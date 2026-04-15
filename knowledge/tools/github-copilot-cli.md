@@ -26,7 +26,6 @@ winget install GitHub.Copilot
 OAuth デバイスフローまたは GitHub Personal Access Token (PAT) で認証。
 
 ```bash
-# 環境変数で認証
 export GH_TOKEN="your_github_token"
 # または
 export GITHUB_TOKEN="your_github_token"
@@ -38,7 +37,7 @@ export GITHUB_TOKEN="your_github_token"
 copilot                  # インタラクティブセッション開始
 ```
 
-### セッション内コマンド
+## セッション内コマンド
 
 | コマンド | 説明 |
 |---|---|
@@ -47,19 +46,28 @@ copilot                  # インタラクティブセッション開始
 | `/ask` | 会話に影響せずに質問 |
 | `/share` | セッション共有 |
 | `/context` | 会話コンテキスト表示 |
+| `/agent <name>` | カスタムエージェントを起動 |
+| `/lsp` | LSP サーバーの状態表示 |
 | `/version` | バージョン表示 |
 | `/update` | CLI アップデート |
 | `/exit` | セッション終了 |
 
-## 設定
+## 設定ファイル
 
-環境変数による設定:
+| パス | 用途 | Git 管理 |
+|---|---|---|
+| `AGENTS.md` | プロジェクト固有の指示 | Yes |
+| `.agents/` | カスタムエージェント・スキル | Yes |
+| `copilot-instructions.md` | カスタム指示（レガシー） | Yes |
+
+### 環境変数
 
 | 変数 | 用途 |
 |---|---|
 | `GH_TOKEN` / `GITHUB_TOKEN` | GitHub 認証トークン |
 | `GH_HOST` | カスタム GitHub ホスト（GHES） |
-| `HTTPS_PROXY` | プロキシ設定 |
+| `HTTPS_PROXY` / `HTTP_PROXY` | プロキシ設定 |
+| `NO_PROXY` | プロキシ除外リスト |
 | `NO_COLOR` | カラー出力無効化 |
 | `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` | カスタム指示ディレクトリ |
 
@@ -70,25 +78,73 @@ copilot                  # インタラクティブセッション開始
 - **コマンド実行**: テスト・ビルド・Git 操作を自動実行
 - **リモートコントロール**: GitHub Web / モバイルアプリからセッションを監視・操作
 - **コンテキストヒント**: `@files` や `#issues` でコンテキストを指定
-- **セッションリンク**: QR コードでリモート制御用リンクを生成
+- **カスタムエージェント**: Markdown で専門エージェントを定義
+- **LSP 統合**: TypeScript Language Server と連携して型情報を活用
+- **MCP 統合**: Model Context Protocol サーバーとの連携
 
-## 承認レベル
+## カスタムエージェント
 
-- すべてのアクションを確認
-- ファイル編集は自動、コマンドは確認
-- 完全自律実行（Autopilot）
+`.agents/` に Markdown ファイルとして定義:
 
-## エージェント向け設定ファイル
+```markdown
+---
+name: db-specialist
+description: データベース操作の専門エージェント
+tools:
+  - shell
+  - view
+  - edit
+---
 
-```text
-AGENTS.md                              # GitHub Copilot が読む指示ファイル
-.agents/skills/                        # カスタムスキル定義
-copilot-instructions.md                # カスタム指示（レガシー）
+SQL クエリの最適化とスキーマ設計を支援します。
+```
+
+```bash
+# 起動方法
+copilot --agent db-specialist
+# または セッション内で
+/agent db-specialist
+```
+
+## エージェント統合
+
+### 指示ファイル
+
+`AGENTS.md` をプロジェクトルートに配置。Copilot CLI が自動で読み込む。
+
+### MCP サーバー登録
+
+JSON 設定ファイルまたは CLI フラグで指定:
+
+```json
+{
+  "mcpServers": {
+    "knowledge": {
+      "command": "node",
+      "args": ["/path/to/mcp-server-knowledge/dist/index.js"],
+      "env": {}
+    }
+  }
+}
+```
+
+```bash
+# CLI フラグで追加設定を渡す
+copilot --additional-mcp-config @/path/to/config.json
 ```
 
 ## 料金プラン
 
-すべての GitHub Copilot プラン（Free, Pro, Pro+, Business, Enterprise）で利用可能。Free プランでも基本機能にアクセス可能。
+すべての GitHub Copilot プランで利用可能:
+
+- Free（基本機能）
+- Pro / Pro+
+- Business / Enterprise
+
+## 制限事項
+
+- GitHub アカウントが必須
+- GHES（GitHub Enterprise Server）利用時は `GH_HOST` の設定が必要
 
 ## システム要件
 
