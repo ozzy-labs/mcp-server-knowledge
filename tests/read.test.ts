@@ -24,4 +24,11 @@ describe("readKnowledge", () => {
   it("throws for non-existent category", async () => {
     await expect(readKnowledge(FIXTURES_DIR, "nonexistent/file")).rejects.toThrow();
   });
+
+  it("rejects path traversal attempts", async () => {
+    await expect(readKnowledge(FIXTURES_DIR, "../package")).rejects.toThrow("Path traversal");
+    await expect(readKnowledge(FIXTURES_DIR, "tools/../../package")).rejects.toThrow(
+      "Path traversal",
+    );
+  });
 });

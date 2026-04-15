@@ -32,4 +32,9 @@ describe("listFiles", () => {
   it("throws for non-existent category", async () => {
     await expect(listFiles(FIXTURES_DIR, "nonexistent")).rejects.toThrow();
   });
+
+  it("rejects path traversal attempts", async () => {
+    await expect(listFiles(FIXTURES_DIR, "../")).rejects.toThrow("Path traversal");
+    await expect(listFiles(FIXTURES_DIR, "tools/../../")).rejects.toThrow("Path traversal");
+  });
 });

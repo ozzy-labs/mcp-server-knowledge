@@ -1,6 +1,14 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
+function assertWithinDir(knowledgeDir: string, resolved: string): void {
+  const normalized = path.resolve(resolved);
+  const base = path.resolve(knowledgeDir);
+  if (!normalized.startsWith(base + path.sep) && normalized !== base) {
+    throw new Error("Path traversal detected");
+  }
+}
+
 export async function listCategories(knowledgeDir: string): Promise<string[]> {
   const entries = await readdir(knowledgeDir, { withFileTypes: true });
   return entries
@@ -11,6 +19,7 @@ export async function listCategories(knowledgeDir: string): Promise<string[]> {
 
 export async function listFiles(knowledgeDir: string, category: string): Promise<string[]> {
   const categoryDir = path.join(knowledgeDir, category);
+  assertWithinDir(knowledgeDir, categoryDir);
   const entries = await readdir(categoryDir, { withFileTypes: true });
   return entries
     .filter((e) => e.isFile() && e.name.endsWith(".md"))
@@ -20,6 +29,7 @@ export async function listFiles(knowledgeDir: string, category: string): Promise
 
 export async function readKnowledge(knowledgeDir: string, filePath: string): Promise<string> {
   const resolved = path.join(knowledgeDir, `${filePath}.md`);
+  assertWithinDir(knowledgeDir, resolved);
   return readFile(resolved, "utf-8");
 }
 
