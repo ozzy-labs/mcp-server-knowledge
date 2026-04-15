@@ -31,7 +31,7 @@ pnpm run build
 ### Claude Code
 
 ```json
-// ~/.claude/settings.json
+// ~/.claude/.mcp.json
 {
   "mcpServers": {
     "knowledge": {
@@ -42,10 +42,33 @@ pnpm run build
 }
 ```
 
+### Codex CLI
+
+```toml
+# ~/.codex/config.toml
+[mcp_servers.knowledge]
+command = "node"
+args = ["/path/to/mcp-server-knowledge/dist/index.js"]
+```
+
 ### Gemini CLI
 
 ```json
 // ~/.gemini/settings.json
+{
+  "mcpServers": {
+    "knowledge": {
+      "command": "node",
+      "args": ["/path/to/mcp-server-knowledge/dist/index.js"]
+    }
+  }
+}
+```
+
+### GitHub Copilot CLI
+
+```json
+// ~/.copilot/mcp-config.json
 {
   "mcpServers": {
     "knowledge": {

@@ -52,12 +52,13 @@ claude --help             # ヘルプ表示
 |---|---|---|
 | `~/.claude/settings.json` | グローバル設定（権限等） | - |
 | `~/.claude/settings.local.json` | ローカルオーバーライド | - |
+| `~/.claude/.mcp.json` | グローバル MCP サーバー設定 | - |
 | `CLAUDE.md` | プロジェクト固有の指示 | Yes |
 | `.claude/settings.json` | プロジェクト固有の設定 | Yes |
 | `.claude/settings.local.json` | ユーザーローカル設定 | No |
 | `.claude/rules/` | 追加ルールファイル | Yes |
 | `.claude/commands/` | カスタムスラッシュコマンド | Yes |
-| `.mcp.json` | MCP サーバー設定 | Yes |
+| `.mcp.json` | プロジェクト MCP サーバー設定 | Yes |
 
 ## 主要機能
 
@@ -126,7 +127,7 @@ claude --help             # ヘルプ表示
 
 ### MCP サーバー登録
 
-`.mcp.json`（プロジェクト単位）または `~/.claude/settings.json`（グローバル）:
+`.mcp.json`（プロジェクト単位）または `~/.claude/.mcp.json`（グローバル）:
 
 ```json
 {
