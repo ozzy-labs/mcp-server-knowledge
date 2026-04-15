@@ -31,7 +31,7 @@ pnpm run build
 ### Claude Code
 
 ```json
-// ~/.claude/settings.json
+// ~/.claude/.mcp.json
 {
   "mcpServers": {
     "knowledge": {
