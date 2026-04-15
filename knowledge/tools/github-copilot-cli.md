@@ -56,9 +56,13 @@ copilot                  # インタラクティブセッション開始
 
 | パス | 用途 | Git 管理 |
 |---|---|---|
+| `~/.copilot/config.json` | グローバル設定 | - |
+| `~/.copilot/mcp-config.json` | グローバル MCP サーバー設定 | - |
 | `AGENTS.md` | プロジェクト固有の指示 | Yes |
 | `.agents/` | カスタムエージェント・スキル | Yes |
 | `copilot-instructions.md` | カスタム指示（レガシー） | Yes |
+
+`COPILOT_HOME` 環境変数または `--config-dir` フラグで設定ディレクトリを変更可能。
 
 ### 環境変数
 
@@ -114,22 +118,22 @@ copilot --agent db-specialist
 
 ### MCP サーバー登録
 
-JSON 設定ファイルまたは CLI フラグで指定:
+`~/.copilot/mcp-config.json`（グローバル）に追加:
 
 ```json
 {
   "mcpServers": {
     "knowledge": {
       "command": "node",
-      "args": ["/path/to/mcp-server-knowledge/dist/index.js"],
-      "env": {}
+      "args": ["/path/to/mcp-server-knowledge/dist/index.js"]
     }
   }
 }
 ```
 
+CLI フラグで一時的に追加することも可能:
+
 ```bash
-# CLI フラグで追加設定を渡す
 copilot --additional-mcp-config @/path/to/config.json
 ```
 

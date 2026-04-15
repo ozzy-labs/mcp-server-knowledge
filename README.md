@@ -67,13 +67,8 @@ args = ["/path/to/mcp-server-knowledge/dist/index.js"]
 
 ### GitHub Copilot CLI
 
-```bash
-copilot --additional-mcp-config @/path/to/mcp-server-knowledge/.mcp-entry.json
-```
-
-または MCP 設定ファイルに直接追加:
-
 ```json
+// ~/.copilot/mcp-config.json
 {
   "mcpServers": {
     "knowledge": {
