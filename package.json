@@ -1,0 +1,26 @@
+{
+  "name": "mcp-server-knowledge",
+  "version": "0.1.0",
+  "description": "MCP server providing verified, up-to-date knowledge base for AI agents",
+  "type": "module",
+  "bin": {
+    "mcp-server-knowledge": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.25.23"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.1"
+  },
+  "license": "MIT"
+}
