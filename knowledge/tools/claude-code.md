@@ -50,9 +50,9 @@ claude --help             # ヘルプ表示
 
 | パス | 用途 | Git 管理 |
 |---|---|---|
+| `~/.claude.json` | ユーザースコープ設定（top-level `mcpServers` でユーザー MCP を保持） | - |
 | `~/.claude/settings.json` | グローバル設定（権限等） | - |
 | `~/.claude/settings.local.json` | ローカルオーバーライド | - |
-| `~/.claude/.mcp.json` | グローバル MCP サーバー設定 | - |
 | `~/.claude/agents/` | ユーザースコープのサブエージェント定義 | - |
 | `~/.claude/skills/` | ユーザースコープのスキル定義 | - |
 | `~/.claude/output-styles/` | ユーザースコープの出力スタイル | - |
@@ -64,7 +64,9 @@ claude --help             # ヘルプ表示
 | `.claude/agents/` | プロジェクトスコープのサブエージェント定義 | Yes |
 | `.claude/skills/` | プロジェクトスコープのスキル定義 | Yes |
 | `.claude/output-styles/` | プロジェクトスコープの出力スタイル | Yes |
-| `.mcp.json` | プロジェクト MCP サーバー設定 | Yes |
+| `.mcp.json` | プロジェクト MCP サーバー設定（リポジトリ直下） | Yes |
+
+> **注意**: `~/.claude/.mcp.json` は Claude Code から読み込まれない。ユーザースコープの MCP 設定は `~/.claude.json` の top-level `mcpServers` に置かれる（`claude mcp add --scope user` が自動で書き込む）。
 
 同名エントリがあれば **Project > User** の順で優先される。
 
@@ -309,7 +311,29 @@ echo "[$MODEL] $PCT% context"
 
 ### MCP サーバー登録
 
-`.mcp.json`（プロジェクト単位）または `~/.claude/.mcp.json`（グローバル）:
+CLI コマンドで登録するのが推奨。スコープを指定してサーバーを追加する:
+
+```bash
+# ユーザースコープ（全プロジェクト共通）
+claude mcp add --transport stdio <name> --scope user -- <command> [args...]
+
+# プロジェクトスコープ（リポジトリで共有、.mcp.json に書き込み）
+claude mcp add --transport stdio <name> --scope project -- <command> [args...]
+
+# ローカルスコープ（このプロジェクトの自分だけ）
+claude mcp add --transport stdio <name> --scope local -- <command> [args...]
+
+# 登録状態・接続確認
+claude mcp list
+```
+
+| スコープ | 書き込み先 | 共有範囲 |
+|---|---|---|
+| `user` | `~/.claude.json` の top-level `mcpServers` | 全プロジェクト |
+| `project` | リポジトリ直下の `.mcp.json` | Git で共有 |
+| `local` | プロジェクト固有ローカル | このマシンのみ |
+
+手動で設定を書くときのフォーマット:
 
 ```json
 {
@@ -324,6 +348,8 @@ echo "[$MODEL] $PCT% context"
   }
 }
 ```
+
+**スコープ優先度**: Local > Project > User（同名サーバーがあれば優先度の高いものが勝つ）。
 
 ### カスタムコマンド
 
