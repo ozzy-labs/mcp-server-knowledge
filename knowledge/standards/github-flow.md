@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # GitHub Flow
 
 GitHub が提唱するシンプルな Git ワークフロー。`main` を常にデプロイ可能に保ち、新しい変更は短命な feature branch で行う。Git Flow より軽量で、継続的デリバリーに適している。

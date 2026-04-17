@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # Vitest
 
 Vite ネイティブの高速テストランナー。Jest 互換の API で ESM・TypeScript・JSX をネイティブに扱える。HMR ベースの watch モードが特徴。

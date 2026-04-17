@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # MCP TypeScript SDK
 
 `@modelcontextprotocol/sdk` — Model Context Protocol のサーバー・クライアント両方を実装する公式 TypeScript SDK。本リポジトリもこれを利用している。

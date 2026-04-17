@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # shfmt
 
 Go 製のシェルスクリプトフォーマッタ。bash / mksh / POSIX sh のパース + 整形を一貫して行う。shellcheck と並んで shell スクリプト運用のデファクトツール。

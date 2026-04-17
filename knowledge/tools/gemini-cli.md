@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # Gemini CLI
 
 Google が提供するオープンソースの AI エージェント CLI。ReAct（Reason and Act）ループにより、複雑なコーディングタスク・デバッグ・自動化をターミナルから実行する。

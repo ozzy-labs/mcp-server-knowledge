@@ -17,13 +17,30 @@ const CATEGORIES = [
   { dir: "platforms", label: "プラットフォーム" },
 ];
 
-/** Read a single article and extract `{ title, summary }`. */
+/** Parse minimal YAML frontmatter (flat `key: value` pairs) at file start. */
+function parseFrontmatter(lines) {
+  const frontmatter = {};
+  let cursor = 0;
+  if (lines[0]?.trim() !== "---") return { frontmatter, cursor };
+  cursor = 1;
+  while (cursor < lines.length && lines[cursor].trim() !== "---") {
+    const match = lines[cursor].match(/^(\w[\w-]*):\s*(.*?)\s*$/);
+    if (match) frontmatter[match[1]] = match[2].replace(/^["']|["']$/g, "");
+    cursor++;
+  }
+  if (cursor < lines.length) cursor++;
+  return { frontmatter, cursor };
+}
+
+/** Read a single article and extract `{ title, summary, reviewed }`. */
 async function extractMeta(filePath) {
   const content = await readFile(filePath, "utf8");
   const lines = content.split("\n");
 
+  const { frontmatter, cursor: afterFrontmatter } = parseFrontmatter(lines);
+  let cursor = afterFrontmatter;
+
   let title = "";
-  let cursor = 0;
   for (; cursor < lines.length; cursor++) {
     const match = lines[cursor].match(/^#\s+(.+?)\s*$/);
     if (match) {
@@ -47,7 +64,7 @@ async function extractMeta(filePath) {
   }
 
   const summary = summaryLines.join(" ").replace(/\s+/g, " ").replace(/\|/g, "\\|").trim();
-  return { title, summary };
+  return { title, summary, reviewed: frontmatter.reviewed ?? "" };
 }
 
 /** List categories and their article filenames (sorted, excluding INDEX.md). */
@@ -89,13 +106,13 @@ async function main() {
 
     sections.push(`## \`${dir}/\` — ${label} (${articles.length})`);
     sections.push("");
-    sections.push("| 記事 | 概要 |");
-    sections.push("|---|---|");
+    sections.push("| 記事 | reviewed | 概要 |");
+    sections.push("|---|---|---|");
 
     for (const name of articles) {
       const path = `${dir}/${name}`;
-      const { title, summary } = await extractMeta(join(KNOWLEDGE_DIR, path));
-      sections.push(`| [${title}](${path}) | ${summary} |`);
+      const { title, summary, reviewed } = await extractMeta(join(KNOWLEDGE_DIR, path));
+      sections.push(`| [${title}](${path}) | ${reviewed || "—"} | ${summary} |`);
     }
     sections.push("");
   }

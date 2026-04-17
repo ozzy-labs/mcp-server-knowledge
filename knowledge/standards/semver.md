@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # Semantic Versioning (SemVer)
 
 `MAJOR.MINOR.PATCH` の 3 要素でバージョンを表す公開 API 契約。Conventional Commits とセットで、リリース自動化の基盤になる。

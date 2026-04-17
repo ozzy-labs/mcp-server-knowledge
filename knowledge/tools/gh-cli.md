@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # gh (GitHub CLI)
 
 GitHub 公式の CLI。PR・Issue・Actions・Releases・Secrets などブラウザの UI で行う操作をターミナルから実行できる。AI エージェント運用の基盤ツール（Claude Code / Codex CLI も Git/GitHub 操作で多用）。

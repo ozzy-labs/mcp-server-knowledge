@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # GitHub Actions
 
 GitHub ネイティブの CI/CD プラットフォーム。ワークフローを YAML で定義し、リポジトリへのイベント（push, PR, schedule 等）に応じて実行する。`gh` CLI と並んで GitHub 運用の中核。

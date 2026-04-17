@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # actionlint
 
 GitHub Actions ワークフローファイル（`.github/workflows/*.yaml`）の静的解析ツール。構文エラー・式の型・shellcheck 連携・未知の runner やアクションを検出する。Go 製の単一バイナリ。
