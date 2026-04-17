@@ -30,17 +30,11 @@ pnpm run build
 
 ### Claude Code
 
-```json
-// ~/.claude/.mcp.json
-{
-  "mcpServers": {
-    "knowledge": {
-      "command": "node",
-      "args": ["/path/to/mcp-server-knowledge/dist/index.js"]
-    }
-  }
-}
+```bash
+claude mcp add --transport stdio knowledge --scope user -- node /path/to/mcp-server-knowledge/dist/index.js
 ```
+
+`~/.claude.json` の top-level `mcpServers` に登録される。
 
 ### Codex CLI
 
