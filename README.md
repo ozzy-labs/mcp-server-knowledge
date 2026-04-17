@@ -77,11 +77,14 @@ args = ["/path/to/mcp-server-knowledge/dist/index.js"]
 
 ```text
 knowledge/
+├── INDEX.md        ← 全記事の一覧（自動生成）
 ├── tools/          ← AI CLI ツールの使い方・設定リファレンス
 ├── standards/      ← 規約・プラクティス
 ├── languages/      ← 言語固有の知識
 └── platforms/      ← プラットフォーム・サービス
 ```
+
+収録記事の一覧は [`knowledge/INDEX.md`](knowledge/INDEX.md) を参照。`knowledge/**/*.md` を変更すると lefthook pre-commit で自動再生成される（`pnpm run generate-index` で手動実行も可）。
 
 ## 開発
 

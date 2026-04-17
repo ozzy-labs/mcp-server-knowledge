@@ -15,6 +15,10 @@ pre-commit:
     actionlint:
       glob: ".github/workflows/*.{yaml,yml}"
       run: actionlint
+    generate-index:
+      glob: "knowledge/**/*.md"
+      exclude: "knowledge/INDEX.md"
+      run: node scripts/generate-index.mjs && git add knowledge/INDEX.md
 
 pre-push:
   commands:
