@@ -49,10 +49,10 @@ codex "プロンプト"        # ワンショット実行
 ### config.toml の主要設定
 
 ```toml
-# デフォルトモデル
-model = "o4-mini"
+# デフォルトモデル（例）。省略時は CLI 同梱のモデルカタログから自動選択される
+model = "gpt-5.4"
 
-# 推論の深さ（low, medium, high）
+# 推論の深さ（minimal, low, medium, high, xhigh）※ xhigh はモデル依存
 model_reasoning_effort = "medium"
 
 # サンドボックス: "macos"（Seatbelt）, "docker", "none"
@@ -74,6 +74,18 @@ approval_mode = "approve"
 [notify]
 command = "/path/to/notify-script.sh"
 ```
+
+### 同梱モデル（rust-v0.121.0 時点、2026-04）
+
+`/model` ピッカーが露出するモデル（優先度順）:
+
+| モデル | 説明 |
+|---|---|
+| `gpt-5.4` | 最新のフロンティア agentic coding モデル |
+| `gpt-5.3-codex` | 一世代前。UI で `gpt-5.4` へのアップグレード案内が出る |
+| `gpt-5.2-codex` | 低優先度。明示指定時のみ使用 |
+
+古い資料にある `o4-mini` は同梱カタログから削除済み。`model_presets.rs` のハードコードも撤廃され、`models-manager/models.json` のカタログから動的に列挙される。
 
 ## 主要機能
 

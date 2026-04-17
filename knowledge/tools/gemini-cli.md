@@ -80,7 +80,7 @@ gemini --help            # ヘルプ表示
     "checkpointing": { "enabled": true }
   },
   "model": {
-    "name": "gemini-2.5-pro"
+    "name": "auto"
   },
   "context": {
     "fileName": ["GEMINI.md", "CONTEXT.md"],
@@ -104,6 +104,19 @@ gemini --help            # ヘルプ表示
   }
 }
 ```
+
+### 選択可能なモデル（2026-04 時点）
+
+| モデル | 位置付け |
+|---|---|
+| `auto` | **新デフォルト**。タスク複雑度に応じてルーティング |
+| `gemini-3.1-pro` | フラグシップ（2026-02 リリース） |
+| `gemini-3-pro` | v0.25.0（2026-01）で正式に preview 解除されデフォルト昇格した経緯あり |
+| `gemini-3.1-flash-lite` | 軽量・高速（2026-03 API 公開） |
+| `gemini-2.5-pro` / `gemini-2.5-flash` / `gemini-2.5-flash-lite` | 旧世代、継続提供 |
+| `gemma`（ローカル） | 実験的 |
+
+旧資料の `gemini-2.5-pro` デフォルトは陳腐化。**モデル解決の優先度**: `--model` フラグ → `GEMINI_MODEL` 環境変数 → `settings.json` の `model.name` → ローカル Gemma ルータ。
 
 ## ビルトインツール
 
