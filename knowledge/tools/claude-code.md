@@ -53,12 +53,20 @@ claude --help             # ヘルプ表示
 | `~/.claude/settings.json` | グローバル設定（権限等） | - |
 | `~/.claude/settings.local.json` | ローカルオーバーライド | - |
 | `~/.claude/.mcp.json` | グローバル MCP サーバー設定 | - |
+| `~/.claude/agents/` | ユーザースコープのサブエージェント定義 | - |
+| `~/.claude/skills/` | ユーザースコープのスキル定義 | - |
+| `~/.claude/output-styles/` | ユーザースコープの出力スタイル | - |
 | `CLAUDE.md` | プロジェクト固有の指示 | Yes |
 | `.claude/settings.json` | プロジェクト固有の設定 | Yes |
 | `.claude/settings.local.json` | ユーザーローカル設定 | No |
 | `.claude/rules/` | 追加ルールファイル | Yes |
 | `.claude/commands/` | カスタムスラッシュコマンド | Yes |
+| `.claude/agents/` | プロジェクトスコープのサブエージェント定義 | Yes |
+| `.claude/skills/` | プロジェクトスコープのスキル定義 | Yes |
+| `.claude/output-styles/` | プロジェクトスコープの出力スタイル | Yes |
 | `.mcp.json` | プロジェクト MCP サーバー設定 | Yes |
+
+同名エントリがあれば **Project > User** の順で優先される。
 
 ## 主要機能
 
@@ -66,7 +74,11 @@ claude --help             # ヘルプ表示
 - **コマンド実行**: シェルコマンドの実行と結果の解釈
 - **Git 操作**: コミット・ブランチ・PR 作成を自然言語で
 - **MCP 統合**: Model Context Protocol サーバーとの連携
-- **スキルシステム**: `.claude/skills/` にドメイン知識をエンコード
+- **サブエージェント**: 専門タスク用の独立コンテキストエージェント（`.claude/agents/`）
+- **スキル**: プロンプト + コンテキストのバンドル。スラッシュコマンドとしても自動発火でも呼べる（`.claude/skills/`）
+- **プラグイン / マーケットプレイス**: コマンド・エージェント・スキル・フックをバンドル配布
+- **出力スタイル**: 応答のトーンと形式をプロジェクト単位で切り替え（`.claude/output-styles/`）
+- **ステータスライン**: モデル・コスト・コンテキスト使用率などをターミナル下部に常時表示
 - **フック**: ツール実行前後にシェルコマンドや LLM 検証を自動実行
 - **マルチモデル**: Haiku（高速）/ Sonnet / Opus（高精度）を切り替え
 - **スケジュール実行**: Anthropic インフラ上で定期実行
@@ -118,6 +130,176 @@ claude --help             # ヘルプ表示
 ```
 
 フック応答: exit 0 = 許可、exit 2 = 拒否（stderr がエラーメッセージとしてフィードバック）。
+
+## サブエージェント
+
+メインセッションから独立した文脈で動作する専門エージェント。`.claude/agents/<name>.md` または `~/.claude/agents/<name>.md` に定義する。
+
+```markdown
+---
+name: code-explorer
+description: Explore and understand codebases. Use when analyzing project structure.
+model: claude-haiku-4-5-20251001
+tools: Grep Glob Read
+---
+
+コードベースを体系的に分析してください...
+```
+
+| フィールド | 説明 |
+|---|---|
+| `name` | エージェント識別子（必須） |
+| `description` | 自動委譲の判定に使用（必須） |
+| `model` | 使用モデル（省略時は親セッションを継承） |
+| `tools` | 許可ツール（空白/改行区切り） |
+| `skip-tools` | 拒否ツール |
+| `system-prompt` | システムプロンプト上書き |
+| `skills` | プリロードするスキル |
+
+**呼び出し方**:
+
+- **自動委譲**: `description` にマッチするタスクを検出して親エージェントが委譲
+- **`/agents` コマンド**: インタラクティブに選択
+- **Agent ツール経由**: スキル定義で `context: fork` + `agent: <name>` を指定した場合
+
+**スコープ優先**: Project (`.claude/agents/`) > User (`~/.claude/agents/`)。
+
+## スキル
+
+タスク特化のプロンプト + コンテキストバンドル。`.claude/skills/<name>/SKILL.md` に定義する。
+
+```markdown
+---
+name: code-review
+description: Review code for best practices, security issues, and potential bugs. Use when reviewing code or checking PRs.
+allowed-tools: Read Grep Glob
+---
+
+コードレビュー時は以下をチェック:
+- セキュリティ脆弱性
+- パフォーマンス問題
+- テストカバレッジ
+```
+
+| フィールド | 説明 |
+|---|---|
+| `name` | スキル名（省略時はディレクトリ名。`/name` で呼び出し可能） |
+| `description` | **発見の鍵**。`description` + `when_to_use` 合わせて最大 1,536 文字。冒頭にユースケースを置く |
+| `when_to_use` | 追加のトリガー説明 |
+| `user-invocable` | `false` なら Claude のみ呼び出し可（デフォルト true） |
+| `disable-model-invocation` | `true` ならユーザーのみ呼び出し可（デフォルト false） |
+| `allowed-tools` | スキル有効中に許可確認をスキップするツール |
+| `context` | `fork` でサブエージェントコンテキストで実行 |
+| `agent` | `context: fork` 時のエージェント名（デフォルト `general-purpose`） |
+
+**Progressive disclosure**: 起動時は description だけがコンテキストに載り、トリガーされた時点で本文が読み込まれる。コンテキスト節約の核。
+
+**呼び出し方**:
+
+- **手動**: `/skill-name [arguments]`
+- **自動**: `description` にタスクがマッチすれば Claude が自動発火
+
+**サブエージェントとの違い**: サブエージェントは「委譲先の永続的エージェント定義」、スキルは「オンデマンドで呼び出す再利用可能なタスクプロンプト」。
+
+## プラグイン / マーケットプレイス
+
+コマンド・サブエージェント・スキル・フック・MCP サーバーをまとめてパッケージ化・配布する仕組み。
+
+```text
+my-plugin/
+├── .claude-plugin/
+│   └── plugin.json      # name, description, version, author
+├── skills/
+│   └── <skill-name>/SKILL.md
+├── agents/
+│   └── <agent-name>.md
+├── hooks/
+│   └── hooks.json
+├── .mcp.json
+└── .lsp.json
+```
+
+**主要コマンド**:
+
+| コマンド | 用途 |
+|---|---|
+| `/plugin` | プラグインマネージャ UI |
+| `/plugin install <name>` | マーケットプレイスからインストール |
+| `/reload-plugins` | 開発中の再読み込み |
+| `claude --plugin-dir ./path` | ローカルプラグインをテスト起動 |
+
+**マーケットプレイス**:
+
+- **公式**: `platform.claude.com/plugins` / `claude.ai/settings/plugins`
+- **コミュニティ**: リポジトリ / カスタムレジストリで配布
+- **チーム運用**: managed settings や team marketplace を指す
+
+## 出力スタイル
+
+応答のトーン・形式・ロールを切り替える仕組み。知識やツールは変更しない。`.claude/output-styles/<name>.md` または `~/.claude/output-styles/<name>.md` に配置。
+
+```markdown
+---
+name: Japanese Technical Writer
+description: 技術的な精度を保ち、フォーマルな日本語で応答
+keep-coding-instructions: true
+---
+
+# Japanese Technical Mode
+
+応答はすべて日本語で、ビジネス・技術文書のレジスタで書く...
+```
+
+| フィールド | 説明 |
+|---|---|
+| `name` | 表示名（省略時はファイル名） |
+| `description` | `/config` の選択 UI で表示 |
+| `keep-coding-instructions` | `true` で Claude Code のデフォルトコーディング指示を残す |
+
+**選択方法**:
+
+- `/config` → Output style → メニューから選択
+- `settings.json` の `outputStyle` フィールドを編集（次セッションから有効）
+
+**組み込みスタイル**: `Default` / `Explanatory`（教育的補足） / `Learning`（`TODO(human)` マーカー併用の協調モード）。
+
+## ステータスライン
+
+ターミナル下部にセッション情報を常時表示するカスタマイズ機能。シェルスクリプトが JSON をstdin から受け取り、標準出力をそのまま表示する。
+
+`settings.json`:
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh",
+    "padding": 2,
+    "refreshInterval": 1
+  }
+}
+```
+
+スクリプト例:
+
+```bash
+#!/bin/bash
+input=$(cat)
+MODEL=$(echo "$input" | jq -r '.model.display_name')
+PCT=$(echo "$input" | jq -r '.context_window.used_percentage // 0' | cut -d. -f1)
+echo "[$MODEL] $PCT% context"
+```
+
+**JSON で受け取れる主なフィールド**:
+
+- `model.display_name`, `model.id`
+- `workspace.current_dir`, `workspace.project_dir`
+- `context_window.used_percentage`, `context_window.remaining_percentage`
+- `cost.total_cost_usd`, `cost.total_duration_ms`
+- `session_id`, `session_name`
+- `rate_limits.five_hour.used_percentage`, `rate_limits.seven_day.used_percentage`
+
+**クイック設定**: `/statusline モデル名とコンテキスト使用率を表示` と送れば Claude がスクリプトを生成して自動設定する。
 
 ## エージェント統合
 
