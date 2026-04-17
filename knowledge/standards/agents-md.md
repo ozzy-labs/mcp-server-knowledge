@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # AGENTS.md
 
 AI コーディングエージェント向けのプロジェクトガイダンスを記述する共通ファイル。単一の `AGENTS.md` で Codex CLI / Gemini CLI / GitHub Copilot CLI / Cursor / Amp など複数のエージェントにまたがって方針を共有する。

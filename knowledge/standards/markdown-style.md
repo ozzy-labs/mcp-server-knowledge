@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # Markdown 執筆スタイル（本リポジトリ向け）
 
 この knowledge base の記事を書くときの執筆規約。AI エージェントが新規記事を追加する・既存記事を更新する際の一貫性を保つため。
@@ -21,6 +25,31 @@ knowledge/
 ```
 
 ファイル名はケバブケース: `mcp-typescript-sdk.md` / `conventional-commits.md`。
+
+## Frontmatter
+
+各記事の先頭に YAML frontmatter を付ける:
+
+```markdown
+---
+reviewed: 2026-04-18
+---
+
+# 記事タイトル
+
+...
+```
+
+| フィールド | 意味 | 必須 |
+|---|---|---|
+| `reviewed` | 事実が検証された最終日（`YYYY-MM-DD`） | Yes |
+
+- `reviewed` は `/refresh` スキルが読み書きする。新規記事作成時は作成日を入れる
+- `generate-index.mjs` が INDEX.md に `reviewed` 列を出力し、古い記事を視覚化できる
+- パースは簡易的な `key: value` 形式のみサポート（ネストや配列は未対応）
+- 将来的に `tags` / `source_verified_at` / `deprecated` などを追加する余地あり
+
+記事を書き換える際は `reviewed` を**必ず更新する**。事実検証なしの軽微な修正（typo など）の場合は据え置きでよい。
 
 ## 記事の骨格
 

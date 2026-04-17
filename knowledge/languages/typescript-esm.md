@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # TypeScript + Node.js ESM
 
 Node.js で TypeScript を ECMAScript Modules（ESM）として動かすセットアップの要点と落とし穴。CommonJS から移行するプロジェクトで AI エージェントが誤りやすいポイントに重点を置く。

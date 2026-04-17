@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # taplo
 
 Rust 製の TOML フォーマッタ + バリデータ + 言語サーバー。`pyproject.toml` / `Cargo.toml` / `.mise.toml` など TOML 採用が広がるにつれて有用性が増した。

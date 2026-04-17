@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # Biome
 
 Rust で書かれた高速な JavaScript / TypeScript / JSON / CSS / GraphQL のフォーマッタ + リンタ。ESLint + Prettier を単一ツールで置き換えることを目標とする。

@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # Anthropic API (Claude API)
 
 Anthropic が提供する Claude モデルの API。本記事は API 本体（SDK 経由のアプリ実装）を対象。Claude Code CLI は別記事 `tools/claude-code.md` を参照。

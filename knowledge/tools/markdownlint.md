@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # markdownlint
 
 Markdown の構文・スタイルを検証する Linter。`markdownlint-cli2` が現行推奨 CLI。ルール体系は [CommonMark](https://commonmark.org/) + GitHub Flavored Markdown 準拠。

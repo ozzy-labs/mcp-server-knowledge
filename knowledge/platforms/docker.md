@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # Docker
 
 アプリケーションをコンテナ（軽量な隔離環境）として配布・実行するプラットフォーム。OCI (Open Container Initiative) 仕様準拠の runtime + CLI + イメージレジストリ + Compose のエコシステム。

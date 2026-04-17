@@ -1,3 +1,7 @@
+---
+reviewed: 2026-04-18
+---
+
 # GitHub Copilot CLI
 
 GitHub が提供する AI コーディングエージェント CLI。GitHub アカウントと深く統合され、コードの編集・テスト実行・Git ワークフローをエージェントが自律的に行う。
