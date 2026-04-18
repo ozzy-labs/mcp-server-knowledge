@@ -44,7 +44,7 @@ reviewed: 2026-04-18
 |---|---|---|
 | `reviewed` | 事実が検証された最終日（`YYYY-MM-DD`） | Yes |
 
-- `reviewed` は `/refresh` スキルが読み書きする。新規記事作成時は作成日を入れる
+- `reviewed` は `/create`（作成時）と `/update`（再検証時）が書き込む。作成日＝最終検証日として扱う
 - `generate-index.mjs` が INDEX.md に `reviewed` 列を出力し、古い記事を視覚化できる
 - パースは簡易的な `key: value` 形式のみサポート（ネストや配列は未対応）
 - 将来的に `tags` / `source_verified_at` / `deprecated` などを追加する余地あり

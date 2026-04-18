@@ -1,13 +1,13 @@
 ---
-description: knowledge ベース内の記事を最新情報で再検証・更新する
+description: knowledge ベース内の既存記事を最新情報で再検証・更新する
 argument-hint: "<article-path | category | --stale [days] | --all>"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch, AskUserQuestion
 ---
 
-# refresh
+# update
 
-`.agents/skills/refresh/SKILL.md` を Read し、ワークフロー手順に従う。
+`.agents/skills/update/SKILL.md` を Read し、ワークフロー手順に従う。
 
 ## Claude Code 固有の追加事項
 
@@ -21,9 +21,9 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch, AskUser
 
 ### 完了報告後
 
-refresh で記事を書き換えた場合、AskUserQuestion を呼び出す（`answers` パラメータは設定しない）:
+update で記事を書き換えた場合、AskUserQuestion を呼び出す（`answers` パラメータは設定しない）:
 
 - **「ship まで進める」** → `.claude/skills/ship/SKILL.md` を Read して lint → commit → PR 作成
 - **「終了する」** → 変更はワーキングツリーに残したまま終了
 
-refresh で変更がなかった場合は AskUserQuestion を呼ばず、そのまま終了する。
+update で変更がなかった場合は AskUserQuestion を呼ばず、そのまま終了する。
