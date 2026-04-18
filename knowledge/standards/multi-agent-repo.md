@@ -174,7 +174,7 @@ exit 0
 }
 ```
 
-**注意**: stdin の JSON スキーマは CLI ごとに微妙に異なる。共通化するなら `tool` / `input` 等の最上位キーだけを参照し、CLI 固有フィールドには触らない。Gemini CLI の環境変数は `CLAUDE_PROJECT_DIR` を互換エイリアスとして提供する点も覚えておく。
+**注意**: stdin の JSON スキーマは CLI ごとに異なる（例: Claude Code は `tool_name` / `tool_input`）。実際に使う前に各 CLI のドキュメントでキー名を確認し、スクリプト側を調整する必要がある。Gemini CLI の環境変数は `CLAUDE_PROJECT_DIR` を互換エイリアスとして提供する点も覚えておく。
 
 ## MCP 設定の共有
 
