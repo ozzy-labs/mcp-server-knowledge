@@ -86,7 +86,6 @@ reviewed: YYYY-MM-DD
 1. `pnpm run generate-index` で INDEX.md を再生成
 2. `pnpm run test` でテスト通過を確認
 3. `markdownlint-cli2 --fix` で書式を整える
-4. `pnpm run build` と `pnpm run typecheck` を実行（記事以外への波及がないことを確認）
 
 ### 7. 完了報告
 
