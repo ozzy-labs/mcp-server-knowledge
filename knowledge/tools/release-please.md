@@ -43,7 +43,7 @@ jobs:
           manifest-file: .release-please-manifest.json
 
       - if: ${{ steps.release.outputs.release_created }}
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - if: ${{ steps.release.outputs.release_created }}
         run: pnpm publish --no-git-checks
 ```
