@@ -185,7 +185,7 @@ exit 0
   "mcpServers": {
     "knowledge": {
       "command": "node",
-      "args": ["./node_modules/mcp-server-knowledge/dist/index.js"]
+      "args": ["./node_modules/@ozzylabs/mcp-server-knowledge/dist/index.js"]
     }
   }
 }

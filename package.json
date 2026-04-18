@@ -1,5 +1,5 @@
 {
-  "name": "mcp-server-knowledge",
+  "name": "@ozzylabs/mcp-server-knowledge",
   "version": "0.1.0",
   "description": "MCP server providing verified, up-to-date knowledge base for AI agents",
   "type": "module",
