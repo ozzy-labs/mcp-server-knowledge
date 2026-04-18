@@ -16,7 +16,9 @@
 - `/review` — コード変更や PR をレビュー
 - `/ship` — lint・コミット・PR 作成を一括実行
 - `/drive` — implement + ship + review loop（Issue から merge-ready な PR まで自律駆動）
-- `/refresh` — knowledge 記事を最新情報で再検証・更新（単体 / カテゴリ / `--stale` 指定）
+- `/create` — 新規の knowledge 記事をトピック指定でリサーチ・執筆・登録
+- `/update` — 既存の knowledge 記事を最新情報で再検証・更新（単体 / カテゴリ / `--stale` 指定）
+- `/audit` — knowledge ベース全体の健全性を監査（frontmatter / INDEX / stale / リンク切れ / 重複 / 孤立）
 
 ## Skills の共通ルール
 
