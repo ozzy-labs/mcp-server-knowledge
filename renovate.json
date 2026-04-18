@@ -1,1 +1,4 @@
-{"$schema": "https://docs.renovatebot.com/renovate-schema.json", "extends": ["github>ozzy-labs/.github"]}
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["github>ozzy-labs/.github"]
+}
