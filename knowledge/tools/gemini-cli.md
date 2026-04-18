@@ -4,7 +4,7 @@ reviewed: 2026-04-18
 
 # Gemini CLI
 
-Google が提供するオープンソースの AI エージェント CLI。ReAct（Reason and Act）ループにより、複雑なコーディングタスク・デバッグ・自動化をターミナルから実行する。
+Google が提供するオープンソースの AI エージェント CLI。ReAct（Reason and Act）ループにより、複雑なコーディングタスク・デバッグ・自動化をターミナルから実行する。拡張機構の横断比較は `standards/agent-extensions.md` を参照。
 
 ## インストール
 
@@ -165,6 +165,88 @@ gemini --help            # ヘルプ表示
 | `podman` | Podman コンテナ内で実行 |
 | `true` | OS ネイティブサンドボックス（macOS Seatbelt / Windows） |
 | `false` | サンドボックスなし |
+
+## Skills
+
+2026-03 頃に追加された新機能。`Agent Skills` オープン標準準拠。
+
+**探索ディレクトリ**:
+
+1. Workspace: `.gemini/skills/` または `.agents/skills/`
+2. User: `~/.gemini/skills/` または `~/.agents/skills/`
+3. Extension bundled
+
+`.agents/skills/` のほうが優先される（他 CLI との相互運用のため）。
+
+**管理**: `/skills list | link | disable | enable | reload` および `gemini skills install`。アクティベーション時は `activate_skill` ツール経由でユーザー確認後、SKILL.md の本文とディレクトリ構造が会話履歴に注入される。
+
+## サブエージェント
+
+`.gemini/agents/`（project）または `~/.gemini/agents/`（user）に定義。
+
+**frontmatter**:
+
+| フィールド | 必須 | 説明 |
+|---|---|---|
+| `name` | Yes | slug |
+| `description` | Yes | 用途 |
+| `kind` | - | `local` / `remote` |
+| `tools` | - | ワイルドカード `*`, `mcp_*`, `mcp_server_*` 対応 |
+| `mcpServers` | - | inline 定義 |
+| `model` | - | `inherit` 可 |
+| `temperature` | - | 0.0-2.0 |
+| `max_turns` | - | デフォルト 30 |
+| `timeout_mins` | - | デフォルト 10 |
+
+**ビルトイン**: `generalist` / `cli_help` / `codebase_investigator` / `browser_agent`（experimental、Chrome 144+ 必要）。
+
+**呼び出し**: 自動委譲、または `@subagent-name` で強制呼び出し。**再帰不可**（subagent から subagent を呼べない）。
+
+## カスタムコマンド
+
+`.gemini/commands/*.toml` に TOML 形式で定義。サブディレクトリでネームスペース: `git/commit.toml` → `/git:commit`。
+
+```toml
+prompt = "以下のコミット: {{args}}\n\n!{git diff --staged}\n\n@{README.md}"
+description = "ステージ済み変更のコミットメッセージを提案"
+```
+
+**プレースホルダ**:
+
+- `{{args}}` — コマンド引数
+- `!{shell command}` — シェルコマンドの実行結果を埋め込み
+- `@{file}` — ファイル内容を埋め込み
+
+**優先度**: Project `.gemini/commands/` > User `~/.gemini/commands/` > Extensions（同名衝突時に `<extension>.<command>` にプレフィックス）。
+
+## Hooks
+
+2025 年末〜2026 年初頭に追加。`settings.json` の `hooks` セクション。
+
+**対応イベント（11 種類）**:
+
+| カテゴリ | イベント |
+|---|---|
+| セッション | `SessionStart`, `SessionEnd` |
+| エージェント | `BeforeAgent`, `AfterAgent` |
+| モデル | `BeforeModel`, `AfterModel` |
+| ツール | `BeforeToolSelection`, `BeforeTool`, `AfterTool` |
+| コンテキスト | `PreCompress` |
+| その他 | `Notification` |
+
+exit 0 = success、exit 2 = block。環境変数 `GEMINI_PROJECT_DIR`, `GEMINI_SESSION_ID`, `CLAUDE_PROJECT_DIR`（互換エイリアス）が渡される。
+
+**管理コマンド**: `/hooks panel`, `/hooks enable-all` など。
+
+**セキュリティ**: プロジェクト hooks はフィンガープリントされ、変更時に警告が出る。
+
+## Extensions
+
+`gemini-extension.json` で定義するパッケージ。含められるもの: `commands/`, `hooks/hooks.json`, `skills/`, `agents/`, `policies/`, `themes/`, `mcpServers`, `contextFileName`, `excludeTools`, `settings`。
+
+```bash
+gemini extensions install <github-url>
+```
 
 ## エージェント統合
 
