@@ -143,7 +143,7 @@ ruff check --fix .  # 自動修正
 ruff format .       # format (black 互換)
 ```
 
-`[tool.ruff.lint.select = ["E", "F", "I", "UP", "B", "SIM"]]` のようにルールを選択。黒/pylint を個別に使う場面は減っている。
+`[tool.ruff.lint]` セクションの `select = ["E", "F", "I", "UP", "B", "SIM"]` のようにルールを選択。black / pylint を個別に使う場面は減っている。
 
 ## テスト: pytest
 
