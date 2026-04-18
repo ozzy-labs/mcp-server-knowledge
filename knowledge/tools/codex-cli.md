@@ -4,7 +4,7 @@ reviewed: 2026-04-18
 
 # Codex CLI
 
-OpenAI が提供するオープンソースのコーディングエージェント CLI。フルスクリーン TUI でコードの読み取り・編集・コマンド実行を行い、マルチエージェント並列処理もサポートする。
+OpenAI が提供するオープンソースのコーディングエージェント CLI。フルスクリーン TUI でコードの読み取り・編集・コマンド実行を行い、マルチエージェント並列処理もサポートする。拡張機構の横断比較は `standards/agent-extensions.md` を参照。
 
 ## インストール
 
@@ -47,8 +47,14 @@ codex "プロンプト"        # ワンショット実行
 | パス | 用途 | Git 管理 |
 |---|---|---|
 | `~/.codex/config.toml` | グローバル設定 | - |
+| `~/.codex/AGENTS.md` / `AGENTS.override.md` | ユーザーグローバル指示 | - |
+| `~/.codex/agents/` | ユーザー subagent 定義 | - |
+| `~/.codex/hooks.json` | ユーザー hooks（experimental） | - |
+| `~/.agents/skills/` | ユーザー skills | - |
 | `AGENTS.md` | プロジェクト固有の指示 | Yes |
-| `.agents/` | スキル・ツール設定 | Yes |
+| `.agents/skills/<name>/SKILL.md` | プロジェクト skills | Yes |
+| `.codex/agents/<name>.md` | プロジェクト subagent 定義 | Yes |
+| `.codex/hooks.json` | プロジェクト hooks（experimental） | Yes |
 
 ### config.toml の主要設定
 
@@ -59,8 +65,8 @@ model = "gpt-5.4"
 # 推論の深さ（minimal, low, medium, high, xhigh）※ xhigh はモデル依存
 model_reasoning_effort = "medium"
 
-# サンドボックス: "macos"（Seatbelt）, "docker", "none"
-sandbox = "macos"
+# サンドボックスモード: "read-only" / "workspace-write" / "danger-full-access"
+sandbox_mode = "workspace-write"
 
 # 承認ポリシー: "untrusted", "on-request", "never"
 approval_policy = "on-request"
@@ -114,17 +120,112 @@ command = "/path/to/notify-script.sh"
 
 ## サンドボックス
 
+`config.toml` の `sandbox_mode` で設定:
+
 | モード | 説明 |
 |---|---|
-| `macos` | macOS Seatbelt でサンドボックス化 |
-| `docker` | Docker コンテナ内で実行 |
-| `none` | サンドボックスなし |
+| `read-only` | 読み取りのみ許可（デフォルト、最も安全） |
+| `workspace-write` | CWD 配下の書き込みを許可（コマンド実行は OS のサンドボックスで制約） |
+| `danger-full-access` | サンドボックスなし。CI / コンテナ内など既に隔離された環境でのみ使用 |
+
+プラットフォーム固有のサンドボックス実装: macOS は Seatbelt、Linux は Landlock/seccomp。Docker / Podman コンテナ内で動かす場合は `danger-full-access` + 外側のコンテナ隔離を推奨。
+
+## Skills
+
+`Agent Skills` オープン標準に準拠。`SKILL.md` を配置して読み込ませる。
+
+```text
+.agents/skills/code-review/
+├── SKILL.md               # 必須。frontmatter + 本文
+├── agents/openai.yaml     # Codex 固有メタ（任意）
+├── scripts/               # （任意）
+├── references/            # （任意）
+└── assets/                # （任意）
+```
+
+**探索順**:
+
+1. `.agents/skills/`（CWD → 親 → リポジトリルート）
+2. `$HOME/.agents/skills/`
+3. `/etc/codex/skills/`（管理者）
+4. 組み込み
+
+**SKILL.md frontmatter**:
+
+```markdown
+---
+name: code-review
+description: Review code for security and best practices
+---
+
+コードレビュー時は...
+```
+
+| フィールド | 必須 | 説明 |
+|---|---|---|
+| `name` | Yes | スキル名 |
+| `description` | Yes | 発見の鍵 |
+
+**呼び出し**: `/skills` コマンド、`$skill-name` メンション、または暗黙的発火。
+
+### Custom Prompts（deprecated）
+
+旧 `~/.codex/prompts/*.md`（トップレベルのみ）は廃止予定。新規は Skills を使う。
+
+## サブエージェント
+
+`~/.codex/agents/`（personal）または `.codex/agents/`（project）に配置。**明示的にユーザーがリクエストしない限り spawn しない**（Claude Code の自動委譲と対照的）。
+
+`config.toml` で制御:
+
+```toml
+[agents]
+max_threads = 6       # 並列 spawn 上限
+max_depth = 1         # 再帰の深さ
+job_max_runtime_seconds = 600
+```
+
+**カスタム agent file の frontmatter**:
+
+| フィールド | 必須 | 説明 |
+|---|---|---|
+| `name` | Yes | エージェント識別子 |
+| `description` | Yes | 用途説明 |
+| `developer_instructions` | Yes | システムプロンプト |
+| `nickname_candidates` | - | 呼び出し用エイリアス |
+| `model` | - | 使用モデル |
+| `model_reasoning_effort` | - | 推論深さ |
+| `sandbox_mode` | - | サンドボックス上書き |
+| `mcp_servers` | - | 利用可能な MCP |
+| `skills.config` | - | preload スキル |
+
+**ビルトイン**: `default` / `worker` / `explorer`。
+
+## Hooks（experimental）
+
+`[features] codex_hooks = true` で有効化。`~/.codex/hooks.json` または `<repo>/.codex/hooks.json`。
+
+**対応イベント（5 種類）**:
+
+| イベント | タイミング |
+|---|---|
+| `SessionStart` | セッション開始 |
+| `PreToolUse` | ツール実行前（Bash のみ）。`permissionDecision: deny` または exit 2 でブロック |
+| `PostToolUse` | ツール実行後 |
+| `UserPromptSubmit` | ユーザー発話直前 |
+| `Stop` | セッション終了 |
+
+**注意**: Windows は一時的にサポート外。仕様は experimental 扱いで流動的。
 
 ## エージェント統合
 
 ### 指示ファイル
 
 `AGENTS.md` をプロジェクトルートに配置。Codex CLI が自動で読み込む。
+
+- ユーザーグローバル: `~/.codex/AGENTS.override.md` → `~/.codex/AGENTS.md` の順で読む
+- プロジェクト: Git リポジトリルートから CWD まで階層的に読み、近いほど優先
+- 合計 `project_doc_max_bytes`（デフォルト 32 KiB）で打ち切り
 
 ### MCP サーバー登録
 

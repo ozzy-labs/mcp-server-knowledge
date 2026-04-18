@@ -122,12 +122,20 @@ claude --help             # ヘルプ表示
 
 ## フックシステム
 
-ツール実行の前後に自動処理を挟む仕組み。`command`（シェル実行）と `prompt`（LLM 評価）の 2 種類。
+ツール実行やセッションイベントの前後に自動処理を挟む仕組み。ハンドラ種別は `command`（シェル実行）/ `prompt`（LLM 評価）/ `http`（HTTP POST）/ `agent`（サブエージェント呼び出し）の 4 種類。
 
-| イベント | タイミング |
+**主要イベント**（約 23 種）:
+
+| カテゴリ | イベント |
 |---|---|
-| `PreToolUse` | ツール実行前（許可/拒否/入力変更が可能） |
-| `PostToolUse` | ツール実行後（結果の検証・フィードバック） |
+| セッション | `SessionStart`, `SessionEnd` |
+| ターン | `UserPromptSubmit`, `Stop`, `StopFailure` |
+| ツール | `PreToolUse`, `PermissionRequest`, `PermissionDenied`, `PostToolUse`, `PostToolUseFailure` |
+| サブエージェント | `SubagentStart`, `SubagentStop` |
+| タスク | `TeammateIdle`, `TaskCreated`, `TaskCompleted` |
+| 非同期 | `Notification`, `CwdChanged`, `FileChanged`, `InstructionsLoaded`, `ConfigChange` |
+| コンテキスト | `PreCompact`, `PostCompact` |
+| MCP / worktree | `Elicitation`, `ElicitationResult`, `WorktreeCreate`, `WorktreeRemove` |
 
 ```json
 {
@@ -146,7 +154,7 @@ claude --help             # ヘルプ表示
 }
 ```
 
-フック応答: exit 0 = 許可、exit 2 = 拒否（stderr がエラーメッセージとしてフィードバック）。
+**応答**: exit 0 = 許可、exit 2 = 拒否（stderr がエラーメッセージとしてフィードバック）。PreToolUse では `hookSpecificOutput.permissionDecision` で `allow` / `deny` / `ask` / `defer`（2025 年末追加）を返してより細かく制御できる。`async`, `asyncRewake`, `statusMessage`, `once`, `shell` フィールドあり。
 
 ## サブエージェント
 
@@ -167,11 +175,22 @@ tools: Grep Glob Read
 |---|---|
 | `name` | エージェント識別子（必須） |
 | `description` | 自動委譲の判定に使用（必須） |
-| `model` | 使用モデル（省略時は親セッションを継承） |
-| `tools` | 許可ツール（空白/改行区切り） |
-| `skip-tools` | 拒否ツール |
-| `system-prompt` | システムプロンプト上書き |
+| `model` | 使用モデル（`inherit` で親セッション継承） |
+| `tools` | 許可ツール（カンマまたは空白区切り） |
+| `disallowedTools` | 拒否ツール |
+| `permissionMode` | `default` / `acceptEdits` / `auto` / `dontAsk` / `bypassPermissions` / `plan` |
+| `maxTurns` | 最大ターン数 |
 | `skills` | プリロードするスキル |
+| `mcpServers` | 利用可能な MCP サーバー |
+| `hooks` | このエージェント内で有効な hooks |
+| `memory` | `user` / `project` / `local` — `<scope>/agent-memory/<name>/` に永続化 |
+| `isolation` | `worktree` で Git worktree に隔離 |
+| `background` | `true` で非同期起動 |
+| `effort` | 推論の深さ |
+| `color` | UI 色分け |
+| `initialPrompt` | 起動直後に流す指示 |
+
+**本文は system prompt として扱われる**（`system-prompt` フィールドは存在しない）。
 
 **呼び出し方**:
 
@@ -179,7 +198,19 @@ tools: Grep Glob Read
 - **`/agents` コマンド**: インタラクティブに選択
 - **Agent ツール経由**: スキル定義で `context: fork` + `agent: <name>` を指定した場合
 
-**スコープ優先**: Project (`.claude/agents/`) > User (`~/.claude/agents/`)。
+**スコープ優先**（高→低）: Managed settings > `--agents` CLI flag (JSON) > Project (`.claude/agents/`) > User (`~/.claude/agents/`) > Plugin。
+
+**ビルトインサブエージェント**:
+
+| 名前 | 用途 |
+|---|---|
+| `Explore` | Haiku ベース。read-only の高速コード探索 |
+| `Plan` | 親モデル継承、read-only。実装計画を立てる |
+| `general-purpose` | 汎用的な委譲先 |
+| `statusline-setup` | ステータスライン設定の対話 |
+| `Claude Code Guide` | Claude Code の機能に関する質問対応 |
+
+v2.1.63 以降、旧名 `Task` ツールは `Agent` にリネームされている（エイリアスは残存）。
 
 ## スキル
 
