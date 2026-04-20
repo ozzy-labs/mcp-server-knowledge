@@ -234,7 +234,7 @@ job_max_runtime_seconds = 600
 ```toml
 [mcp_servers.knowledge]
 command = "node"
-args = ["/path/to/mcp-server-knowledge/dist/index.js"]
+args = ["/path/to/knowledge-mcp-server/dist/index.js"]
 ```
 
 ## 制限事項

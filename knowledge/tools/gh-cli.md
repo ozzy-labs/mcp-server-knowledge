@@ -211,7 +211,7 @@ gh api graphql -f query='
       }
     }
   }
-' -F owner=ozzy-labs -F repo=mcp-server-knowledge
+' -F owner=ozzy-labs -F repo=knowledge-mcp-server
 
 # ページング
 gh api --paginate repos/org/repo/issues

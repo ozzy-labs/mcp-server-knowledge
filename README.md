@@ -1,10 +1,10 @@
-# mcp-server-knowledge
+# knowledge-mcp-server
 
 検証済みの最新ナレッジを MCP サーバーとして AI エージェントに提供するローカルサーバー。
 
 ## 解決する課題
 
-AI エージェントの学習データは急速に陳腐化する。セッションごとに最新情報を調査すると時間とコンテキストウィンドウを浪費する。mcp-server-knowledge は検証済みのナレッジを MCP ツールで即時提供し、この問題を解消する。
+AI エージェントの学習データは急速に陳腐化する。セッションごとに最新情報を調査すると時間とコンテキストウィンドウを浪費する。knowledge-mcp-server は検証済みのナレッジを MCP ツールで即時提供し、この問題を解消する。
 
 ## MCP ツール
 
@@ -28,10 +28,12 @@ pnpm run build
 
 各エージェントのグローバル MCP 設定に一度登録する。
 
+> **旧リポジトリ名からの移行**: 旧名 `mcp-server-knowledge` を参照している既存の MCP 設定は、各エージェントの設定ファイルで `/path/to/knowledge-mcp-server/` にパスを置換してください（`@ozzylabs/mcp-server-knowledge` を npm から入れている場合は `@ozzylabs/knowledge-mcp-server` にパッケージ名も差し替え）。旧 npm パッケージは `npm deprecate` で案内済み。
+
 ### Claude Code
 
 ```bash
-claude mcp add --transport stdio knowledge --scope user -- node /path/to/mcp-server-knowledge/dist/index.js
+claude mcp add --transport stdio knowledge --scope user -- node /path/to/knowledge-mcp-server/dist/index.js
 ```
 
 `~/.claude.json` の top-level `mcpServers` に登録される。
@@ -42,7 +44,7 @@ claude mcp add --transport stdio knowledge --scope user -- node /path/to/mcp-ser
 # ~/.codex/config.toml
 [mcp_servers.knowledge]
 command = "node"
-args = ["/path/to/mcp-server-knowledge/dist/index.js"]
+args = ["/path/to/knowledge-mcp-server/dist/index.js"]
 ```
 
 ### Gemini CLI
@@ -53,7 +55,7 @@ args = ["/path/to/mcp-server-knowledge/dist/index.js"]
   "mcpServers": {
     "knowledge": {
       "command": "node",
-      "args": ["/path/to/mcp-server-knowledge/dist/index.js"]
+      "args": ["/path/to/knowledge-mcp-server/dist/index.js"]
     }
   }
 }
@@ -67,7 +69,7 @@ args = ["/path/to/mcp-server-knowledge/dist/index.js"]
   "mcpServers": {
     "knowledge": {
       "command": "node",
-      "args": ["/path/to/mcp-server-knowledge/dist/index.js"]
+      "args": ["/path/to/knowledge-mcp-server/dist/index.js"]
     }
   }
 }
