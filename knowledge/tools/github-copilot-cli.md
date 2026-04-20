@@ -220,7 +220,7 @@ copilot plugin install ./path     # ローカル
   "mcpServers": {
     "knowledge": {
       "command": "node",
-      "args": ["/path/to/mcp-server-knowledge/dist/index.js"]
+      "args": ["/path/to/knowledge-mcp-server/dist/index.js"]
     }
   }
 }

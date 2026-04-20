@@ -143,7 +143,7 @@ server.registerTool(
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("mcp-server-knowledge running on stdio");
+  console.error("knowledge-mcp-server running on stdio");
 }
 
 main().catch((error) => {
