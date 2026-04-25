@@ -1,8 +1,8 @@
 name: Sync skills
 
-# Renovate (skills-sync preset) が .dev-config/sync.yaml の skills_commit を更新する。
+# Renovate (skills-sync preset) が .commons/sync.yaml の skills_commit を更新する。
 # 本ワークフローは skills_commit に対応する skills repo の adapter 出力（dist/{adapter}/）を
-# .dev-config/sync.yaml の skills_adapters opt-in に従って各エージェント向け配置に同期し、
+# .commons/sync.yaml の skills_adapters opt-in に従って各エージェント向け配置に同期し、
 # 差分があれば PR を作成する。
 #
 # 役割分担:
@@ -25,7 +25,7 @@ on:
   push:
     branches: [main]
     paths:
-      - .dev-config/sync.yaml
+      - .commons/sync.yaml
   workflow_dispatch:
 
 permissions:
@@ -44,9 +44,9 @@ jobs:
         id: read
         run: |
           set -euo pipefail
-          SHA=$(grep -E '^skills_commit:' .dev-config/sync.yaml | awk '{print $2}')
+          SHA=$(grep -E '^skills_commit:' .commons/sync.yaml | awk '{print $2}')
           if [[ -z "${SHA}" ]]; then
-            echo "Error: skills_commit not found in .dev-config/sync.yaml" >&2
+            echo "Error: skills_commit not found in .commons/sync.yaml" >&2
             exit 1
           fi
           echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
@@ -94,7 +94,7 @@ jobs:
             [ozzy-labs/skills](https://github.com/ozzy-labs/skills) at
             `${{ steps.read.outputs.sha }}`.
 
-            Adapter sources（`.dev-config/sync.yaml` の `skills_adapters` opt-in に従う）:
+            Adapter sources（`.commons/sync.yaml` の `skills_adapters` opt-in に従う）:
             - claude-code: `dist/claude-code/.claude/skills/` → `.claude/skills/`
             - codex-cli: `dist/codex-cli/.agents/skills/` → `.agents/skills/`、
               `AGENTS.md.snippet` → `AGENTS.md`（marker 間置換）
