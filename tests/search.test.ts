@@ -35,7 +35,7 @@ describe("searchKnowledge", () => {
     const results = await searchKnowledge(FIXTURES_DIR, "cross-platform");
     const toolB = results.find((r) => r.path === "tools/sample-tool-b");
     expect(toolB).toBeDefined();
-    expect(toolB!.matches.length).toBeGreaterThan(0);
-    expect(toolB!.matches[0]).toContain("Cross-platform");
+    expect(toolB?.matches.length).toBeGreaterThan(0);
+    expect(toolB?.matches[0]).toContain("Cross-platform");
   });
 });
