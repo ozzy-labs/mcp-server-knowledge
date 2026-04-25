@@ -66,4 +66,4 @@ pnpm run build             # プロダクションビルド
 | Claude Code | `CLAUDE.md`, `.claude/` |
 | Gemini CLI | `.gemini/settings.json` → `AGENTS.md` |
 | Codex CLI | `AGENTS.md` + `.agents/skills/` |
-| GitHub Copilot | `AGENTS.md` + `.agents/skills/` |
+| GitHub Copilot | `.github/copilot-instructions.md` → `AGENTS.md` |
