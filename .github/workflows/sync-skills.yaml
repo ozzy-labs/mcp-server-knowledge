@@ -96,9 +96,12 @@ jobs:
 
             Adapter sources（`.dev-config/sync.yaml` の `skills_adapters` opt-in に従う）:
             - claude-code: `dist/claude-code/.claude/skills/` → `.claude/skills/`
-            - codex-cli: `dist/codex-cli/.agents/skills/` → `.agents/skills/`、`AGENTS.md.snippet` → `AGENTS.md`（marker 間置換）
-            - gemini-cli: `dist/gemini-cli/.gemini/settings.json` → `.gemini/settings.json`、`AGENTS.md.snippet` → `AGENTS.md`（marker 間置換）
-            - copilot: `dist/copilot/.github/copilot-instructions.md.snippet` → `.github/copilot-instructions.md`（marker 間置換）
+            - codex-cli: `dist/codex-cli/.agents/skills/` → `.agents/skills/`、
+              `AGENTS.md.snippet` → `AGENTS.md`（marker 間置換）
+            - gemini-cli: `dist/gemini-cli/.gemini/settings.json` → `.gemini/settings.json`、
+              `AGENTS.md.snippet` → `AGENTS.md`（marker 間置換）
+            - copilot: `dist/copilot/.github/copilot-instructions.md.snippet`
+              → `.github/copilot-instructions.md`（marker 間置換）
 
             Triggered by the `Sync skills` workflow. Review the diff and merge when appropriate.
           labels: chore,skills-sync
