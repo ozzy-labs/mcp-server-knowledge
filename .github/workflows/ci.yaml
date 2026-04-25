@@ -14,13 +14,6 @@ permissions:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    env:
-      # trivy is a local-only security scanner (lefthook pre-commit / dev use).
-      # CI lint/test does not need it, and resolving aqua:aquasecurity/trivy
-      # releases via GitHub API has been hitting 403 (secondary rate limit /
-      # auth scope) even with GITHUB_TOKEN set. Skip install in CI entirely.
-      # See handbook#84 / commons#76.
-      MISE_DISABLE_TOOLS: trivy
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
@@ -35,6 +28,12 @@ jobs:
           # Belt-and-suspenders: some mise backends (aqua) read GITHUB_TOKEN
           # from env rather than the action input.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # trivy is a local-only security scanner (lefthook pre-commit / dev use).
+          # CI lint/test does not need it, and resolving aqua:aquasecurity/trivy
+          # releases via GitHub API has been hitting 403 (secondary rate limit /
+          # auth scope) even with GITHUB_TOKEN set. Skip install in CI entirely.
+          # See handbook#84 / commons#76.
+          MISE_DISABLE_TOOLS: trivy
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
