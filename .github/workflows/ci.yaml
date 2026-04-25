@@ -1,0 +1,60 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4
+        with:
+          install: true
+          cache: true
+          # Explicit token: authenticates mise's aqua / GitHub release lookups
+          # (defaults exist but normalize for clarity and future repo rollout).
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          # Belt-and-suspenders: some mise backends (aqua) read GITHUB_TOKEN
+          # from env rather than the action input.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # trivy is a local-only security scanner (lefthook pre-commit / dev use).
+          # CI lint/test does not need it, and resolving aqua:aquasecurity/trivy
+          # releases via GitHub API has been hitting 403 (secondary rate limit /
+          # auth scope) even with GITHUB_TOKEN set. Skip install in CI entirely.
+          # See handbook#84 / commons#76.
+          MISE_DISABLE_TOOLS: trivy
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (Biome)
+        run: biome check .
+
+      - name: Lint (Markdown)
+        run: markdownlint-cli2 '**/*.md' '#**/node_modules' '#**/dist'
+
+      - name: Lint (YAML)
+        run: yamllint -c .yamllint.yaml .
+
+      - name: Lint (Actions)
+        run: actionlint
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Test
+        run: pnpm run test
