@@ -6,7 +6,6 @@
       "tests/**",
       ".vscode/**",
       ".github/**",
-      ".gemini/**",
       "*.json",
       "*.jsonc",
       "!**/node_modules",
