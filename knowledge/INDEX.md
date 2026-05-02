@@ -2,7 +2,7 @@
 
 <!-- このファイルは `scripts/generate-index.mjs` によって自動生成されます。手動で編集せず、対応する記事を修正してから再生成してください。 -->
 
-## `tools/` — CLI・SDK・ライブラリ (37)
+## `tools/` — CLI・SDK・ライブラリ (38)
 
 | 記事 | reviewed | 概要 |
 |---|---|---|
@@ -42,6 +42,7 @@
 | [Vitest](tools/vitest.md) | 2026-04-18 | Vite ネイティブの高速テストランナー。Jest 互換の API で ESM・TypeScript・JSX をネイティブに扱える。HMR ベースの watch モードが特徴。 |
 | [yamlfmt](tools/yamlfmt.md) | 2026-04-18 | Google 製の YAML フォーマッタ。Go で書かれた単一バイナリ。インデント・行末・キー順などを一貫した形に整形する。yamllint（検証）と対になる。 |
 | [yamllint](tools/yamllint.md) | 2026-04-18 | YAML ファイルの構文と**スタイル**を検証する Linter。Python 製。インデント、行長、コメントフォーマット、truthy 値の扱い等、YAML 特有の落とし穴を検出する。 |
+| [yq](tools/yq.md) | 2026-05-03 | YAML / JSON / XML / INI / CSV / TSV / properties を扱うコマンドライン処理ツール。`jq` の YAML 版的な位置付けだが、**実装が 2 つあり挙動が大きく違う**。本記事では事実上の標準である **Mike Farah 版（Go 製、`mikefarah/yq`）** を扱う。`tools/jq.md` の知識を YAML に拡張する。 |
 | [Zod](tools/zod.md) | 2026-04-18 | TypeScript ファーストのスキーマ宣言・バリデーションライブラリ。ランタイム検証と型推論を同じスキーマで実現する。MCP SDK のツール入力スキーマなど、本リポジトリでも中心的に使用。 |
 
 ## `standards/` — 規約・設計原則・プロトコル (12)
@@ -77,4 +78,4 @@
 | [Docker](platforms/docker.md) | 2026-04-18 | アプリケーションをコンテナ（軽量な隔離環境）として配布・実行するプラットフォーム。OCI (Open Container Initiative) 仕様準拠の runtime + CLI + イメージレジストリ + Compose のエコシステム。 |
 | [GitHub Actions](platforms/github-actions.md) | 2026-04-18 | GitHub ネイティブの CI/CD プラットフォーム。ワークフローを YAML で定義し、リポジトリへのイベント（push, PR, schedule 等）に応じて実行する。`gh` CLI と並んで GitHub 運用の中核。 |
 
-_Total: 55 articles._
+_Total: 56 articles._
