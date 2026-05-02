@@ -2,7 +2,7 @@
 
 <!-- このファイルは `scripts/generate-index.mjs` によって自動生成されます。手動で編集せず、対応する記事を修正してから再生成してください。 -->
 
-## `tools/` — CLI・SDK・ライブラリ (36)
+## `tools/` — CLI・SDK・ライブラリ (37)
 
 | 記事 | reviewed | 概要 |
 |---|---|---|
@@ -32,6 +32,7 @@
 | [Prettier](tools/prettier.md) | 2026-04-18 | 主観的なコードフォーマッタ。元のスタイルを破棄して一貫した形に再出力する。2026-04 時点では **Biome がまだ整形に対応していない Markdown / YAML / HTML / Vue / Svelte** などを補完する役割で残り続けている。Biome を採用したプロジェクトでも、非 JS 資産に Prettier を併用するハイブリッド構成が一般的。 |
 | [release-please](tools/release-please.md) | 2026-04-18 | Google が開発するリリース自動化ツール。Conventional Commits の履歴から次のバージョンを決定し、`CHANGELOG.md` と `package.json` 等を更新した **単一の「Release PR」** を常に最新に保つ。Release PR をマージすると GitHub Release と Git タグが作成される。`standards/conventional-commits.md` + `standards/semver.md` + `tools/commitlint.md` と四点セットで使うのが定番。 |
 | [Renovate](tools/renovate.md) | 2026-04-18 | 依存関係を自動で最新に保つボット。PR を作って更新を提案し、CI が通れば自動マージまで可能。Dependabot より設定の自由度と対応エコシステムが広い。Mend が開発・運用。 |
+| [ripgrep](tools/ripgrep.md) | 2026-05-03 | `grep` 互換の高速検索ツール（バイナリ名 `rg`）。Rust 製で、`.gitignore` を既定で尊重し、並列ファイル探索 + SIMD 加速で `grep -r` / `ag` / `ack` を大きく上回る速度を出す。AI エージェントがコードベースを探索するときの第一選択。`grep` 知識のままだと `--type` の名前体系・正規表現エンジン・ignore ファイル挙動で誤りやすいので押さえておく。 |
 | [ShellCheck](tools/shellcheck.md) | 2026-04-18 | Bash / POSIX sh スクリプトの静的解析ツール。よくあるバグ・移植性問題・クオート抜けなど、エディタと目視では拾いきれない問題を検出する。Haskell 製。 |
 | [shfmt](tools/shfmt.md) | 2026-04-18 | Go 製のシェルスクリプトフォーマッタ。bash / mksh / POSIX sh のパース + 整形を一貫して行う。shellcheck と並んで shell スクリプト運用のデファクトツール。 |
 | [taplo](tools/taplo.md) | 2026-04-18 | Rust 製の TOML フォーマッタ + バリデータ + 言語サーバー。`pyproject.toml` / `Cargo.toml` / `.mise.toml` など TOML 採用が広がるにつれて有用性が増した。 |
@@ -76,4 +77,4 @@
 | [Docker](platforms/docker.md) | 2026-04-18 | アプリケーションをコンテナ（軽量な隔離環境）として配布・実行するプラットフォーム。OCI (Open Container Initiative) 仕様準拠の runtime + CLI + イメージレジストリ + Compose のエコシステム。 |
 | [GitHub Actions](platforms/github-actions.md) | 2026-04-18 | GitHub ネイティブの CI/CD プラットフォーム。ワークフローを YAML で定義し、リポジトリへのイベント（push, PR, schedule 等）に応じて実行する。`gh` CLI と並んで GitHub 運用の中核。 |
 
-_Total: 54 articles._
+_Total: 55 articles._
