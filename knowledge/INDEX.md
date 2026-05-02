@@ -2,7 +2,7 @@
 
 <!-- このファイルは `scripts/generate-index.mjs` によって自動生成されます。手動で編集せず、対応する記事を修正してから再生成してください。 -->
 
-## `tools/` — CLI・SDK・ライブラリ (30)
+## `tools/` — CLI・SDK・ライブラリ (31)
 
 | 記事 | reviewed | 概要 |
 |---|---|---|
@@ -32,6 +32,7 @@
 | [taplo](tools/taplo.md) | 2026-04-18 | Rust 製の TOML フォーマッタ + バリデータ + 言語サーバー。`pyproject.toml` / `Cargo.toml` / `.mise.toml` など TOML 採用が広がるにつれて有用性が増した。 |
 | [Trivy](tools/trivy.md) | 2026-04-18 | Aqua Security が提供する包括的なセキュリティスキャナ。コンテナイメージ・ファイルシステム・IaC・Kubernetes マニフェストに対して、脆弱性 (CVE)・シークレット・設定ミス・ライセンスの問題を検出する。Go 製の単一バイナリ。 |
 | [tsdown](tools/tsdown.md) | 2026-04-18 | Rolldown（Rust 製のバンドラ）+ Oxc をベースにした TypeScript ライブラリ向けビルドツール。`tsup` の事実上の後継として Rolldown チームが開発している。ESM ファースト、`.d.ts` 自動生成、コード分割を標準で備える。 |
+| [uv](tools/uv.md) | 2026-05-03 | Astral 製の Python パッケージ・プロジェクトマネージャ。Rust で書かれており、`pip` / `pip-tools` / `pipx` / `poetry` / `pyenv` / `twine` / `virtualenv` を 1 つに統合する。`pip` 比 10-100 倍速をうたう。Python 自体のインストールから依存解決、CLI ツール管理、ビルド・publish まで担う。`languages/python.md` の依存・バージョン管理項を実務レベルで補完する。 |
 | [Vitest](tools/vitest.md) | 2026-04-18 | Vite ネイティブの高速テストランナー。Jest 互換の API で ESM・TypeScript・JSX をネイティブに扱える。HMR ベースの watch モードが特徴。 |
 | [yamlfmt](tools/yamlfmt.md) | 2026-04-18 | Google 製の YAML フォーマッタ。Go で書かれた単一バイナリ。インデント・行末・キー順などを一貫した形に整形する。yamllint（検証）と対になる。 |
 | [yamllint](tools/yamllint.md) | 2026-04-18 | YAML ファイルの構文と**スタイル**を検証する Linter。Python 製。インデント、行長、コメントフォーマット、truthy 値の扱い等、YAML 特有の落とし穴を検出する。 |
@@ -69,4 +70,4 @@
 | [Docker](platforms/docker.md) | 2026-04-18 | アプリケーションをコンテナ（軽量な隔離環境）として配布・実行するプラットフォーム。OCI (Open Container Initiative) 仕様準拠の runtime + CLI + イメージレジストリ + Compose のエコシステム。 |
 | [GitHub Actions](platforms/github-actions.md) | 2026-04-18 | GitHub ネイティブの CI/CD プラットフォーム。ワークフローを YAML で定義し、リポジトリへのイベント（push, PR, schedule 等）に応じて実行する。`gh` CLI と並んで GitHub 運用の中核。 |
 
-_Total: 47 articles._
+_Total: 48 articles._
