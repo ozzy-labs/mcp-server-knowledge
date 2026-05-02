@@ -211,13 +211,13 @@ copilot plugin install ./path     # ローカル
 
 ### 指示ファイル
 
-優先順位（自動読み込み）:
+読み込み対象:
 
 - **個人グローバル**: `~/.copilot/copilot-instructions.md` — 全プロジェクトに適用
 - **プロジェクト**: `AGENTS.md` — リポジトリルート / CWD / `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` 環境変数（カンマ区切り）で指定したディレクトリ
 - **追加**: `.github/instructions/**/*.instructions.md` — `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` 配下も含めて自動読み込み
 
-Copilot CLI が起動時にこれらをすべて連結してコンテキストに載せる。
+これらは Copilot CLI が自動で読み込む。
 
 ### MCP サーバー登録
 
