@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-02
 ---
 
 # GitHub Copilot CLI
@@ -62,9 +62,11 @@ copilot                  # インタラクティブセッション開始
 |---|---|---|
 | `~/.copilot/config.json` | グローバル設定 | - |
 | `~/.copilot/mcp-config.json` | グローバル MCP サーバー設定 | - |
+| `~/.copilot/copilot-instructions.md` | 個人グローバル指示（全プロジェクト共通） | - |
 | `~/.copilot/agents/<name>.agent.md` | ユーザー custom agent | - |
 | `~/.copilot/skills/<name>/SKILL.md` | ユーザー skill | - |
-| `AGENTS.md` | プロジェクト固有の指示 | Yes |
+| `AGENTS.md` | プロジェクト固有の指示（repo root / CWD / `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` で指定したディレクトリで読まれる） | Yes |
+| `.github/instructions/**/*.instructions.md` | プロジェクト追加指示（自動読み込み） | Yes |
 | `.github/agents/<name>.agent.md` | プロジェクト custom agent | Yes |
 | `.github/skills/<name>/SKILL.md` | プロジェクト skill（`.claude/skills/` / `.agents/skills/` も読む） | Yes |
 | `.github/hooks/hooks.json` | プロジェクト hooks | Yes |
@@ -209,7 +211,13 @@ copilot plugin install ./path     # ローカル
 
 ### 指示ファイル
 
-`AGENTS.md` をプロジェクトルートに配置。Copilot CLI が自動で読み込む。
+読み込み対象:
+
+- **個人グローバル**: `~/.copilot/copilot-instructions.md` — 全プロジェクトに適用
+- **プロジェクト**: `AGENTS.md` — リポジトリルート / CWD / `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` 環境変数（カンマ区切り）で指定したディレクトリ
+- **追加**: `.github/instructions/**/*.instructions.md` — `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` 配下も含めて自動読み込み
+
+これらは Copilot CLI が自動で読み込む。
 
 ### MCP サーバー登録
 
