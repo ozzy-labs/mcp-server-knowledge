@@ -2,7 +2,7 @@
 
 <!-- このファイルは `scripts/generate-index.mjs` によって自動生成されます。手動で編集せず、対応する記事を修正してから再生成してください。 -->
 
-## `tools/` — CLI・SDK・ライブラリ (31)
+## `tools/` — CLI・SDK・ライブラリ (32)
 
 | 記事 | reviewed | 概要 |
 |---|---|---|
@@ -18,6 +18,7 @@
 | [GitHub Copilot CLI](tools/github-copilot-cli.md) | 2026-05-02 | GitHub が提供する AI コーディングエージェント CLI。GitHub アカウントと深く統合され、コードの編集・テスト実行・Git ワークフローをエージェントが自律的に行う。2026-02-25 に GA。拡張機構の横断比較は `standards/agent-extensions.md` を参照。 |
 | [Gitleaks](tools/gitleaks.md) | 2026-04-18 | Git リポジトリに誤コミットされたシークレット（API キー、トークン、秘密鍵）を検出する CLI。pre-commit や CI で実行する想定。Go 製の単一バイナリ。 |
 | [jq](tools/jq.md) | 2026-04-18 | JSON を処理するコマンドラインフィルタ。`grep` / `sed` / `awk` の JSON 版。API 応答の整形、設定ファイルの抽出、CI スクリプトでの値取り出しに必須。C 製の単一バイナリ。 |
+| [just](tools/just.md) | 2026-05-03 | プロジェクト固有のコマンドを `justfile` に集約して実行するコマンドランナー。**ビルドシステムではない**ので make の依存解決・タイムスタンプ追跡を持たず、その分シンプル。`.PHONY` 不要、引数・デフォルト値・属性が宣言的に書ける。AI エージェントが Makefile 風に書いて落とし穴に嵌まりやすい領域なので、make との差分を押さえることが重要。 |
 | [lefthook](tools/lefthook.md) | 2026-04-18 | Go で書かれた高速な Git フック管理ツール。並列実行、ファイルフィルタ、ステージ更新、複数リポジトリ横断の設定共有をサポート。husky / pre-commit の置き換えとして採用が進む。 |
 | [markdownlint](tools/markdownlint.md) | 2026-04-18 | Markdown の構文・スタイルを検証する Linter。`markdownlint-cli2` が現行推奨 CLI。ルール体系は [CommonMark](https://commonmark.org/) + GitHub Flavored Markdown 準拠。 |
 | [MCP TypeScript SDK](tools/mcp-typescript-sdk.md) | 2026-04-18 | `@modelcontextprotocol/sdk` — Model Context Protocol のサーバー・クライアント両方を実装する公式 TypeScript SDK。本リポジトリもこれを利用している。 |
@@ -70,4 +71,4 @@
 | [Docker](platforms/docker.md) | 2026-04-18 | アプリケーションをコンテナ（軽量な隔離環境）として配布・実行するプラットフォーム。OCI (Open Container Initiative) 仕様準拠の runtime + CLI + イメージレジストリ + Compose のエコシステム。 |
 | [GitHub Actions](platforms/github-actions.md) | 2026-04-18 | GitHub ネイティブの CI/CD プラットフォーム。ワークフローを YAML で定義し、リポジトリへのイベント（push, PR, schedule 等）に応じて実行する。`gh` CLI と並んで GitHub 運用の中核。 |
 
-_Total: 48 articles._
+_Total: 49 articles._
