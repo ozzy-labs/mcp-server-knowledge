@@ -42,7 +42,7 @@
 | [yamllint](tools/yamllint.md) | 2026-04-18 | YAML ファイルの構文と**スタイル**を検証する Linter。Python 製。インデント、行長、コメントフォーマット、truthy 値の扱い等、YAML 特有の落とし穴を検出する。 |
 | [Zod](tools/zod.md) | 2026-04-18 | TypeScript ファーストのスキーマ宣言・バリデーションライブラリ。ランタイム検証と型推論を同じスキーマで実現する。MCP SDK のツール入力スキーマなど、本リポジトリでも中心的に使用。 |
 
-## `standards/` — 規約・設計原則・プロトコル (11)
+## `standards/` — 規約・設計原則・プロトコル (12)
 
 | 記事 | reviewed | 概要 |
 |---|---|---|
@@ -54,6 +54,7 @@
 | [Markdown 執筆スタイル（本リポジトリ向け）](standards/markdown-style.md) | 2026-04-18 | この knowledge base の記事を書くときの執筆規約。AI エージェントが新規記事を追加する・既存記事を更新する際の一貫性を保つため。 |
 | [Model Context Protocol (MCP)](standards/mcp-protocol.md) | 2026-04-18 | Anthropic が 2024 年に発表したオープン規格。AI エージェント（クライアント）と外部コンテキスト・ツール（サーバー）を標準化されたプロトコルで接続する。USB-C のように「1 本のインタフェースで多様な周辺機器につなぐ」イメージ。 |
 | [マルチエージェント対応リポジトリの設計](standards/multi-agent-repo.md) | 2026-04-18 | 1 つのリポジトリを Claude Code / Codex CLI / Gemini CLI / GitHub Copilot CLI のいずれでも扱えるようにする設計指針。拡張機構そのものの仕様は `standards/agent-extensions.md`、共通指示ファイルは `standards/agents-md.md` を参照。 |
+| [複数リポジトリ間の設定同期](standards/multi-repo-config-sync.md) | 2026-05-03 | `.editorconfig` / `lefthook` / `biome.json` / `.github/workflows/` / エージェント設定 / Dev Container 等を**複数リポジトリで揃えたい**ときの設計指針。1 リポジトリ内のマルチエージェント対応は `standards/multi-agent-repo.md` を参照。 |
 | [npm Trusted Publishers (OIDC publishing)](standards/npm-trusted-publishers.md) | 2026-05-02 | CI から npm レジストリへ **長寿命 secret (`NPM_TOKEN`) を持たずに publish する** 仕組み。GitHub Actions の OIDC token を npm が信頼することで、トークン管理コストとローテーション運用を消す。2024 年に GA、現在は GitHub Actions / GitLab CI で利用可能。 |
 | [プロンプトインジェクション対策](standards/prompt-injection.md) | 2026-04-18 | LLM エージェントが外部データ（Web ページ、ファイル、ツール結果、メール等）を読み込む際に、その中に埋め込まれた指示に従ってしまう攻撃。MCP サーバー・ツール呼び出しが返す `content` も例外ではなく、エージェント連携を設計する側は常に対策を組み込む必要がある。 |
 | [Semantic Versioning (SemVer)](standards/semver.md) | 2026-04-18 | `MAJOR.MINOR.PATCH` の 3 要素でバージョンを表す公開 API 契約。Conventional Commits とセットで、リリース自動化の基盤になる。 |
@@ -74,4 +75,4 @@
 | [Docker](platforms/docker.md) | 2026-04-18 | アプリケーションをコンテナ（軽量な隔離環境）として配布・実行するプラットフォーム。OCI (Open Container Initiative) 仕様準拠の runtime + CLI + イメージレジストリ + Compose のエコシステム。 |
 | [GitHub Actions](platforms/github-actions.md) | 2026-04-18 | GitHub ネイティブの CI/CD プラットフォーム。ワークフローを YAML で定義し、リポジトリへのイベント（push, PR, schedule 等）に応じて実行する。`gh` CLI と並んで GitHub 運用の中核。 |
 
-_Total: 52 articles._
+_Total: 53 articles._
