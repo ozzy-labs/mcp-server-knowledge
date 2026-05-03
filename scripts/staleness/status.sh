@@ -45,7 +45,7 @@ print_group() {
       | map(select(.value.group == $g))
       | sort_by(.key)
       | .[]
-      | "\(.key)\t\(.value.skip // false)"
+      | "\(.key)\t\(.value.skip // false)\t\(.value.skip_reason // "")"
     ')
 
   local count=0
@@ -54,12 +54,16 @@ print_group() {
 
   printf '\n%s (threshold > %d days)\n' "${label}" "${threshold}"
 
-  while IFS=$'\t' read -r path skip; do
+  while IFS=$'\t' read -r path skip skip_reason; do
     [[ -z "${path}" ]] && continue
     count=$((count + 1))
 
     if [[ "${skip}" == "true" ]]; then
-      printf '  %-44s  [skip]\n' "${path}"
+      if [[ -n "${skip_reason}" ]]; then
+        printf '  %-44s  [skip] %s\n' "${path}" "${skip_reason}"
+      else
+        printf '  %-44s  [skip]\n' "${path}"
+      fi
       continue
     fi
 

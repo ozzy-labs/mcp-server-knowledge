@@ -689,18 +689,12 @@ standards/github-flow:
 standards/markdown-style:
   group: monthly
   skip: true
-  skip_reason: |
-    OzzyLabs 自前ルール集。CommonMark / GFM の仕様変化は
-    `tools/markdownlint` 経由で間接的に追跡される。
-    handbook で四半期手動レビュー対象。
+  skip_reason: "自リポの執筆規約（外部ソースなし）。handbook で四半期手動レビュー対象。"
 
 standards/multi-repo-config-sync:
   group: monthly
   skip: true
-  skip_reason: |
-    OzzyLabs 自前パターン。一次源は handbook ADR。
-    Renovate 仕様変化は `tools/renovate` 記事側で追跡される。
-    handbook で四半期手動レビュー対象。
+  skip_reason: "自リポ運用ノウハウ（外部ソースなし）。handbook で四半期手動レビュー対象。"
 
 standards/npm-trusted-publishers:
   group: monthly
