@@ -202,7 +202,7 @@ jq -f script.jq data.json
 
 ## Claude Code / MCP との関連
 
-- Claude Code の **statusline script** 例で jq を使って `.model.display_name` / `.context_window.used_percentage` を抽出（`tools/claude-code.md` 参照）
+- Claude Code の **statusline script** 例で jq を使って `.model.display_name` / `.context_window.used_percentage` を抽出（`ai/agents/claude-code.md` 参照）
 - `gh <cmd> --json ...` の結果処理で頻出
 - MCP サーバーのデバッグで `npx @modelcontextprotocol/inspector` の出力整形にも
 
