@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [library, commercial, cloud-hosted, ai-workflow]
 aliases: [claude-api]
 ---
@@ -36,19 +36,21 @@ message = client.messages.create(
 print(message.content[0].text)
 ```
 
-## 現行モデル（2026-04 時点）
+## 現行モデル（2026-05 時点）
 
-| モデル | API ID | コンテキスト | 位置付け | 価格 (入力/出力 per 1M) |
-|---|---|---|---|---|
-| **Opus 4.7** | `claude-opus-4-7` | 200K | 最も高精度。複雑推論向け | $5 / $25 |
-| **Sonnet 4.6** | `claude-sonnet-4-6` | 200K | 性能/コスト比に優れる（デフォルト推奨） | $3 / $15 |
-| **Haiku 4.5** | `claude-haiku-4-5-20251001` | 200K | 最速・最安。単純タスク向け | $1 / $5 |
+| モデル | API ID | コンテキスト | 最大出力 | 位置付け | 価格 (入力/出力 per 1M) |
+|---|---|---|---|---|---|
+| **Opus 4.7** | `claude-opus-4-7` | 1M | 128K | 最高精度。複雑推論・agentic coding。Extended thinking 非対応（adaptive thinking のみ） | $5 / $25 |
+| **Sonnet 4.6** | `claude-sonnet-4-6` | 1M | 64K | 速度と知性のバランス（デフォルト推奨）。extended/adaptive 両対応 | $3 / $15 |
+| **Haiku 4.5** | `claude-haiku-4-5-20251001` | 200K | 64K | 最速・最安。near-frontier 知性。extended thinking 対応 | $1 / $5 |
 
-1M コンテキスト拡張は beta ヘッダ `context-1m-2025-08-07` で有効化。`claude-opus` / `claude-sonnet` のエイリアスは各ティアの最新を指す（プロダクション用途ではピン留め推奨）。
+Opus 4.7 は 2026-04-16 リリース。1M context は **2026-03-13 に Opus 4.6 / Sonnet 4.6 で GA**（ヘッダ不要、標準価格）。旧モデル向け beta ヘッダ `context-1m-2025-08-07` は 2026-04-30 に Sonnet 4.5 / Sonnet 4 から廃止され効果なし。`claude-opus` / `claude-sonnet` のエイリアスは各ティアの最新を指す（プロダクション用途ではピン留め推奨）。Sonnet 4 / Opus 4 は 2026-06-15 retire 予定。
 
 ## プロンプトキャッシング — 最重要の最適化
 
 静的なシステムプロンプト・ドキュメント・ツール定義にキャッシュブレークポイントを置くと、次以降のリクエストで**キャッシュヒット分は入力単価の 10%** になる。ITPM レートリミット消費も大幅減。
+
+**自動キャッシング（2026-02-19 launch）**: `cache_control` を 1 箇所付けるだけで、会話伸長に応じて自動でキャッシュポイントが前進する。手動 breakpoint 管理は不要。block-level cache control と併用可。
 
 ### 配置
 
@@ -68,7 +70,7 @@ message = client.messages.create(
 )
 ```
 
-- **TTL**: デフォルト 5 分 / 拡張 1 時間（beta ヘッダ `extended-cache-ttl-2025-04-11`）
+- **TTL**: デフォルト 5 分 / 拡張 1 時間（**2025-08-13 に GA、ヘッダ不要**。旧 beta ヘッダ `extended-cache-ttl-2025-04-11` は廃止）
 - **ブレークポイント上限**: 1 リクエストあたり最大 4 個
 - **無効化**: ブレークポイントより前のコンテンツが変わるとそれ以降のキャッシュは失効する
 - **対象ブロック**: `system` / `messages.content` のテキスト・画像・PDF、ツール定義
@@ -114,21 +116,26 @@ tools = [
 - 旧モデルはキャッシュトークンも ITPM に計上されていた。料金表の注釈を確認
 - `stop_reason: "tool_use"` を無視して応答を切ると無限ループ・破綻の原因
 
-## Extended Thinking
+## Extended / Adaptive Thinking
+
+Opus 4.6 以降は **adaptive thinking** が推奨。manual thinking (`type: "enabled"` + `budget_tokens`) は deprecated。Opus 4.7 は extended thinking 自体に非対応で adaptive のみサポート。
 
 ```python
+# Opus 4.7 / 4.6: adaptive thinking
 message = client.messages.create(
     model="claude-opus-4-7",
     max_tokens=16000,
-    thinking={"type": "enabled", "budget_tokens": 5000},
+    thinking={"type": "adaptive"},
     messages=[{"role": "user", "content": "複雑な問題..."}],
 )
 ```
 
+`effort` パラメータ（2026-02-05 GA、`budget_tokens` の代替）で thinking depth を制御できる。
+
 - **用途**: 多段推論、数学、デバッグ、深い分析
 - **コスト**: thinking トークンは通常入力の約 3x 単価
-- **キャッシングと併用可**: thinking バジェットはキャッシュと独立。固定システムプロンプトをキャッシュしつつ新クエリで thinking を使える
-- **バジェット選定**: まず 1K〜5K から。多くのタスクは 5K で十分
+- **キャッシングと併用可**: thinking はキャッシュと独立。固定システムプロンプトをキャッシュしつつ新クエリで thinking を使える
+- **`thinking.display: "omitted"`** (2026-03-16): 応答から thinking 内容を省略しレスポンスを高速化（`signature` は保持）
 
 ## Message Batches API
 
