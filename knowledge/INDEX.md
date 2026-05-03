@@ -33,10 +33,11 @@
 | [AI エージェントの定期実行](ai/practice/scheduled-tasks.md) | 2026-05-03 | — | `ai-workflow` `methodology` | AI コーディングエージェント（Claude Code / Codex 等）を recurring に走らせるための選択肢と選び方。「knowledge ベースを週次で再検証する」「PR レビューを毎朝実行する」「失敗ジョブを夜間に修復する」のような用途で必要になる。各 CLI の個別仕様は `ai/agents/claude-code.md` / `ai/agents/codex-cli.md` 他を参照。 |
 | [仕様駆動開発（Spec-Driven Development, SDD）](ai/practice/spec-driven-development.md) | 2026-05-03 | — | `methodology` `ai-workflow` `spec` | 実装の前に**意図（spec）と計画（plan）を文書として書き出し**、それを起点にコードを生成・検証するワークフロー。AI エージェントは曖昧な自然言語よりも構造化された spec の方が扱いやすいため、AI 駆動開発と組み合わせる用途で 2025 年以降急速に普及した。 |
 
-## `ai/workflow/` — AI 駆動開発ワークフロー (2)
+## `ai/workflow/` — AI 駆動開発ワークフロー (3)
 
 | 記事 | reviewed | stability | tags | 概要 |
 |---|---|---|---|---|
+| [cc-sdd](ai/workflow/cc-sdd.md) | 2026-05-03 | `beta` | `ai-workflow` `spec` `oss` `npm` `javascript` | OSS の SDD オーケストレータ（gotalab/cc-sdd）。npm パッケージとして配布され、`npx cc-sdd@latest` 一発で **17 個の Agent Skill**（discovery / spec / impl / steering 等）を 8 種類の AI コーディングエージェントに対してインストールする。「Kiro-inspired」を明言しており、Kiro の spec 形式（EARS + design + tasks）と互換。 |
 | [GitHub Spec Kit](ai/workflow/github-spec-kit.md) | 2026-05-03 | `beta` | `ai-workflow` `spec` `oss` `github` `cli` | GitHub が公式に提供する OSS の SDD オーケストレータ。Python 製の CLI `specify` と、エージェント向け slash command / Agent Skill のテンプレート群を配布する。30+ の AI コーディングエージェント（Claude Code, Codex, Cursor, Copilot, Gemini CLI, Windsurf, Antigravity, OpenCode 等）に対して**同一の SDD ワークフロー**をインストールできる agent-agnostic な orchestrator。 |
 | [Kiro](ai/workflow/kiro.md) | 2026-05-03 | `beta` | `ai-workflow` `spec` `commercial` `aws` `ide` | AWS が提供する spec-driven development（SDD）ベースのエージェント型 AI IDE。Code OSS をベースとしたデスクトップアプリと、ヘッドレスで走る CLI（Kiro CLI）の 2 形態がある。「prototype から production まで spec 駆動で持っていく」を看板に掲げ、Cursor / Claude Code 系の対話型コーディングとは異なるアプローチを取る。 |
 
@@ -110,7 +111,7 @@
 
 | タグ | 記事数 | 記事 |
 |---|---|---|
-| `ai-workflow` | 18 | [Claude Code Routines](ai/agents/claude-code-routines.md) / [Claude Code](ai/agents/claude-code.md) / [Codex CLI](ai/agents/codex-cli.md) / [Gemini CLI](ai/agents/gemini-cli.md) / [GitHub Copilot CLI](ai/agents/github-copilot-cli.md) / [AI エージェントの拡張機構（Skills / Subagents / Hooks / Plugins）](ai/platform/agent-extensions.md) / [AGENTS.md](ai/platform/agents-md.md) / [Anthropic API (Claude API)](ai/platform/anthropic-api.md) / [Model Context Protocol (MCP)](ai/platform/mcp-protocol.md) / [MCP TypeScript SDK](ai/platform/mcp-typescript-sdk.md) / [AI エージェントのコンテキスト管理](ai/practice/ai-context-management.md) / [AI 駆動開発（AI-Driven Development, AIDD）](ai/practice/ai-driven-development.md) / [マルチエージェント対応リポジトリの設計](ai/practice/multi-agent-repo.md) / [プロンプトインジェクション対策](ai/practice/prompt-injection.md) / [AI エージェントの定期実行](ai/practice/scheduled-tasks.md) / [仕様駆動開発（Spec-Driven Development, SDD）](ai/practice/spec-driven-development.md) / [GitHub Spec Kit](ai/workflow/github-spec-kit.md) / [Kiro](ai/workflow/kiro.md) |
+| `ai-workflow` | 19 | [Claude Code Routines](ai/agents/claude-code-routines.md) / [Claude Code](ai/agents/claude-code.md) / [Codex CLI](ai/agents/codex-cli.md) / [Gemini CLI](ai/agents/gemini-cli.md) / [GitHub Copilot CLI](ai/agents/github-copilot-cli.md) / [AI エージェントの拡張機構（Skills / Subagents / Hooks / Plugins）](ai/platform/agent-extensions.md) / [AGENTS.md](ai/platform/agents-md.md) / [Anthropic API (Claude API)](ai/platform/anthropic-api.md) / [Model Context Protocol (MCP)](ai/platform/mcp-protocol.md) / [MCP TypeScript SDK](ai/platform/mcp-typescript-sdk.md) / [AI エージェントのコンテキスト管理](ai/practice/ai-context-management.md) / [AI 駆動開発（AI-Driven Development, AIDD）](ai/practice/ai-driven-development.md) / [マルチエージェント対応リポジトリの設計](ai/practice/multi-agent-repo.md) / [プロンプトインジェクション対策](ai/practice/prompt-injection.md) / [AI エージェントの定期実行](ai/practice/scheduled-tasks.md) / [仕様駆動開発（Spec-Driven Development, SDD）](ai/practice/spec-driven-development.md) / [cc-sdd](ai/workflow/cc-sdd.md) / [GitHub Spec Kit](ai/workflow/github-spec-kit.md) / [Kiro](ai/workflow/kiro.md) |
 | `aws` | 2 | [Kiro](ai/workflow/kiro.md) / [AWS CLI](tools/aws-cli.md) |
 | `bash` | 4 | [Bash / POSIX shell](languages/bash.md) / [bats (bats-core)](tools/bats.md) / [ShellCheck](tools/shellcheck.md) / [shfmt](tools/shfmt.md) |
 | `build` | 1 | [tsdown](tools/tsdown.md) |
@@ -127,21 +128,21 @@
 | `github` | 8 | [GitHub Copilot CLI](ai/agents/github-copilot-cli.md) / [GitHub Spec Kit](ai/workflow/github-spec-kit.md) / [GitHub Actions](platforms/github-actions.md) / [GitHub Flow](standards/github-flow.md) / [npm Trusted Publishers (OIDC publishing)](standards/npm-trusted-publishers.md) / [actionlint](tools/actionlint.md) / [gh (GitHub CLI)](tools/gh-cli.md) / [release-please](tools/release-please.md) |
 | `go` | 9 | [actionlint](tools/actionlint.md) / [chezmoi](tools/chezmoi.md) / [gh (GitHub CLI)](tools/gh-cli.md) / [Gitleaks](tools/gitleaks.md) / [lefthook](tools/lefthook.md) / [shfmt](tools/shfmt.md) / [Trivy](tools/trivy.md) / [yamlfmt](tools/yamlfmt.md) / [yq](tools/yq.md) |
 | `ide` | 1 | [Kiro](ai/workflow/kiro.md) |
-| `javascript` | 9 | [Node.js](languages/nodejs.md) / [TypeScript + Node.js ESM](languages/typescript-esm.md) / [Astro](tools/astro.md) / [Biome](tools/biome.md) / [commitlint](tools/commitlint.md) / [markdownlint](tools/markdownlint.md) / [pnpm](tools/pnpm.md) / [Prettier](tools/prettier.md) / [Vitest](tools/vitest.md) |
+| `javascript` | 10 | [cc-sdd](ai/workflow/cc-sdd.md) / [Node.js](languages/nodejs.md) / [TypeScript + Node.js ESM](languages/typescript-esm.md) / [Astro](tools/astro.md) / [Biome](tools/biome.md) / [commitlint](tools/commitlint.md) / [markdownlint](tools/markdownlint.md) / [pnpm](tools/pnpm.md) / [Prettier](tools/prettier.md) / [Vitest](tools/vitest.md) |
 | `json` | 2 | [Biome](tools/biome.md) / [jq](tools/jq.md) |
 | `library` | 3 | [Anthropic API (Claude API)](ai/platform/anthropic-api.md) / [MCP TypeScript SDK](ai/platform/mcp-typescript-sdk.md) / [Zod](tools/zod.md) |
 | `lint` | 8 | [actionlint](tools/actionlint.md) / [ast-grep](tools/ast-grep.md) / [Biome](tools/biome.md) / [commitlint](tools/commitlint.md) / [markdownlint](tools/markdownlint.md) / [ShellCheck](tools/shellcheck.md) / [taplo](tools/taplo.md) / [yamllint](tools/yamllint.md) |
 | `markdown` | 5 | [AGENTS.md](ai/platform/agents-md.md) / [Markdown 執筆スタイル（本リポジトリ向け）](standards/markdown-style.md) / [markdownlint](tools/markdownlint.md) / [MarkItDown](tools/markitdown.md) / [Prettier](tools/prettier.md) |
 | `methodology` | 13 | [AI エージェントの拡張機構（Skills / Subagents / Hooks / Plugins）](ai/platform/agent-extensions.md) / [AGENTS.md](ai/platform/agents-md.md) / [Model Context Protocol (MCP)](ai/platform/mcp-protocol.md) / [AI エージェントのコンテキスト管理](ai/practice/ai-context-management.md) / [AI 駆動開発（AI-Driven Development, AIDD）](ai/practice/ai-driven-development.md) / [マルチエージェント対応リポジトリの設計](ai/practice/multi-agent-repo.md) / [AI エージェントの定期実行](ai/practice/scheduled-tasks.md) / [仕様駆動開発（Spec-Driven Development, SDD）](ai/practice/spec-driven-development.md) / [Conventional Commits](standards/conventional-commits.md) / [Dev Containers](standards/dev-containers.md) / [GitHub Flow](standards/github-flow.md) / [複数リポジトリ間の設定同期](standards/multi-repo-config-sync.md) / [Semantic Versioning (SemVer)](standards/semver.md) |
-| `npm` | 3 | [npm Trusted Publishers (OIDC publishing)](standards/npm-trusted-publishers.md) / [npm publish](tools/npm-publish.md) / [pnpm](tools/pnpm.md) |
+| `npm` | 4 | [cc-sdd](ai/workflow/cc-sdd.md) / [npm Trusted Publishers (OIDC publishing)](standards/npm-trusted-publishers.md) / [npm publish](tools/npm-publish.md) / [pnpm](tools/pnpm.md) |
 | `oci` | 1 | [Docker](platforms/docker.md) |
-| `oss` | 1 | [GitHub Spec Kit](ai/workflow/github-spec-kit.md) |
+| `oss` | 2 | [cc-sdd](ai/workflow/cc-sdd.md) / [GitHub Spec Kit](ai/workflow/github-spec-kit.md) |
 | `package` | 5 | [npm publish](tools/npm-publish.md) / [pnpm](tools/pnpm.md) / [Renovate](tools/renovate.md) / [tsdown](tools/tsdown.md) / [uv](tools/uv.md) |
 | `python` | 5 | [Python](languages/python.md) / [AWS CLI](tools/aws-cli.md) / [MarkItDown](tools/markitdown.md) / [uv](tools/uv.md) / [yamllint](tools/yamllint.md) |
 | `release` | 4 | [npm Trusted Publishers (OIDC publishing)](standards/npm-trusted-publishers.md) / [Semantic Versioning (SemVer)](standards/semver.md) / [npm publish](tools/npm-publish.md) / [release-please](tools/release-please.md) |
 | `rust` | 7 | [ast-grep](tools/ast-grep.md) / [Biome](tools/biome.md) / [just](tools/just.md) / [mise](tools/mise.md) / [ripgrep](tools/ripgrep.md) / [taplo](tools/taplo.md) / [uv](tools/uv.md) |
 | `security` | 4 | [プロンプトインジェクション対策](ai/practice/prompt-injection.md) / [npm Trusted Publishers (OIDC publishing)](standards/npm-trusted-publishers.md) / [Gitleaks](tools/gitleaks.md) / [Trivy](tools/trivy.md) |
-| `spec` | 3 | [仕様駆動開発（Spec-Driven Development, SDD）](ai/practice/spec-driven-development.md) / [GitHub Spec Kit](ai/workflow/github-spec-kit.md) / [Kiro](ai/workflow/kiro.md) |
+| `spec` | 4 | [仕様駆動開発（Spec-Driven Development, SDD）](ai/practice/spec-driven-development.md) / [cc-sdd](ai/workflow/cc-sdd.md) / [GitHub Spec Kit](ai/workflow/github-spec-kit.md) / [Kiro](ai/workflow/kiro.md) |
 | `style` | 1 | [Markdown 執筆スタイル（本リポジトリ向け）](standards/markdown-style.md) |
 | `task-runner` | 2 | [just](tools/just.md) / [mise](tools/mise.md) |
 | `test` | 2 | [bats (bats-core)](tools/bats.md) / [Vitest](tools/vitest.md) |
@@ -150,4 +151,4 @@
 | `version-manager` | 2 | [mise](tools/mise.md) / [uv](tools/uv.md) |
 | `yaml` | 6 | [GitHub Actions](platforms/github-actions.md) / [actionlint](tools/actionlint.md) / [Prettier](tools/prettier.md) / [yamlfmt](tools/yamlfmt.md) / [yamllint](tools/yamllint.md) / [yq](tools/yq.md) |
 
-_Total: 64 articles._
+_Total: 65 articles._
