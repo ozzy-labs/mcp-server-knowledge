@@ -1,5 +1,6 @@
 ---
 reviewed: 2026-05-03
+tags: [task-runner, rust]
 ---
 
 # just

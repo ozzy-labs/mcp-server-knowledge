@@ -1,5 +1,6 @@
 ---
 reviewed: 2026-04-18
+tags: [ai-workflow, methodology]
 ---
 
 # AI エージェントのコンテキスト管理

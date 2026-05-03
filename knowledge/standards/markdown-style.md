@@ -1,5 +1,6 @@
 ---
 reviewed: 2026-04-18
+tags: [style, markdown]
 ---
 
 # Markdown 執筆スタイル（本リポジトリ向け）

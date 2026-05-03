@@ -1,5 +1,7 @@
 ---
 reviewed: 2026-05-02
+tags: [ai-workflow, commercial, github]
+aliases: [copilot]
 ---
 
 # GitHub Copilot CLI

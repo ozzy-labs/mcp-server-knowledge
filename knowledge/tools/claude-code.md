@@ -1,5 +1,7 @@
 ---
 reviewed: 2026-04-18
+tags: [ai-workflow, commercial]
+aliases: [cc]
 ---
 
 # Claude Code

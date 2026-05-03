@@ -1,5 +1,6 @@
 ---
 reviewed: 2026-05-03
+tags: [data-cli, yaml, go]
 ---
 
 # yq

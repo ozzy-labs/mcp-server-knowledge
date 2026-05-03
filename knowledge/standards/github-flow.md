@@ -1,5 +1,6 @@
 ---
 reviewed: 2026-04-18
+tags: [methodology, github, git-hook]
 ---
 
 # GitHub Flow
