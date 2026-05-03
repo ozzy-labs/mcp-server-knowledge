@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [data-cli, json, fast]
 ---
 
@@ -7,7 +7,9 @@ tags: [data-cli, json, fast]
 
 JSON を処理するコマンドラインフィルタ。`grep` / `sed` / `awk` の JSON 版。API 応答の整形、設定ファイルの抽出、CI スクリプトでの値取り出しに必須。C 製の単一バイナリ。
 
-公式: [jqlang.github.io/jq](https://jqlang.github.io/jq/) / [manual](https://jqlang.github.io/jq/manual/)
+公式: [jqlang.org](https://jqlang.org/) / [manual](https://jqlang.org/manual/)
+
+最新版は **1.8.1**（2025-07-01）。1.8.0（2025-06-01）でメジャー更新があり、`trim/0` などの新関数・複数のセキュリティ修正・一部 breaking change（`indices/1` / `index/1` / `rindex/1` が code point ベースに変更など）が入った。
 
 ## インストール
 
@@ -129,7 +131,8 @@ echo '"hello"' | jq 'length'             # → 5
 echo '"hello"' | jq 'ascii_upcase'       # → "HELLO"
 echo '"a,b,c"' | jq 'split(",")'         # → ["a","b","c"]
 echo '["a","b"]' | jq 'join("-")'        # → "a-b"
-echo '"  x  "' | jq 'ltrimstr(" ") | rtrimstr(" ")'
+echo '"  x  "' | jq 'trim'                            # → "x"（jq 1.8+）
+echo '"  x  "' | jq 'ltrimstr(" ") | rtrimstr(" ")'   # 旧来の書き方
 ```
 
 ## フォーマット変換
@@ -231,7 +234,7 @@ jq '(.a.b.c) // "default"'
 
 ### 大量データで遅い
 
-jq 1.6 → 1.7 でパフォーマンス改善あり。`--stream` モードで逐次処理も可能（巨大 JSON 向け）:
+jq 1.7 / 1.8 でパフォーマンス改善あり（`bsearch/1`、`unique/0`、文字列繰り返しなど）。`--stream` モードで逐次処理も可能（巨大 JSON 向け）:
 
 ```bash
 jq --stream 'select(.[0][0] == "users") | .[1]' huge.json

@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [framework, javascript, typescript]
 ---
 
@@ -17,7 +17,7 @@ tags: [framework, javascript, typescript]
 
 ## バージョン
 
-2026-04 時点の現行 major は **Astro 6**（6.0 は 2026-03-10 リリース）。Starlight は **0.38 系**で 1.0 未満、minor 間で破壊的変更があるため **minor 固定** を推奨。
+2026-05 時点の現行 stable は **Astro 6.2**（6.0: 2026-03-10、6.1: 2026-03-26、6.2: 2026-04-30）。**Astro 7 は alpha** が 2026-04-30 に公開済み（`astro@7.0.0-alpha.x`）。Starlight は **0.38 系**で 1.0 未満、minor 間で破壊的変更があるため **minor 固定** を推奨。
 
 ## セットアップ
 
@@ -93,7 +93,7 @@ const blog = defineCollection({
 export const collections = { blog };
 ```
 
-Astro 6 で **Live Content Collections**（外部データソースの動的取り込み）が追加。
+Astro 6 で **Live Content Collections**（外部データソースの動的取り込み）が追加。6.1 で codec 別 Sharp 画像デフォルトと i18n fallback ルート、6.2 で SVG optimizer API・font ファイル URL ヘルパ・JSON 出力 logger（実験）が追加されている。
 
 ## Starlight（ドキュメントテーマ）
 

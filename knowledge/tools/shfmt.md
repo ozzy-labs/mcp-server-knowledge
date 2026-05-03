@@ -1,11 +1,11 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [format, bash, go]
 ---
 
 # shfmt
 
-Go 製のシェルスクリプトフォーマッタ。bash / mksh / POSIX sh のパース + 整形を一貫して行う。shellcheck と並んで shell スクリプト運用のデファクトツール。
+Go 製のシェルスクリプトフォーマッタ。bash / mksh / POSIX sh / zsh のパース + 整形を一貫して行う（zsh は v3.13.0 から）。shellcheck と並んで shell スクリプト運用のデファクトツール。
 
 公式: [github.com/mvdan/sh](https://github.com/mvdan/sh)
 
@@ -44,6 +44,7 @@ shfmt -w .
 shfmt -ln bash script.sh   # bash
 shfmt -ln posix script.sh  # POSIX sh
 shfmt -ln mksh script.sh   # mksh
+shfmt -ln zsh script.sh    # zsh（v3.13.0+）
 ```
 
 ## 主要フラグ
@@ -75,7 +76,7 @@ switch_case_indent = true
 space_redirects = true
 ```
 
-EditorConfig 経由で統一すると、他ツール（エディタ、prettier 等）と一貫できる。
+v3.13.1 から `[[zsh]]` セクションも認識し、`.zshrc` / `.bash_profile` 等のファイル名から方言を自動推定する。EditorConfig 経由で統一すると、他ツール（エディタ、prettier 等）と一貫できる。
 
 ## フォーマット例
 
@@ -105,9 +106,10 @@ shfmt は shebang を見て方言を決定:
 #!/bin/bash       → bash
 #!/bin/sh         → POSIX sh
 #!/usr/bin/env bash → bash
+#!/bin/zsh        → zsh（v3.13.0+）
 ```
 
-shebang がない場合は `-ln` で明示。
+shebang がない場合は `-ln` で明示。`.zshrc` / `.bash_profile` などのファイル名は v3.13.1 以降自動で方言が決まる。
 
 ## pre-commit 連携（lefthook）
 

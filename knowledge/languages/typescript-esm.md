@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [typescript, javascript]
 ---
 
@@ -56,10 +56,20 @@ cat package.json | grep '"type"'
 | `skipLibCheck` | `true` | サードパーティ型のエラーを無視（ビルド高速化） |
 | `declaration` / `declarationMap` | `true` | ライブラリ用途。consumer 側で補完と goto-def が効く |
 | `verbatimModuleSyntax` | `true`（任意） | `import type` を強制し、ランタイムの副作用 import を明示化 |
+| `rewriteRelativeImportExtensions` | `true`（任意, TS 5.7+） | TS ソースの `./foo.ts` を出力時に `./foo.js` に書き換え。Node ネイティブ実行と `tsc` ビルドを両立させる時に有用 |
+| `erasableSyntaxOnly` | `true`（任意, TS 5.8+） | enum / namespace など非消去構文をエラーにし、Node の型ストリップ実行と互換にする |
 
-### `module: "Node16"` vs `"NodeNext"`
+### `module: "Node16"` / `"Node18"` / `"NodeNext"`
 
-どちらも ESM/CJS 相互運用ができる。`NodeNext` は Node の最新解決規則に追従、`Node16` は Node 16 時点で固定。**2026 時点の推奨は `NodeNext`**。
+いずれも ESM/CJS 相互運用に対応する Node 系列の `module` 値。
+
+| 値 | ターゲット | `require(ESM)` | JSON imports | 用途 |
+|---|---|---|---|---|
+| `Node16` | Node 16 時点固定 | 不可 | 不可 | レガシー互換が必要な時 |
+| `Node18` | Node 18 時点固定 | 不可 | 可（`with` 必須） | Node 18 系で挙動を固定したい時 |
+| `NodeNext` | 最新解決規則を追従 | 可 | 可（`with` 必須） | **2026 時点の推奨** |
+
+Node v22.12+ / v24+ で `require(ESM)` が stable になったため、ライブラリでも `NodeNext` がデフォルト推奨。`exports` 内の types 条件など最新機能を取りこぼさない。
 
 ## `package.json` 最小構成
 
@@ -129,34 +139,36 @@ import pkg from "legacy-cjs";
 const { foo } = pkg;  // default の中から取り出す
 ```
 
-Node.js 22+ は `require(ESM)` にも実験的に対応（`--experimental-require-module`）。
+Node v22.12 / v24+ で `require(ESM)` が **Stable**。CJS から普通の ESM パッケージを `require()` できる。ただし top-level `await` を含む ESM は同期読みできず `ERR_REQUIRE_ASYNC_MODULE` になるため、その場合は `await import()` を使う。
 
 ## `__dirname` / `__filename` の代替
 
 ESM ではこれらのグローバルは存在しない:
 
 ```ts
-// Node 20.11+ / 21.2+
+// Stable: Node v24.0+ / v22.16+（v20.11 で実験導入、v24 で stable）
 const dir = import.meta.dirname;
 const file = import.meta.filename;
 
-// それ以前
+// それ以前 / file: 以外のスキーム
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 ```
 
+`import.meta.dirname` / `filename` は `file:` URL のモジュールでのみ利用可能。`data:` / `http:` 経由のロードでは `undefined`。
+
 ## JSON import
 
 ```ts
-// Node 20.10+ / ESM
+// Stable: Node v23.1+ / v22.12+ / v20.18+
 import pkg from "./package.json" with { type: "json" };
-
-// 古い Node では --experimental-json-modules
 ```
 
-TypeScript は `resolveJsonModule: true` が必要。
+- `with { type: "json" }` 構文（import attributes）が必須。旧 `assert { type: "json" }` は非推奨。
+- default export のみ。named import 不可。
+- TypeScript は `resolveJsonModule: true` が必要。`module: "NodeNext"` で attribute 構文を解釈できる。
 
 ## 開発用ランタイム
 
@@ -164,12 +176,30 @@ TypeScript は `resolveJsonModule: true` が必要。
 
 | ツール | 特徴 |
 |---|---|
-| `tsx` | zero-config で TS/ESM を直接実行。`tsx src/index.ts` / `tsx watch` |
+| **Node 標準** | v25.2+ で **型ストリップが Stable**。`node src/index.ts` で直接実行（後述） |
+| `tsx` | zero-config で TS/ESM を直接実行。`tsx src/index.ts` / `tsx watch`。enum / decorator など非消去構文も対応 |
 | `ts-node` | 老舗。ESM サポートはやや癖 |
 | `bun` | 別ランタイム。TS ネイティブ |
 | `deno` | 別ランタイム。npm 互換モードあり |
 
 本番ビルドは `tsc` が最もシンプル。型だけ `tsc --noEmit` でチェック、バンドルは `esbuild` / `rollup` / `tsup` のようにする構成も一般的。
+
+### Node ネイティブ TypeScript 実行（v25.2+ Stable）
+
+```bash
+node src/index.ts                                 # 型注釈を空白に置換して実行（型チェックなし）
+node --no-strip-types src/index.ts                # 型ストリップを無効化
+node --experimental-transform-types src/index.ts  # enum / namespace など変換
+```
+
+- **型チェックは行わない**（`tsc --noEmit` を併用）
+- **`tsconfig.json` は読まれない**（`paths` エイリアス無効、`#imports` を使う）
+- `node_modules` 配下の `.ts` は実行不可
+- `.tsx` は非対応
+- 拡張子は `.ts` / `.mts` / `.cts` をサポート
+- `enum` / `namespace` / parameter properties は `--experimental-transform-types` 必須
+
+互換のため `tsconfig.json` は `erasableSyntaxOnly: true` / `rewriteRelativeImportExtensions: true` を入れておくと、TS ソース直実行と `tsc` ビルドが両立する。
 
 ## CJS と ESM の公開（デュアルパッケージ）
 
@@ -251,5 +281,8 @@ CJS コードから ESM パッケージを `require()` している。`import()`
 ## 参考資料
 
 - [Node.js: Modules: ECMAScript modules](https://nodejs.org/api/esm.html)
-- [TypeScript: ECMAScript Modules in Node.js](https://www.typescriptlang.org/docs/handbook/esm-node.html)
+- [Node.js: Modules: TypeScript](https://nodejs.org/api/typescript.html)
+- [TypeScript: Modules Reference](https://www.typescriptlang.org/docs/handbook/modules/reference.html)
 - [`verbatimModuleSyntax`](https://www.typescriptlang.org/tsconfig#verbatimModuleSyntax)
+- [`rewriteRelativeImportExtensions`](https://www.typescriptlang.org/tsconfig#rewriteRelativeImportExtensions)
+- [`erasableSyntaxOnly`](https://www.typescriptlang.org/tsconfig#erasableSyntaxOnly)

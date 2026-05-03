@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-03
+reviewed: 2026-05-04
 tags: [test, bash]
 ---
 
@@ -76,6 +76,16 @@ bats --filter 'echo' tests/     # 名前パターンで絞る
 
 `run` の前に `set -e` 等を付けると意図せず止まることがあるので、Bats では原則使わない。
 
+パイプを伴うコマンドは `run` 単体だと最後のコマンドの終了コードしか拾えないため、`bats_pipe`（v1.10+）を介す:
+
+```bash
+@test "grep finds match" {
+  run bats_pipe echo "hello world" \| grep -o world
+  [ "$status" -eq 0 ]
+  [ "$output" = "world" ]
+}
+```
+
 ## 主要フック
 
 | フック | タイミング |
@@ -86,6 +96,7 @@ bats --filter 'echo' tests/     # 名前パターンで絞る
 | `teardown_file` | ファイル末尾で 1 回 |
 | `setup_suite` | スイート全体で 1 回（`setup_suite.bash` を別途配置） |
 | `teardown_suite` | スイート末尾で 1 回 |
+| `bats::on_failure` | テストまたは `setup*` 失敗時（v1.12+） |
 
 ```bash
 setup() {
@@ -103,6 +114,27 @@ teardown() {
 ```
 
 `setup_suite` のみ命名が特殊で、`tests/setup_suite.bash` という**専用ファイル**に書く必要がある（同名関数を `.bats` に書いても呼ばれない）。
+
+## バージョン要求と動的テスト登録
+
+```bash
+# ファイル先頭で最低バージョンを要求（v1.7+）
+bats_require_minimum_version 1.13.0
+
+# システム共通ライブラリの読み込み（BATS_LIB_PATH を見る）
+bats_load_library bats-support
+bats_load_library bats-assert
+
+# 動的テスト登録（v1.11+）— ループでテストを生成したい場合
+for case in alpha beta gamma; do
+  bats_test_function --description "handles $case" -- run_case "$case"
+done
+
+run_case() {
+  run my-cli "$1"
+  [ "$status" -eq 0 ]
+}
+```
 
 ## ヘルパライブラリ
 
@@ -160,14 +192,23 @@ load test_helper
 ```
 
 ```bash
-bats --filter-tags 'network' tests/   # network タグのみ
-bats --filter-tags '!slow' tests/     # slow を除外
+bats --filter-tags 'network' tests/      # network タグのみ
+bats --filter-tags '!slow' tests/        # slow を除外
+bats --negative-filter 'integration' .   # 名前一致を除外（v1.13+）
+```
+
+`bats:focus` タグ（v1.9+）を付けたテストがあると、そのテストだけが実行される（CI で誤って残すのを避けるため、focus 残存時は終了コード 1 になる）:
+
+```bash
+# bats test_tags=bats:focus
+@test "only this one" { ... }
 ```
 
 ## 並列実行と分離
 
 ```bash
 bats -j 4 tests/
+bats --abort tests/   # 最初の失敗で打ち切り（v1.13+）
 ```
 
 `setup_file` / `teardown_file` を使うと並列で衝突しやすいので、`BATS_RUN_TMPDIR` や `BATS_FILE_TMPDIR` を使ってファイル単位で隔離する。
