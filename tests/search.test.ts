@@ -44,9 +44,40 @@ describe("searchKnowledge", () => {
     expect(results.some((r) => r.path === "ai/agents/sample-nested-agent")).toBe(true);
   });
 
-  it("returns nested article path with full path", async () => {
-    const results = await searchKnowledge(FIXTURES_DIR, "Nested Agent");
-    const nested = results.find((r) => r.path === "ai/agents/sample-nested-agent");
-    expect(nested).toBeDefined();
+  it("ranks filename match higher than body match", async () => {
+    const results = await searchKnowledge(FIXTURES_DIR, "sample");
+    const tool = results.find((r) => r.path === "tools/sample-tool-a");
+    const std = results.find((r) => r.path === "standards/sample-standard");
+    expect(tool).toBeDefined();
+    expect(std).toBeDefined();
+    expect(tool?.score ?? 0).toBeGreaterThanOrEqual(std?.score ?? 0);
+  });
+
+  it("filters by category prefix", async () => {
+    const results = await searchKnowledge(FIXTURES_DIR, "sample", { category: "ai" });
+    expect(results.every((r) => r.path.startsWith("ai/"))).toBe(true);
+    expect(results.length).toBeGreaterThan(0);
+  });
+
+  it("filters by required tags (AND)", async () => {
+    const results = await searchKnowledge(FIXTURES_DIR, "agent", {
+      tags: ["ai-workflow", "cli"],
+    });
+    expect(results.every((r) => r.path.startsWith("ai/agents/"))).toBe(true);
+    expect(results.some((r) => r.path === "ai/agents/sample-related-agent")).toBe(true);
+    expect(results.some((r) => r.path === "ai/agents/sample-nested-agent")).toBe(false);
+  });
+
+  it("filters by stability", async () => {
+    const results = await searchKnowledge(FIXTURES_DIR, "sample", {
+      stability: ["research-preview"],
+    });
+    expect(results.some((r) => r.path === "ai/agents/sample-nested-agent")).toBe(true);
+    expect(results.some((r) => r.path === "ai/agents/sample-related-agent")).toBe(false);
+  });
+
+  it("respects limit", async () => {
+    const results = await searchKnowledge(FIXTURES_DIR, "sample", { limit: 2 });
+    expect(results.length).toBeLessThanOrEqual(2);
   });
 });

@@ -24,7 +24,7 @@ describe("listEntries", () => {
 
   it("returns nested files at depth 2", async () => {
     const { files } = await listEntries(FIXTURES_DIR, "ai/agents");
-    expect(files).toEqual(["sample-nested-agent"]);
+    expect(files).toEqual(["sample-nested-agent", "sample-related-agent"]);
   });
 
   it("throws for non-existent path", async () => {

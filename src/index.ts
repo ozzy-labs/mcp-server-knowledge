@@ -5,11 +5,13 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import {
+  findRelated,
   listEntries,
   readKnowledge,
   searchKnowledge,
   validateAllFrontmatter,
 } from "./knowledge.js";
+import { StabilitySchema } from "./schema.js";
 
 const KNOWLEDGE_DIR = path.resolve(import.meta.dirname, "..", "knowledge");
 
@@ -104,14 +106,30 @@ server.registerTool(
     title: "Search Knowledge",
     description:
       "Search the knowledge base by keyword across all nested directories. " +
-      "Matches against article paths and content.",
+      "Optionally filter by tags (AND), category prefix, or stability values. " +
+      "Ranking: filename match > alias match > frontmatter match > body match.",
     inputSchema: {
       query: z.string().describe("Search keyword."),
+      tags: z
+        .array(z.string())
+        .optional()
+        .describe("Required tags (AND). Articles missing any tag are excluded."),
+      category: z.string().optional().describe('Path prefix scope, e.g. "ai" or "ai/agents".'),
+      stability: z
+        .array(StabilitySchema)
+        .optional()
+        .describe("Allowed stability values (e.g. ['ga', 'beta'])."),
+      limit: z.number().int().positive().optional().describe("Max number of results to return."),
     },
     annotations: { readOnlyHint: true },
   },
-  async ({ query }) => {
-    const results = await searchKnowledge(KNOWLEDGE_DIR, query);
+  async ({ query, tags, category, stability, limit }) => {
+    const results = await searchKnowledge(KNOWLEDGE_DIR, query, {
+      tags,
+      category,
+      stability,
+      limit,
+    });
 
     if (results.length === 0) {
       return { content: [{ type: "text" as const, text: `No results for "${query}".` }] };
@@ -120,11 +138,55 @@ server.registerTool(
     const text = results
       .map((r) => {
         const snippets = r.matches.map((m) => `  ${m}`).join("\n  ---\n");
-        return `## ${r.path}\n${snippets}`;
+        return `## ${r.path} (score: ${r.score})\n${snippets}`;
       })
       .join("\n\n");
 
     return { content: [{ type: "text" as const, text: text }] };
+  },
+);
+
+// --- related tool ---
+server.registerTool(
+  "related",
+  {
+    title: "Related Knowledge",
+    description:
+      "Find knowledge articles related to the given path. " +
+      "Scoring: same directory (+3), each shared tag (+2), alias overlap (+1).",
+    inputSchema: {
+      path: z.string().describe('Path to the source article, e.g. "ai/agents/claude-code".'),
+      limit: z
+        .number()
+        .int()
+        .positive()
+        .optional()
+        .describe("Max number of related articles to return (default 5)."),
+    },
+    annotations: { readOnlyHint: true },
+  },
+  async ({ path: filePath, limit }) => {
+    try {
+      const results = await findRelated(KNOWLEDGE_DIR, filePath, { limit });
+      if (results.length === 0) {
+        return {
+          content: [
+            { type: "text" as const, text: `No related articles found for "${filePath}".` },
+          ],
+        };
+      }
+      const text = results
+        .map((r) => `- ${r.path} (score: ${r.score}) — ${r.reasons.join("; ")}`)
+        .join("\n");
+      return {
+        content: [{ type: "text" as const, text: `Related to "${filePath}":\n${text}` }],
+      };
+    } catch {
+      return {
+        content: [{ type: "text" as const, text: `Knowledge not found: "${filePath}".` }],
+        isError: true,
+      };
+    }
   },
 );
 
