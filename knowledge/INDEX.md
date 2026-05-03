@@ -2,7 +2,7 @@
 
 <!-- このファイルは `scripts/generate-index.mjs` によって自動生成されます。手動で編集せず、対応する記事を修正してから再生成してください。 -->
 
-## `tools/` — CLI・SDK・ライブラリ (39)
+## `tools/` — CLI・SDK・ライブラリ (40)
 
 | 記事 | reviewed | 概要 |
 |---|---|---|
@@ -14,6 +14,7 @@
 | [bats (bats-core)](tools/bats.md) | 2026-05-03 | Bash 3.2+ で動く TAP 準拠のテストフレームワーク。`.bats` ファイル内に `@test` ブロックを書き、`run` でコマンドを実行して終了コードや出力を assert する。AI エージェントがシェルスクリプトを書くなら、`shellcheck` でも捕まえられない**動作面の回帰**を防ぐ唯一現実的な手段。`languages/bash.md` と組で使う。 |
 | [Biome](tools/biome.md) | 2026-04-18 | Rust で書かれた高速な JavaScript / TypeScript / JSON / CSS / GraphQL のフォーマッタ + リンタ。ESLint + Prettier を単一ツールで置き換えることを目標とする。 |
 | [chezmoi](tools/chezmoi.md) | 2026-05-03 | 複数マシン間で dotfiles を同期する Go 製ツール。bare git / GNU Stow / yadm よりも豊富な機能を持ち、**Go テンプレート / 暗号化 / パスワードマネージャ統合 / スクリプト実行**を備える。`~/.local/share/chezmoi` を **source directory** として、そこから `$HOME` 配下にファイルを apply するモデル。新マシンの初期化が 1 コマンドで完了する点が運用上の強み。 |
+| [Claude Code Routines](tools/claude-code-routines.md) | 2026-05-03 | Anthropic 管理のクラウドインフラで Claude Code を非対話に動かす仕組み。プロンプト・対象リポジトリ・MCP コネクタを「ルーチン」として保存し、**スケジュール / API / GitHub イベント**のいずれかで起動する。research preview。Pro / Max / Team / Enterprise プランで利用可能。 |
 | [Claude Code](tools/claude-code.md) | 2026-04-18 | Anthropic が提供する AI コーディングエージェント CLI。ターミナル上でコードベースの理解・編集・Git 操作・コマンド実行をエージェントが自律的に行う。 |
 | [Codex CLI](tools/codex-cli.md) | 2026-04-18 | OpenAI が提供するオープンソースのコーディングエージェント CLI。フルスクリーン TUI でコードの読み取り・編集・コマンド実行を行い、マルチエージェント並列処理もサポートする。拡張機構の横断比較は `standards/agent-extensions.md` を参照。 |
 | [commitlint](tools/commitlint.md) | 2026-04-18 | コミットメッセージが Conventional Commits など規約に従っているか検証する Node.js 製の Linter。`commit-msg` Git フックで実行し、規約違反のコミットをローカルで止める。`standards/conventional-commits.md` と対になるツール。 |
@@ -81,4 +82,4 @@
 | [Docker](platforms/docker.md) | 2026-04-18 | アプリケーションをコンテナ（軽量な隔離環境）として配布・実行するプラットフォーム。OCI (Open Container Initiative) 仕様準拠の runtime + CLI + イメージレジストリ + Compose のエコシステム。 |
 | [GitHub Actions](platforms/github-actions.md) | 2026-04-18 | GitHub ネイティブの CI/CD プラットフォーム。ワークフローを YAML で定義し、リポジトリへのイベント（push, PR, schedule 等）に応じて実行する。`gh` CLI と並んで GitHub 運用の中核。 |
 
-_Total: 59 articles._
+_Total: 60 articles._
