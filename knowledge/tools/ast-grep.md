@@ -1,5 +1,7 @@
 ---
 reviewed: 2026-05-03
+tags: [lint, data-cli, rust]
+aliases: [sg]
 ---
 
 # ast-grep

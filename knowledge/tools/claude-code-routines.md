@@ -1,5 +1,7 @@
 ---
 reviewed: 2026-05-03
+tags: [ai-workflow, commercial, cloud-hosted]
+stability: research-preview
 ---
 
 # Claude Code Routines

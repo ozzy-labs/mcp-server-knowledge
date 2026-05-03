@@ -1,5 +1,6 @@
 ---
 reviewed: 2026-05-03
+tags: [package, version-manager, python, rust, fast]
 ---
 
 # uv

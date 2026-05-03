@@ -1,5 +1,7 @@
 ---
 reviewed: 2026-05-03
+tags: [data-cli, rust, fast]
+aliases: [rg]
 ---
 
 # ripgrep

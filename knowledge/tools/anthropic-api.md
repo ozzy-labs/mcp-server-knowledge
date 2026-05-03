@@ -1,5 +1,7 @@
 ---
 reviewed: 2026-04-18
+tags: [library, commercial, cloud-hosted, ai-workflow]
+aliases: [claude-api]
 ---
 
 # Anthropic API (Claude API)

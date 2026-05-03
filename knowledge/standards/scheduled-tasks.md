@@ -1,5 +1,6 @@
 ---
 reviewed: 2026-05-03
+tags: [ai-workflow, methodology]
 ---
 
 # AI エージェントの定期実行

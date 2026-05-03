@@ -1,5 +1,6 @@
 ---
 reviewed: 2026-04-18
+tags: [package, npm, javascript, fast]
 ---
 
 # pnpm

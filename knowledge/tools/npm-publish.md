@@ -1,5 +1,6 @@
 ---
 reviewed: 2026-05-02
+tags: [package, release, npm]
 ---
 
 # npm publish

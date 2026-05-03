@@ -1,5 +1,6 @@
 ---
 reviewed: 2026-05-03
+tags: [methodology]
 ---
 
 # 複数リポジトリ間の設定同期

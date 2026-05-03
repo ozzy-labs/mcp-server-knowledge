@@ -1,5 +1,6 @@
 ---
 reviewed: 2026-04-18
+tags: [typescript, javascript]
 ---
 
 # TypeScript + Node.js ESM

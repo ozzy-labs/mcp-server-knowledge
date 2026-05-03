@@ -1,5 +1,6 @@
 ---
 reviewed: 2026-05-02
+tags: [release, security, npm, github]
 ---
 
 # npm Trusted Publishers (OIDC publishing)

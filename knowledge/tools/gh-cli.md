@@ -1,5 +1,7 @@
 ---
 reviewed: 2026-04-18
+tags: [github, go]
+aliases: [gh]
 ---
 
 # gh (GitHub CLI)

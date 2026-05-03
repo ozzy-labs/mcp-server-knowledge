@@ -1,5 +1,6 @@
 ---
 reviewed: 2026-04-18
+tags: [lint, format, javascript, typescript, json, rust, fast]
 ---
 
 # Biome
