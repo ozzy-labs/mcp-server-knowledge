@@ -81,7 +81,7 @@ CLI / CI 実行モードもあるが、GitHub App モードが最も手軽。
       "schedule": ["before 6am on monday"]
     },
     {
-      "matchPackageNames": ["/^@types//"],
+      "matchPackageNames": ["/^@types\\//"],
       "groupName": "type definitions",
       "automerge": true
     },
@@ -197,7 +197,7 @@ CLI / CI 実行モードもあるが、GitHub App モードが最も手軽。
 
 ### monorepo で同じパッケージが複数更新される
 
-`group:monorepos` プリセットを追加、または `packageRules.matchPackageNames`（regex 形式 `/pattern/`）+ `groupName` で手動グルーピング。
+`group:monorepos` プリセットを追加、または `packageRules.matchPackageNames` + `groupName` で手動グルーピング。`matchPackageNames` の値は前後を `/` で囲むと正規表現として解釈される（例: `"/^@types\\//"` は `@types/` で始まる依存にマッチ）。
 
 ### 自動マージが動かない
 

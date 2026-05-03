@@ -21,9 +21,9 @@ corepack enable pnpm
 corepack use pnpm@latest          # v10 系（latest dist-tag）
 corepack use pnpm@next-11         # v11 系を opt-in
 
-# スタンドアロンインストーラ（Node.js 不要）
-curl -fsSL https://get.pnpm.io/install.sh | sh -                          # 最新 latest（v10）
-curl -fsSL https://get.pnpm.io/install.sh | env PNPM_VERSION=11.0.4 sh -  # v11 を固定取得
+# スタンドアロンインストーラ（Node.js / Corepack なしで pnpm 単体を導入）
+curl -fsSL https://get.pnpm.io/install.sh | sh -                          # latest dist-tag（現在 v10）
+curl -fsSL https://get.pnpm.io/install.sh | env PNPM_VERSION=11.0.4 sh -  # 任意バージョンを PNPM_VERSION で固定
 
 # mise / asdf
 mise use pnpm@10                  # latest 系

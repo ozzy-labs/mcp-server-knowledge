@@ -5,13 +5,13 @@ tags: [format, javascript, typescript, markdown, yaml]
 
 # Prettier
 
-主観的なコードフォーマッタ。元のスタイルを破棄して一貫した形に再出力する。2026-04 時点では **Biome がまだ整形に対応していない Markdown / YAML / HTML / Vue / Svelte** などを補完する役割で残り続けている。Biome を採用したプロジェクトでも、非 JS 資産に Prettier を併用するハイブリッド構成が一般的。
+主観的なコードフォーマッタ。元のスタイルを破棄して一貫した形に再出力する。2026-05 時点では **Biome がまだ整形に対応していない Markdown / YAML / HTML / Vue / Svelte** などを補完する役割で残り続けている。Biome を採用したプロジェクトでも、非 JS 資産に Prettier を併用するハイブリッド構成が一般的。
 
 公式: [prettier.io](https://prettier.io/)
 
 ## バージョン
 
-2026-04 時点の現行は **3.8 系**（3.8.3, 2026-04-15）。4.0 は CLI 高速化を中心に計画中。
+2026-05 時点の現行は **3.8 系**（3.8.3, 2026-04-15）。4.0 は CLI 高速化を中心に計画中。
 
 ## インストール
 
@@ -101,7 +101,7 @@ CHANGELOG.md
 
 Prettier 3.0 から **`.gitignore` も自動で尊重**される。
 
-## Biome との使い分け（2026-04 時点）
+## Biome との使い分け（2026-05 時点）
 
 現実解は **Biome を中心にしつつ、Biome が扱えないものに Prettier を当てる**:
 
