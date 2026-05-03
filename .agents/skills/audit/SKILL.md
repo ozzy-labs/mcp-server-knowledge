@@ -19,13 +19,12 @@ description: knowledge ベース全体の健全性を検査し、リンク切れ
 
 1. **Critical**
    - frontmatter 欠損（`reviewed` フィールドなし、または不正な日付形式）
-   - INDEX.md への未登録記事
 2. **Warning**
    - Stale 記事（`reviewed` が閾値より古い）
    - リンク切れ（404 や到達不能な外部リンク）
    - 重複候補（タイトルまたはファイル名が類似する記事ペア）
 3. **Info**
-   - 孤立記事（他記事から参照されていない。INDEX は除く）
+   - 孤立記事（他記事から参照されていない）
    - 参考セクションなし
 
 ## 手順
@@ -40,11 +39,10 @@ description: knowledge ベース全体の健全性を検査し、リンク切れ
 各項目を並行して実施:
 
 1. **frontmatter 検査**: `reviewed` の有無・形式（`YYYY-MM-DD`）
-2. **INDEX 整合**: `knowledge/INDEX.md` を Read し、各記事が列挙されているか照合
-3. **Stale 判定**: 今日との差分が閾値を超えているか
-4. **リンク検査**: 本文中の HTTP/HTTPS URL を抽出し、HEAD リクエストで到達確認（並列化可）
-5. **重複候補**: ファイル名・H1 タイトル・主題キーワードの類似度で重複候補を抽出
-6. **孤立判定**: `knowledge/**/*.md` 全体を Grep し、他記事からの相互参照を確認
+2. **Stale 判定**: 今日との差分が閾値を超えているか
+3. **リンク検査**: 本文中の HTTP/HTTPS URL を抽出し、HEAD リクエストで到達確認（並列化可）
+4. **重複候補**: ファイル名・H1 タイトル・主題キーワードの類似度で重複候補を抽出
+5. **孤立判定**: `knowledge/**/*.md` 全体を Grep し、他記事からの相互参照を確認
 
 ### 3. レポート生成
 
@@ -54,9 +52,6 @@ audit 結果（対象: N 件）:
 [Critical] frontmatter 欠損: 2 件
   - knowledge/tools/foo.md
   - knowledge/platforms/bar.md
-
-[Critical] INDEX 未登録: 1 件
-  - knowledge/languages/baz.md
 
 [Warning] Stale (>90 日): 3 件
   - knowledge/tools/old-tool.md (reviewed: 2024-10-01)
@@ -77,7 +72,6 @@ audit 結果（対象: N 件）:
 検出項目ごとに対応方法を案内:
 
 - **frontmatter 欠損** → 該当記事を手動で修正、または `update <path>` で再検証
-- **INDEX 未登録** → `pnpm run generate-index` を実行
 - **Stale** → `update --stale <days>` で一括更新
 - **リンク切れ** → 該当記事を `update <path>` で修正
 - **重複候補** → 人手でレビューし、統合するか別記事として明確化

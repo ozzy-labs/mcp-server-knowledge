@@ -16,7 +16,7 @@ allowed-tools: Read, Bash, Grep, Glob, WebFetch, AskUserQuestion
 
 ### 検査の並列化
 
-手順 2（検査）の各項目（frontmatter・INDEX 整合・Stale・リンク・重複・孤立）は独立しているため、`Agent` ツールに `subagent_type: general-purpose` を指定して並列実行してよい。リンク検査は特に外部アクセスが必要なため積極的に並列化する。
+手順 2（検査）の各項目（frontmatter・Stale・リンク・重複・孤立）は独立しているため、`Agent` ツールに `subagent_type: general-purpose` を指定して並列実行してよい。リンク検査は特に外部アクセスが必要なため積極的に並列化する。
 
 ### 完了報告後
 
