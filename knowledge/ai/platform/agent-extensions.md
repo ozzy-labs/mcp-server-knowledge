@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [ai-workflow, methodology]
 ---
 
@@ -85,7 +85,7 @@ allowed-tools: Read Grep Glob
 
 | 項目 | Claude Code | Codex CLI | Gemini CLI | GitHub Copilot CLI |
 |---|---|---|---|---|
-| イベント数 | 約 23 | 5（experimental） | 11 | 6 |
+| イベント数 | 約 23 | 6（experimental） | 11 | 6 |
 | 設定場所 | `settings.json` の `hooks` | `~/.codex/hooks.json` / `<repo>/.codex/hooks.json` | `settings.json` の `hooks` | `.github/hooks/*.json` |
 | 有効化 | デフォルト | `[features] codex_hooks = true` | デフォルト | デフォルト |
 | 決定返却 | `hookSpecificOutput.permissionDecision` (`allow`/`deny`/`ask`/`defer`) | exit 2 or permissionDecision | exit 2 = block | `preToolUse` のみ permissionDecision |
@@ -119,8 +119,8 @@ Claude Code のみ対応する高度イベント（例）:
 |---|---|---|---|---|
 | マニフェスト | `.claude-plugin/plugin.json` | Plugin marketplace（2026 初頭追加） | `gemini-extension.json` | `plugin.json` |
 | 含められるもの | skills / agents / hooks / commands / MCP / monitors | skills / agents / MCP | commands / hooks / skills / agents / policies / themes / MCP | agents / skills / hooks / MCP / LSP |
-| インストール | `/plugin install <name>` | marketplace | `gemini extensions install <github-url>` | `/plugin install owner/repo` |
-| 名前空間 | `plugin-name:skill-name` | 仕様不明 | 同名衝突時に `<extension>.<command>` | リポジトリ名ベース |
+| インストール | `/plugin install <name>` | `/plugins`（インタラクティブブラウザ） | `gemini extensions install <github-url>` | `/plugin install owner/repo` |
+| 名前空間 | `plugin-name:skill-name` | `<plugin>@<marketplace>`（例 `gmail@openai-curated`） | 同名衝突時に `<extension>.<command>` | リポジトリ名ベース |
 
 **セキュリティ制約**:
 
@@ -145,7 +145,7 @@ Claude Code のみ対応する高度イベント（例）:
 | AGENTS.md | Yes（CLAUDE.md 優先） | Yes | Yes | Yes |
 | Skills（オープン標準） | Yes | Yes | Yes | Yes |
 | Subagents | Yes（自動委譲） | Yes（明示のみ） | Yes（自動+@） | Yes（複数手段） |
-| Hooks | 23 events | 5 events (experimental) | 11 events | 6 events |
+| Hooks | 23 events | 6 events (experimental) | 11 events | 6 events |
 | Plugins / Extensions | Yes（成熟） | Yes（marketplace） | Yes（Extensions） | Yes |
 | MCP | Yes | Yes | Yes | Yes |
 | Custom slash commands | Skills に統合 | Deprecated（Skills 推奨） | `.toml` ベース | プラグイン経由 |

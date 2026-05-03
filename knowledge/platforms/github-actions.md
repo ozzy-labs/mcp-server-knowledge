@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [github, yaml]
 ---
 
@@ -25,11 +25,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm
@@ -74,7 +74,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - run: pnpm biome ci
 
   test:
@@ -84,8 +84,8 @@ jobs:
       matrix:
         node: [20, 22, 24]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
       - run: pnpm install --frozen-lockfile
@@ -104,16 +104,16 @@ jobs:
 
 | Action | 用途 |
 |---|---|
-| `actions/checkout@v4` | リポジトリ取得（必須） |
-| `actions/setup-node@v4` | Node セットアップ + キャッシュ |
-| `pnpm/action-setup@v4` | pnpm インストール |
-| `actions/setup-python@v5` | Python |
-| `actions/setup-go@v5` | Go |
-| `actions/cache@v4` | 汎用キャッシュ |
-| `actions/upload-artifact@v4` / `download-artifact@v4` | Job 間のファイル受け渡し |
-| `actions/github-script@v7` | GitHub API を Node で叩く |
+| `actions/checkout@v6` | リポジトリ取得（必須） |
+| `actions/setup-node@v6` | Node セットアップ + キャッシュ |
+| `pnpm/action-setup@v6` | pnpm インストール |
+| `actions/setup-python@v6` | Python |
+| `actions/setup-go@v6` | Go |
+| `actions/cache@v5` | 汎用キャッシュ |
+| `actions/upload-artifact@v7` / `download-artifact@v8` | Job 間のファイル受け渡し |
+| `actions/github-script@v9` | GitHub API を Node で叩く |
 | `softprops/action-gh-release@v2` | リリース作成 |
-| `jdx/mise-action@v2` | mise 経由でツールインストール |
+| `jdx/mise-action@v4` | mise 経由でツールインストール |
 
 バージョンは**メジャー固定 + パッチ追従**（`@v4`）が一般的。完全固定（SHA）が最もセキュアだが更新負荷が高い。
 
@@ -163,12 +163,12 @@ permissions:
 ### キャッシュ
 
 ```yaml
-- uses: actions/setup-node@v4
+- uses: actions/setup-node@v6
   with:
     cache: pnpm                       # 組み込みキャッシュ
 
 # 汎用キャッシュ
-- uses: actions/cache@v4
+- uses: actions/cache@v5
   with:
     path: ~/.cache/pnpm
     key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
@@ -203,8 +203,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
       - run: pnpm run test
@@ -233,9 +233,9 @@ name: setup
 runs:
   using: composite
   steps:
-    - uses: pnpm/action-setup@v4
+    - uses: pnpm/action-setup@v6
       with: { version: 10 }
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v6
       with:
         node-version: 24
         cache: pnpm
@@ -304,7 +304,7 @@ steps:
 
 ### 外部 action が非推奨になった
 
-Renovate で自動更新するか、`actions/*` シリーズの公式版に移行（例: `actions/setup-node@v4` は cache 機能も内蔵）。
+Renovate で自動更新するか、`actions/*` シリーズの公式版に移行（例: `actions/setup-node@v6` は cache 機能も内蔵）。
 
 ### `pull_request` でチェックが走らない
 

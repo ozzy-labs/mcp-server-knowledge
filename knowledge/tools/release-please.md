@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [release, github, cloud-hosted]
 ---
 
@@ -30,13 +30,14 @@ on:
 
 permissions:
   contents: write
+  issues: write
   pull-requests: write
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@v5
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -49,7 +50,7 @@ jobs:
         run: pnpm publish --no-git-checks
 ```
 
-2026-04 時点の現行 major は `release-please-action@v4`（内部の release-please ライブラリは 17.x 系）。
+2026-05 時点の現行 major は `release-please-action@v5`（node24 ランタイム、内部の release-please ライブラリは 17.6.x 系）。v5.0.0 は 2026-04-22 にリリースされたメジャー更新。
 
 ## `release-please-config.json`
 
@@ -126,7 +127,7 @@ pnpm workspaces のモノレポ:
 
 ## AI エージェントがよくやるミス
 
-1. **`permissions` を書き忘れて Release PR が作れない** — `contents: write` と `pull-requests: write` が必須。
+1. **`permissions` を書き忘れて Release PR が作れない** — `contents: write` / `issues: write` / `pull-requests: write` が必須。
 2. **Release PR のマージで他ワークフローが発火しないのを忘れる** — `GITHUB_TOKEN` で作られたタグは downstream CI をトリガしない。publish を回したい場合は GitHub App トークンまたは PAT を `token:` に渡す。
 3. **`bump-minor-pre-major` を未設定で `0.x` が永久 PATCH** — 公開前プロジェクトでは通常 `true` にする。
 4. **`node-workspace` プラグイン無しで内部依存が更新されない** — pnpm/yarn workspaces なら必須。Cargo は `cargo-workspace`。
