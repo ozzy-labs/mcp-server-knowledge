@@ -148,4 +148,4 @@ messages = [
 
 - [OWASP Top 10 for LLM Applications 2025](https://genai.owasp.org/llmrisk/llm01-prompt-injection/) — LLM01:2025 Prompt Injection（直接 / 間接の2分類、7つの緩和策）
 - [Simon Willison's prompt injection series](https://simonwillison.net/tags/prompt-injection/) — 実事例の豊富なレビュー、lethal trifecta の出典
-- [Anthropic: Mitigate jailbreaks and prompt injections](https://platform.claude.com/docs/en/docs/test-and-evaluate/strengthen-guardrails/mitigate-jailbreaks) — Harmlessness screens / Input validation / Chain safeguards の実装ガイド
+- [Anthropic: Mitigate jailbreaks and prompt injections](https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/mitigate-jailbreaks) — Harmlessness screens / Input validation / Chain safeguards の実装ガイド
