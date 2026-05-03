@@ -1,11 +1,11 @@
 ---
-reviewed: 2026-05-03
+reviewed: 2026-05-04
 tags: [data-cli, yaml, go]
 ---
 
 # yq
 
-YAML / JSON / XML / INI / CSV / TSV / properties を扱うコマンドライン処理ツール。`jq` の YAML 版的な位置付けだが、**実装が 2 つあり挙動が大きく違う**。本記事では事実上の標準である **Mike Farah 版（Go 製、`mikefarah/yq`）** を扱う。`tools/jq.md` の知識を YAML に拡張する。
+YAML / JSON / TOML / HCL / XML / INI / CSV / TSV / properties を扱うコマンドライン処理ツール。`jq` の YAML 版的な位置付けだが、**実装が 2 つあり挙動が大きく違う**。本記事では事実上の標準である **Mike Farah 版（Go 製、`mikefarah/yq`）** を扱う。`tools/jq.md` の知識を YAML に拡張する。
 
 公式: [mikefarah.gitbook.io/yq](https://mikefarah.gitbook.io/yq) / [mikefarah/yq](https://github.com/mikefarah/yq)
 
@@ -94,10 +94,12 @@ yq ea '.[].name' multi-doc.yaml
 ```bash
 yq -o=json '.' config.yaml         # YAML → JSON
 yq -o=yaml '.' config.json         # JSON → YAML（jq 代替）
+yq -o=toml '.' config.yaml         # TOML（v4.52+ で双方向対応）
 yq -o=props '.' config.yaml        # Java properties
 yq -o=xml '.' config.yaml          # XML
 yq -o=csv '.[]' list.yaml          # CSV（配列のみ）
 yq -o=tsv '.[]' list.yaml          # TSV
+yq -p=toml -o=yaml '.' config.toml # TOML → YAML
 yq -p=xml -o=yaml '.' config.xml   # XML → YAML（-p で入力指定）
 ```
 

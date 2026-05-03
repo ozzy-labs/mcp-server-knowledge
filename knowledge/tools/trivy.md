@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [security, go]
 ---
 
@@ -13,7 +13,7 @@ Aqua Security が提供する包括的なセキュリティスキャナ。コン
 
 ```bash
 # mise
-mise use trivy@0.69
+mise use trivy@0.70
 
 # Homebrew
 brew install trivy
@@ -31,7 +31,7 @@ Trivy は複数の検査器を切り替えて実行する:
 
 | スキャナ | 検出対象 |
 |---|---|
-| `vuln` | CVE（OS パッケージ、言語の lockfile: npm, pnpm, Gemfile, go.sum, etc.） |
+| `vuln` | CVE（OS パッケージ、言語の lockfile: npm, pnpm, Gemfile, go.sum, pylock.toml, etc.） |
 | `secret` | API キー、トークン、秘密鍵のパターン検出 |
 | `misconfig` | Dockerfile / Kubernetes / Terraform / CloudFormation の設定ミス |
 | `license` | 使用ライブラリのライセンス |

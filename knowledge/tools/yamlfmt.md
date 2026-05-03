@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [format, yaml, go]
 ---
 
@@ -111,12 +111,19 @@ pre-commit:
 yamlfmt -lint .
 ```
 
-GitHub Actions:
+GitHub Actions（公式 Action はないため、バイナリを実行する）:
 
 ```yaml
-- uses: google/yamlfmt@v0.13.0
-  with:
-    args: -lint
+- name: Run yamlfmt
+  run: |
+    docker run --rm -v "$PWD:/workdir" ghcr.io/google/yamlfmt:latest -lint .
+```
+
+または `mise` でバージョンを揃える:
+
+```yaml
+- uses: jdx/mise-action@v2
+- run: yamlfmt -lint .
 ```
 
 ## 再現性のある運用

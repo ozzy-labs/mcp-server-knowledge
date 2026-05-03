@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [library, typescript]
 ---
 
@@ -73,15 +73,28 @@ z.never()             // never
 
 ```ts
 z.string().min(1).max(100);
-z.string().email();
-z.string().url();
-z.string().uuid();
 z.string().regex(/^[a-z]+$/);
 z.string().startsWith("https://");
-z.string().datetime();        // ISO 8601
 z.string().trim();            // パース時に trim
 z.string().toLowerCase();     // パース時に変換
 ```
+
+### 文字列フォーマット（v4 から top-level 関数）
+
+v4 では `z.string().email()` などのメソッド形式は **deprecated**。フォーマット系は専用クラスとして top-level 関数に移行した。
+
+```ts
+z.email();
+z.url();
+z.uuid();           // RFC 9562/4122 厳格化（v3 より厳しい）
+z.ipv4();
+z.ipv6();
+z.base64();
+z.base64url();      // padding 不可
+z.iso.datetime();   // ISO 8601
+```
+
+v3 のメソッド形式は当面動くが、新規コードは top-level を使う。
 
 ### 数値の絞り込み
 
@@ -143,6 +156,8 @@ z.map(z.string(), z.number());        // Map<string, number>
 z.set(z.number());                    // Set<number>
 ```
 
+v4 では `z.record(valueSchema)` の **1 引数形式は廃止**。必ず `z.record(keySchema, valueSchema)` の 2 引数で呼ぶ。enum をキーにすると exhaustiveness が要求されるので、欠落を許す場合は `z.partialRecord(...)` を使う。
+
 ## Optional / Nullable / Default
 
 ```ts
@@ -198,13 +213,14 @@ try {
     for (const issue of e.issues) {
       console.log(`${issue.path.join(".")}: ${issue.message}`);
     }
-    // フラット化（フィールド → エラーメッセージ配列）
-    const flat = e.flatten();
-    // ネスト形式
-    const formatted = e.format();
+    // v4: ツリー形式（推奨）
+    const tree = z.treeifyError(e);
+    // v3 互換: e.flatten() / e.format() は v4 で deprecated。
   }
 }
 ```
+
+v4 では `e.flatten()` / `e.format()` は deprecated、`.formErrors` / `.errors` は削除。代わりに top-level の `z.treeifyError(error)` を使う。
 
 ## z.infer と z.input / z.output
 
@@ -244,23 +260,28 @@ server.registerTool(
 
 ## v3 と v4 の差
 
-本記事は **v3 系**（2026-04 時点で `zod@3.25+` が主流）を前提。v4（alpha/beta）で予定されている変更:
+**2026-05 現在**: `zod@4` が stable。最新は `zod@4.4.2`（2026-05-01 リリース）。新規プロジェクトは v4 を推奨。
 
-- パッケージ分割（`zod/v4`、`zod-mini`）
-- エラーフォーマッタの刷新
-- `z.discriminatedUnion` の多段対応
-- パフォーマンス改善
-- 一部メソッド名の整理
+主な破壊的変更:
 
-**2026-04 現在**: プロダクションは v3 推奨。ライブラリ開発では peer dep を `zod@^3.25 || ^4.0` にしておくと両対応可能（MCP SDK もそうしている）。
+- **文字列フォーマット**: `z.string().email()` → `z.email()` の top-level 関数化。`z.uuid()` は RFC 9562/4122 厳格化。
+- **`z.record()`**: 1 引数形式を廃止、`z.record(keySchema, valueSchema)` 必須。enum キーで exhaustiveness 強制。
+- **エラー API**: `e.flatten()` / `e.format()` deprecated。`z.treeifyError()` へ移行。`.formErrors` / `.errors` は削除。
+- **パッケージ分割**: `zod`（メイン）、`zod/v4/core`（コアユーティリティ）、`zod-mini`（軽量版・tree-shake 重視）。
+- **パフォーマンス**: パース速度・型推論ともに大幅改善。
+
+**ライブラリ開発の peer dep**: 当面 `zod@^3 || ^4` で両対応する選択もある（MCP SDK 等）。アプリケーション側は v4 へ移行を推奨。
+
+詳細な移行手順は公式の [v4 changelog](https://zod.dev/v4/changelog) を参照。
 
 ## よくある誤り
 
 1. **`z.object({}).parse(undefined)` で落ちる** — `z.object({}).optional()` を使うか `safeParse` で握る
 2. **`transform` の中で副作用**（DB 呼び出し等） — パースは純粋関数であるべき。副作用は別レイヤーで
-3. **`z.record(z.string())` を `Record<string, string>` と混同** — `z.record(keySchema, valueSchema)` は v3.23+ の 2 引数形式。1 引数だと values のみ
-4. **`z.literal([...])` が使えない** — literal は単一値用。複数は `z.union([z.literal(...), ...])` または `z.enum([...])`
-5. **`z.enum()` に非 readonly 配列を渡す** — `z.enum(["a", "b"] as const)` と const assertion を付ける
+3. **v4 で `z.record(z.string())` が動かない** — v4 は 2 引数必須。`z.record(z.string(), z.string())` と書く
+4. **v4 でも `z.string().email()` を書く** — 動くが deprecated。新規は `z.email()` を使う
+5. **`z.literal([...])` が使えない** — literal は単一値用。複数は `z.union([z.literal(...), ...])` または `z.enum([...])`
+6. **`z.enum()` に非 readonly 配列を渡す** — `z.enum(["a", "b"] as const)` と const assertion を付ける
 
 ## 他ライブラリとの比較
 
