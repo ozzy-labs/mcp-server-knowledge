@@ -1,7 +1,6 @@
 ---
 description: knowledge ベース内の既存記事を最新情報で再検証・更新する
 argument-hint: "<article-path | category | --stale [days] | --staleness-group <name> | --all> [--non-interactive] [--auto-ship]"
-disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch, AskUserQuestion
 ---
 

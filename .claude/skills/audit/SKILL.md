@@ -1,7 +1,6 @@
 ---
 description: knowledge ベースの健全性を監査し、問題を検出してレポートする
 argument-hint: "[--category <name> | <article-path>] [--stale <days>]"
-disable-model-invocation: true
 allowed-tools: Read, Bash, Grep, Glob, WebFetch, AskUserQuestion
 ---
 
