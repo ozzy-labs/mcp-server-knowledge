@@ -1,0 +1,777 @@
+# Knowledge MCP staleness verification sources.
+#
+# Each entry maps a knowledge article path to the sources that should be
+# consulted when re-verifying its content via Claude Code Routines.
+#
+# Schema:
+#   <article_path>:
+#     group: daily | weekly | monthly
+#     skip: optional bool (default false)
+#     skip_reason: optional string (required when skip: true)
+#     sources:
+#       docs: [str]              # Public docs URLs to WebFetch
+#       github_releases: [str]   # GitHub repos (owner/name) for releases API
+#       rss: [str]               # RSS/Atom feed URLs
+#       raw_files: [str]         # GitHub raw paths (owner/repo/HEAD/path)
+#       npm: [str]               # npm package names (registry.npmjs.org/{pkg})
+#       pypi: [str]              # PyPI package names
+#       eol: str | null          # endoflife.date product name (or null)
+#       web_search: [str]        # Web search queries (agent-driven)
+#       related_internal: [str]  # Related knowledge article paths to read
+#     verification:
+#       confidence_threshold: high | medium | low (default medium)
+#
+# Confidence semantics (set per article in `verification.confidence_threshold`):
+#   high   -> auto PR (clear factual delta with cross-source corroboration)
+#   medium -> auto PR + [needs review] label (pattern shift suggested)
+#   low    -> reviewed: update only, batched PR (no factual delta)
+#   fail   -> issue created (verification material unavailable)
+#
+# Confirmed working endoflife.date products (2026-05-03 audit):
+#   pnpm, nodejs (alias: node), python, docker-engine
+# Other products (biome, vitest, prettier, astro, typescript, github-actions)
+# are NOT tracked by endoflife.date; rely on GitHub releases instead.
+
+defaults:
+  verification:
+    confidence_threshold: medium
+
+# ==============================================================================
+# Daily group (8 articles, 02:00 JST)
+# ==============================================================================
+
+ai/agents/claude-code:
+  group: daily
+  sources:
+    docs:
+      - https://code.claude.com/docs
+    github_releases:
+      - anthropics/claude-code
+    raw_files:
+      - anthropics/claude-code/HEAD/CHANGELOG.md
+    npm:
+      - "@anthropic-ai/claude-code"
+    web_search:
+      - "claude code latest features"
+    related_internal:
+      - ai/agents/claude-code-routines
+
+ai/agents/claude-code-routines:
+  group: daily
+  sources:
+    docs:
+      - https://code.claude.com/docs/en/routines
+      - https://code.claude.com/docs/en/web-scheduled-tasks
+      - https://platform.claude.com/docs/en/api/claude-code/routines-fire
+      - https://code.claude.com/docs/en/legal-and-compliance
+    web_search:
+      - "claude code routines update"
+    related_internal:
+      - ai/agents/claude-code
+      - ai/practice/scheduled-tasks
+
+ai/agents/codex-cli:
+  group: daily
+  sources:
+    docs:
+      - https://developers.openai.com/codex
+    github_releases:
+      - openai/codex
+    rss:
+      - https://openai.com/blog/rss.xml
+    raw_files:
+      - openai/codex/HEAD/CHANGELOG.md
+    npm:
+      - "@openai/codex"
+    web_search:
+      - "openai codex cli release"
+
+ai/agents/gemini-cli:
+  group: daily
+  sources:
+    docs:
+      - https://ai.google.dev/gemini-api/docs
+    github_releases:
+      - google-gemini/gemini-cli
+    rss:
+      - https://cloudblog.withgoogle.com/rss/
+    raw_files:
+      - google-gemini/gemini-cli/HEAD/CHANGELOG.md
+    npm:
+      - "@google/gemini-cli"
+    web_search:
+      - "gemini cli release notes"
+
+ai/agents/github-copilot-cli:
+  group: daily
+  sources:
+    docs:
+      - https://docs.github.com/en/copilot/github-copilot-in-the-cli
+      - https://docs.github.com/en/copilot
+    github_releases:
+      - github/gh-copilot
+    rss:
+      - https://github.blog/changelog/feed/
+    web_search:
+      - "github copilot cli update"
+
+ai/platform/anthropic-api:
+  group: daily
+  sources:
+    docs:
+      - https://docs.anthropic.com/en/api
+      - https://docs.anthropic.com/en/release-notes/api
+      - https://www.anthropic.com/news
+    github_releases:
+      - anthropics/anthropic-sdk-python
+      - anthropics/anthropic-sdk-typescript
+    web_search:
+      - "anthropic api breaking change"
+      - "anthropic api new model"
+
+ai/platform/mcp-protocol:
+  group: daily
+  sources:
+    docs:
+      - https://modelcontextprotocol.io/specification
+    github_releases:
+      - modelcontextprotocol/specification
+    raw_files:
+      - modelcontextprotocol/specification/HEAD/CHANGELOG.md
+    web_search:
+      - "model context protocol spec update"
+
+ai/platform/mcp-typescript-sdk:
+  group: daily
+  sources:
+    docs:
+      - https://modelcontextprotocol.io/docs
+    github_releases:
+      - modelcontextprotocol/typescript-sdk
+    raw_files:
+      - modelcontextprotocol/typescript-sdk/HEAD/CHANGELOG.md
+    npm:
+      - "@modelcontextprotocol/sdk"
+    related_internal:
+      - ai/platform/mcp-protocol
+
+# ==============================================================================
+# Weekly group (24 articles, 03:00 JST Saturday)
+# ==============================================================================
+
+# --- tools 活発系 (12) ---
+
+tools/tsdown:
+  group: weekly
+  sources:
+    docs:
+      - https://tsdown.dev
+    github_releases:
+      - rolldown/tsdown
+    raw_files:
+      - rolldown/tsdown/HEAD/CHANGELOG.md
+    npm:
+      - tsdown
+
+tools/biome:
+  group: weekly
+  sources:
+    docs:
+      - https://biomejs.dev
+    github_releases:
+      - biomejs/biome
+    rss:
+      - https://biomejs.dev/blog/rss.xml
+    raw_files:
+      - biomejs/biome/HEAD/CHANGELOG.md
+    npm:
+      - "@biomejs/biome"
+
+tools/vitest:
+  group: weekly
+  sources:
+    docs:
+      - https://vitest.dev
+    github_releases:
+      - vitest-dev/vitest
+    raw_files:
+      - vitest-dev/vitest/HEAD/CHANGELOG.md
+    npm:
+      - vitest
+
+tools/lefthook:
+  group: weekly
+  sources:
+    docs:
+      - https://lefthook.dev
+    github_releases:
+      - evilmartians/lefthook
+    raw_files:
+      - evilmartians/lefthook/HEAD/CHANGELOG.md
+
+tools/mise:
+  group: weekly
+  sources:
+    docs:
+      - https://mise.jdx.dev
+    github_releases:
+      - jdx/mise
+    raw_files:
+      - jdx/mise/HEAD/CHANGELOG.md
+
+tools/pnpm:
+  group: weekly
+  sources:
+    docs:
+      - https://pnpm.io/cli/install
+      - https://pnpm.io/
+    github_releases:
+      - pnpm/pnpm
+    rss:
+      - https://pnpm.io/blog/rss.xml
+    raw_files:
+      - pnpm/pnpm/HEAD/CHANGELOG.md
+    npm:
+      - pnpm
+    eol: pnpm
+
+tools/uv:
+  group: weekly
+  sources:
+    docs:
+      - https://docs.astral.sh/uv/
+    github_releases:
+      - astral-sh/uv
+    raw_files:
+      - astral-sh/uv/HEAD/CHANGELOG.md
+    pypi:
+      - uv
+
+tools/renovate:
+  group: weekly
+  sources:
+    docs:
+      - https://docs.renovatebot.com
+    github_releases:
+      - renovatebot/renovate
+
+tools/release-please:
+  group: weekly
+  sources:
+    github_releases:
+      - googleapis/release-please
+      - googleapis/release-please-action
+    raw_files:
+      - googleapis/release-please/HEAD/CHANGELOG.md
+    npm:
+      - release-please
+
+tools/gh-cli:
+  group: weekly
+  sources:
+    docs:
+      - https://cli.github.com/manual/
+      - https://docs.github.com/en/github-cli
+    github_releases:
+      - cli/cli
+    raw_files:
+      - cli/cli/HEAD/CHANGELOG.md
+
+tools/ast-grep:
+  group: weekly
+  sources:
+    docs:
+      - https://ast-grep.github.io
+    github_releases:
+      - ast-grep/ast-grep
+    raw_files:
+      - ast-grep/ast-grep/HEAD/CHANGELOG.md
+
+tools/markitdown:
+  group: weekly
+  sources:
+    github_releases:
+      - microsoft/markitdown
+    raw_files:
+      - microsoft/markitdown/HEAD/README.md
+    pypi:
+      - markitdown
+
+# --- ai/practice (6) ---
+
+ai/practice/ai-context-management:
+  group: weekly
+  sources:
+    docs:
+      - https://platform.claude.com/docs/en/build/caching
+      - https://platform.claude.com/docs/en/build/extended-thinking
+      - https://code.claude.com/docs
+    web_search:
+      - "AI agent context management 2026"
+    related_internal:
+      - ai/agents/claude-code
+
+ai/practice/ai-driven-development:
+  group: weekly
+  sources:
+    rss:
+      - https://www.anthropic.com/news
+      - https://openai.com/blog/rss.xml
+    docs:
+      - https://code.claude.com/docs
+      - https://developers.openai.com/codex
+    web_search:
+      - "AI driven development best practices"
+    related_internal:
+      - ai/practice/spec-driven-development
+      - ai/practice/multi-agent-repo
+
+ai/practice/multi-agent-repo:
+  group: weekly
+  sources:
+    docs:
+      - https://agents.md
+      - https://code.claude.com/docs
+      - https://developers.openai.com/codex
+    github_releases:
+      - openai/agents.md
+    raw_files:
+      - openai/agents.md/HEAD/README.md
+    web_search:
+      - "AGENTS.md CLAUDE.md multi agent"
+    related_internal:
+      - ai/platform/agents-md
+      - ai/platform/agent-extensions
+
+ai/practice/prompt-injection:
+  group: weekly
+  sources:
+    docs:
+      - https://owasp.org/www-project-top-10-for-large-language-model-applications/
+      - https://docs.anthropic.com/en/docs/test-and-evaluate/strengthen-guardrails/mitigate-jailbreaks
+      - https://simonwillison.net/tags/prompt-injection/
+    web_search:
+      - "LLM prompt injection 2026"
+
+ai/practice/scheduled-tasks:
+  group: weekly
+  sources:
+    docs:
+      - https://code.claude.com/docs/en/scheduled-tasks
+      - https://code.claude.com/docs/en/web-scheduled-tasks
+      - https://code.claude.com/docs/en/desktop-scheduled-tasks
+      - https://developers.openai.com/codex/cloud
+      - https://code.claude.com/docs/en/legal-and-compliance
+    related_internal:
+      - ai/agents/claude-code-routines
+
+ai/practice/spec-driven-development:
+  group: weekly
+  sources:
+    github_releases:
+      - github/spec-kit
+      - gotalab/cc-sdd
+    docs:
+      - https://kiro.dev/docs
+    rss:
+      - https://github.blog/changelog/feed/
+    web_search:
+      - "spec driven development AI agent"
+    related_internal:
+      - ai/workflow/github-spec-kit
+      - ai/workflow/kiro
+      - ai/workflow/cc-sdd
+
+# --- ai/workflow (3) ---
+
+ai/workflow/cc-sdd:
+  group: weekly
+  sources:
+    github_releases:
+      - gotalab/cc-sdd
+    raw_files:
+      - gotalab/cc-sdd/HEAD/README.md
+    npm:
+      - cc-sdd
+
+ai/workflow/github-spec-kit:
+  group: weekly
+  sources:
+    github_releases:
+      - github/spec-kit
+    rss:
+      - https://github.blog/changelog/feed/
+    raw_files:
+      - github/spec-kit/HEAD/README.md
+
+ai/workflow/kiro:
+  group: weekly
+  sources:
+    docs:
+      - https://kiro.dev
+      - https://kiro.dev/docs
+    rss:
+      - https://aws.amazon.com/blogs/aws/feed/
+    web_search:
+      - "kiro IDE update"
+
+# --- ai/platform 残り (2) ---
+
+ai/platform/agent-extensions:
+  group: weekly
+  sources:
+    docs:
+      - https://code.claude.com/docs
+      - https://developers.openai.com/codex
+      - https://docs.github.com/en/copilot
+    github_releases:
+      - google-gemini/gemini-cli
+    related_internal:
+      - ai/practice/multi-agent-repo
+
+ai/platform/agents-md:
+  group: weekly
+  sources:
+    docs:
+      - https://agents.md
+    github_releases:
+      - openai/agents.md
+    raw_files:
+      # agents.md ランディングは spec 本文を持たない (2026-05-04 audit)。
+      # README が実質的な spec 一次源。
+      - openai/agents.md/HEAD/README.md
+    related_internal:
+      - ai/practice/multi-agent-repo
+
+# --- platforms (1) ---
+
+platforms/github-actions:
+  group: weekly
+  sources:
+    docs:
+      - https://docs.github.com/en/actions
+    rss:
+      - https://github.blog/changelog/feed/
+
+# ==============================================================================
+# Monthly group (33 articles incl 2 skip, 04:00 JST 1st of month)
+# ==============================================================================
+
+# --- tools 安定系 (21) ---
+
+tools/ripgrep:
+  group: monthly
+  sources:
+    github_releases:
+      - BurntSushi/ripgrep
+    raw_files:
+      - BurntSushi/ripgrep/HEAD/CHANGELOG.md
+
+tools/jq:
+  group: monthly
+  sources:
+    docs:
+      - https://jqlang.org
+    github_releases:
+      - jqlang/jq
+    raw_files:
+      - jqlang/jq/HEAD/NEWS.md
+
+tools/yq:
+  group: monthly
+  sources:
+    docs:
+      - https://mikefarah.gitbook.io/yq
+    github_releases:
+      - mikefarah/yq
+    raw_files:
+      - mikefarah/yq/HEAD/CHANGELOG.md
+
+tools/just:
+  group: monthly
+  sources:
+    docs:
+      - https://just.systems/man/en/
+    github_releases:
+      - casey/just
+    raw_files:
+      - casey/just/HEAD/CHANGELOG.md
+
+tools/aws-cli:
+  group: monthly
+  sources:
+    docs:
+      - https://docs.aws.amazon.com/cli/latest/reference/
+    github_releases:
+      - aws/aws-cli
+    raw_files:
+      - aws/aws-cli/HEAD/CHANGELOG.rst
+
+tools/chezmoi:
+  group: monthly
+  sources:
+    docs:
+      - https://chezmoi.io/
+      - https://chezmoi.io/quick-start/
+    github_releases:
+      - twpayne/chezmoi
+    raw_files:
+      - twpayne/chezmoi/HEAD/CHANGELOG.md
+
+tools/taplo:
+  group: monthly
+  sources:
+    docs:
+      - https://taplo.tamasfe.dev
+    github_releases:
+      - tamasfe/taplo
+
+tools/yamlfmt:
+  group: monthly
+  sources:
+    github_releases:
+      - google/yamlfmt
+    raw_files:
+      - google/yamlfmt/HEAD/README.md
+
+tools/yamllint:
+  group: monthly
+  sources:
+    docs:
+      - https://yamllint.readthedocs.io
+    github_releases:
+      - adrienverge/yamllint
+    pypi:
+      - yamllint
+
+tools/shellcheck:
+  group: monthly
+  sources:
+    docs:
+      - https://shellcheck.net
+    github_releases:
+      - koalaman/shellcheck
+    raw_files:
+      - koalaman/shellcheck/HEAD/CHANGELOG.md
+
+tools/shfmt:
+  group: monthly
+  sources:
+    github_releases:
+      - mvdan/sh
+
+tools/bats:
+  group: monthly
+  sources:
+    docs:
+      - https://bats-core.readthedocs.io
+    github_releases:
+      - bats-core/bats-core
+    raw_files:
+      - bats-core/bats-core/HEAD/CHANGELOG.md
+
+tools/commitlint:
+  group: monthly
+  sources:
+    docs:
+      - https://commitlint.js.org
+    github_releases:
+      - conventional-changelog/commitlint
+    npm:
+      - "@commitlint/cli"
+
+tools/actionlint:
+  group: monthly
+  sources:
+    github_releases:
+      - rhysd/actionlint
+    raw_files:
+      - rhysd/actionlint/HEAD/CHANGELOG.md
+
+tools/markdownlint:
+  group: monthly
+  sources:
+    github_releases:
+      - DavidAnson/markdownlint
+      - DavidAnson/markdownlint-cli2
+    npm:
+      - markdownlint-cli2
+
+tools/prettier:
+  group: monthly
+  sources:
+    docs:
+      - https://prettier.io/docs/
+    github_releases:
+      - prettier/prettier
+    rss:
+      - https://prettier.io/blog/atom.xml
+    npm:
+      - prettier
+
+tools/gitleaks:
+  group: monthly
+  sources:
+    github_releases:
+      - gitleaks/gitleaks
+    raw_files:
+      - gitleaks/gitleaks/HEAD/CHANGELOG.md
+
+tools/trivy:
+  group: monthly
+  sources:
+    docs:
+      - https://trivy.dev
+    github_releases:
+      - aquasecurity/trivy
+    raw_files:
+      - aquasecurity/trivy/HEAD/CHANGELOG.md
+
+tools/npm-publish:
+  group: monthly
+  sources:
+    docs:
+      - https://docs.npmjs.com/cli/v11/commands/npm-publish
+      - https://docs.npmjs.com/about-access-tokens
+    rss:
+      - https://github.blog/changelog/feed/
+    related_internal:
+      - standards/npm-trusted-publishers
+
+tools/zod:
+  group: monthly
+  sources:
+    docs:
+      - https://zod.dev
+    github_releases:
+      - colinhacks/zod
+    npm:
+      - zod
+
+tools/astro:
+  group: monthly
+  sources:
+    docs:
+      - https://docs.astro.build/
+    github_releases:
+      - withastro/astro
+    rss:
+      - https://astro.build/rss.xml
+    npm:
+      - astro
+
+# --- standards (7, 2 skip) ---
+
+standards/conventional-commits:
+  group: monthly
+  sources:
+    docs:
+      - https://conventionalcommits.org
+    github_releases:
+      - conventional-commits/conventionalcommits.org
+
+standards/dev-containers:
+  group: monthly
+  sources:
+    docs:
+      - https://containers.dev/implementors/spec
+    github_releases:
+      - devcontainers/spec
+
+standards/github-flow:
+  group: monthly
+  sources:
+    docs:
+      - https://docs.github.com/en/get-started/using-github/github-flow
+    rss:
+      - https://github.blog/changelog/feed/
+
+standards/markdown-style:
+  group: monthly
+  skip: true
+  skip_reason: |
+    OzzyLabs 自前ルール集。CommonMark / GFM の仕様変化は
+    `tools/markdownlint` 経由で間接的に追跡される。
+    handbook で四半期手動レビュー対象。
+
+standards/multi-repo-config-sync:
+  group: monthly
+  skip: true
+  skip_reason: |
+    OzzyLabs 自前パターン。一次源は handbook ADR。
+    Renovate 仕様変化は `tools/renovate` 記事側で追跡される。
+    handbook で四半期手動レビュー対象。
+
+standards/npm-trusted-publishers:
+  group: monthly
+  sources:
+    docs:
+      - https://docs.npmjs.com/trusted-publishers
+    rss:
+      - https://github.blog/changelog/feed/
+    related_internal:
+      - tools/npm-publish
+
+standards/semver:
+  group: monthly
+  sources:
+    docs:
+      - https://semver.org
+
+# --- languages (4) ---
+
+languages/bash:
+  group: monthly
+  sources:
+    docs:
+      # gnu.org/software/bash/manual は Cloudflare で 403 を返すため除外。
+      # NEWS は Chet Ramey (Bash maintainer) のミラーを使用。
+      - https://tiswww.case.edu/php/chet/bash/NEWS
+    web_search:
+      - "GNU bash latest release notes"
+
+languages/nodejs:
+  group: monthly
+  sources:
+    docs:
+      - https://nodejs.org/api/
+      - https://nodejs.org/en/about/previous-releases
+    github_releases:
+      - nodejs/node
+      - nodejs/Release
+    rss:
+      - https://nodejs.org/en/feed/blog.xml
+    eol: nodejs
+
+languages/python:
+  group: monthly
+  sources:
+    docs:
+      - https://docs.python.org/3/
+      - https://devguide.python.org/versions/
+    eol: python
+    web_search:
+      - "Python release notes"
+
+languages/typescript-esm:
+  group: monthly
+  sources:
+    docs:
+      - https://www.typescriptlang.org/docs/handbook/modules
+      - https://nodejs.org/api/esm.html
+      - https://www.typescriptlang.org/docs/handbook/release-notes
+    related_internal:
+      - languages/nodejs
+
+# --- platforms (1) ---
+
+platforms/docker:
+  group: monthly
+  sources:
+    docs:
+      - https://docs.docker.com
+      - https://docs.docker.com/engine/release-notes/
+      - https://docs.docker.com/compose/release-notes/
+    rss:
+      - https://www.docker.com/blog/feed/
+    eol: docker-engine

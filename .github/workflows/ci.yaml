@@ -50,6 +50,9 @@ jobs:
       - name: Lint (Actions)
         run: actionlint
 
+      - name: Validate staleness sources
+        run: pnpm run validate-staleness-sources
+
       - name: Typecheck
         run: pnpm run typecheck
 

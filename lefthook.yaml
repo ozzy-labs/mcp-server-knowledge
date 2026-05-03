@@ -19,6 +19,9 @@ pre-commit:
       glob: "knowledge/**/*.md"
       exclude: "knowledge/INDEX.md"
       run: node scripts/generate-index.mjs && git add knowledge/INDEX.md
+    validate-staleness-sources:
+      glob: "scripts/staleness/sources.{yaml,schema.json}"
+      run: node scripts/staleness/validate.mjs
 
 pre-push:
   commands:

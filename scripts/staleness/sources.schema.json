@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ozzy-labs/knowledge-mcp-server/scripts/staleness/sources.schema.json",
+  "title": "Knowledge MCP staleness sources",
+  "description": "Maps each knowledge article path to the sources that should be consulted when re-verifying its content via Claude Code Routines.",
+  "type": "object",
+  "minProperties": 1,
+  "properties": {
+    "defaults": {
+      "$ref": "#/definitions/defaults"
+    }
+  },
+  "additionalProperties": {
+    "$ref": "#/definitions/articleEntry"
+  },
+  "definitions": {
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "verification": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "confidence_threshold": {
+              "$ref": "#/definitions/confidenceThreshold"
+            }
+          }
+        }
+      }
+    },
+    "group": {
+      "type": "string",
+      "enum": ["daily", "weekly", "monthly"]
+    },
+    "confidenceThreshold": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    },
+    "stringArray": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "articleEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["group"],
+      "properties": {
+        "group": {
+          "$ref": "#/definitions/group"
+        },
+        "skip": {
+          "type": "boolean"
+        },
+        "skip_reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sources": {
+          "$ref": "#/definitions/sources"
+        },
+        "verification": {
+          "$ref": "#/definitions/verification"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "skip": {
+                "const": true
+              }
+            },
+            "required": ["skip"]
+          },
+          "then": {
+            "required": ["skip_reason"]
+          }
+        },
+        {
+          "if": {
+            "not": {
+              "properties": {
+                "skip": {
+                  "const": true
+                }
+              },
+              "required": ["skip"]
+            }
+          },
+          "then": {
+            "required": ["sources"]
+          }
+        }
+      ]
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/stringArray"
+        },
+        "github_releases": {
+          "$ref": "#/definitions/stringArray"
+        },
+        "rss": {
+          "$ref": "#/definitions/stringArray"
+        },
+        "raw_files": {
+          "$ref": "#/definitions/stringArray"
+        },
+        "npm": {
+          "$ref": "#/definitions/stringArray"
+        },
+        "pypi": {
+          "$ref": "#/definitions/stringArray"
+        },
+        "eol": {
+          "type": ["string", "null"],
+          "minLength": 1
+        },
+        "web_search": {
+          "$ref": "#/definitions/stringArray"
+        },
+        "related_internal": {
+          "$ref": "#/definitions/stringArray"
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "confidence_threshold": {
+          "$ref": "#/definitions/confidenceThreshold"
+        }
+      }
+    }
+  }
+}
