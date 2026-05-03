@@ -46,7 +46,7 @@
 | [yq](tools/yq.md) | 2026-05-03 | YAML / JSON / XML / INI / CSV / TSV / properties を扱うコマンドライン処理ツール。`jq` の YAML 版的な位置付けだが、**実装が 2 つあり挙動が大きく違う**。本記事では事実上の標準である **Mike Farah 版（Go 製、`mikefarah/yq`）** を扱う。`tools/jq.md` の知識を YAML に拡張する。 |
 | [Zod](tools/zod.md) | 2026-04-18 | TypeScript ファーストのスキーマ宣言・バリデーションライブラリ。ランタイム検証と型推論を同じスキーマで実現する。MCP SDK のツール入力スキーマなど、本リポジトリでも中心的に使用。 |
 
-## `standards/` — 規約・設計原則・プロトコル (13)
+## `standards/` — 規約・設計原則・プロトコル (14)
 
 | 記事 | reviewed | 概要 |
 |---|---|---|
@@ -62,6 +62,7 @@
 | [複数リポジトリ間の設定同期](standards/multi-repo-config-sync.md) | 2026-05-03 | `.editorconfig` / `lefthook` / `biome.json` / `.github/workflows/` / エージェント設定 / Dev Container 等を**複数リポジトリで揃えたい**ときの設計指針。1 リポジトリ内のマルチエージェント対応は `standards/multi-agent-repo.md` を参照。 |
 | [npm Trusted Publishers (OIDC publishing)](standards/npm-trusted-publishers.md) | 2026-05-02 | CI から npm レジストリへ **長寿命 secret (`NPM_TOKEN`) を持たずに publish する** 仕組み。GitHub Actions の OIDC token を npm が信頼することで、トークン管理コストとローテーション運用を消す。2024 年に GA、現在は GitHub Actions / GitLab CI で利用可能。 |
 | [プロンプトインジェクション対策](standards/prompt-injection.md) | 2026-04-18 | LLM エージェントが外部データ（Web ページ、ファイル、ツール結果、メール等）を読み込む際に、その中に埋め込まれた指示に従ってしまう攻撃。MCP サーバー・ツール呼び出しが返す `content` も例外ではなく、エージェント連携を設計する側は常に対策を組み込む必要がある。 |
+| [AI エージェントの定期実行](standards/scheduled-tasks.md) | 2026-05-03 | AI コーディングエージェント（Claude Code / Codex 等）を recurring に走らせるための選択肢と選び方。「knowledge ベースを週次で再検証する」「PR レビューを毎朝実行する」「失敗ジョブを夜間に修復する」のような用途で必要になる。各 CLI の個別仕様は `tools/claude-code.md` / `tools/codex-cli.md` 他を参照。 |
 | [Semantic Versioning (SemVer)](standards/semver.md) | 2026-04-18 | `MAJOR.MINOR.PATCH` の 3 要素でバージョンを表す公開 API 契約。Conventional Commits とセットで、リリース自動化の基盤になる。 |
 
 ## `languages/` — 言語別 (4)
@@ -80,4 +81,4 @@
 | [Docker](platforms/docker.md) | 2026-04-18 | アプリケーションをコンテナ（軽量な隔離環境）として配布・実行するプラットフォーム。OCI (Open Container Initiative) 仕様準拠の runtime + CLI + イメージレジストリ + Compose のエコシステム。 |
 | [GitHub Actions](platforms/github-actions.md) | 2026-04-18 | GitHub ネイティブの CI/CD プラットフォーム。ワークフローを YAML で定義し、リポジトリへのイベント（push, PR, schedule 等）に応じて実行する。`gh` CLI と並んで GitHub 運用の中核。 |
 
-_Total: 58 articles._
+_Total: 59 articles._
