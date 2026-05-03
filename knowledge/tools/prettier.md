@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [format, javascript, typescript, markdown, yaml]
 ---
 

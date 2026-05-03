@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [lint, git-hook, javascript]
 ---
 
@@ -15,7 +15,7 @@ tags: [lint, git-hook, javascript]
 pnpm add -D @commitlint/cli @commitlint/config-conventional
 ```
 
-2026-04 時点の現行メジャーは v20 系（Node 20 以上が必要）。
+2026-05 時点の現行は v20.5 系（最新 v20.5.3 / 2026-04-30 リリース、Node 20 以上が必要）。
 
 ## 最小設定
 

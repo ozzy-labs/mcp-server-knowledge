@@ -45,67 +45,67 @@
 
 | 記事 | reviewed | stability | tags | 概要 |
 |---|---|---|---|---|
-| [Bash / POSIX shell](languages/bash.md) | 2026-04-18 | — | `bash` | AI コーディングエージェントが最も頻繁に書く言語のひとつ。落とし穴は大半が「変数展開」「終了コード」「サブシェル境界」に集中する。ツール記事は `tools/shellcheck.md` / `tools/shfmt.md` を参照。 |
-| [Node.js](languages/nodejs.md) | 2026-04-18 | — | `javascript` | JavaScript のサーバーサイドランタイム。本記事は**ランタイム本体・内蔵モジュール・実行フラグ**を対象にする。TypeScript を ESM で動かすための tsconfig / 依存解決の細部は `languages/typescript-esm.md` を参照。 |
-| [Python](languages/python.md) | 2026-04-18 | — | `python` | 動的型付けスクリプト言語。AI エージェントが最も頻繁に読み書きする言語のひとつで、**依存管理** と **型ヒント** の現状を押さえておけば大半の落とし穴を避けられる。 |
-| [TypeScript + Node.js ESM](languages/typescript-esm.md) | 2026-04-18 | — | `typescript` `javascript` | Node.js で TypeScript を ECMAScript Modules（ESM）として動かすセットアップの要点と落とし穴。CommonJS から移行するプロジェクトで AI エージェントが誤りやすいポイントに重点を置く。 |
+| [Bash / POSIX shell](languages/bash.md) | 2026-05-04 | — | `bash` | AI コーディングエージェントが最も頻繁に書く言語のひとつ。落とし穴は大半が「変数展開」「終了コード」「サブシェル境界」に集中する。ツール記事は `tools/shellcheck.md` / `tools/shfmt.md` を参照。 |
+| [Node.js](languages/nodejs.md) | 2026-05-04 | — | `javascript` | JavaScript のサーバーサイドランタイム。本記事は**ランタイム本体・内蔵モジュール・実行フラグ**を対象にする。TypeScript を ESM で動かすための tsconfig / 依存解決の細部は `languages/typescript-esm.md` を参照。 |
+| [Python](languages/python.md) | 2026-05-04 | — | `python` | 動的型付けスクリプト言語。AI エージェントが最も頻繁に読み書きする言語のひとつで、**依存管理** と **型ヒント** の現状を押さえておけば大半の落とし穴を避けられる。 |
+| [TypeScript + Node.js ESM](languages/typescript-esm.md) | 2026-05-04 | — | `typescript` `javascript` | Node.js で TypeScript を ECMAScript Modules（ESM）として動かすセットアップの要点と落とし穴。CommonJS から移行するプロジェクトで AI エージェントが誤りやすいポイントに重点を置く。 |
 
 ## `platforms/` — プラットフォーム (2)
 
 | 記事 | reviewed | stability | tags | 概要 |
 |---|---|---|---|---|
-| [Docker](platforms/docker.md) | 2026-04-18 | — | `dockerfile` `oci` | アプリケーションをコンテナ（軽量な隔離環境）として配布・実行するプラットフォーム。OCI (Open Container Initiative) 仕様準拠の runtime + CLI + イメージレジストリ + Compose のエコシステム。 |
+| [Docker](platforms/docker.md) | 2026-05-04 | — | `dockerfile` `oci` | アプリケーションをコンテナ（軽量な隔離環境）として配布・実行するプラットフォーム。OCI (Open Container Initiative) 仕様準拠の runtime + CLI + イメージレジストリ + Compose のエコシステム。 |
 | [GitHub Actions](platforms/github-actions.md) | 2026-05-04 | — | `github` `yaml` | GitHub ネイティブの CI/CD プラットフォーム。ワークフローを YAML で定義し、リポジトリへのイベント（push, PR, schedule 等）に応じて実行する。`gh` CLI と並んで GitHub 運用の中核。 |
 
 ## `standards/` — 規約・設計原則・プロトコル (7)
 
 | 記事 | reviewed | stability | tags | 概要 |
 |---|---|---|---|---|
-| [Conventional Commits](standards/conventional-commits.md) | 2026-04-18 | — | `methodology` `git-hook` | コミットメッセージの形式を規約化した仕様。履歴から自動生成（CHANGELOG、セマンティックバージョン）を可能にし、変更の意図を機械可読にする。 |
-| [Dev Containers](standards/dev-containers.md) | 2026-05-03 | — | `methodology` `dockerfile` | OCI コンテナ内で開発環境を定義する仕様。`.devcontainer/devcontainer.json` をリポジトリ直下に置くと VS Code / GitHub Codespaces / JetBrains / `devcontainer` CLI 等のツールが**同一の隔離環境**を起動できる。マシン依存のセットアップを排除し、AI エージェント（Claude Code / Codex CLI / Gemini CLI / Copilot CLI）も Dev Container 内に常駐させる運用が広がっている。1 リポ内のマルチエージェント構成は `ai/practice/multi-agent-repo.md`、複数リポへの設定配布は `standards/multi-repo-config-sync.md` を参照。 |
-| [GitHub Flow](standards/github-flow.md) | 2026-04-18 | — | `methodology` `github` `git-hook` | GitHub が提唱するシンプルな Git ワークフロー。`main` を常にデプロイ可能に保ち、新しい変更は短命な feature branch で行う。Git Flow より軽量で、継続的デリバリーに適している。 |
+| [Conventional Commits](standards/conventional-commits.md) | 2026-05-04 | — | `methodology` `git-hook` | コミットメッセージの形式を規約化した仕様。履歴から自動生成（CHANGELOG、セマンティックバージョン）を可能にし、変更の意図を機械可読にする。 |
+| [Dev Containers](standards/dev-containers.md) | 2026-05-04 | — | `methodology` `dockerfile` | OCI コンテナ内で開発環境を定義する仕様。`.devcontainer/devcontainer.json` をリポジトリ直下に置くと VS Code / GitHub Codespaces / JetBrains / `devcontainer` CLI 等のツールが**同一の隔離環境**を起動できる。マシン依存のセットアップを排除し、AI エージェント（Claude Code / Codex CLI / Gemini CLI / Copilot CLI）も Dev Container 内に常駐させる運用が広がっている。1 リポ内のマルチエージェント構成は `ai/practice/multi-agent-repo.md`、複数リポへの設定配布は `standards/multi-repo-config-sync.md` を参照。 |
+| [GitHub Flow](standards/github-flow.md) | 2026-05-04 | — | `methodology` `github` `git-hook` | GitHub が提唱するシンプルな Git ワークフロー。`main` を常にデプロイ可能に保ち、新しい変更は短命な feature branch で行う。Git Flow より軽量で、継続的デリバリーに適している。 |
 | [Markdown 執筆スタイル（本リポジトリ向け）](standards/markdown-style.md) | 2026-04-18 | — | `style` `markdown` | この knowledge base の記事を書くときの執筆規約。AI エージェントが新規記事を追加する・既存記事を更新する際の一貫性を保つため。 |
 | [複数リポジトリ間の設定同期](standards/multi-repo-config-sync.md) | 2026-05-03 | — | `methodology` | `.editorconfig` / `lefthook` / `biome.json` / `.github/workflows/` / エージェント設定 / Dev Container 等を**複数リポジトリで揃えたい**ときの設計指針。1 リポジトリ内のマルチエージェント対応は `ai/practice/multi-agent-repo.md` を参照。 |
-| [npm Trusted Publishers (OIDC publishing)](standards/npm-trusted-publishers.md) | 2026-05-02 | — | `release` `security` `npm` `github` | CI から npm レジストリへ **長寿命 secret (`NPM_TOKEN`) を持たずに publish する** 仕組み。GitHub Actions の OIDC token を npm が信頼することで、トークン管理コストとローテーション運用を消す。2024 年に GA、現在は GitHub Actions / GitLab CI で利用可能。 |
-| [Semantic Versioning (SemVer)](standards/semver.md) | 2026-04-18 | — | `methodology` `release` | `MAJOR.MINOR.PATCH` の 3 要素でバージョンを表す公開 API 契約。Conventional Commits とセットで、リリース自動化の基盤になる。 |
+| [npm Trusted Publishers (OIDC publishing)](standards/npm-trusted-publishers.md) | 2026-05-04 | — | `release` `security` `npm` `github` | CI から npm レジストリへ **長寿命 secret (`NPM_TOKEN`) を持たずに publish する** 仕組み。CI 側で発行された OIDC token を npm が信頼することで、トークン管理コストとローテーション運用を消す。2024 年に GA。2026-05 時点で対応している CI は **GitHub Actions / GitLab CI/CD / CircleCI**（いずれもクラウドホスト ランナー）。**self-hosted runner は未対応**（将来対応予定）。 |
+| [Semantic Versioning (SemVer)](standards/semver.md) | 2026-05-04 | — | `methodology` `release` | `MAJOR.MINOR.PATCH` の 3 要素でバージョンを表す公開 API 契約。Conventional Commits とセットで、リリース自動化の基盤になる。 |
 
 ## `tools/` — CLI・SDK・ライブラリ (33)
 
 | 記事 | reviewed | stability | tags | 概要 |
 |---|---|---|---|---|
-| [actionlint](tools/actionlint.md) | 2026-04-18 | — | `lint` `yaml` `github` `go` | GitHub Actions ワークフローファイル（`.github/workflows/*.yaml`）の静的解析ツール。構文エラー・式の型・shellcheck 連携・未知の runner やアクションを検出する。Go 製の単一バイナリ。 |
+| [actionlint](tools/actionlint.md) | 2026-05-04 | — | `lint` `yaml` `github` `go` | GitHub Actions ワークフローファイル（`.github/workflows/*.yaml`）の静的解析ツール。構文エラー・式の型・shellcheck 連携・未知の runner やアクションを検出する。Go 製の単一バイナリ。 |
 | [ast-grep](tools/ast-grep.md) | 2026-05-04 | — | `lint` `data-cli` `rust` | AST ベースのコード検索・lint・書き換えを 20+ 言語横断で行う Rust 製 CLI。`grep` / `sed` がテキストで失敗する「**構造を保ったまま**の置換」を、tree-sitter ベースのパターンマッチで安全に実行する。`jscodeshift` のような codemod よりセットアップが軽い。バイナリ名は `ast-grep` と短縮 `sg`。Linux で `sg` は `setsid` 系のコマンドと衝突するため `ast-grep` を使う。 |
-| [Astro](tools/astro.md) | 2026-04-18 | — | `framework` `javascript` `typescript` | コンテンツ中心のサーバーファースト Web フレームワーク。ページ単位で静的生成（SSG）を既定とし、必要な部分だけをクライアントに水和する **Islands Architecture** を採用。React / Vue / Svelte / Solid など複数の UI ライブラリを同一プロジェクトで混在できる UI 非依存性が特徴。ドキュメントサイト用テーマ **Starlight** と併用されることが多い。 |
-| [AWS CLI](tools/aws-cli.md) | 2026-05-03 | — | `data-cli` `cloud-hosted` `aws` `python` | AWS の公式コマンドラインツール。`aws-cli/2.x`（v2）が現行で、v1 は新機能の backport がない（IAM Identity Center、auto-prompt 等は v2 のみ）。すべての AWS API を CLI から叩ける一方、profile / リージョン / 認証チェーン / output 形式の組み合わせで意図しない挙動を起こしやすい。AI エージェントが S3 / IAM / ECR / Logs / SSM 等を操作する基盤ツールとして頻出する。 |
-| [bats (bats-core)](tools/bats.md) | 2026-05-03 | — | `test` `bash` | Bash 3.2+ で動く TAP 準拠のテストフレームワーク。`.bats` ファイル内に `@test` ブロックを書き、`run` でコマンドを実行して終了コードや出力を assert する。AI エージェントがシェルスクリプトを書くなら、`shellcheck` でも捕まえられない**動作面の回帰**を防ぐ唯一現実的な手段。`languages/bash.md` と組で使う。 |
+| [Astro](tools/astro.md) | 2026-05-04 | — | `framework` `javascript` `typescript` | コンテンツ中心のサーバーファースト Web フレームワーク。ページ単位で静的生成（SSG）を既定とし、必要な部分だけをクライアントに水和する **Islands Architecture** を採用。React / Vue / Svelte / Solid など複数の UI ライブラリを同一プロジェクトで混在できる UI 非依存性が特徴。ドキュメントサイト用テーマ **Starlight** と併用されることが多い。 |
+| [AWS CLI](tools/aws-cli.md) | 2026-05-04 | — | `data-cli` `cloud-hosted` `aws` `python` | AWS の公式コマンドラインツール。`aws-cli/2.x`（v2）が現行で、v1 は新機能の backport がない（IAM Identity Center、auto-prompt 等は v2 のみ）。すべての AWS API を CLI から叩ける一方、profile / リージョン / 認証チェーン / output 形式の組み合わせで意図しない挙動を起こしやすい。AI エージェントが S3 / IAM / ECR / Logs / SSM 等を操作する基盤ツールとして頻出する。 |
+| [bats (bats-core)](tools/bats.md) | 2026-05-04 | — | `test` `bash` | Bash 3.2+ で動く TAP 準拠のテストフレームワーク。`.bats` ファイル内に `@test` ブロックを書き、`run` でコマンドを実行して終了コードや出力を assert する。AI エージェントがシェルスクリプトを書くなら、`shellcheck` でも捕まえられない**動作面の回帰**を防ぐ唯一現実的な手段。`languages/bash.md` と組で使う。 |
 | [Biome](tools/biome.md) | 2026-05-04 | — | `lint` `format` `javascript` `typescript` `json` `rust` `fast` | Rust で書かれた高速な JavaScript / TypeScript / JSON / CSS / GraphQL のフォーマッタ + リンタ。ESLint + Prettier を単一ツールで置き換えることを目標とする。 |
-| [chezmoi](tools/chezmoi.md) | 2026-05-03 | — | `go` | 複数マシン間で dotfiles を同期する Go 製ツール。bare git / GNU Stow / yadm よりも豊富な機能を持ち、**Go テンプレート / 暗号化 / パスワードマネージャ統合 / スクリプト実行**を備える。`~/.local/share/chezmoi` を **source directory** として、そこから `$HOME` 配下にファイルを apply するモデル。新マシンの初期化が 1 コマンドで完了する点が運用上の強み。 |
-| [commitlint](tools/commitlint.md) | 2026-04-18 | — | `lint` `git-hook` `javascript` | コミットメッセージが Conventional Commits など規約に従っているか検証する Node.js 製の Linter。`commit-msg` Git フックで実行し、規約違反のコミットをローカルで止める。`standards/conventional-commits.md` と対になるツール。 |
+| [chezmoi](tools/chezmoi.md) | 2026-05-04 | — | `go` | 複数マシン間で dotfiles を同期する Go 製ツール。bare git / GNU Stow / yadm よりも豊富な機能を持ち、**Go テンプレート / 暗号化 / パスワードマネージャ統合 / スクリプト実行**を備える。`~/.local/share/chezmoi` を **source directory** として、そこから `$HOME` 配下にファイルを apply するモデル。新マシンの初期化が 1 コマンドで完了する点が運用上の強み。 |
+| [commitlint](tools/commitlint.md) | 2026-05-04 | — | `lint` `git-hook` `javascript` | コミットメッセージが Conventional Commits など規約に従っているか検証する Node.js 製の Linter。`commit-msg` Git フックで実行し、規約違反のコミットをローカルで止める。`standards/conventional-commits.md` と対になるツール。 |
 | [gh (GitHub CLI)](tools/gh-cli.md) | 2026-05-04 | — | `github` `go` | GitHub 公式の CLI。PR・Issue・Actions・Releases・Secrets などブラウザの UI で行う操作をターミナルから実行できる。AI エージェント運用の基盤ツール（Claude Code / Codex CLI も Git/GitHub 操作で多用）。 |
-| [Gitleaks](tools/gitleaks.md) | 2026-04-18 | — | `security` `git-hook` `go` | Git リポジトリに誤コミットされたシークレット（API キー、トークン、秘密鍵）を検出する CLI。pre-commit や CI で実行する想定。Go 製の単一バイナリ。 |
-| [jq](tools/jq.md) | 2026-04-18 | — | `data-cli` `json` `fast` | JSON を処理するコマンドラインフィルタ。`grep` / `sed` / `awk` の JSON 版。API 応答の整形、設定ファイルの抽出、CI スクリプトでの値取り出しに必須。C 製の単一バイナリ。 |
-| [just](tools/just.md) | 2026-05-03 | — | `task-runner` `rust` | プロジェクト固有のコマンドを `justfile` に集約して実行するコマンドランナー。**ビルドシステムではない**ので make の依存解決・タイムスタンプ追跡を持たず、その分シンプル。`.PHONY` 不要、引数・デフォルト値・属性が宣言的に書ける。AI エージェントが Makefile 風に書いて落とし穴に嵌まりやすい領域なので、make との差分を押さえることが重要。 |
+| [Gitleaks](tools/gitleaks.md) | 2026-05-04 | — | `security` `git-hook` `go` | Git リポジトリに誤コミットされたシークレット（API キー、トークン、秘密鍵）を検出する CLI。pre-commit や CI で実行する想定。Go 製の単一バイナリ。 |
+| [jq](tools/jq.md) | 2026-05-04 | — | `data-cli` `json` `fast` | JSON を処理するコマンドラインフィルタ。`grep` / `sed` / `awk` の JSON 版。API 応答の整形、設定ファイルの抽出、CI スクリプトでの値取り出しに必須。C 製の単一バイナリ。 |
+| [just](tools/just.md) | 2026-05-04 | — | `task-runner` `rust` | プロジェクト固有のコマンドを `justfile` に集約して実行するコマンドランナー。**ビルドシステムではない**ので make の依存解決・タイムスタンプ追跡を持たず、その分シンプル。`.PHONY` 不要、引数・デフォルト値・属性が宣言的に書ける。AI エージェントが Makefile 風に書いて落とし穴に嵌まりやすい領域なので、make との差分を押さえることが重要。 |
 | [lefthook](tools/lefthook.md) | 2026-05-04 | — | `git-hook` `go` | Go で書かれた高速な Git フック管理ツール。並列実行、ファイルフィルタ、ステージ更新、複数リポジトリ横断の設定共有をサポート。husky / pre-commit の置き換えとして採用が進む。 |
-| [markdownlint](tools/markdownlint.md) | 2026-04-18 | — | `lint` `markdown` `javascript` | Markdown の構文・スタイルを検証する Linter。`markdownlint-cli2` が現行推奨 CLI。ルール体系は [CommonMark](https://commonmark.org/) + GitHub Flavored Markdown 準拠。 |
+| [markdownlint](tools/markdownlint.md) | 2026-05-04 | — | `lint` `markdown` `javascript` | Markdown の構文・スタイルを検証する Linter。`markdownlint-cli2` が現行推奨 CLI。ルール体系は [CommonMark](https://commonmark.org/) + GitHub Flavored Markdown 準拠。 |
 | [MarkItDown](tools/markitdown.md) | 2026-05-04 | — | `data-cli` `python` `markdown` | Microsoft 製の Python ユーティリティ。PDF / Office / 画像 / 音声 / HTML / CSV / JSON / XML / ZIP / EPub / YouTube URL などを Markdown に変換する。LLM への取り込み（RAG・コンテキストウィンドウ投入）を主目的に設計されており、トークン効率とドキュメント構造保持を両立する。AI エージェントが「PDF を読ませたい」「画像の中の文字を渡したい」場面で第一候補になる。 |
 | [mise](tools/mise.md) | 2026-05-04 | — | `version-manager` `task-runner` `rust` | 開発ツールのバージョン管理 + タスクランナー + 環境変数管理を統合した CLI。asdf の後継として設計され、Go バイナリで起動が高速。Node / Python / Go / Rust / バイナリ単体まで単一設定で管理できる。 |
-| [npm publish](tools/npm-publish.md) | 2026-05-02 | — | `package` `release` `npm` | npm レジストリにパッケージを公開するコマンドと運用上の要点。tarball の中身（`files` / `.npmignore`）、dist-tag、ライフサイクルスクリプト、provenance、unpublish ポリシーが落とし穴の中心。`tools/pnpm.md` のパッケージマネージャ運用、`standards/npm-trusted-publishers.md` の OIDC、`standards/semver.md` のバージョン決定とセットで使う。 |
+| [npm publish](tools/npm-publish.md) | 2026-05-04 | — | `package` `release` `npm` | npm レジストリにパッケージを公開するコマンドと運用上の要点。tarball の中身（`files` / `.npmignore`）、dist-tag、ライフサイクルスクリプト、provenance、unpublish ポリシーが落とし穴の中心。`tools/pnpm.md` のパッケージマネージャ運用、`standards/npm-trusted-publishers.md` の OIDC、`standards/semver.md` のバージョン決定とセットで使う。 |
 | [pnpm](tools/pnpm.md) | 2026-05-04 | — | `package` `npm` `javascript` `fast` | 高速・ディスク効率の良い Node.js パッケージマネージャ。グローバルストアへのハードリンクで依存を共有し、厳格な node_modules ツリー（hoisting しない）で間接依存への依存を防ぐ。 |
-| [Prettier](tools/prettier.md) | 2026-04-18 | — | `format` `javascript` `typescript` `markdown` `yaml` | 主観的なコードフォーマッタ。元のスタイルを破棄して一貫した形に再出力する。2026-04 時点では **Biome がまだ整形に対応していない Markdown / YAML / HTML / Vue / Svelte** などを補完する役割で残り続けている。Biome を採用したプロジェクトでも、非 JS 資産に Prettier を併用するハイブリッド構成が一般的。 |
+| [Prettier](tools/prettier.md) | 2026-05-04 | — | `format` `javascript` `typescript` `markdown` `yaml` | 主観的なコードフォーマッタ。元のスタイルを破棄して一貫した形に再出力する。2026-04 時点では **Biome がまだ整形に対応していない Markdown / YAML / HTML / Vue / Svelte** などを補完する役割で残り続けている。Biome を採用したプロジェクトでも、非 JS 資産に Prettier を併用するハイブリッド構成が一般的。 |
 | [release-please](tools/release-please.md) | 2026-05-04 | — | `release` `github` `cloud-hosted` | Google が開発するリリース自動化ツール。Conventional Commits の履歴から次のバージョンを決定し、`CHANGELOG.md` と `package.json` 等を更新した **単一の「Release PR」** を常に最新に保つ。Release PR をマージすると GitHub Release と Git タグが作成される。`standards/conventional-commits.md` + `standards/semver.md` + `tools/commitlint.md` と四点セットで使うのが定番。 |
 | [Renovate](tools/renovate.md) | 2026-05-04 | — | `package` `commercial` `cloud-hosted` | 依存関係を自動で最新に保つボット。PR を作って更新を提案し、CI が通れば自動マージまで可能。Dependabot より設定の自由度と対応エコシステムが広い。Mend が開発・運用。 |
-| [ripgrep](tools/ripgrep.md) | 2026-05-03 | — | `data-cli` `rust` `fast` | `grep` 互換の高速検索ツール（バイナリ名 `rg`）。Rust 製で、`.gitignore` を既定で尊重し、並列ファイル探索 + SIMD 加速で `grep -r` / `ag` / `ack` を大きく上回る速度を出す。AI エージェントがコードベースを探索するときの第一選択。`grep` 知識のままだと `--type` の名前体系・正規表現エンジン・ignore ファイル挙動で誤りやすいので押さえておく。 |
-| [ShellCheck](tools/shellcheck.md) | 2026-04-18 | — | `lint` `bash` | Bash / POSIX sh スクリプトの静的解析ツール。よくあるバグ・移植性問題・クオート抜けなど、エディタと目視では拾いきれない問題を検出する。Haskell 製。 |
-| [shfmt](tools/shfmt.md) | 2026-04-18 | — | `format` `bash` `go` | Go 製のシェルスクリプトフォーマッタ。bash / mksh / POSIX sh のパース + 整形を一貫して行う。shellcheck と並んで shell スクリプト運用のデファクトツール。 |
-| [taplo](tools/taplo.md) | 2026-04-18 | — | `lint` `format` `toml` `rust` | Rust 製の TOML フォーマッタ + バリデータ + 言語サーバー。`pyproject.toml` / `Cargo.toml` / `.mise.toml` など TOML 採用が広がるにつれて有用性が増した。 |
-| [Trivy](tools/trivy.md) | 2026-04-18 | — | `security` `go` | Aqua Security が提供する包括的なセキュリティスキャナ。コンテナイメージ・ファイルシステム・IaC・Kubernetes マニフェストに対して、脆弱性 (CVE)・シークレット・設定ミス・ライセンスの問題を検出する。Go 製の単一バイナリ。 |
+| [ripgrep](tools/ripgrep.md) | 2026-05-04 | — | `data-cli` `rust` `fast` | `grep` 互換の高速検索ツール（バイナリ名 `rg`）。Rust 製で、`.gitignore` を既定で尊重し、並列ファイル探索 + SIMD 加速で `grep -r` / `ag` / `ack` を大きく上回る速度を出す。AI エージェントがコードベースを探索するときの第一選択。`grep` 知識のままだと `--type` の名前体系・正規表現エンジン・ignore ファイル挙動で誤りやすいので押さえておく。 |
+| [ShellCheck](tools/shellcheck.md) | 2026-05-04 | — | `lint` `bash` | Bash / POSIX sh スクリプトの静的解析ツール。よくあるバグ・移植性問題・クオート抜けなど、エディタと目視では拾いきれない問題を検出する。Haskell 製。 |
+| [shfmt](tools/shfmt.md) | 2026-05-04 | — | `format` `bash` `go` | Go 製のシェルスクリプトフォーマッタ。bash / mksh / POSIX sh / zsh のパース + 整形を一貫して行う（zsh は v3.13.0 から）。shellcheck と並んで shell スクリプト運用のデファクトツール。 |
+| [taplo](tools/taplo.md) | 2026-05-04 | — | `lint` `format` `toml` `rust` | Rust 製の TOML フォーマッタ + バリデータ + 言語サーバー。`pyproject.toml` / `Cargo.toml` / `.mise.toml` など TOML 採用が広がるにつれて有用性が増した。 |
+| [Trivy](tools/trivy.md) | 2026-05-04 | — | `security` `go` | Aqua Security が提供する包括的なセキュリティスキャナ。コンテナイメージ・ファイルシステム・IaC・Kubernetes マニフェストに対して、脆弱性 (CVE)・シークレット・設定ミス・ライセンスの問題を検出する。Go 製の単一バイナリ。 |
 | [tsdown](tools/tsdown.md) | 2026-05-04 | — | `build` `package` `typescript` | Rolldown（Rust 製のバンドラ）+ Oxc をベースにした TypeScript ライブラリ向けビルドツール。`tsup` の事実上の後継として Rolldown チームが開発している。ESM ファースト、`.d.ts` 自動生成、コード分割を標準で備える。 |
 | [uv](tools/uv.md) | 2026-05-04 | — | `package` `version-manager` `python` `rust` `fast` | Astral 製の Python パッケージ・プロジェクトマネージャ。Rust で書かれており、`pip` / `pip-tools` / `pipx` / `poetry` / `pyenv` / `twine` / `virtualenv` を 1 つに統合する。`pip` 比 10-100 倍速をうたう。Python 自体のインストールから依存解決、CLI ツール管理、ビルド・publish まで担う。`languages/python.md` の依存・バージョン管理項を実務レベルで補完する。 |
 | [Vitest](tools/vitest.md) | 2026-05-04 | — | `test` `javascript` `typescript` | Vite ネイティブの高速テストランナー。Jest 互換の API で ESM・TypeScript・JSX をネイティブに扱える。HMR ベースの watch モードが特徴。 |
-| [yamlfmt](tools/yamlfmt.md) | 2026-04-18 | — | `format` `yaml` `go` | Google 製の YAML フォーマッタ。Go で書かれた単一バイナリ。インデント・行末・キー順などを一貫した形に整形する。yamllint（検証）と対になる。 |
-| [yamllint](tools/yamllint.md) | 2026-04-18 | — | `lint` `yaml` `python` | YAML ファイルの構文と**スタイル**を検証する Linter。Python 製。インデント、行長、コメントフォーマット、truthy 値の扱い等、YAML 特有の落とし穴を検出する。 |
-| [yq](tools/yq.md) | 2026-05-03 | — | `data-cli` `yaml` `go` | YAML / JSON / XML / INI / CSV / TSV / properties を扱うコマンドライン処理ツール。`jq` の YAML 版的な位置付けだが、**実装が 2 つあり挙動が大きく違う**。本記事では事実上の標準である **Mike Farah 版（Go 製、`mikefarah/yq`）** を扱う。`tools/jq.md` の知識を YAML に拡張する。 |
-| [Zod](tools/zod.md) | 2026-04-18 | — | `library` `typescript` | TypeScript ファーストのスキーマ宣言・バリデーションライブラリ。ランタイム検証と型推論を同じスキーマで実現する。MCP SDK のツール入力スキーマなど、本リポジトリでも中心的に使用。 |
+| [yamlfmt](tools/yamlfmt.md) | 2026-05-04 | — | `format` `yaml` `go` | Google 製の YAML フォーマッタ。Go で書かれた単一バイナリ。インデント・行末・キー順などを一貫した形に整形する。yamllint（検証）と対になる。 |
+| [yamllint](tools/yamllint.md) | 2026-05-04 | — | `lint` `yaml` `python` | YAML ファイルの構文と**スタイル**を検証する Linter。Python 製。インデント、行長、コメントフォーマット、truthy 値の扱い等、YAML 特有の落とし穴を検出する。 |
+| [yq](tools/yq.md) | 2026-05-04 | — | `data-cli` `yaml` `go` | YAML / JSON / TOML / HCL / XML / INI / CSV / TSV / properties を扱うコマンドライン処理ツール。`jq` の YAML 版的な位置付けだが、**実装が 2 つあり挙動が大きく違う**。本記事では事実上の標準である **Mike Farah 版（Go 製、`mikefarah/yq`）** を扱う。`tools/jq.md` の知識を YAML に拡張する。 |
+| [Zod](tools/zod.md) | 2026-05-04 | — | `library` `typescript` | TypeScript ファーストのスキーマ宣言・バリデーションライブラリ。ランタイム検証と型推論を同じスキーマで実現する。MCP SDK のツール入力スキーマなど、本リポジトリでも中心的に使用。 |
 
 ## タグ別索引
 

@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [security, git-hook, go]
 ---
 
@@ -29,25 +29,26 @@ docker run --rm -v "$PWD":/path zricethezav/gitleaks:latest detect --source /pat
 
 | コマンド | 用途 |
 |---|---|
-| `gitleaks detect` | Git 履歴全体をスキャン |
-| `gitleaks protect` | ステージ中またはワーキングツリーの変更のみ（pre-commit 向け） |
-| `gitleaks dir` | Git 以外のディレクトリをスキャン |
+| `gitleaks git` | Git リポジトリ（履歴 / ステージ）をスキャン |
+| `gitleaks dir` | Git 以外のディレクトリ・ファイルをスキャン |
 | `gitleaks stdin` | 標準入力をスキャン |
+
+> v8.19.0 で `detect` / `protect` は非推奨化された（`--help` から非表示・後方互換あり）。新規導入では `git` / `dir` / `stdin` を使う。
 
 ## 基本的な使い方
 
 ```bash
 # 履歴全体
-gitleaks detect --no-banner
+gitleaks git --no-banner
 
 # 現在のコミット以降のみ
-gitleaks detect --no-banner --log-opts="HEAD~10..HEAD"
+gitleaks git --no-banner --log-opts="HEAD~10..HEAD"
 
 # ステージ中のファイル（pre-commit）
-gitleaks protect --staged --no-banner
+gitleaks git --pre-commit --staged --no-banner
 
 # 終了コードで CI 判定
-gitleaks detect --exit-code 1
+gitleaks git --exit-code 1
 ```
 
 ### 主要フラグ
@@ -127,10 +128,10 @@ commits = ["abc123def..."]  # 特定コミットを除外
 pre-commit:
   commands:
     gitleaks:
-      run: gitleaks protect --staged --no-banner
+      run: gitleaks git --pre-commit --staged --no-banner
 ```
 
-`gitleaks protect --staged` はステージ中のファイルのみを対象にする高速モード。
+`gitleaks git --pre-commit --staged` はステージ中のファイルのみを対象にする高速モード。
 
 ## CI での使い方
 
@@ -146,7 +147,7 @@ pre-commit:
 ### 生コマンド
 
 ```yaml
-- run: gitleaks detect --no-banner --redact --report-format sarif --report-path gitleaks.sarif
+- run: gitleaks git --no-banner --redact --report-format sarif --report-path gitleaks.sarif
 - if: always()
   uses: github/codeql-action/upload-sarif@v3
   with:
@@ -184,17 +185,17 @@ git push --force --tags
 
 ## トラブルシュート
 
-### `detect` が遅い
+### `gitleaks git` が遅い
 
 リポジトリが巨大だと Git 履歴全走査で時間がかかる。`--log-opts` で範囲を絞る:
 
 ```bash
-gitleaks detect --log-opts="--since='1 month ago'"
+gitleaks git --log-opts="--since='1 month ago'"
 ```
 
 ### CI で検出したが個人環境で通る
 
-`pre-commit` と `detect`（履歴全走査）はスコープが異なる。既存のコミット履歴に含まれる漏洩は `detect` のみが拾う。
+`--pre-commit --staged`（ステージのみ）と `gitleaks git`（履歴全走査）はスコープが異なる。既存のコミット履歴に含まれる漏洩は履歴全走査のみが拾う。
 
 ### `gitleaks-action` が有料エラー
 

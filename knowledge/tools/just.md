@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-03
+reviewed: 2026-05-04
 tags: [task-runner, rust]
 ---
 
@@ -35,7 +35,7 @@ just                # 既定レシピを実行（justfile の最初）
 just <recipe>       # 指定レシピを実行
 just -l             # レシピ一覧
 just --evaluate     # 変数を評価して表示
-just --fmt          # justfile を整形（要 `--unstable` または stable 後の現行版）
+just --fmt          # justfile を整形（1.50.0 で安定化）
 just --choose       # 対話的にレシピを選択
 just --dry-run -n   # 実行せず内容だけ表示
 ```
@@ -159,7 +159,8 @@ release:
 | `[group('name')]` | 一覧でグループ化 |
 | `[confirm("msg")]` | 実行前に確認プロンプト |
 | `[no-cd]` | デフォルトの「justfile のあるディレクトリに cd」を無効化 |
-| `[linux]` / `[macos]` / `[windows]` / `[unix]` / `[openbsd]` | OS フィルタ |
+| `[linux]` / `[macos]` / `[windows]` / `[unix]` / `[openbsd]` / `[freebsd]` / `[netbsd]` / `[dragonfly]` / `[android]` | OS フィルタ |
+| `[env('NAME', 'VALUE')]` | レシピ単位の環境変数を設定 (1.47.0+) |
 | `[working-directory: '<path>']` | レシピ単位の作業ディレクトリ |
 | `[script("interpreter")]` | レシピ本体を別言語のスクリプトとして実行 |
 | `[doc("...")]` | `just -l` の説明テキスト |
