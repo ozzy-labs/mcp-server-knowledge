@@ -107,7 +107,16 @@ on:
 
 ## 5. OpenAI Codex Cloud / Workspace Agents
 
-ChatGPT 系の同等機能。[Codex cloud](https://developers.openai.com/codex/cloud) と [Workspace agents](https://openai.com/index/introducing-workspace-agents-in-chatgpt/) で「マシンを閉じていても背景でコーディング作業を続行」「スケジュール実行」「Slack 経由でリクエスト受付」が可能。ChatGPT Plus / Pro 以上のサブスク枠で動く。Anthropic Routines のおおよそ対応物。
+ChatGPT 系の同等機能は 2 つに分かれている。
+
+| プロダクト | 何ができるか | 対応プラン |
+|---|---|---|
+| [Codex cloud](https://developers.openai.com/codex/cloud) | Codex CLI が cloud 環境で非同期タスクを実行（ノート閉じても継続、並列可） | ChatGPT サブスク全般 |
+| [Workspace agents](https://openai.com/index/introducing-workspace-agents-in-chatgpt/) | チーム共有エージェント、スケジュール実行、Slack 連携 | Business / Enterprise / Edu / Teachers のみ（research preview） |
+
+> **注意**: Workspace Agents は **ChatGPT Plus / Pro では利用不可**。チーム/エンタープライズプラン限定。2026-05-06 までは無料、以降クレジットベース課金。
+
+Anthropic Routines に最も近いのは Workspace Agents（スケジュール実行 + ノート閉じても継続）だが、個人プランでは選択肢から外れる。Plus / Pro ユーザーが OpenAI 側で背景実行を使いたい場合は Codex cloud が候補。
 
 ## 認証と課金（重要）
 
