@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [test, javascript, typescript]
 ---
 
@@ -29,7 +29,7 @@ Vite を使っていないプロジェクトでも単独で動く（内部で es
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "vitest": "^3.2.0"
+    "vitest": "^4.1.0"
   }
 }
 ```
@@ -161,7 +161,7 @@ expect(obj).toMatchInlineSnapshot(`{ "foo": "bar" }`);
 | `jest.spyOn()` | `vi.spyOn()` |
 | `jest.useFakeTimers()` | `vi.useFakeTimers()` |
 | `--watch` | デフォルトで watch |
-| `--runInBand` | `--no-threads` / `poolOptions.threads.singleThread` |
+| `--runInBand` | `--max-workers=1`（`maxWorkers: 1, isolate: false`） |
 
 `globals: true` を設定すれば `describe` / `it` をインポートなしで使える（Jest の挙動に近い）。
 
@@ -199,7 +199,7 @@ Vitest は ESM がデフォルト。CJS のみのライブラリは `deps.optimi
 
 ### `ReferenceError: describe is not defined`
 
-`globals: false` がデフォルト（v3 系）。`import { describe } from "vitest"` を書くか、`test.globals = true` を設定。
+`globals: false` がデフォルト（v3/v4）。`import { describe } from "vitest"` を書くか、`test.globals = true` を設定。
 
 ### `vi.mock` が効かない
 

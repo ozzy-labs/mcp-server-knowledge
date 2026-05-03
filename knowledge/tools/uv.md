@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-03
+reviewed: 2026-05-04
 tags: [package, version-manager, python, rust, fast]
 ---
 
@@ -157,14 +157,14 @@ my-core = { workspace = true }
 
 ```yaml
 - uses: actions/checkout@v6
-- uses: astral-sh/setup-uv@v5
+- uses: astral-sh/setup-uv@v8
   with:
     enable-cache: true
-- run: uv sync --frozen        # uv.lock を更新せず厳密一致
+- run: uv sync --locked        # uv.lock が最新でなければ失敗（CI 推奨）
 - run: uv run pytest
 ```
 
-`--frozen` は CI 必須（lockfile を更新させない）。`--no-sync` はインストールスキップ。
+CI では `--locked`（lockfile が最新であることを検証して失敗させる）が推奨。`--frozen` は lockfile を更新せず既存内容で進める弱い保証。`--no-sync` はインストールスキップ。
 
 ## ビルドと publish
 

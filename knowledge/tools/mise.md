@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [version-manager, task-runner, rust]
 ---
 
@@ -35,9 +35,9 @@ echo 'eval "$(mise activate zsh)"' >> ~/.zshrc
 echo 'mise activate fish | source' >> ~/.config/fish/config.fish
 ```
 
-`cd` するたびに `.mise.toml` を読み、PATH を動的に切り替える。
+`cd` するたびに `mise.toml` を読み、PATH を動的に切り替える。
 
-## 設定ファイル `.mise.toml`
+## 設定ファイル `mise.toml`
 
 ```toml
 [tools]
@@ -140,7 +140,7 @@ _ = ".env"
 
 プロジェクトごとの環境変数を `.env` なしで mise 一元管理できる。
 
-## `.mise.local.toml`
+## `mise.local.toml`
 
 ローカル上書き用（`.gitignore` 推奨）:
 
@@ -167,7 +167,7 @@ DEBUG = "1"
 
 ## 信頼モデル
 
-`.mise.toml` はシェルに影響するため、**信頼されていないディレクトリ**では読み込まれない:
+`mise.toml` はシェルに影響するため、**信頼されていないディレクトリ**では読み込まれない:
 
 ```bash
 cd new-repo
@@ -180,15 +180,15 @@ mise trust
 ## CI での使い方
 
 ```yaml
-- uses: jdx/mise-action@v2
+- uses: jdx/mise-action@v4
   with:
-    version: 2025.1.0
+    version: 2026.4.28
     experimental: true
 - run: pnpm install --frozen-lockfile
 - run: pnpm run test
 ```
 
-mise-action が `.mise.toml` を読んで全ツールをインストール。キャッシュも自動。
+mise-action が `mise.toml` を読んで全ツールをインストール。キャッシュも自動。
 
 ## asdf からの移行
 

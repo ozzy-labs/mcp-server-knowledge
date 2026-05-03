@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [package, commercial, cloud-hosted]
 ---
 
@@ -81,7 +81,7 @@ CLI / CI 実行モードもあるが、GitHub App モードが最も手軽。
       "schedule": ["before 6am on monday"]
     },
     {
-      "matchPackagePatterns": ["^@types/"],
+      "matchPackageNames": ["/^@types//"],
       "groupName": "type definitions",
       "automerge": true
     },
@@ -197,7 +197,7 @@ CLI / CI 実行モードもあるが、GitHub App モードが最も手軽。
 
 ### monorepo で同じパッケージが複数更新される
 
-`:group:monorepos` プリセットを追加、または `packageRules.matchPackagePatterns` + `groupName` で手動グルーピング。
+`group:monorepos` プリセットを追加、または `packageRules.matchPackageNames`（regex 形式 `/pattern/`）+ `groupName` で手動グルーピング。
 
 ### 自動マージが動かない
 

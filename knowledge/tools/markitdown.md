@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-03
+reviewed: 2026-05-04
 tags: [data-cli, python, markdown]
 ---
 
@@ -10,6 +10,8 @@ Microsoft 製の Python ユーティリティ。PDF / Office / 画像 / 音声 /
 公式: [microsoft/markitdown](https://github.com/microsoft/markitdown)
 
 ## インストール
+
+> Python 3.10 以上が必要 (`requires-python = ">=3.10"`)。
 
 ```bash
 # 全フォーマット対応（推奨）
@@ -116,10 +118,7 @@ markitdown scan.png > scan.md
 ローカル `pdfminer` ベースだと崩れる「複数段組 PDF」「画像内の表」は Azure Document Intelligence で精度が大きく上がる:
 
 ```bash
-export AZURE_DOC_INTEL_ENDPOINT=https://<name>.cognitiveservices.azure.com/
-export AZURE_DOC_INTEL_KEY=<key>
-
-markitdown --use-docintel scan.pdf > scan.md
+markitdown -d -e "https://<name>.cognitiveservices.azure.com/" scan.pdf > scan.md
 ```
 
 API 課金が発生するため CI で全 PDF に当てるのは避ける。LLM への投入精度が問題になったときに切り替える運用が現実的。

@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [git-hook, go]
 ---
 
@@ -57,7 +57,7 @@ pre-commit:
       run: markdownlint-cli2 --fix {staged_files}
       stage_fixed: true
     gitleaks:
-      run: gitleaks protect --staged --no-banner
+      run: gitleaks git --pre-commit --staged --no-banner
 
 pre-push:
   commands:
@@ -125,7 +125,7 @@ pre-commit:
   parallel: true
   commands:
     gitleaks:
-      run: gitleaks protect --staged --no-banner
+      run: gitleaks git --pre-commit --staged --no-banner
 ```
 
 ```yaml

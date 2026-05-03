@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [lint, format, javascript, typescript, json, rust, fast]
 ---
 
@@ -41,7 +41,7 @@ brew install biome
 
 ```json
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.9/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.14/schema.json",
   "files": {
     "includes": ["src/**", "tests/**", "*.json", "!**/node_modules", "!**/dist"],
     "ignoreUnknown": true
@@ -79,7 +79,7 @@ brew install biome
 | `formatter` | 全言語共通のフォーマット設定 |
 | `javascript` / `typescript` / `json` / `css` | 言語別の上書き |
 | `linter.rules` | ルール有効化。`recommended: true` で推奨セット適用 |
-| `organizeImports.enabled` | import 整列（v2 系で formatter/linter 統合） |
+| `assist.actions.source.organizeImports` | import 整列（v2 で `organizeImports` から `assist` 配下に移動。`biome migrate` で自動変換可） |
 
 ### ルールの severity
 

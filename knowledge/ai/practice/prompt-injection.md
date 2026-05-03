@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [ai-workflow, security]
 ---
 
@@ -23,6 +23,16 @@ LLM エージェントが外部データ（Web ページ、ファイル、ツー
 攻撃者の入口は多岐にわたる: Web ページ、GitHub Issue/PR 本文、PDF、メール本文、DB レコード、画像内の OCR 可能テキスト、別の LLM が生成した出力、MCP サーバーの返り値 ... 。
 
 ## 攻撃パターン
+
+### 0. lethal trifecta（致死の三要素）
+
+Simon Willison が提唱した、データ窃取攻撃が成立する 3 条件:
+
+1. **untrusted input**（外部データを LLM が読む）
+2. **sensitive data へのアクセス**（機密ファイル・API キー・会話履歴）
+3. **exfiltration mechanism**（外部送信手段: HTTP fetch、画像 URL、Markdown レンダリング等）
+
+3 つすべてが揃うとデータ窃取が成立する。**いずれか 1 つを切れば**この攻撃クラスは防げる。MCP サーバー設計でも、ツールの組み合わせがこの三角形を構成しないかを常に確認する。
 
 ### 1. 直接指示
 
@@ -136,6 +146,6 @@ messages = [
 
 ## 参考資料
 
-- [OWASP Top 10 for LLM Applications](https://owasp.org/www-project-top-10-for-large-language-model-applications/) — LLM01 Prompt Injection
-- [Simon Willison's prompt injection series](https://simonwillison.net/tags/prompt-injection/) — 実事例の豊富なレビュー
-- [Anthropic: Responsible Scaling Policy](https://www.anthropic.com/rsp) — モデル提供側の視点
+- [OWASP Top 10 for LLM Applications 2025](https://genai.owasp.org/llmrisk/llm01-prompt-injection/) — LLM01:2025 Prompt Injection（直接 / 間接の2分類、7つの緩和策）
+- [Simon Willison's prompt injection series](https://simonwillison.net/tags/prompt-injection/) — 実事例の豊富なレビュー、lethal trifecta の出典
+- [Anthropic: Mitigate jailbreaks and prompt injections](https://platform.claude.com/docs/en/docs/test-and-evaluate/strengthen-guardrails/mitigate-jailbreaks) — Harmlessness screens / Input validation / Chain safeguards の実装ガイド
