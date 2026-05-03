@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [ai-workflow, commercial]
 aliases: [cc]
 ---
@@ -48,7 +48,7 @@ claude --help             # ヘルプ表示
 | `/clear` | コンテキストクリア |
 | `/compact` | コンテキスト圧縮 |
 | `/model` | モデル切り替え |
-| `/cost` | トークン使用量表示 |
+| `/usage` | セッションコスト・プラン使用量・統計を表示。`/cost` と `/stats` は v2.1.118 で `/usage` に統合され、shortcut として残る |
 
 カスタムコマンドは `.claude/commands/` に Markdown ファイルとして定義可能。
 
@@ -124,7 +124,7 @@ claude --help             # ヘルプ表示
 
 ## フックシステム
 
-ツール実行やセッションイベントの前後に自動処理を挟む仕組み。ハンドラ種別は `command`（シェル実行）/ `prompt`（LLM 評価）/ `http`（HTTP POST）/ `agent`（サブエージェント呼び出し）の 4 種類。
+ツール実行やセッションイベントの前後に自動処理を挟む仕組み。ハンドラ種別は `command`（シェル実行）/ `prompt`（LLM 評価）/ `http`（HTTP POST）/ `agent`（サブエージェント呼び出し）/ `mcp_tool`（MCP ツール直接呼び出し、v2.1.118 追加）の 5 種類。
 
 **主要イベント**（約 23 種）:
 

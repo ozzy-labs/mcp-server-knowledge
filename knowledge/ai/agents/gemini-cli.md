@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-04
 tags: [ai-workflow, commercial, gcp]
 ---
 
@@ -123,7 +123,7 @@ gemini --help            # ヘルプ表示
 
 旧資料の `gemini-2.5-pro` デフォルトは陳腐化。**モデル解決の優先度**: `--model` フラグ → `GEMINI_MODEL` 環境変数 → `settings.json` の `model.name` → ローカル Gemma ルータ。
 
-> **注意**: 既知の Issue [#5373](https://github.com/google-gemini/gemini-cli/issues/5373) — 一部コードパスでハードコードされた `DEFAULT_GEMINI_MODEL = "gemini-2.5-pro"` が `settings.json` の指定を上書きするケースがある。期待モデルで起動していないと感じたら `--model` フラグまたは `GEMINI_MODEL` 環境変数で強制指定する。
+> **注意**: 旧 Issue [#5373](https://github.com/google-gemini/gemini-cli/issues/5373) で報告された「ハードコード `DEFAULT_GEMINI_MODEL` が `settings.json` を上書きする」問題は PR [#5527](https://github.com/google-gemini/gemini-cli/pull/5527)（2025-08 merge）で解消済み。現在は `--model` フラグ → `settings.json` の `model.name` → ハードコード fallback の順で評価される。期待モデルで起動していなければ `--model` フラグまたは `GEMINI_MODEL` 環境変数で強制指定するのが確実。
 
 ## ビルトインツール
 

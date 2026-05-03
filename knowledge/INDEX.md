@@ -6,11 +6,11 @@
 
 | 記事 | reviewed | stability | tags | 概要 |
 |---|---|---|---|---|
-| [Claude Code Routines](ai/agents/claude-code-routines.md) | 2026-05-03 | `research-preview` | `ai-workflow` `commercial` `cloud-hosted` | Anthropic 管理のクラウドインフラで Claude Code を非対話に動かす仕組み。プロンプト・対象リポジトリ・MCP コネクタを「ルーチン」として保存し、**スケジュール / API / GitHub イベント**のいずれかで起動する。research preview。Pro / Max / Team / Enterprise プランで利用可能。 |
-| [Claude Code](ai/agents/claude-code.md) | 2026-04-18 | — | `ai-workflow` `commercial` | Anthropic が提供する AI コーディングエージェント CLI。ターミナル上でコードベースの理解・編集・Git 操作・コマンド実行をエージェントが自律的に行う。 |
-| [Codex CLI](ai/agents/codex-cli.md) | 2026-04-18 | — | `ai-workflow` `commercial` | OpenAI が提供するオープンソースのコーディングエージェント CLI。フルスクリーン TUI でコードの読み取り・編集・コマンド実行を行い、マルチエージェント並列処理もサポートする。拡張機構の横断比較は `ai/platform/agent-extensions.md` を参照。 |
-| [Gemini CLI](ai/agents/gemini-cli.md) | 2026-04-18 | — | `ai-workflow` `commercial` `gcp` | Google が提供するオープンソースの AI エージェント CLI。ReAct（Reason and Act）ループにより、複雑なコーディングタスク・デバッグ・自動化をターミナルから実行する。拡張機構の横断比較は `ai/platform/agent-extensions.md` を参照。 |
-| [GitHub Copilot CLI](ai/agents/github-copilot-cli.md) | 2026-05-02 | — | `ai-workflow` `commercial` `github` | GitHub が提供する AI コーディングエージェント CLI。GitHub アカウントと深く統合され、コードの編集・テスト実行・Git ワークフローをエージェントが自律的に行う。2026-02-25 に GA。拡張機構の横断比較は `ai/platform/agent-extensions.md` を参照。 |
+| [Claude Code Routines](ai/agents/claude-code-routines.md) | 2026-05-04 | `research-preview` | `ai-workflow` `commercial` `cloud-hosted` | Anthropic 管理のクラウドインフラで Claude Code を非対話に動かす仕組み。プロンプト・対象リポジトリ・MCP コネクタを「ルーチン」として保存し、**スケジュール / API / GitHub イベント**のいずれかで起動する。research preview。Pro / Max / Team / Enterprise プランで利用可能。 |
+| [Claude Code](ai/agents/claude-code.md) | 2026-05-04 | — | `ai-workflow` `commercial` | Anthropic が提供する AI コーディングエージェント CLI。ターミナル上でコードベースの理解・編集・Git 操作・コマンド実行をエージェントが自律的に行う。 |
+| [Codex CLI](ai/agents/codex-cli.md) | 2026-05-04 | — | `ai-workflow` `commercial` | OpenAI が提供するオープンソースのコーディングエージェント CLI。フルスクリーン TUI でコードの読み取り・編集・コマンド実行を行い、マルチエージェント並列処理もサポートする。拡張機構の横断比較は `ai/platform/agent-extensions.md` を参照。 |
+| [Gemini CLI](ai/agents/gemini-cli.md) | 2026-05-04 | — | `ai-workflow` `commercial` `gcp` | Google が提供するオープンソースの AI エージェント CLI。ReAct（Reason and Act）ループにより、複雑なコーディングタスク・デバッグ・自動化をターミナルから実行する。拡張機構の横断比較は `ai/platform/agent-extensions.md` を参照。 |
+| [GitHub Copilot CLI](ai/agents/github-copilot-cli.md) | 2026-05-04 | — | `ai-workflow` `commercial` `github` | GitHub が提供する AI コーディングエージェント CLI。GitHub アカウントと深く統合され、コードの編集・テスト実行・Git ワークフローをエージェントが自律的に行う。2026-02-25 に GA。拡張機構の横断比較は `ai/platform/agent-extensions.md` を参照。 |
 
 ## `ai/platform/` — AI プラットフォーム・SDK・プロトコル (5)
 
@@ -18,9 +18,9 @@
 |---|---|---|---|---|
 | [AI エージェントの拡張機構（Skills / Subagents / Hooks / Plugins）](ai/platform/agent-extensions.md) | 2026-04-18 | — | `ai-workflow` `methodology` | Claude Code / Codex CLI / Gemini CLI / GitHub Copilot CLI の 4 大コーディングエージェント CLI が、2026 年時点でほぼ共通のメンタルモデルで**拡張機構**を持つようになった。本記事はそれらを横断比較する。個別 CLI の仕様は `ai/agents/claude-code.md` / `ai/agents/codex-cli.md` / `ai/agents/gemini-cli.md` / `ai/agents/github-copilot-cli.md` を参照。 |
 | [AGENTS.md](ai/platform/agents-md.md) | 2026-04-18 | — | `ai-workflow` `methodology` `markdown` | AI コーディングエージェント向けのプロジェクトガイダンスを記述する共通ファイル。単一の `AGENTS.md` で Codex CLI / Gemini CLI / GitHub Copilot CLI / Cursor / Amp など複数のエージェントにまたがって方針を共有する。 |
-| [Anthropic API (Claude API)](ai/platform/anthropic-api.md) | 2026-04-18 | — | `library` `commercial` `cloud-hosted` `ai-workflow` | Anthropic が提供する Claude モデルの API。本記事は API 本体（SDK 経由のアプリ実装）を対象。Claude Code CLI は別記事 `ai/agents/claude-code.md` を参照。 |
-| [Model Context Protocol (MCP)](ai/platform/mcp-protocol.md) | 2026-04-18 | — | `ai-workflow` `methodology` | Anthropic が 2024 年に発表したオープン規格。AI エージェント（クライアント）と外部コンテキスト・ツール（サーバー）を標準化されたプロトコルで接続する。USB-C のように「1 本のインタフェースで多様な周辺機器につなぐ」イメージ。 |
-| [MCP TypeScript SDK](ai/platform/mcp-typescript-sdk.md) | 2026-04-18 | — | `library` `typescript` `ai-workflow` | `@modelcontextprotocol/sdk` — Model Context Protocol のサーバー・クライアント両方を実装する公式 TypeScript SDK。本リポジトリもこれを利用している。 |
+| [Anthropic API (Claude API)](ai/platform/anthropic-api.md) | 2026-05-04 | — | `library` `commercial` `cloud-hosted` `ai-workflow` | Anthropic が提供する Claude モデルの API。本記事は API 本体（SDK 経由のアプリ実装）を対象。Claude Code CLI は別記事 `ai/agents/claude-code.md` を参照。 |
+| [Model Context Protocol (MCP)](ai/platform/mcp-protocol.md) | 2026-05-04 | — | `ai-workflow` `methodology` | Anthropic が 2024 年に発表したオープン規格。AI エージェント（クライアント）と外部コンテキスト・ツール（サーバー）を標準化されたプロトコルで接続する。USB-C のように「1 本のインタフェースで多様な周辺機器につなぐ」イメージ。 |
+| [MCP TypeScript SDK](ai/platform/mcp-typescript-sdk.md) | 2026-05-04 | — | `library` `typescript` `ai-workflow` | `@modelcontextprotocol/sdk` — Model Context Protocol のサーバー・クライアント両方を実装する公式 TypeScript SDK。本リポジトリもこれを利用している。 |
 
 ## `ai/practice/` — AI 駆動開発の手法 (6)
 

@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-02
+reviewed: 2026-05-04
 tags: [ai-workflow, commercial, github]
 aliases: [copilot]
 ---
@@ -62,9 +62,11 @@ copilot                  # インタラクティブセッション開始
 
 | パス | 用途 | Git 管理 |
 |---|---|---|
-| `~/.copilot/config.json` | グローバル設定 | - |
+| `~/.copilot/settings.json` | ユーザー設定（v1.0.35 で `config.json` から分離） | - |
+| `~/.copilot/config.json` | CLI 内部ステート（自動管理） | - |
 | `~/.copilot/mcp-config.json` | グローバル MCP サーバー設定 | - |
 | `~/.copilot/copilot-instructions.md` | 個人グローバル指示（全プロジェクト共通） | - |
+| `~/.copilot/instructions/*.instructions.md` | 個人グローバル追加指示（v1.0.12 以降、自動読み込み） | - |
 | `~/.copilot/agents/<name>.agent.md` | ユーザー custom agent | - |
 | `~/.copilot/skills/<name>/SKILL.md` | ユーザー skill | - |
 | `AGENTS.md` | プロジェクト固有の指示（repo root / CWD / `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` で指定したディレクトリで読まれる） | Yes |
@@ -72,7 +74,7 @@ copilot                  # インタラクティブセッション開始
 | `.github/agents/<name>.agent.md` | プロジェクト custom agent | Yes |
 | `.github/skills/<name>/SKILL.md` | プロジェクト skill（`.claude/skills/` / `.agents/skills/` も読む） | Yes |
 | `.github/hooks/hooks.json` | プロジェクト hooks | Yes |
-| `.github/mcp.json` | プロジェクト MCP | Yes |
+| `.mcp.json` | プロジェクト MCP（v1.0.22 で `.vscode/mcp.json` / `.devcontainer/devcontainer.json` のサポートを廃止し `.mcp.json` に標準化） | Yes |
 | `.github/copilot-instructions.md` | カスタム指示（レガシー） | Yes |
 
 `COPILOT_HOME` 環境変数または `--config-dir` フラグで設定ディレクトリを変更可能。
@@ -164,7 +166,7 @@ copilot --agent db-specialist --prompt "..."      # CLI フラグ
 
 `.github/hooks/*.json`（repo）または CWD の `hooks.json`。
 
-**対応イベント（6 種類）**:
+**対応イベント**（PascalCase / camelCase 両対応）:
 
 | イベント | 説明 |
 |---|---|
@@ -173,7 +175,13 @@ copilot --agent db-specialist --prompt "..."      # CLI フラグ
 | `userPromptSubmitted` | ユーザー発話直前 |
 | `preToolUse` | ツール実行前。`permissionDecision: allow\|deny\|ask` を返せる |
 | `postToolUse` | ツール実行後 |
-| `errorOccurred` | エラー発生時 |
+| `postToolUseFailure` | ツールエラー発生時（v1.0.15 追加） |
+| `permissionRequest` | スクリプトから programmatic に承認可能（v1.0.16 追加） |
+| `subagentStart` | subagent spawn 時（v1.0.11 追加） |
+| `agentStop` / `subagentStop` | エージェント終了制御（v1.0.22 追加） |
+| `preCompact` | コンテキスト圧縮直前（v1.0.5 追加） |
+| `notification` | 非同期通知（v1.0.33 追加） |
+| `errorOccurred` | エラー発生時（汎用） |
 
 ```json
 {
