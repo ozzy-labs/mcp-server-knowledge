@@ -4,7 +4,12 @@ import path from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { listCategories, listFiles, readKnowledge, searchKnowledge } from "./knowledge.js";
+import {
+  listEntries,
+  readKnowledge,
+  searchKnowledge,
+  validateAllFrontmatter,
+} from "./knowledge.js";
 
 const KNOWLEDGE_DIR = path.resolve(import.meta.dirname, "..", "knowledge");
 
@@ -13,12 +18,12 @@ const KNOWLEDGE_DIR = path.resolve(import.meta.dirname, "..", "knowledge");
 // ---------------------------------------------------------------------------
 
 const server = new McpServer(
-  { name: "knowledge", version: "0.1.0" },
+  { name: "knowledge", version: "0.2.0" },
   {
     instructions:
       "Provides verified, up-to-date knowledge for AI agents. " +
-      "Use 'list' to discover categories and files, 'read' to retrieve a specific knowledge article, " +
-      "and 'search' to find relevant knowledge by keyword.",
+      "Use 'list' to discover categories and articles (supports nested paths like 'ai/agents'), " +
+      "'read' to retrieve a specific article, and 'search' to find relevant content by keyword.",
   },
 );
 
@@ -28,48 +33,36 @@ server.registerTool(
   {
     title: "List Knowledge",
     description:
-      "List available knowledge categories or files within a category. " +
-      "Call without arguments to get all categories, or with a category name to list its files.",
+      "List knowledge entries (subdirectories and articles) at the given path. " +
+      "Call without arguments to list the top level. " +
+      'Use a nested path like "ai" or "ai/agents" to navigate deeper.',
     inputSchema: {
-      category: z
+      path: z
         .string()
         .optional()
-        .describe("Category name to list files in. Omit to list all categories."),
+        .describe('Path to list (e.g. "ai" or "ai/agents"). Omit for the top-level entries.'),
     },
     annotations: { readOnlyHint: true },
   },
-  async ({ category }) => {
-    if (category === undefined) {
-      const categories = await listCategories(KNOWLEDGE_DIR);
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text:
-              categories.length > 0
-                ? `Categories:\n${categories.map((c) => `- ${c}`).join("\n")}`
-                : "No categories found.",
-          },
-        ],
-      };
-    }
-
+  async ({ path: subPath }) => {
     try {
-      const files = await listFiles(KNOWLEDGE_DIR, category);
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text:
-              files.length > 0
-                ? `Files in "${category}":\n${files.map((f) => `- ${f}`).join("\n")}`
-                : `No knowledge files in category "${category}".`,
-          },
-        ],
-      };
+      const { directories, files } = await listEntries(KNOWLEDGE_DIR, subPath ?? "");
+      const lines: string[] = [];
+      const label = subPath && subPath !== "" ? `"${subPath}"` : "top level";
+      if (directories.length > 0) {
+        lines.push(`Subdirectories in ${label}:`);
+        for (const d of directories) lines.push(`- ${d}/`);
+      }
+      if (files.length > 0) {
+        if (lines.length > 0) lines.push("");
+        lines.push(`Articles in ${label}:`);
+        for (const f of files) lines.push(`- ${f}`);
+      }
+      if (lines.length === 0) lines.push(`No entries in ${label}.`);
+      return { content: [{ type: "text" as const, text: lines.join("\n") }] };
     } catch {
       return {
-        content: [{ type: "text" as const, text: `Category "${category}" not found.` }],
+        content: [{ type: "text" as const, text: `Path "${subPath ?? ""}" not found.` }],
         isError: true,
       };
     }
@@ -82,18 +75,19 @@ server.registerTool(
   {
     title: "Read Knowledge",
     description:
-      'Read a specific knowledge article. Provide the path as "category/name" (e.g. "tools/claude-code").',
+      'Read a specific knowledge article. Provide the path without ".md" extension ' +
+      '(e.g. "tools/ripgrep" or "ai/agents/claude-code").',
     inputSchema: {
-      path: z.string().describe('Path to the knowledge file, e.g. "tools/claude-code".'),
+      path: z
+        .string()
+        .describe('Path to the article, e.g. "tools/ripgrep" or "ai/agents/claude-code".'),
     },
     annotations: { readOnlyHint: true },
   },
   async ({ path: filePath }) => {
     try {
       const content = await readKnowledge(KNOWLEDGE_DIR, filePath);
-      return {
-        content: [{ type: "text" as const, text: content }],
-      };
+      return { content: [{ type: "text" as const, text: content }] };
     } catch {
       return {
         content: [{ type: "text" as const, text: `Knowledge not found: "${filePath}".` }],
@@ -108,7 +102,9 @@ server.registerTool(
   "search",
   {
     title: "Search Knowledge",
-    description: "Search the knowledge base by keyword. Matches against file names and content.",
+    description:
+      "Search the knowledge base by keyword across all nested directories. " +
+      "Matches against article paths and content.",
     inputSchema: {
       query: z.string().describe("Search keyword."),
     },
@@ -118,9 +114,7 @@ server.registerTool(
     const results = await searchKnowledge(KNOWLEDGE_DIR, query);
 
     if (results.length === 0) {
-      return {
-        content: [{ type: "text" as const, text: `No results for "${query}".` }],
-      };
+      return { content: [{ type: "text" as const, text: `No results for "${query}".` }] };
     }
 
     const text = results
@@ -130,9 +124,7 @@ server.registerTool(
       })
       .join("\n\n");
 
-    return {
-      content: [{ type: "text" as const, text: text }],
-    };
+    return { content: [{ type: "text" as const, text: text }] };
   },
 );
 
@@ -141,6 +133,11 @@ server.registerTool(
 // ---------------------------------------------------------------------------
 
 async function main() {
+  const issues = await validateAllFrontmatter(KNOWLEDGE_DIR);
+  for (const issue of issues) {
+    console.error(`[knowledge] frontmatter warning: ${issue.path} — ${issue.errors.join("; ")}`);
+  }
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("knowledge-mcp-server running on stdio");

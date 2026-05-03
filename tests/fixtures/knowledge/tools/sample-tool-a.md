@@ -1,3 +1,8 @@
+---
+reviewed: 2026-05-03
+tags: [cli, sample]
+---
+
 # Sample Tool A
 
 A CLI tool for demonstration purposes.

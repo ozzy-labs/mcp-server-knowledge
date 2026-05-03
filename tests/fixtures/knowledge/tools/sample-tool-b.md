@@ -1,3 +1,9 @@
+---
+reviewed: 2026-05-03
+tags: [cli, sample]
+aliases: [sample-b]
+---
+
 # Sample Tool B
 
 Another CLI tool for testing search functionality.
