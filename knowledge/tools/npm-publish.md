@@ -199,7 +199,7 @@ npm publish --otp 123456
 
 `auth-and-writes` レベルの 2FA を有効にすると publish/dist-tag 変更時に毎回 OTP を要求する。CI は OIDC（Trusted Publishers）または **granular access token**（2FA bypass を有効化した write 権限トークン）を使う。
 
-> **2025-11 以降**: npm は legacy access token を完全に廃止し、granular access token のみが利用可能になった。granular token は package / scope / organization 単位の権限、有効期限（最短 1 日）、IP CIDR 制限、read-only / read-write、2FA bypass を細かく設定できる。長寿命トークンを残すなら granular に移行する。
+> **legacy access token の段階的廃止**: 2025-11-05 に新規作成を停止、**2025-12-09 で既存トークンも revoke**。現在は granular access token のみが利用可能。granular token は package / scope / organization 単位の権限、有効期限（最短 1 日）、IP CIDR 制限、read-only / read-write、2FA bypass を細かく設定できる。長寿命トークンを残すなら granular に移行する。
 
 ## pnpm / yarn での publish
 
