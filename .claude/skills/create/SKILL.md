@@ -1,7 +1,6 @@
 ---
 description: トピック指定で新規の knowledge 記事を作成する
 argument-hint: "<topic> [--category <tools|standards|languages|platforms>]"
-disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch, AskUserQuestion
 ---
 

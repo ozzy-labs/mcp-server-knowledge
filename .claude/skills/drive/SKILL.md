@@ -1,7 +1,6 @@
 ---
 description: Issue から実装・PR 作成・セルフレビュー・修正を自動で回し、merge-ready な PR を出す。オプションでマージまで実行可能。
 argument-hint: <#issue-number | instruction> [--merge]
-disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch, AskUserQuestion
 ---
 
