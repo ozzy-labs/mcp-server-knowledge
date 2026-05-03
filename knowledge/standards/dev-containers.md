@@ -5,7 +5,7 @@ tags: [methodology, dockerfile]
 
 # Dev Containers
 
-OCI コンテナ内で開発環境を定義する仕様。`.devcontainer/devcontainer.json` をリポジトリ直下に置くと VS Code / GitHub Codespaces / JetBrains / `devcontainer` CLI 等のツールが**同一の隔離環境**を起動できる。マシン依存のセットアップを排除し、AI エージェント（Claude Code / Codex CLI / Gemini CLI / Copilot CLI）も Dev Container 内に常駐させる運用が広がっている。1 リポ内のマルチエージェント構成は `standards/multi-agent-repo.md`、複数リポへの設定配布は `standards/multi-repo-config-sync.md` を参照。
+OCI コンテナ内で開発環境を定義する仕様。`.devcontainer/devcontainer.json` をリポジトリ直下に置くと VS Code / GitHub Codespaces / JetBrains / `devcontainer` CLI 等のツールが**同一の隔離環境**を起動できる。マシン依存のセットアップを排除し、AI エージェント（Claude Code / Codex CLI / Gemini CLI / Copilot CLI）も Dev Container 内に常駐させる運用が広がっている。1 リポ内のマルチエージェント構成は `ai/practice/multi-agent-repo.md`、複数リポへの設定配布は `standards/multi-repo-config-sync.md` を参照。
 
 公式: [containers.dev](https://containers.dev/) / [Reference](https://containers.dev/implementors/json_reference/)
 
@@ -224,7 +224,7 @@ CI で「Dev Container と同じ環境でテストを回す」用途、または
 ## 関連
 
 - [`platforms/docker.md`](../platforms/docker.md) — 基盤コンテナ知識
-- [`standards/multi-agent-repo.md`](multi-agent-repo.md) — 1 リポ内のマルチエージェント構成
+- [`ai/practice/multi-agent-repo.md`](multi-agent-repo.md) — 1 リポ内のマルチエージェント構成
 - [`standards/multi-repo-config-sync.md`](multi-repo-config-sync.md) — 複数リポへの `.devcontainer/` 配布
 
 ## 参考

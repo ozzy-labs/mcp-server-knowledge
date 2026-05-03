@@ -5,7 +5,7 @@ tags: [ai-workflow, commercial, gcp]
 
 # Gemini CLI
 
-Google が提供するオープンソースの AI エージェント CLI。ReAct（Reason and Act）ループにより、複雑なコーディングタスク・デバッグ・自動化をターミナルから実行する。拡張機構の横断比較は `standards/agent-extensions.md` を参照。
+Google が提供するオープンソースの AI エージェント CLI。ReAct（Reason and Act）ループにより、複雑なコーディングタスク・デバッグ・自動化をターミナルから実行する。拡張機構の横断比較は `ai/platform/agent-extensions.md` を参照。
 
 ## インストール
 

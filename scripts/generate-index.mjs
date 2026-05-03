@@ -137,10 +137,6 @@ function labelFor(dir) {
   return DIR_LABELS[dir] ?? dir;
 }
 
-function depthOf(dir) {
-  return dir === "" ? 0 : dir.split("/").length;
-}
-
 function escapeCell(value) {
   return value.replace(/\|/g, "\\|");
 }
@@ -182,8 +178,7 @@ async function main() {
     const articles = grouped.get(dir);
     if (!articles || articles.length === 0) continue;
     total += articles.length;
-    const heading = "#".repeat(Math.min(6, depthOf(dir) + 1));
-    sections.push(`${heading} \`${dir}/\` — ${labelFor(dir)} (${articles.length})`);
+    sections.push(`## \`${dir}/\` — ${labelFor(dir)} (${articles.length})`);
     sections.push("");
     sections.push("| 記事 | reviewed | stability | tags | 概要 |");
     sections.push("|---|---|---|---|---|");

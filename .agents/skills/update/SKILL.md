@@ -11,7 +11,7 @@ description: knowledge ベース内の既存記事を最新情報で再検証・
 
 引数は以下のいずれか:
 
-- **単一記事**: `tools/gemini-cli.md` のようなパス、または `tools/gemini-cli` / `gemini-cli` の省略形
+- **単一記事**: `ai/agents/gemini-cli.md` のようなパス、または `ai/agents/gemini-cli` / `gemini-cli` の省略形
 - **カテゴリ**: `tools`, `standards`, `languages`, `platforms`（配下の全記事が対象）
 - **`--stale [days]`**: `reviewed` が `days` 日以上前の記事すべて（デフォルト 90）
 - **`--all`**: 全記事（慎重に使う）

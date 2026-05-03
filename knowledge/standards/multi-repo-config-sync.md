@@ -5,7 +5,7 @@ tags: [methodology]
 
 # 複数リポジトリ間の設定同期
 
-`.editorconfig` / `lefthook` / `biome.json` / `.github/workflows/` / エージェント設定 / Dev Container 等を**複数リポジトリで揃えたい**ときの設計指針。1 リポジトリ内のマルチエージェント対応は `standards/multi-agent-repo.md` を参照。
+`.editorconfig` / `lefthook` / `biome.json` / `.github/workflows/` / エージェント設定 / Dev Container 等を**複数リポジトリで揃えたい**ときの設計指針。1 リポジトリ内のマルチエージェント対応は `ai/practice/multi-agent-repo.md` を参照。
 
 ## 解きたい問題
 
@@ -212,7 +212,7 @@ git add . && git commit -m "chore: initialize from commons"
 
 ## 関連
 
-- [`standards/multi-agent-repo.md`](multi-agent-repo.md) — 1 リポジトリ内で複数 AI エージェントを共存させる設計（commons パターンと組み合わせて使う）
+- [`ai/practice/multi-agent-repo.md`](multi-agent-repo.md) — 1 リポジトリ内で複数 AI エージェントを共存させる設計（commons パターンと組み合わせて使う）
 - [`tools/renovate.md`](../tools/renovate.md) — preset / customManager の詳細
 - [`tools/lefthook.md`](../tools/lefthook.md) — `extends` で base 設定を継承するモデル
 - [`platforms/github-actions.md`](../platforms/github-actions.md) — scheduled workflow / `peter-evans/create-pull-request`

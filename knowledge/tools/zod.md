@@ -240,7 +240,7 @@ server.registerTool(
 );
 ```
 
-詳細は `tools/mcp-typescript-sdk.md` 参照。
+詳細は `ai/platform/mcp-typescript-sdk.md` 参照。
 
 ## v3 と v4 の差
 

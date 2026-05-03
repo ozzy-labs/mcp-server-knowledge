@@ -212,7 +212,7 @@ vi.mock("./m", () => ({ f: mockFn }));
 
 ### MCP サーバーのテスト
 
-`InMemoryTransport` で in-process 結合テストが書ける（`tools/mcp-typescript-sdk.md` 参照）。Vitest + `@modelcontextprotocol/sdk` の組み合わせが標準。
+`InMemoryTransport` で in-process 結合テストが書ける（`ai/platform/mcp-typescript-sdk.md` 参照）。Vitest + `@modelcontextprotocol/sdk` の組み合わせが標準。
 
 ## Jest / Mocha との比較
 

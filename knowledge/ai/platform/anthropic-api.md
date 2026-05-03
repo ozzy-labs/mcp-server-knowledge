@@ -6,7 +6,7 @@ aliases: [claude-api]
 
 # Anthropic API (Claude API)
 
-Anthropic が提供する Claude モデルの API。本記事は API 本体（SDK 経由のアプリ実装）を対象。Claude Code CLI は別記事 `tools/claude-code.md` を参照。
+Anthropic が提供する Claude モデルの API。本記事は API 本体（SDK 経由のアプリ実装）を対象。Claude Code CLI は別記事 `ai/agents/claude-code.md` を参照。
 
 公式: [platform.claude.com/docs](https://platform.claude.com/docs)
 

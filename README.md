@@ -80,10 +80,15 @@ args = ["/path/to/knowledge-mcp-server/dist/index.js"]
 ```text
 knowledge/
 ├── INDEX.md        ← 全記事の一覧（自動生成）
-├── tools/          ← AI CLI ツールの使い方・設定リファレンス
-├── standards/      ← 規約・プラクティス
-├── languages/      ← 言語固有の知識
-└── platforms/      ← プラットフォーム・サービス
+├── tools/          ← 一般 CLI / lint / format / build / package / version manager 等
+├── standards/      ← 一般的な規約・プラクティス・設計方針
+├── languages/      ← プログラミング言語固有の知識
+├── platforms/      ← クラウド / プラットフォーム / サービス
+└── ai/
+    ├── agents/     ← AI コーディングエージェント CLI（Claude Code, Codex, Gemini, Copilot 等）
+    ├── platform/   ← AI プラットフォーム・SDK・プロトコル（Anthropic API, MCP 等）
+    ├── workflow/   ← AI 駆動開発ワークフロー / SDD ツール
+    └── practice/   ← AI 駆動開発の方法論・運用パターン
 ```
 
 収録記事の一覧は [`knowledge/INDEX.md`](knowledge/INDEX.md) を参照。`knowledge/**/*.md` を変更すると lefthook pre-commit で自動再生成される（`pnpm run generate-index` で手動実行も可）。
