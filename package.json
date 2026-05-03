@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "generate-index": "node scripts/generate-index.mjs",
-    "validate-staleness-sources": "node scripts/staleness/validate.mjs"
+    "validate-staleness-sources": "node scripts/staleness/validate.mjs",
+    "staleness:status": "scripts/staleness/status.sh"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
