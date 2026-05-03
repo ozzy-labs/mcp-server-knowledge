@@ -77,7 +77,7 @@ describe("walkArticles", () => {
     for await (const entry of walkArticles(FIXTURES_DIR, "ai")) {
       collected.push(entry.path);
     }
-    expect(collected).toEqual(["ai/agents/sample-nested-agent"]);
+    expect(collected).toEqual(["ai/agents/sample-nested-agent", "ai/agents/sample-related-agent"]);
   });
 });
 
