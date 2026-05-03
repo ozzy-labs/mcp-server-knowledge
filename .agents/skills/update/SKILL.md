@@ -89,9 +89,8 @@ confidence 別の挙動:
 
 ### 5. 検証
 
-1. `pnpm run generate-index` で INDEX.md を更新
-2. `pnpm run test` でテスト通過を確認
-3. `markdownlint-cli2 --fix` で書式を整える
+1. `pnpm run test` でテスト通過を確認
+2. `markdownlint-cli2 --fix` で書式を整える
 
 ### 6. PR / issue 起票（`--auto-ship` 指定時）
 

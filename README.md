@@ -79,7 +79,6 @@ args = ["/path/to/knowledge-mcp-server/dist/index.js"]
 
 ```text
 knowledge/
-├── INDEX.md        ← 全記事の一覧（自動生成）
 ├── tools/          ← 一般 CLI / lint / format / build / package / version manager 等
 ├── standards/      ← 一般的な規約・プラクティス・設計方針
 ├── languages/      ← プログラミング言語固有の知識
@@ -91,7 +90,7 @@ knowledge/
     └── practice/   ← AI 駆動開発の方法論・運用パターン
 ```
 
-収録記事の一覧は [`knowledge/INDEX.md`](knowledge/INDEX.md) を参照。`knowledge/**/*.md` を変更すると lefthook pre-commit で自動再生成される（`pnpm run generate-index` で手動実行も可）。
+収録記事は MCP `list` ツール経由で取得する（AI エージェントが本リポの主たる利用者）。人間がローカルで一覧を眺めたい場合のみ `pnpm run generate-index` で `knowledge/INDEX.md` を生成できる（`.gitignore` 対象、git にコミットしない）。
 
 ## 開発
 

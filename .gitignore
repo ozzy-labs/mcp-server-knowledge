@@ -26,3 +26,6 @@ coverage/
 
 # Logs
 *.log
+
+# Knowledge index (auto-generated locally; MCP `list` tool serves the same data)
+knowledge/INDEX.md

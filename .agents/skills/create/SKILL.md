@@ -1,11 +1,11 @@
 ---
 name: create
-description: トピックを指定して、新規の knowledge 記事をリサーチ・執筆・登録する。カテゴリ判定から INDEX 反映まで自動で行う。
+description: トピックを指定して、新規の knowledge 記事をリサーチ・執筆・登録する。カテゴリ判定から登録まで自動で行う。
 ---
 
 # create - knowledge 記事の新規作成
 
-指定トピックについて、最新情報をリサーチして新規の記事を生成し、適切なカテゴリに配置して INDEX を更新する。
+指定トピックについて、最新情報をリサーチして新規の記事を生成し、適切なカテゴリに配置する。
 
 ## 入力
 
@@ -87,9 +87,8 @@ reviewed: YYYY-MM-DD
 
 ### 6. 検証
 
-1. `pnpm run generate-index` で INDEX.md を再生成
-2. `pnpm run test` でテスト通過を確認
-3. `markdownlint-cli2 --fix` で書式を整える
+1. `pnpm run test` でテスト通過を確認
+2. `markdownlint-cli2 --fix` で書式を整える
 
 ### 7. 完了報告
 
@@ -98,7 +97,6 @@ create 完了:
   記事:    knowledge/<category>/<filename>.md
   カテゴリ: <category>
   reviewed: YYYY-MM-DD
-  INDEX:   更新済み
 ```
 
 ## 責務の範囲

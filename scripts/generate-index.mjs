@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-// Auto-generates knowledge/INDEX.md from the articles under knowledge/.
+// Generates knowledge/INDEX.md from the articles under knowledge/.
 // Walks the directory tree recursively, supports nested categories
 // (e.g. ai/agents/), and emits a tag-based index in addition to per-directory
-// tables. Invoked by `pnpm run generate-index` and lefthook pre-commit.
+// tables. The output is git-ignored; this script is for local human browsing
+// only. AI agents consume the same data via the MCP `list` tool.
+// Invoked manually via `pnpm run generate-index`.
 
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
