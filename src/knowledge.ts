@@ -1,5 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { type Frontmatter, parseFrontmatter, validateFrontmatter } from "./schema.js";
 
 function assertWithinDir(knowledgeDir: string, resolved: string): void {
   const normalized = path.resolve(resolved);
@@ -9,22 +10,62 @@ function assertWithinDir(knowledgeDir: string, resolved: string): void {
   }
 }
 
-export async function listCategories(knowledgeDir: string): Promise<string[]> {
-  const entries = await readdir(knowledgeDir, { withFileTypes: true });
-  return entries
+export interface ListEntries {
+  directories: string[];
+  files: string[];
+}
+
+export async function listEntries(knowledgeDir: string, subPath = ""): Promise<ListEntries> {
+  const target = subPath === "" ? knowledgeDir : path.join(knowledgeDir, subPath);
+  assertWithinDir(knowledgeDir, target);
+  const entries = await readdir(target, { withFileTypes: true });
+  const directories = entries
     .filter((e) => e.isDirectory())
     .map((e) => e.name)
     .sort();
+  const files = entries
+    .filter((e) => e.isFile() && e.name.endsWith(".md") && e.name !== "INDEX.md")
+    .map((e) => e.name.replace(/\.md$/, ""))
+    .sort();
+  return { directories, files };
+}
+
+export async function listCategories(knowledgeDir: string): Promise<string[]> {
+  const { directories } = await listEntries(knowledgeDir, "");
+  return directories;
 }
 
 export async function listFiles(knowledgeDir: string, category: string): Promise<string[]> {
-  const categoryDir = path.join(knowledgeDir, category);
-  assertWithinDir(knowledgeDir, categoryDir);
-  const entries = await readdir(categoryDir, { withFileTypes: true });
-  return entries
-    .filter((e) => e.isFile() && e.name.endsWith(".md"))
-    .map((e) => e.name.replace(/\.md$/, ""))
-    .sort();
+  const { files } = await listEntries(knowledgeDir, category);
+  return files;
+}
+
+export interface ArticleEntry {
+  /** Path relative to knowledgeDir without `.md` (e.g. `ai/agents/claude-code`). */
+  path: string;
+  /** Absolute filesystem path. */
+  absolutePath: string;
+}
+
+export async function* walkArticles(
+  knowledgeDir: string,
+  subPath = "",
+): AsyncGenerator<ArticleEntry> {
+  const target = subPath === "" ? knowledgeDir : path.join(knowledgeDir, subPath);
+  assertWithinDir(knowledgeDir, target);
+  const entries = await readdir(target, { withFileTypes: true });
+  entries.sort((a, b) => a.name.localeCompare(b.name));
+  for (const entry of entries) {
+    const childRel = subPath === "" ? entry.name : `${subPath}/${entry.name}`;
+    if (entry.isDirectory()) {
+      yield* walkArticles(knowledgeDir, childRel);
+    } else if (entry.isFile() && entry.name.endsWith(".md") && entry.name !== "INDEX.md") {
+      yield {
+        path: childRel.replace(/\.md$/, ""),
+        absolutePath: path.join(target, entry.name),
+      };
+    }
+  }
 }
 
 export async function readKnowledge(knowledgeDir: string, filePath: string): Promise<string> {
@@ -44,39 +85,68 @@ export async function searchKnowledge(
 ): Promise<SearchResult[]> {
   const results: SearchResult[] = [];
   const lowerQuery = query.toLowerCase();
-  const categories = await listCategories(knowledgeDir);
 
-  for (const category of categories) {
-    const files = await listFiles(knowledgeDir, category);
-    for (const file of files) {
-      const filePath = `${category}/${file}`;
-      const content = await readFile(path.join(knowledgeDir, `${filePath}.md`), "utf-8");
-      const lines = content.split("\n");
-      const matchingLines: string[] = [];
+  for await (const article of walkArticles(knowledgeDir)) {
+    const content = await readFile(article.absolutePath, "utf-8");
+    const lines = content.split("\n");
+    const matchingLines: string[] = [];
+    const fileBaseName = path.basename(article.path);
+    const nameMatch = fileBaseName.toLowerCase().includes(lowerQuery);
 
-      const nameMatch = file.toLowerCase().includes(lowerQuery);
-
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].toLowerCase().includes(lowerQuery)) {
-          const start = Math.max(0, i - 1);
-          const end = Math.min(lines.length, i + 2);
-          matchingLines.push(lines.slice(start, end).join("\n"));
-        }
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].toLowerCase().includes(lowerQuery)) {
+        const start = Math.max(0, i - 1);
+        const end = Math.min(lines.length, i + 2);
+        matchingLines.push(lines.slice(start, end).join("\n"));
       }
+    }
 
-      if (nameMatch || matchingLines.length > 0) {
-        results.push({
-          path: filePath,
-          matches:
-            matchingLines.length > 0
-              ? matchingLines
-              : nameMatch
-                ? [`(filename match: ${file})`]
-                : [],
-        });
-      }
+    if (nameMatch || matchingLines.length > 0) {
+      results.push({
+        path: article.path,
+        matches:
+          matchingLines.length > 0
+            ? matchingLines
+            : nameMatch
+              ? [`(filename match: ${fileBaseName})`]
+              : [],
+      });
     }
   }
 
   return results;
+}
+
+export interface FrontmatterValidationIssue {
+  path: string;
+  errors: string[];
+}
+
+/**
+ * Walk all articles and validate their frontmatter against the schema.
+ * Returns a list of articles whose frontmatter failed validation.
+ */
+export async function validateAllFrontmatter(
+  knowledgeDir: string,
+): Promise<FrontmatterValidationIssue[]> {
+  const issues: FrontmatterValidationIssue[] = [];
+  for await (const article of walkArticles(knowledgeDir)) {
+    const content = await readFile(article.absolutePath, "utf-8");
+    const { frontmatter } = parseFrontmatter(content);
+    const validated = validateFrontmatter(frontmatter);
+    if (!validated.ok) {
+      issues.push({ path: article.path, errors: validated.errors ?? [] });
+    }
+  }
+  return issues;
+}
+
+export async function readArticleFrontmatter(
+  knowledgeDir: string,
+  filePath: string,
+): Promise<Frontmatter | null> {
+  const content = await readKnowledge(knowledgeDir, filePath);
+  const { frontmatter } = parseFrontmatter(content);
+  const validated = validateFrontmatter(frontmatter);
+  return validated.data ?? null;
 }

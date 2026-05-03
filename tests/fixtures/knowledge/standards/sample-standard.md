@@ -1,3 +1,8 @@
+---
+reviewed: 2026-05-03
+tags: [style]
+---
+
 # Sample Standard
 
 A coding standard for demonstration.

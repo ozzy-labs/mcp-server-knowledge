@@ -38,4 +38,15 @@ describe("searchKnowledge", () => {
     expect(toolB?.matches.length).toBeGreaterThan(0);
     expect(toolB?.matches[0]).toContain("Cross-platform");
   });
+
+  it("recursively searches nested directories", async () => {
+    const results = await searchKnowledge(FIXTURES_DIR, "nested-marker-xyz");
+    expect(results.some((r) => r.path === "ai/agents/sample-nested-agent")).toBe(true);
+  });
+
+  it("returns nested article path with full path", async () => {
+    const results = await searchKnowledge(FIXTURES_DIR, "Nested Agent");
+    const nested = results.find((r) => r.path === "ai/agents/sample-nested-agent");
+    expect(nested).toBeDefined();
+  });
 });
