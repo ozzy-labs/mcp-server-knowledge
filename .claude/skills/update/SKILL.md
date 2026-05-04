@@ -52,10 +52,10 @@ fi
 ### 既存 PR との衝突回避
 
 ```bash
-gh pr list --state open --search "head:staleness/" --json headRefName --jq '.[].headRefName'
+gh pr list --state open --search "staleness in:head" --json headRefName --jq '.[].headRefName'
 ```
 
-`staleness/<article-slug>-*` または `staleness/<routine>-*` ブランチで open PR がある記事はスキップ。同日の同 routine バッチは旧ブランチに追記する形に切り替える。
+`docs/staleness-<article-slug>-*` または `chore/staleness-<routine>-*` ブランチで open PR がある記事はスキップ。同日の同 routine バッチは旧ブランチに追記する形に切り替える（type prefix は CI Branch Name Check の許容 type 内: feat / fix / docs / style / refactor / perf / test / build / ci / chore）。
 
 ### 完了後
 

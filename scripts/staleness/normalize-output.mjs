@@ -3,8 +3,6 @@
 // 「edits が空」「全ての edits が frontmatter (reviewed) のみ」の場合、
 // confidence を high/medium と返してきても low に強制降格する。
 
-import { readFileSync } from "node:fs";
-
 export function normalizeAgentOutput(report) {
 	const next = { ...report };
 	if (next.confidence === "fail") {
