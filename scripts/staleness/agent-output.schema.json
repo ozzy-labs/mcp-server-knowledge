@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ozzy-labs/knowledge-mcp-server/schemas/staleness/agent-output.schema.json",
+  "title": "staleness-researcher agent output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "article",
+    "confidence",
+    "summary",
+    "sources_consulted",
+    "fetch_failures",
+    "edits"
+  ],
+  "properties": {
+    "article": {
+      "type": "string",
+      "description": "記事パス（拡張子なし、knowledge/ 起点）",
+      "pattern": "^[a-z0-9][a-z0-9/_-]*$"
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low", "fail"]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "description": "1-2 文の差分要約"
+    },
+    "sources_consulted": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "参照した URL またはコマンドのリスト"
+    },
+    "fetch_failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["url", "reason"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["locator", "old_string", "new_string"],
+        "properties": {
+          "locator": {
+            "type": "string",
+            "minLength": 1
+          },
+          "old_string": {
+            "type": "string",
+            "minLength": 1
+          },
+          "new_string": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

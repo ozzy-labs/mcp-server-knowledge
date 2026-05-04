@@ -1,66 +1,64 @@
 ---
-description: knowledge ベース内の既存記事を最新情報で再検証・更新する
-argument-hint: "<article-path | category | --stale [days] | --staleness-group <name> | --all> [--non-interactive] [--auto-ship]"
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch, AskUserQuestion
+description: knowledge ベース内の既存記事を最新情報で再検証・更新する（Routines 想定の非対話実行）
+argument-hint: "<article-path | category | --stale [days] | --staleness-group <name> | --all> [--parallel N] [--dry-run] [--force-research]"
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
 ---
 
 # update
 
-`.agents/skills/update/SKILL.md` を Read し、ワークフロー手順に従う。
+`.agents/skills/update/SKILL.md` を Read し、ワークフロー手順に従う。本スキルは Routines および手動実行いずれからも呼び出される非対話・自律実行型ワークフロー。AskUserQuestion は使わない。
 
 ## Claude Code 固有の追加事項
 
-### 入力解析
+### sub-agent 起動
 
-引数を解析し、対象記事と実行モードを決定する:
+手順 2（リサーチ）では `Agent` ツールに `subagent_type: staleness-researcher` を指定して並列起動する（定義は `.claude/agents/staleness-researcher.md`）。同 agent は `allowed-tools` で Edit / Write / curl が物理的に禁止されている。
 
-- 位置引数省略時は `--stale 90` として扱う
-- `--non-interactive` 指定時は `AskUserQuestion` を一切呼ばず、すべての判断を本スキルが行う
-- `--auto-ship` 指定時は完了時に自動で `ship` 相当の処理（lint → commit → push → PR 作成）を行う
-- `--staleness-group <name>` 指定時は `scripts/staleness/sources.yaml` を `yq -o json scripts/staleness/sources.yaml | jq` でパースする
+並列度は `--parallel <N>`（デフォルト 4、上限 16）。例:
 
-### sources.yaml ベースのフェッチ
+- `/update --staleness-group daily` → 並列 4（デフォルト）
+- `/update --staleness-group monthly --parallel 8` → 並列 8
+- `/update --all --parallel 16` → 並列 16（上限）
 
-手順 2-3 の各 method は以下のツール / Agent に対応させる:
+各 sub-agent には sources.yaml の該当エントリと記事パスを渡し、`scripts/staleness/agent-output.schema.json` 準拠の JSON で confidence + 差分提案を返させる。Edit / Write は agent 定義で禁止されているため、main セッションが `edits[]` を Edit ツールで適用する。
 
-- `docs[]`、`rss[]` → `WebFetch`
-- `github_releases[]` → `Bash` で `gh release list -R <owner/repo> --limit 5` および `gh release view`
-- `raw_files[]` → `Bash` で `curl -fsSL https://raw.githubusercontent.com/<owner>/<repo>/HEAD/<path>`
-- `npm[]` → `Bash` で `curl -fsSL https://registry.npmjs.org/<pkg>/latest | jq '{version, time}'`
-- `pypi[]` → `Bash` で `curl -fsSL https://pypi.org/pypi/<pkg>/json | jq '{info: {version: .info.version, requires_python: .info.requires_python}}'`
-- `eol` → `Bash` で `curl -fsSL https://endoflife.date/api/<product>.json`
-- `web_search[]` → `WebSearch`
-- `related_internal[]` → `Read` で `knowledge/<path>.md` を取得
+### sub-agent JSON validation + 自動正規化
 
-### リサーチエージェントの活用
+main セッションは各 sub-agent の出力に対し以下を順に適用する:
 
-手順 2（リサーチ）では `Agent` ツールに `subagent_type: general-purpose` を指定して並列起動する:
+```bash
+# 1. Schema validation（不適合は fail 扱い）
+echo "$AGENT_JSON" | node scripts/staleness/validate-output.mjs
 
-- 単一記事更新: 並列度 1（本セッションで処理）
-- 複数記事（カテゴリ / `--staleness-group` / `--stale`）: 3〜4 並列まで
-- `--staleness-group monthly` のように 30 件超の場合: 4 並列を維持し、ウェーブ単位で処理
+# 2. Confidence auto-downgrade（edits 空 / frontmatter only → low）
+echo "$AGENT_JSON" | node scripts/staleness/normalize-output.mjs
+```
 
-各 sub-agent には sources.yaml の該当エントリと記事パスを渡し、confidence 判定（high / medium / low / fail）と差分要約を返させる。判定結果を本セッションが集約し、PR / issue 起票を行う。
+正規化済み JSON を各記事の処理に使用する。
 
-### 完了報告後
+### fast-path 振り分け
 
-#### 対話モード（`--non-interactive` なし）
+手順 1.3 の fast-path 判定は以下の Bash で行う:
 
-update で記事を書き換えた場合、AskUserQuestion を呼び出す（`answers` パラメータは設定しない）:
-
-- **「ship まで進める」** → `.claude/skills/ship/SKILL.md` を Read して lint → commit → PR 作成
-- **「終了する」** → 変更はワーキングツリーに残したまま終了
-
-update で変更がなかった場合は AskUserQuestion を呼ばず、そのまま終了する。
-
-#### 非対話モード（`--non-interactive`）
-
-`AskUserQuestion` を一切呼ばない:
-
-- `--auto-ship` あり: 個別 PR / バッチ PR / fail issue を自動起票し、完了報告して終了
-- `--auto-ship` なし: 変更内容をワーキングツリーに残したまま完了報告して終了（後続フローに任せる）
+```bash
+threshold=$(case "$ROUTINE" in daily) echo 1 ;; weekly) echo 7 ;; monthly) echo 30 ;; esac)
+half=$((threshold / 2))
+days_old=$(( ( $(date -u +%s) - $(date -u -d "$reviewed" +%s) ) / 86400 ))
+if [ "$days_old" -lt "$half" ] && [ -z "$FORCE_RESEARCH" ]; then
+  # fast-path: skip sub-agent, bump reviewed only
+fi
+```
 
 ### 既存 PR との衝突回避
 
-- `gh pr list --state open --search "head:claude/staleness"` を呼び、`claude/staleness/<article-path>/*` ブランチで open PR がある記事はスキップ
-- バッチ PR `claude/staleness/batch/<routine>/<YYYYMMDD>` の同日重複は新規 commit を旧ブランチに追記する形に切り替える
+```bash
+gh pr list --state open --search "staleness in:head" --json headRefName --jq '.[].headRefName'
+```
+
+`docs/staleness-<article-slug>-*` または `chore/staleness-<routine>-*` ブランチで open PR がある記事はスキップ。同日の同 routine バッチは旧ブランチに追記する形に切り替える（type prefix は CI Branch Name Check の許容 type 内: feat / fix / docs / style / refactor / perf / test / build / ci / chore）。
+
+### 完了後
+
+`--dry-run` 未指定時は PR 作成 + auto-merge まで実施し、完了報告して終了する。`AskUserQuestion` は呼ばない。
+
+`--dry-run` 指定時は research 結果のサマリのみを stdout に出力し、ファイル変更は破棄する。
