@@ -79,16 +79,29 @@ args = ["/path/to/knowledge-mcp-server/dist/index.js"]
 
 ```text
 knowledge/
-├── tools/          ← 一般 CLI / lint / format / build / package / version manager 等
+├── tools/          ← 言語非依存の汎用 CLI / lint / format / package 等
 ├── standards/      ← 一般的な規約・プラクティス・設計方針
-├── languages/      ← プログラミング言語固有の知識
-├── platforms/      ← クラウド / プラットフォーム / サービス
+├── languages/
+│   ├── go/         ← Go 言語本体 + Go エコシステム（golangci-lint, gopls, goreleaser, ...）
+│   ├── js/         ← Node.js / TypeScript ESM + JS/TS エコシステム（Biome, Vitest, pnpm, ...）
+│   ├── python/     ← Python 本体 + uv 等
+│   └── bash/       ← Bash 本体 + bats / shellcheck / shfmt
+├── platforms/
+│   ├── github/     ← GitHub Actions / gh CLI / gh-extensions / actionlint
+│   ├── aws/        ← AWS CLI 等
+│   └── docker/     ← Docker 本体
 └── ai/
     ├── agents/     ← AI コーディングエージェント CLI（Claude Code, Codex, Gemini, Copilot 等）
     ├── platform/   ← AI プラットフォーム・SDK・プロトコル（Anthropic API, MCP 等）
     ├── workflow/   ← AI 駆動開発ワークフロー / SDD ツール
     └── practice/   ← AI 駆動開発の方法論・運用パターン
 ```
+
+カテゴリ判定ルール:
+
+- **言語専用ツール** → `languages/<lang>/` 配下（例: `golangci-lint` は Go 専用 → `languages/go/`）
+- **プラットフォーム専用ツール** → `platforms/<platform>/` 配下（例: `actionlint` は GitHub Actions 専用 → `platforms/github/`）
+- **言語非依存の汎用ツール** → `tools/` flat（例: `mise`, `jq`, `lefthook`, `trivy`）
 
 収録記事は MCP `list` ツール経由で取得する（AI エージェントが本リポの主たる利用者）。人間がローカルで一覧を眺めたい場合のみ `pnpm run generate-index` で `knowledge/INDEX.md` を生成できる（`.gitignore` 対象、git にコミットしない）。
 

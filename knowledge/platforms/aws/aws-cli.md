@@ -276,10 +276,10 @@ aws ecs execute-command --cluster c --task <task-id> --container app --interacti
 
 ## 関連
 
-- [`tools/jq.md`](jq.md) — `--output json` の後処理
-- [`tools/yq.md`](yq.md) — `--output yaml` の後処理
-- [`standards/npm-trusted-publishers.md`](../standards/npm-trusted-publishers.md) — OIDC 短命 credentials の同思想
-- [`platforms/github-actions.md`](../platforms/github-actions.md) — `configure-aws-credentials` の使い方
+- [`tools/jq.md`](../../tools/jq.md) — `--output json` の後処理
+- [`tools/yq.md`](../../tools/yq.md) — `--output yaml` の後処理
+- [`standards/npm-trusted-publishers.md`](../../standards/npm-trusted-publishers.md) — OIDC 短命 credentials の同思想
+- [`platforms/github/github-actions.md`](../github/github-actions.md) — `configure-aws-credentials` の使い方
 
 ## 参考
 

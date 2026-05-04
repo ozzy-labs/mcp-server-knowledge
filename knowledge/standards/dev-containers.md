@@ -223,8 +223,8 @@ CI で「Dev Container と同じ環境でテストを回す」用途、または
 
 ## 関連
 
-- [`platforms/docker.md`](../platforms/docker.md) — 基盤コンテナ知識
-- [`ai/practice/multi-agent-repo.md`](multi-agent-repo.md) — 1 リポ内のマルチエージェント構成
+- [`platforms/docker/docker.md`](../platforms/docker/docker.md) — 基盤コンテナ知識
+- [`ai/practice/multi-agent-repo.md`](../ai/practice/multi-agent-repo.md) — 1 リポ内のマルチエージェント構成
 - [`standards/multi-repo-config-sync.md`](multi-repo-config-sync.md) — 複数リポへの `.devcontainer/` 配布
 
 ## 参考

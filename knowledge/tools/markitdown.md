@@ -155,9 +155,9 @@ markitdown --use-plugins deck.pptx
 
 ## 関連
 
-- [`languages/python.md`](../languages/python.md) — 実行環境
-- [`tools/uv.md`](uv.md) — `uv tool install` で隔離インストール
-- [`platforms/docker.md`](../platforms/docker.md) — tesseract / whisper を含むイメージで再現性確保
+- [`languages/python/python.md`](../languages/python/python.md) — 実行環境
+- [`languages/python/uv.md`](../languages/python/uv.md) — `uv tool install` で隔離インストール
+- [`platforms/docker/docker.md`](../platforms/docker/docker.md) — tesseract / whisper を含むイメージで再現性確保
 
 ## 参考
 

@@ -173,7 +173,7 @@ ripgrep は CPU コア数に応じて自動的に並列化する。`-j N` で明
 
 - [`tools/jq.md`](jq.md) — `--json` 出力の後処理
 - [`tools/ast-grep.md`](ast-grep.md) — 構造ベース検索が必要な場合の選択肢
-- [`languages/bash.md`](../languages/bash.md) — シェルからの呼び出し基礎
+- [`languages/bash/bash.md`](../languages/bash/bash.md) — シェルからの呼び出し基礎
 
 ## 参考
 

@@ -311,12 +311,12 @@ func FuzzReverse(f *testing.F) {
 
 | ツール | 用途 | 記事 |
 |---|---|---|
-| gopls | 公式 Language Server | [`tools/gopls.md`](../tools/gopls.md) |
-| golangci-lint | linter aggregator | [`tools/golangci-lint.md`](../tools/golangci-lint.md) |
-| govulncheck | 公式脆弱性スキャナ | [`tools/govulncheck.md`](../tools/govulncheck.md) |
-| GoReleaser | クロスコンパイル + リリース自動化 | [`tools/goreleaser.md`](../tools/goreleaser.md) |
-| Cobra | CLI フレームワーク | [`tools/cobra.md`](../tools/cobra.md) |
-| Buf | Protobuf / gRPC ツールチェーン | [`tools/buf.md`](../tools/buf.md) |
+| gopls | 公式 Language Server | [`languages/go/gopls.md`](gopls.md) |
+| golangci-lint | linter aggregator | [`languages/go/golangci-lint.md`](golangci-lint.md) |
+| govulncheck | 公式脆弱性スキャナ | [`languages/go/govulncheck.md`](govulncheck.md) |
+| GoReleaser | クロスコンパイル + リリース自動化 | [`languages/go/goreleaser.md`](goreleaser.md) |
+| Cobra | CLI フレームワーク | [`languages/go/cobra.md`](cobra.md) |
+| Buf | Protobuf / gRPC ツールチェーン | [`tools/buf.md`](../../tools/buf.md) |
 
 ## トレンド（2025-2026）
 
