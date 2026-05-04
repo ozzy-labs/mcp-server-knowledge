@@ -1,5 +1,6 @@
 ---
 description: 変更をステージし、Conventional Commits でコミットする（push はしない）
+disable-model-invocation: true
 allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion
 ---
 
