@@ -278,6 +278,8 @@ gh extension list
 gh extension upgrade --all
 ```
 
+詳細は [`gh-extensions.md`](gh-extensions.md) を参照。
+
 ## Claude Code / MCP との連携
 
 Claude Code 等のエージェントは `gh` 経由で GitHub 操作を行うよう設計されているものが多い。理由:
