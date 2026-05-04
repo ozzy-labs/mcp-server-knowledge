@@ -29,3 +29,6 @@ coverage/
 
 # Knowledge index (auto-generated locally; MCP `list` tool serves the same data)
 knowledge/INDEX.md
+
+# Claude Code runtime lock (created by the schedule skill at runtime)
+.claude/scheduled_tasks.lock
