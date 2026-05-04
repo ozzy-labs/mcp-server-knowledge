@@ -58,6 +58,24 @@ describe("validateFrontmatter", () => {
     const result = validateFrontmatter({});
     expect(result.ok).toBe(false);
   });
+
+  it("accepts known tags from the controlled vocabulary", () => {
+    const result = validateFrontmatter({
+      reviewed: "2026-05-04",
+      tags: ["cli", "go", "lint"],
+    });
+    expect(result.ok).toBe(true);
+    expect(result.data?.tags).toEqual(["cli", "go", "lint"]);
+  });
+
+  it("rejects unknown tags not in the vocabulary", () => {
+    const result = validateFrontmatter({
+      reviewed: "2026-05-04",
+      tags: ["cli", "linter"],
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors?.some((e) => e.includes("tags"))).toBe(true);
+  });
 });
 
 describe("walkArticles", () => {

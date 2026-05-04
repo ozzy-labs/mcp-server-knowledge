@@ -1,6 +1,6 @@
 ---
 reviewed: 2026-05-03
-tags: [cli, sample]
+tags: [cli]
 aliases: [sample-b]
 ---
 

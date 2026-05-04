@@ -196,8 +196,14 @@ server.registerTool(
 
 async function main() {
   const issues = await validateAllFrontmatter(KNOWLEDGE_DIR);
-  for (const issue of issues) {
-    console.error(`[knowledge] frontmatter warning: ${issue.path} — ${issue.errors.join("; ")}`);
+  if (issues.length > 0) {
+    for (const issue of issues) {
+      console.error(`[knowledge] frontmatter error: ${issue.path} — ${issue.errors.join("; ")}`);
+    }
+    console.error(
+      `[knowledge] ${issues.length} article(s) failed frontmatter validation; aborting startup`,
+    );
+    process.exit(1);
   }
 
   const transport = new StdioServerTransport();
