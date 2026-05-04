@@ -197,9 +197,9 @@ VS Code 拡張 [ast-grep](https://marketplace.visualstudio.com/items?itemName=as
 
 ## 関連
 
-- [`languages/typescript-esm.md`](../languages/typescript-esm.md) — TS でよく使う対象
-- [`tools/biome.md`](biome.md) — JS / TS の lint。テキストパターンで足りるなら biome を優先
-- [`tools/shellcheck.md`](shellcheck.md) — Shell の AST 解析（ast-grep でも shell をサポート）
+- [`languages/js/typescript-esm.md`](../languages/js/typescript-esm.md) — TS でよく使う対象
+- [`languages/js/biome.md`](../languages/js/biome.md) — JS / TS の lint。テキストパターンで足りるなら biome を優先
+- [`languages/bash/shellcheck.md`](../languages/bash/shellcheck.md) — Shell の AST 解析（ast-grep でも shell をサポート）
 
 ## 参考
 

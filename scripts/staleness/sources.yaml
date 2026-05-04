@@ -161,7 +161,7 @@ ai/platform/mcp-typescript-sdk:
 
 # --- tools 活発系 (12) ---
 
-tools/tsdown:
+languages/js/tsdown:
   group: weekly
   sources:
     docs:
@@ -173,7 +173,7 @@ tools/tsdown:
     npm:
       - tsdown
 
-tools/biome:
+languages/js/biome:
   group: weekly
   sources:
     docs:
@@ -187,7 +187,7 @@ tools/biome:
     npm:
       - "@biomejs/biome"
 
-tools/vitest:
+languages/js/vitest:
   group: weekly
   sources:
     docs:
@@ -219,7 +219,7 @@ tools/mise:
     raw_files:
       - jdx/mise/HEAD/CHANGELOG.md
 
-tools/pnpm:
+languages/js/pnpm:
   group: weekly
   sources:
     docs:
@@ -235,7 +235,7 @@ tools/pnpm:
       - pnpm
     eol: pnpm
 
-tools/uv:
+languages/python/uv:
   group: weekly
   sources:
     docs:
@@ -266,7 +266,7 @@ tools/release-please:
     npm:
       - release-please
 
-tools/gh-cli:
+platforms/github/gh-cli:
   group: weekly
   sources:
     docs:
@@ -445,7 +445,7 @@ ai/platform/agents-md:
 
 # --- platforms (1) ---
 
-platforms/github-actions:
+platforms/github/github-actions:
   group: weekly
   sources:
     docs:
@@ -497,7 +497,7 @@ tools/just:
     raw_files:
       - casey/just/HEAD/CHANGELOG.md
 
-tools/aws-cli:
+platforms/aws/aws-cli:
   group: monthly
   sources:
     docs:
@@ -544,7 +544,7 @@ tools/yamllint:
     pypi:
       - yamllint
 
-tools/shellcheck:
+languages/bash/shellcheck:
   group: monthly
   sources:
     docs:
@@ -554,13 +554,13 @@ tools/shellcheck:
     raw_files:
       - koalaman/shellcheck/HEAD/CHANGELOG.md
 
-tools/shfmt:
+languages/bash/shfmt:
   group: monthly
   sources:
     github_releases:
       - mvdan/sh
 
-tools/bats:
+languages/bash/bats:
   group: monthly
   sources:
     docs:
@@ -580,7 +580,7 @@ tools/commitlint:
     npm:
       - "@commitlint/cli"
 
-tools/actionlint:
+platforms/github/actionlint:
   group: monthly
   sources:
     github_releases:
@@ -597,7 +597,7 @@ tools/markdownlint:
     npm:
       - markdownlint-cli2
 
-tools/prettier:
+languages/js/prettier:
   group: monthly
   sources:
     docs:
@@ -627,7 +627,7 @@ tools/trivy:
     raw_files:
       - aquasecurity/trivy/HEAD/CHANGELOG.md
 
-tools/npm-publish:
+languages/js/npm-publish:
   group: monthly
   sources:
     docs:
@@ -638,7 +638,7 @@ tools/npm-publish:
     related_internal:
       - standards/npm-trusted-publishers
 
-tools/zod:
+languages/js/zod:
   group: monthly
   sources:
     docs:
@@ -648,7 +648,7 @@ tools/zod:
     npm:
       - zod
 
-tools/astro:
+languages/js/astro:
   group: monthly
   sources:
     docs:
@@ -714,7 +714,7 @@ standards/semver:
 
 # --- languages (4) ---
 
-languages/bash:
+languages/bash/bash:
   group: monthly
   sources:
     docs:
@@ -724,7 +724,7 @@ languages/bash:
     web_search:
       - "GNU bash latest release notes"
 
-languages/nodejs:
+languages/js/nodejs:
   group: monthly
   sources:
     docs:
@@ -737,7 +737,7 @@ languages/nodejs:
       - https://nodejs.org/en/feed/blog.xml
     eol: nodejs
 
-languages/python:
+languages/python/python:
   group: monthly
   sources:
     docs:
@@ -747,7 +747,7 @@ languages/python:
     web_search:
       - "Python release notes"
 
-languages/typescript-esm:
+languages/js/typescript-esm:
   group: monthly
   sources:
     docs:
@@ -759,7 +759,7 @@ languages/typescript-esm:
 
 # --- platforms (1) ---
 
-platforms/docker:
+platforms/docker/docker:
   group: monthly
   sources:
     docs:

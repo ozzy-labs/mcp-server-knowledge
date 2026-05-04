@@ -270,9 +270,9 @@ setup() {
 
 ## 関連
 
-- [`languages/bash.md`](../languages/bash.md) — テスト対象の言語
-- [`tools/shellcheck.md`](shellcheck.md) — 静的解析。Bats は動的テストなので併用が前提
-- [`tools/shfmt.md`](shfmt.md) — `.bats` ファイルもフォーマット可能（`-ln bats` を使う実装は無いので `-ln bash`）
+- [`languages/bash/bash.md`](bash.md) — テスト対象の言語
+- [`languages/bash/shellcheck.md`](shellcheck.md) — 静的解析。Bats は動的テストなので併用が前提
+- [`languages/bash/shfmt.md`](shfmt.md) — `.bats` ファイルもフォーマット可能（`-ln bats` を使う実装は無いので `-ln bash`）
 
 ## 参考
 

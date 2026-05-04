@@ -215,7 +215,7 @@ git add . && git commit -m "chore: initialize from commons"
 - [`ai/practice/multi-agent-repo.md`](multi-agent-repo.md) — 1 リポジトリ内で複数 AI エージェントを共存させる設計（commons パターンと組み合わせて使う）
 - [`tools/renovate.md`](../tools/renovate.md) — preset / customManager の詳細
 - [`tools/lefthook.md`](../tools/lefthook.md) — `extends` で base 設定を継承するモデル
-- [`platforms/github-actions.md`](../platforms/github-actions.md) — scheduled workflow / `peter-evans/create-pull-request`
+- [`platforms/github/github-actions.md`](../platforms/github/github-actions.md) — scheduled workflow / `peter-evans/create-pull-request`
 
 ## 参考
 

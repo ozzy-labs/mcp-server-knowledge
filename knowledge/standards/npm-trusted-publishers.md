@@ -135,4 +135,4 @@ pnpm は `--provenance` flag を v9 から正式サポート (`pnpm publish --pr
 - [`tools/release-please.md`](../tools/release-please.md) — Conventional Commits 駆動のリリース PR 自動化
 - [`standards/semver.md`](./semver.md) — バージョン番号の決定ルール
 - [`standards/conventional-commits.md`](./conventional-commits.md) — コミットメッセージから version bump を導出
-- [`platforms/github-actions.md`](../platforms/github-actions.md) — workflow / OIDC の基盤
+- [`platforms/github/github-actions.md`](../platforms/github/github-actions.md) — workflow / OIDC の基盤

@@ -200,7 +200,7 @@ sh -c "$(curl -fsLS https://get.chezmoi.io)" -- init --apply <github-user>
 
 ## 関連
 
-- [`languages/bash.md`](../languages/bash.md) — `run_*` スクリプトの基礎
+- [`languages/bash/bash.md`](../languages/bash/bash.md) — `run_*` スクリプトの基礎
 - [`tools/mise.md`](mise.md) — マシンごとの開発ツール install を mise 側に寄せると chezmoi が薄くなる
 
 ## 参考
