@@ -102,7 +102,7 @@ gh ext browse --single-column   # アクセシビリティ向け
 コア `gh` コマンドと拡張名が衝突したときの回避策。short name（`owner/gh-foo` なら `foo`）で拡張側を強制実行する。
 
 ```bash
-gh extension exec foo -- args...
+gh extension exec foo args...
 ```
 
 ## 拡張の作成
