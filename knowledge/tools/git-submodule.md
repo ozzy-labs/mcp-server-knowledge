@@ -186,7 +186,7 @@ git commit -m "Remove foo submodule"
 3. **detached HEAD のまま編集してコミットを失う** — `update` 後はデフォルトで detached HEAD。ブランチに `checkout` してから編集する
 4. **`git pull` で勝手にサブモジュールが進むと思っている** — 既定では進まない。`submodule.recurse=true` を設定するか `git submodule update --recursive` を明示的に呼ぶ
 5. **`rm -rf libs/foo` で削除する** — `.gitmodules` / `.git/config` / `.git/modules/` に残骸が残る。`deinit` → `git rm` → `.git/modules/<path>` の削除が正しい順序
-6. **CI で `--recursive` を忘れる** — ネストしたサブモジュールが取得されずビルド失敗。GitHub Actions なら `actions/checkout@v5` の `submodules: recursive` を指定する
+6. **CI で `--recursive` を忘れる** — ネストしたサブモジュールが取得されずビルド失敗。GitHub Actions なら `actions/checkout` の `submodules: recursive` を指定する
 7. **URL 変更を `.gitmodules` だけで済ませる** — clone 済み環境では `.git/config` の URL は変わらない。`git submodule sync` を実行する
 
 ## トラブルシュート
