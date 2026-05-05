@@ -28,12 +28,19 @@ jobs:
           # Belt-and-suspenders: some mise backends (aqua) read GITHUB_TOKEN
           # from env rather than the action input.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # trivy is a local-only security scanner (lefthook pre-commit / dev use).
-          # CI lint/test does not need it, and resolving aqua:aquasecurity/trivy
-          # releases via GitHub API has been hitting 403 (secondary rate limit /
-          # auth scope) even with GITHUB_TOKEN set. Skip install in CI entirely.
-          # See handbook#84 / commons#76.
-          MISE_DISABLE_TOOLS: trivy
+          # Tools skipped in CI:
+          # - trivy: local-only security scanner (lefthook pre-commit / dev use).
+          #   Resolving aqua:aquasecurity/trivy releases hits 403 (rate limit / auth scope).
+          # - pnpm: aqua plugin expects pnpm-linux-x64.tar.gz, but newer pnpm releases
+          #   ship the binary without the .tar.gz extension. Installed via
+          #   pnpm/action-setup below instead.
+          # - uv: aqua attestation verification fails (provenance lookup returns None).
+          #   Not used by any CI step, so just skip it.
+          MISE_DISABLE_TOOLS: trivy,pnpm,uv
+
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d # v6.0.5
+        with:
+          version: 10
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
