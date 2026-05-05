@@ -122,6 +122,13 @@ yq -r '.environment.setup_script' .claude/routines/<name>.yaml
 - `routine_id` は Web UI 登録後に書き戻す。空でよいのは `status: draft` のときだけ
 - `triggers` は配列（schedule / api / github を将来混在可能）
 
+### `triggers[].timezone`
+
+- 既定は `UTC`。1 リポ内の routine 群で揃えると運用が楽
+- 月初・月末トリガ（`0 X 1 * *` / `0 X L * *` 等）は **UTC で表現できない**ため `Asia/Tokyo` 等を明示する
+  - 例: 「毎月 1 日 04:00 JST」を UTC 化すると前月末日 19:00 UTC になり、月によって 28〜31 と日付が変動するため cron で書けない
+- 同一リポで一部 routine が JST trigger を持つ場合、整合のため他 routine も `Asia/Tokyo` に揃えるのを推奨
+
 ## バリデーション（任意）
 
 `scripts/routines/validate.py` を用意すれば必須フィールド・cron 妥当性・`status: active` なら `routine_id` が空でないか等を検証できる。Lefthook の **pre-push** に組み込むのが推奨（pre-commit には入れない）。
