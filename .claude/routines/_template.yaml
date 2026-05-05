@@ -90,7 +90,9 @@ triggers:
   - type: scheduled
     # 5 フィールドの cron 式（最小実行間隔は 1 時間）
     cron: "0 23 * * *"
-    # Web UI ではローカル TZ 入力 → 内部で UTC 変換される。記録は UTC 統一。
+    # Web UI ではローカル TZ 入力 → 内部で UTC 変換される。
+    # 既定は UTC。月初・月末トリガなど UTC で表現できないものは "Asia/Tokyo" 等を明示する
+    # (例: "0 4 1 * *" を JST 解釈にしたい場合、UTC 換算で前月末日に飛ぶため cron では書けない)。
     timezone: UTC
 
 # Web UI: Connectors
