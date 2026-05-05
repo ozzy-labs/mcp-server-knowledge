@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-05-05
 tags: [library, typescript, ai-workflow]
 ---
 
@@ -237,4 +237,4 @@ it("calls greet", async () => {
 
 ## v1 / v2 の注意
 
-v2 系（2026-04 時点で alpha 公開）ではパッケージが分割されている: `@modelcontextprotocol/server` / `/client` / `/node`（共有ランタイム / `InMemoryTransport` 等）に加え、フレームワーク統合 `/express` / `/hono` / `/fastify`。Node.js は v2 系で **>= 20** が要求される。`inputSchema` は完全な Zod object を受け取る形に変わる予定。stable は当面 v1 系（本記事は v1.29.0 基準、現行 npm latest = 1.29.0）。
+v2 系（2026-05 時点で alpha 公開、最新 2.0.0-alpha.2）ではパッケージが分割されている: `@modelcontextprotocol/server` / `/client` / `/node`（共有ランタイム / `InMemoryTransport` 等）に加え、フレームワーク統合 `/express` / `/hono` / `/fastify`。Node.js は v2 系で **>= 20** が要求される。`inputSchema` は Zod に限らず Valibot・ArkType など **Standard Schema** 互換ライブラリを受け取る形に変わる（v1 の raw shape とは異なる）。v2 stable は Q1 2026 目標を未達のまま alpha 段階が続いている。stable は当面 v1 系（本記事は v1.29.0 基準、現行 npm latest = 1.29.0）。
