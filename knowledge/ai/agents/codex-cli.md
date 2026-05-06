@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-05
+reviewed: 2026-05-06
 tags: [ai-workflow, commercial]
 ---
 
@@ -23,9 +23,12 @@ brew install --cask codex
 
 ## 認証
 
-初回起動時に ChatGPT アカウントでブラウザ OAuth 認証。以下のいずれかのプランが必要:
+初回起動時にサインインを求められる。以下のいずれかで認証:
 
-- ChatGPT Plus / Pro / Business / Edu / Enterprise
+- ChatGPT アカウント（Plus / Pro / Business / Edu / Enterprise プランのいずれか）でブラウザ OAuth
+- OpenAI API key（`OPENAI_API_KEY` 環境変数）
+
+なお、`gpt-5.5` など一部モデルは ChatGPT サインイン経由でのみ利用可能で、API key 認証では未対応。
 
 ## 基本コマンド
 
