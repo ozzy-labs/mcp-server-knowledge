@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-05-05
 tags: [ai-workflow, commercial]
 aliases: [cc]
 ---
@@ -16,10 +16,14 @@ curl -fsSL https://claude.ai/install.sh | bash    # macOS / Linux / WSL
 irm https://claude.ai/install.ps1 | iex           # Windows PowerShell
 
 # Homebrew（自動アップデートなし）
-brew install --cask claude-code
+brew install --cask claude-code          # stable チャンネル（最新より約 1 週遅れ）
+brew install --cask claude-code@latest  # latest チャンネル（最新版）
 
 # WinGet
 winget install Anthropic.ClaudeCode
+
+# Windows CMD（ネイティブインストーラー）
+curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del install.cmd
 
 # npm（非推奨）
 npm install -g @anthropic-ai/claude-code
@@ -126,7 +130,7 @@ claude --help             # ヘルプ表示
 
 ツール実行やセッションイベントの前後に自動処理を挟む仕組み。ハンドラ種別は `command`（シェル実行）/ `prompt`（LLM 評価）/ `http`（HTTP POST）/ `agent`（サブエージェント呼び出し）/ `mcp_tool`（MCP ツール直接呼び出し、v2.1.118 追加）の 5 種類。
 
-**主要イベント**（約 23 種）:
+**主要イベント**（26 種）:
 
 | カテゴリ | イベント |
 |---|---|
@@ -156,7 +160,7 @@ claude --help             # ヘルプ表示
 }
 ```
 
-**応答**: exit 0 = 許可、exit 2 = 拒否（stderr がエラーメッセージとしてフィードバック）。PreToolUse では `hookSpecificOutput.permissionDecision` で `allow` / `deny` / `ask` / `defer`（2025 年末追加）を返してより細かく制御できる。`async`, `asyncRewake`, `statusMessage`, `once`, `shell` フィールドあり。
+**応答**: exit 0 = 許可、exit 2 = 拒否（stderr がエラーメッセージとしてフィードバック）。PreToolUse では `hookSpecificOutput.permissionDecision` で `allow` / `deny` / `ask` / `defer`（2025 年末追加）を返してより細かく制御できる。`async`, `asyncRewake`, `statusMessage`, `once`, `shell` フィールドあり。`conditional` の `if` フィールドでパーミッションルール構文（例: `Bash(git *)`）を使い、フックが発火する条件を絞り込める（v2.1.85）。PostToolUse フックは `hookSpecificOutput.updatedToolOutput` で全ツールの出力を差し替え可能（v2.1.121）。
 
 ## サブエージェント
 
@@ -343,11 +347,12 @@ echo "[$MODEL] $PCT% context"
 **JSON で受け取れる主なフィールド**:
 
 - `model.display_name`, `model.id`
-- `workspace.current_dir`, `workspace.project_dir`
+- `workspace.current_dir`, `workspace.project_dir`, `workspace.git_worktree`（linked worktree 内で設定）
 - `context_window.used_percentage`, `context_window.remaining_percentage`
 - `cost.total_cost_usd`, `cost.total_duration_ms`
 - `session_id`, `session_name`
 - `rate_limits.five_hour.used_percentage`, `rate_limits.seven_day.used_percentage`
+- `effort.level`, `thinking.enabled`（v2.1.119 追加）
 
 **クイック設定**: `/statusline モデル名とコンテキスト使用率を表示` と送れば Claude がスクリプトを生成して自動設定する。
 
