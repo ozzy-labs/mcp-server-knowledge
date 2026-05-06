@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-05
+reviewed: 2026-05-06
 tags: [ai-workflow, commercial, github]
 aliases: [copilot]
 ---
@@ -85,7 +85,7 @@ copilot                  # インタラクティブセッション開始
 | `.mcp.json` | プロジェクト MCP（v1.0.22 で `.vscode/mcp.json` / `.devcontainer/devcontainer.json` のサポートを廃止し `.mcp.json` に標準化） | Yes |
 | `.github/copilot-instructions.md` | カスタム指示（レガシー） | Yes |
 
-`COPILOT_HOME` 環境変数で設定ディレクトリを変更可能（`--config-dir` フラグは v1.0.40 で deprecated）。
+`COPILOT_HOME` 環境変数で設定ディレクトリを変更可能（`--config-dir` フラグは v1.0.35 で deprecated）。
 
 ### 環境変数
 
@@ -188,10 +188,10 @@ copilot --agent db-specialist --prompt "..."      # CLI フラグ
 | `postToolUse` | ツール実行後 |
 | `postToolUseFailure` | ツールエラー発生時（v1.0.15 追加） |
 | `permissionRequest` | スクリプトから programmatic に承認可能（v1.0.16 追加） |
-| `subagentStart` | subagent spawn 時（v1.0.11 追加） |
+| `subagentStart` | subagent spawn 時（v1.0.7 追加） |
 | `agentStop` / `subagentStop` | エージェント終了制御（v1.0.22 追加） |
 | `preCompact` | コンテキスト圧縮直前（v1.0.5 追加） |
-| `notification` | 非同期通知（v1.0.33 追加） |
+| `notification` | 非同期通知（v1.0.18 追加） |
 | `errorOccurred` | エラー発生時（汎用） |
 
 ```json
