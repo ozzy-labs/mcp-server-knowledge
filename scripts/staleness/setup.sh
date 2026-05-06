@@ -9,6 +9,11 @@
 # environment, so no `gh auth login` step is needed.
 #
 # Setup scripts run as root, so sudo is unnecessary.
+#
+# IMPORTANT: This script runs *before* the repo is cloned (see
+# knowledge/ai/agents/claude-code-routines.md). Repo-dependent steps such as
+# `pnpm install --frozen-lockfile` MUST live in the routine's `instructions`
+# field instead — they will fail here with `ERR_PNPM_NO_PKG_MANIFEST`.
 
 set -euo pipefail
 
@@ -26,9 +31,6 @@ if ! command -v gh >/dev/null 2>&1; then
 else
   log "gh already installed: $(gh --version | head -n1)"
 fi
-
-log "running pnpm install --frozen-lockfile"
-pnpm install --frozen-lockfile
 
 log "gh:   $(gh --version | head -n1)"
 log "yq:   $(yq --version)"
