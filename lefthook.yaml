@@ -8,10 +8,6 @@ pre-commit:
       glob: "**/*.{ts,tsx,js,jsx,json,jsonc}"
       run: biome check --write {staged_files}
       stage_fixed: true
-    taplo:
-      glob: "**/*.toml"
-      run: taplo format {staged_files}
-      stage_fixed: true
     actionlint:
       glob: ".github/workflows/*.{yaml,yml}"
       run: actionlint
