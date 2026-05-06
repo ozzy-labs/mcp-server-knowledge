@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-05
+reviewed: 2026-05-06
 tags: [ai-workflow, commercial, gcp]
 ---
 
@@ -121,7 +121,7 @@ gemini --help            # ヘルプ表示
 |---|---|
 | `auto` | **新デフォルト**。タスク複雑度に応じてルーティング |
 | `gemini-3.1-pro` | フラグシップ（2026-02 リリース） |
-| `gemini-3-pro` | v0.25.0（2026-01）で正式に preview 解除されデフォルト昇格した経緯あり |
+| `gemini-3-pro` | v0.29.0 で preview フラグ解除されデフォルト昇格した経緯あり |
 | `gemini-3-flash` | v0.21.0（2025-12）で追加、高速・コスト効率モデル |
 | `gemini-3.1-flash-lite` | 軽量・高速（2026-03 API 公開） |
 | `gemini-2.5-pro` / `gemini-2.5-flash` / `gemini-2.5-flash-lite` | 旧世代、継続提供 |
