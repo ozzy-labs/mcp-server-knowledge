@@ -4,12 +4,12 @@
 
 ## ⚠️ `.claude/skills/` とは別物
 
-| 項目         | `.claude/skills/`         | `.claude/routines/` (このディレクトリ)     |
-| ------------ | ------------------------- | ------------------------------------------ |
-| ロード       | Claude Code が auto-load  | **Anthropic クラウド側に手動コピー**       |
-| 実行場所     | ローカル CLI              | Anthropic クラウド VM                      |
-| 自動連携     | あり                      | **なし**（リポは正本のコピー先にすぎない） |
-| シークレット | `.env` から読める         | Web UI 側の secret として別管理            |
+| 項目         | `.claude/skills/`        | `.claude/routines/` (このディレクトリ)     |
+| ------------ | ------------------------ | ------------------------------------------ |
+| ロード       | Claude Code が auto-load | **Anthropic クラウド側に手動コピー**       |
+| 実行場所     | ローカル CLI             | Anthropic クラウド VM                      |
+| 自動連携     | あり                     | **なし**（リポは正本のコピー先にすぎない） |
+| シークレット | `.env` から読める        | Web UI 側の secret として別管理            |
 
 このディレクトリのファイルを編集しても**自動では Web UI に反映されない**。必ず手動で同期する。
 
@@ -26,28 +26,28 @@
 
 ## Web UI 欄 ↔ YAML フィールド対応表
 
-| Web UI 欄                            | YAML フィールド                       |
-| ------------------------------------ | ------------------------------------- |
-| Name                                 | `name`                                |
-| Instructions                         | `instructions`                        |
-| Model                                | `model`                               |
-| Repositories                         | `repositories`                        |
-| Environment > Name                   | `environment.name`                    |
-| Environment > Network access         | `environment.network_access`          |
-| Environment > Environment variables  | `environment.variables`               |
-| Environment > Setup script           | `environment.setup_script`            |
-| Trigger                              | `triggers`                            |
-| Connectors                           | `connectors`                          |
-| Behavior > Auto-fix pull requests    | `behavior.auto_fix_pull_requests`    |
+| Web UI 欄                                 | YAML フィールド                           |
+| ----------------------------------------- | ----------------------------------------- |
+| Name                                      | `name`                                    |
+| Instructions                              | `instructions`                            |
+| Model                                     | `model`                                   |
+| Repositories                              | `repositories`                            |
+| Environment > Name                        | `environment.name`                        |
+| Environment > Network access              | `environment.network_access`              |
+| Environment > Environment variables       | `environment.variables`                   |
+| Environment > Setup script                | `environment.setup_script`                |
+| Trigger                                   | `triggers`                                |
+| Connectors                                | `connectors`                              |
+| Behavior > Auto-fix pull requests         | `behavior.auto_fix_pull_requests`         |
 | Permissions > Allow unrestricted git push | `permissions.allow_unrestricted_git_push` |
 
 リポ管理用フィールド（Web UI に対応欄なし）:
 
-| フィールド    | 用途                                                          |
-| ------------- | ------------------------------------------------------------- |
-| `notes`       | 一行サマリ + 運用メモ。1 行目が一行サマリ、空行後にメモを続ける |
-| `status`      | `active`（Web UI 登録済み） / `draft`（未登録）                |
-| `routine_id`  | Web UI 登録後に発行される `trig_xxxx`。draft の間は空          |
+| フィールド   | 用途                                                            |
+| ------------ | --------------------------------------------------------------- |
+| `notes`      | 一行サマリ + 運用メモ。1 行目が一行サマリ、空行後にメモを続ける |
+| `status`     | `active`（Web UI 登録済み） / `draft`（未登録）                 |
+| `routine_id` | Web UI 登録後に発行される `trig_xxxx`。draft の間は空           |
 
 ## 運用ルール
 
@@ -121,13 +121,6 @@ yq -r '.environment.setup_script' .claude/routines/<name>.yaml
 - `status` は `active` または `draft` の 2 値（Web UI 未登録は `draft`）
 - `routine_id` は Web UI 登録後に書き戻す。空でよいのは `status: draft` のときだけ
 - `triggers` は配列（schedule / api / github を将来混在可能）
-
-### `triggers[].timezone`
-
-- 既定は `UTC`。1 リポ内の routine 群で揃えると運用が楽
-- 月初・月末トリガ（`0 X 1 * *` / `0 X L * *` 等）は **UTC で表現できない**ため `Asia/Tokyo` 等を明示する
-  - 例: 「毎月 1 日 04:00 JST」を UTC 化すると前月末日 19:00 UTC になり、月によって 28〜31 と日付が変動するため cron で書けない
-- 同一リポで一部 routine が JST trigger を持つ場合、整合のため他 routine も `Asia/Tokyo` に揃えるのを推奨
 
 ## バリデーション（任意）
 
