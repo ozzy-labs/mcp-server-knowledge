@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-05-05
 tags: [ai-workflow, commercial, gcp]
 ---
 
@@ -63,8 +63,14 @@ gemini --help            # ヘルプ表示
 | `/chat save <tag>` | 現在の会話を保存 |
 | `/chat resume <tag>` | 保存した会話を再開 |
 | `/chat share [file]` | 会話を Markdown/JSON にエクスポート |
-| `/clear` | ターミナルクリア（Ctrl+L） |
+| `/clear` | ターミナルクリア（Ctrl+L）。`/new` も同エイリアス |
 | `/commands reload` | カスタムコマンドの再読み込み |
+| `/compress` | 会話コンテキストを要約に置換してトークン節約 |
+| `/memory add\|list\|refresh\|show` | 記憶コンテキストの管理 |
+| `/model set\|manage` | 使用モデルの変更 |
+| `/plan` | Plan Mode への切替 |
+| `/resume` | セッションのブラウズ・再開（`/chat` はエイリアス） |
+| `/rewind` | 会話を1ターン遡る（Esc×2 ショートカット） |
 | `/bug` | Issue の報告 |
 
 ## 設定ファイル
@@ -104,8 +110,7 @@ gemini --help            # ヘルプ表示
     "folderTrust": { "enabled": true }
   },
   "experimental": {
-    "enableAgents": true,
-    "plan": true
+    "enableAgents": true
   }
 }
 ```
@@ -117,6 +122,7 @@ gemini --help            # ヘルプ表示
 | `auto` | **新デフォルト**。タスク複雑度に応じてルーティング |
 | `gemini-3.1-pro` | フラグシップ（2026-02 リリース） |
 | `gemini-3-pro` | v0.25.0（2026-01）で正式に preview 解除されデフォルト昇格した経緯あり |
+| `gemini-3-flash` | v0.21.0（2025-12）で追加、高速・コスト効率モデル |
 | `gemini-3.1-flash-lite` | 軽量・高速（2026-03 API 公開） |
 | `gemini-2.5-pro` / `gemini-2.5-flash` / `gemini-2.5-flash-lite` | 旧世代、継続提供 |
 | `gemma`（ローカル） | 実験的 |
@@ -235,7 +241,7 @@ description = "ステージ済み変更のコミットメッセージを提案"
 | コンテキスト | `PreCompress` |
 | その他 | `Notification` |
 
-exit 0 = success、exit 2 = block。環境変数 `GEMINI_PROJECT_DIR`, `GEMINI_SESSION_ID`, `CLAUDE_PROJECT_DIR`（互換エイリアス）が渡される。
+exit 0 = success（ブロック含む全ロジックで推奨）、exit 2 = システムブロック（アクション中断）、その他 = 警告（続行）。環境変数 `GEMINI_PROJECT_DIR`, `GEMINI_PLANS_DIR`, `GEMINI_SESSION_ID`, `GEMINI_CWD`, `CLAUDE_PROJECT_DIR`（互換エイリアス）が渡される。
 
 **管理コマンド**: `/hooks panel`, `/hooks enable-all` など。
 
