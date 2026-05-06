@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-05-05
 tags: [library, commercial, cloud-hosted, ai-workflow]
 aliases: [claude-api]
 ---
@@ -118,24 +118,29 @@ tools = [
 
 ## Extended / Adaptive Thinking
 
-Opus 4.6 以降は **adaptive thinking** が推奨。manual thinking (`type: "enabled"` + `budget_tokens`) は deprecated。Opus 4.7 は extended thinking 自体に非対応で adaptive のみサポート。
+Opus 4.6 以降は **adaptive thinking** が推奨。Opus 4.7 では `thinking: {type: "enabled", budget_tokens: N}` を渡すと **400 エラー** が返る（deprecated ではなくリジェクト）。Opus 4.7 は extended thinking 自体に非対応で adaptive のみサポート。
+
+Opus 4.7 では **`temperature` / `top_p` / `top_k` を非デフォルト値に設定すると 400 エラー**。これらのパラメータはリクエストから除去すること。
 
 ```python
-# Opus 4.7 / 4.6: adaptive thinking
+# Opus 4.7: adaptive thinking + effort 指定
 message = client.messages.create(
     model="claude-opus-4-7",
     max_tokens=16000,
     thinking={"type": "adaptive"},
+    output_config={"effort": "high"},  # xhigh / high / medium / low / max
     messages=[{"role": "user", "content": "複雑な問題..."}],
 )
 ```
 
-`effort` パラメータ（2026-02-05 GA、`budget_tokens` の代替）で thinking depth を制御できる。
+`effort` パラメータ（2026-02-05 GA、`budget_tokens` の代替）は `output_config={"effort": "<level>"}` で指定する。effort レベル: `max` / `xhigh`（coding・agentic 推奨）/ `high`（汎用推奨最低ライン）/ `medium` / `low`。
+
+Opus 4.7 では **`thinking.display` のデフォルトが `"omitted"`** に変更（Opus 4.6 はデフォルト `"summarized"`）。ストリーミング中に thinking 内容を表示したい場合は明示的に `"display": "summarized"` を指定すること。
 
 - **用途**: 多段推論、数学、デバッグ、深い分析
 - **コスト**: thinking トークンは通常入力の約 3x 単価
 - **キャッシングと併用可**: thinking はキャッシュと独立。固定システムプロンプトをキャッシュしつつ新クエリで thinking を使える
-- **`thinking.display: "omitted"`** (2026-03-16): 応答から thinking 内容を省略しレスポンスを高速化（`signature` は保持）
+- **`thinking.display: "omitted"`** (2026-03-16): 応答から thinking 内容を省略しレスポンスを高速化（`signature` は保持）。**Opus 4.7 ではこれがデフォルト**。Opus 4.6 のデフォルトは `"summarized"` だった
 
 ## Message Batches API
 
