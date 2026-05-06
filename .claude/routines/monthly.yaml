@@ -20,6 +20,14 @@ instructions: |
   本セッションは Claude Code Routines によって毎月 1 日 04:00 JST に自動起動されました。
   ユーザーへの確認 (`AskUserQuestion`) は一切利用できません。すべての判断を自身で行ってください。
 
+  ## 事前準備
+
+  リポ依存パッケージをインストールしてください。setup script はリポ clone 前に走るため、依存解決はランタイム側（このセッション）で行う必要があります:
+
+  ```bash
+  pnpm install --frozen-lockfile
+  ```
+
   ## 実行内容
 
   以下を順番に実行してください。
@@ -113,6 +121,10 @@ environment:
     # environment, so no `gh auth login` step is needed.
     #
     # Setup scripts run as root, so sudo is unnecessary.
+    #
+    # IMPORTANT: This script runs *before* the repo is cloned. Repo-dependent
+    # steps such as `pnpm install --frozen-lockfile` MUST live in the
+    # `instructions` field instead — they fail here with ERR_PNPM_NO_PKG_MANIFEST.
 
     set -euo pipefail
 
@@ -130,9 +142,6 @@ environment:
     else
       log "gh already installed: $(gh --version | head -n1)"
     fi
-
-    log "running pnpm install --frozen-lockfile"
-    pnpm install --frozen-lockfile
 
     log "gh:   $(gh --version | head -n1)"
     log "yq:   $(yq --version)"
