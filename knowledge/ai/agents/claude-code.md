@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-10
+reviewed: 2026-05-07
 tags: [ai-workflow, commercial]
 aliases: [cc]
 ---
