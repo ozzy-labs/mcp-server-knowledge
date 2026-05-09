@@ -222,4 +222,3 @@ git add . && git commit -m "chore: initialize from commons"
 - [Renovate custom managers](https://docs.renovatebot.com/modules/manager/regex/)
 - [peter-evans/create-pull-request](https://github.com/peter-evans/create-pull-request)
 - [GitHub Branch Protection / Rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets)
-ng-rulesets)
