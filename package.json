@@ -9,7 +9,7 @@
   "files": [
     "dist",
     "knowledge",
-    "!knowledge/private",
+    "!knowledge/_private",
     "LICENSE",
     "README.md"
   ],
