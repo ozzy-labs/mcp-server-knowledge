@@ -50,9 +50,41 @@ describe("parseFrontmatter", () => {
     const { frontmatter } = parseFrontmatter(content);
     expect(frontmatter.tags).toEqual(["valid"]);
   });
+
+  it("handles empty inline list", () => {
+    const { frontmatter } = parseFrontmatter("---\ntags: []\n---");
+    expect(frontmatter.tags).toEqual([]);
+  });
+
+  it("handles file with only frontmatter (no body)", () => {
+    const { bodyOffset } = parseFrontmatter("---\nreviewed: 2026-05-10\n---");
+    expect(bodyOffset).toBe(3); // Should point past the closing ---
+  });
 });
 
 describe("validateFrontmatter", () => {
+  it("provides detailed error messages for nested fields", () => {
+    const result = validateFrontmatter({
+      reviewed: "2026-05-10",
+      tags: ["invalid-tag-123"],
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors?.[0]).toContain("tags.0");
+  });
+
+  it("provides root-level error message when required field is missing", () => {
+    // Passing a non-object should trigger a root-level error
+    const result = validateFrontmatter(null as any);
+    expect(result.ok).toBe(false);
+    expect(result.errors?.[0]).toContain("<root>");
+  });
+
+  it("handles malformed inline list (missing closing bracket)", () => {
+    const { frontmatter } = parseFrontmatter("---\ntags: [a, b\n---");
+    // Should return [] if not correctly delimited
+    expect(frontmatter.tags).toEqual([]);
+  });
+
   it("accepts valid frontmatter and applies defaults", () => {
     const result = validateFrontmatter({ reviewed: "2026-05-03" });
     expect(result.ok).toBe(true);
@@ -124,5 +156,13 @@ describe("validateAllFrontmatter", () => {
   it("returns no issues for fixture set", async () => {
     const issues = await validateAllFrontmatter(FIXTURES_DIR);
     expect(issues).toEqual([]);
+  });
+
+  it("identifies issues in a directory with invalid frontmatter", async () => {
+    const tmpDir = path.resolve(import.meta.dirname, "tmp-invalid");
+    const issues = await validateAllFrontmatter(tmpDir);
+    expect(issues.length).toBe(1);
+    expect(issues[0].path).toBe("invalid");
+    expect(issues[0].errors.length).toBeGreaterThan(0);
   });
 });
