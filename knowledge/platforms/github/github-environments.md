@@ -109,7 +109,7 @@ GitHub App ベースの拡張保護（外部承認システム連携、変更管
 OIDC の `sub` claim に environment 名が含まれる:
 
 ```text
-repo:ozzy-labs/foo:environment:production
+repo:your-org/my-app:environment:production
 ```
 
 クラウド側 trust policy で `environment:production` を含む sub のみ許可することで、staging job が production リソースに触れない設計になる:
@@ -119,7 +119,7 @@ repo:ozzy-labs/foo:environment:production
   "Condition": {
     "StringEquals": {
       "token.actions.githubusercontent.com:sub":
-        "repo:ozzy-labs/foo:environment:production"
+        "repo:your-org/my-app:environment:production"
     }
   }
 }

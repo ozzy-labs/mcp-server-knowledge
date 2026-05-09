@@ -44,7 +44,7 @@ CLI / CI 実行モードもあるが、GitHub App モードが最も手軽。
 ### 組織で共有
 
 ```json
-{ "extends": ["github>ozzy-labs/.github"] }
+{ "extends": ["github>your-org/.github"] }
 ```
 
 `.github` リポジトリに `default.json` を置けば、組織全リポジトリで共通設定を共有できる。
