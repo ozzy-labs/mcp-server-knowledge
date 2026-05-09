@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-06
+reviewed: 2026-05-10
 tags: [ai-workflow, commercial]
 aliases: [cc]
 ---
@@ -16,14 +16,11 @@ curl -fsSL https://claude.ai/install.sh | bash    # macOS / Linux / WSL
 irm https://claude.ai/install.ps1 | iex           # Windows PowerShell
 
 # Homebrew（自動アップデートなし）
-brew install --cask claude-code          # stable チャンネル（最新より約 1 週遅れ）
-brew install --cask claude-code@latest  # latest チャンネル（最新版）
+brew install --cask claude-code          # stable チャンネル
+brew install --cask claude-code@latest  # latest チャンネル（最新 v2.1.138）
 
 # WinGet
 winget install Anthropic.ClaudeCode
-
-# Windows CMD（ネイティブインストーラー）
-curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del install.cmd
 
 # npm（非推奨）
 npm install -g @anthropic-ai/claude-code
@@ -31,7 +28,7 @@ npm install -g @anthropic-ai/claude-code
 
 ## 認証
 
-初回起動時にブラウザで OAuth 認証。以下のいずれかのプランが必要（無料プランでは利用不可）:
+初回起動時にブラウザで OAuth 認証。2026-05-06 以降、全有料プランで 5 時間あたりのメッセージ制限が **2 倍** に引き上げられた。
 
 - Claude Pro / Max / Team / Enterprise
 - API Console（API キー課金）
@@ -42,6 +39,7 @@ npm install -g @anthropic-ai/claude-code
 claude                    # インタラクティブセッション開始
 claude "プロンプト"        # ワンショット実行
 claude --help             # ヘルプ表示
+claude update             # CLI を最新版に更新
 ```
 
 ## セッション内コマンド
@@ -52,7 +50,10 @@ claude --help             # ヘルプ表示
 | `/clear` | コンテキストクリア |
 | `/compact` | コンテキスト圧縮 |
 | `/model` | モデル切り替え |
-| `/usage` | セッションコスト・プラン使用量・統計を表示。`/cost` と `/stats` は v2.1.118 で `/usage` に統合され、shortcut として残る |
+| `/usage` | セッションコスト・プラン使用量・統計を表示。`/cost` と `/stats` は統合済み |
+| `/agents` | サブエージェントの管理 |
+| `/plugins` | プラグインマネージャ UI |
+| `/color` | セッションごとにランダムな UI 色を割り当て |
 
 カスタムコマンドは `.claude/commands/` に Markdown ファイルとして定義可能。
 
@@ -60,25 +61,17 @@ claude --help             # ヘルプ表示
 
 | パス | 用途 | Git 管理 |
 |---|---|---|
-| `~/.claude.json` | ユーザースコープ設定（top-level `mcpServers` でユーザー MCP を保持） | - |
-| `~/.claude/settings.json` | グローバル設定（権限等） | - |
-| `~/.claude/settings.local.json` | ローカルオーバーライド | - |
-| `~/.claude/agents/` | ユーザースコープのサブエージェント定義 | - |
-| `~/.claude/skills/` | ユーザースコープのスキル定義 | - |
-| `~/.claude/output-styles/` | ユーザースコープの出力スタイル | - |
+| `~/.claude.json` | ユーザースコープ設定 | - |
 | `CLAUDE.md` | プロジェクト固有の指示 | Yes |
 | `.claude/settings.json` | プロジェクト固有の設定 | Yes |
-| `.claude/settings.local.json` | ユーザーローカル設定 | No |
 | `.claude/rules/` | 追加ルールファイル | Yes |
 | `.claude/commands/` | カスタムスラッシュコマンド | Yes |
-| `.claude/agents/` | プロジェクトスコープのサブエージェント定義 | Yes |
-| `.claude/skills/` | プロジェクトスコープのスキル定義 | Yes |
-| `.claude/output-styles/` | プロジェクトスコープの出力スタイル | Yes |
-| `.mcp.json` | プロジェクト MCP サーバー設定（リポジトリ直下） | Yes |
+| `.claude/agents/` | サブエージェント定義 | Yes |
 
-> **注意**: `~/.claude/.mcp.json` は Claude Code から読み込まれない。ユーザースコープの MCP 設定は `~/.claude.json` の top-level `mcpServers` に置かれる（`claude mcp add --scope user` が自動で書き込む）。
+### 環境変数
 
-同名エントリがあれば **Project > User** の順で優先される。
+- `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN=1` — フルスクリーンモードを無効化し、ネイティブスクロールを維持。
+- `CLAUDE_CODE_SESSION_ID` — セッション ID を参照可能（フック用）。
 
 ## 主要機能
 
@@ -87,15 +80,15 @@ claude --help             # ヘルプ表示
 - **ファイル編集**: コードの読み取り・編集・新規作成
 - **コマンド実行**: シェルコマンドの実行と結果の解釈
 - **Git 操作**: コミット・ブランチ・PR 作成を自然言語で
-- **マルチモデル**: Haiku（高速）/ Sonnet / Opus（高精度）を切り替え
+- **Routines (v2.1.130+)**: 非同期で PR 修正や定期タスクを実行する高次プロンプト。
+- **Claude Code on Desktop (2026-05 発表)**: GUI ベースで画像やリッチな出力を確認できるデスクトップ版。
 
 ### 拡張機構
 
 - **MCP 統合**: Model Context Protocol サーバーとの連携
 - **サブエージェント**: 専門タスク用の独立コンテキストエージェント（`.claude/agents/`）
-- **スキル**: プロンプト + コンテキストのバンドル。スラッシュコマンドとしても自動発火でも呼べる（`.claude/skills/`）
-- **プラグイン / マーケットプレイス**: コマンド・エージェント・スキル・フックをバンドル配布
-- **フック**: ツール実行前後にシェルコマンドや LLM 検証を自動実行
+- **スキル**: プロンプト + コンテキストのバンドル（`.claude/skills/`）
+- **プラグイン**: コマンド・エージェント・スキル等をバンドル配布。`--plugin-url` で外部読み込み可能。
 
 ### 体験カスタマイズ
 

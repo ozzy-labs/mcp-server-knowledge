@@ -1,11 +1,11 @@
 ---
-reviewed: 2026-05-06
+reviewed: 2026-05-10
 tags: [ai-workflow, commercial]
 ---
 
 # Codex CLI
 
-OpenAI が提供するオープンソースのコーディングエージェント CLI。フルスクリーン TUI でコードの読み取り・編集・コマンド実行を行い、マルチエージェント並列処理もサポートする。拡張機構の横断比較は `ai/platform/agent-extensions.md` を参照。
+OpenAI が提供するオープンソースのコーディングエージェント CLI。フルスクリーン TUI でコードの読み取り・編集・コマンド実行を行い、マルチエージェント並列処理もサポートする。
 
 ## インストール
 
@@ -18,17 +18,16 @@ brew install --cask codex
 
 # バイナリ直接ダウンロード
 # https://github.com/openai/codex/releases
-# Apple Silicon, x86_64 Mac, x86_64 Linux, arm64 Linux 対応
 ```
 
 ## 認証
 
-初回起動時にサインインを求められる。以下のいずれかで認証:
+初回起動時にサインイン。以下のいずれかで認証:
 
-- ChatGPT アカウント（Plus / Pro / Business / Edu / Enterprise プランのいずれか）でブラウザ OAuth
+- ChatGPT アカウント（有料プラン推奨）でブラウザ OAuth
 - OpenAI API key（`OPENAI_API_KEY` 環境変数）
 
-なお、`gpt-5.5` など一部モデルは ChatGPT サインイン経由でのみ利用可能で、API key 認証では未対応。
+なお、`gpt-5.5` は ChatGPT サインイン経由でのみ利用可能。
 
 ## 基本コマンド
 
@@ -36,6 +35,7 @@ brew install --cask codex
 codex                    # フルスクリーン TUI セッション開始
 codex "プロンプト"        # ワンショット実行
 codex update             # CLI を最新バージョンに更新
+codex remote-control     # リモート制御エントリポイント (v0.130+)
 ```
 
 ## セッション内コマンド
@@ -43,7 +43,8 @@ codex update             # CLI を最新バージョンに更新
 | コマンド | 説明 |
 |---|---|
 | `/model` | モデル切り替え |
-| `/goal` | 永続ゴール設定（作成・一時停止・再開・クリア） |
+| `/goal` | 永続ゴール設定 |
+| `/vim` | TUI コンポーザーで Vim モードを有効化 |
 | `/help` | ヘルプ表示 |
 | `/share` | セッション共有 |
 | `/exit` | セッション終了 |
@@ -53,92 +54,54 @@ codex update             # CLI を最新バージョンに更新
 | パス | 用途 | Git 管理 |
 |---|---|---|
 | `~/.codex/config.toml` | グローバル設定 | - |
-| `~/.codex/AGENTS.md` / `AGENTS.override.md` | ユーザーグローバル指示 | - |
-| `~/.codex/agents/` | ユーザー subagent 定義 | - |
-| `~/.codex/hooks.json` | ユーザー hooks（experimental） | - |
-| `~/.agents/skills/` | ユーザー skills | - |
 | `AGENTS.md` | プロジェクト固有の指示 | Yes |
-| `.agents/skills/<name>/SKILL.md` | プロジェクト skills | Yes |
-| `.codex/agents/<name>.md` | プロジェクト subagent 定義 | Yes |
-| `.codex/hooks.json` | プロジェクト hooks（experimental） | Yes |
 
 ### config.toml の主要設定
 
 ```toml
-# デフォルトモデル（例）。省略時は CLI 同梱のモデルカタログから自動選択される
+# デフォルトモデル
 model = "gpt-5.5"
 
-# 推論の深さ（minimal, low, medium, high, xhigh）※ xhigh はモデル依存
+# 推論の深さ（minimal, low, medium, high, xhigh）
 model_reasoning_effort = "medium"
 
-# サンドボックスモード: "read-only" / "workspace-write" / "danger-full-access"
-sandbox_mode = "workspace-write"
-
-# 承認ポリシー: "untrusted", "on-request", "never"
-approval_policy = "on-request"
-
-# MCP サーバー
-[mcp_servers.my-server]
-command = "node"
-args = ["/path/to/server.js"]
-
-# MCP ツールごとの承認設定
-[mcp_servers.my-server.tools.search]
-approval_mode = "approve"
-
-# 通知（エージェント完了時に実行）
-[notify]
-command = "/path/to/notify-script.sh"
+# 承認ポリシー: "Suggest", "Auto Edit", "Full Auto"
+approval_policy = "Auto Edit"
 ```
 
-### 同梱モデル（rust-v0.128.0 時点、2026-04-30）
+### 同梱モデル（v0.130.0 時点、2026-05-08）
 
-`/model` ピッカーが露出するモデル（推奨順）:
+`/model` ピッカーで選択可能な推奨モデル:
 
 | モデル | 説明 |
 |---|---|
-| `gpt-5.5` | 最新フロンティア。複雑コーディング・computer use・research 向け（ChatGPT サインインのみ、API key 認証は未対応） |
-| `gpt-5.4` | flagship。`gpt-5.5` が未配信のアカウント向けフォールバック |
-| `gpt-5.4-mini` | 軽量タスク・サブエージェント向けの低コスト/高速版 |
+| `gpt-5.5` | **新推奨モデル**。複雑コーディング・Computer Use 向け |
+| `gpt-5.4` | Flagship。フォールバック用 |
+| `gpt-5.4-mini` | 軽量・高速版 |
 | `gpt-5.3-codex` | 旧コーディング特化モデル |
-| `gpt-5.3-codex-spark` | text-only research preview（ChatGPT Pro 限定） |
-| `gpt-5.2` | 旧汎用モデル（明示指定時のみ） |
-
-古い資料にある `o4-mini` は同梱カタログから削除済み。カタログは `models-manager/models.json` から動的に列挙される。
 
 ## 主要機能
 
 - **フルスクリーン TUI**: インタラクティブなターミナル UI
-- **マルチエージェント**: 複数のエージェントが独立した Git worktree で並列実行
-- **ミッドターンステアリング**: エージェント作業中にメッセージを送信して方向修正
-- **ファイル添付**: スクリーンショットやデザイン仕様を添付可能
-- **コードレビュー**: コミット前に別エージェントが自動レビュー
-- **セッション記録**: ローカルに保存され、後から再開可能
-- **MCP 統合**: Model Context Protocol サーバーとの連携（ツール単位で承認制御）
-- **推論レベル調整**: タスクに応じて推論の深さを調整
-- **Amazon Bedrock 対応**: AWS SigV4 認証による OpenAI 互換プロバイダーとの連携（v0.124.0+）
+- **マルチエージェント**: 独立した Git worktree での並列実行
+- **大規模スレッドのページング (v0.130+)**: 巨大な履歴の要約・フル表示切り替え
+- **MCP 統合**: Model Context Protocol サーバーとの連携
 
 ## 承認ポリシー
 
 | ポリシー | 説明 |
 |---|---|
-| `untrusted` | すべてのアクションを確認 |
-| `on-request` | ファイル編集は自動、コマンド実行は確認 |
-| `never` | すべて自動実行 |
+| `Suggest` | 提案のみ（実行はすべて要承認） |
+| `Auto Edit` | ファイル書き換えは自動、コマンド実行は確認 |
+| `Full Auto` | コマンド実行まで自動 |
 
 `config.toml` の `approval_policy` で設定。
 
 ## サンドボックス
 
-`config.toml` の `sandbox_mode` で設定:
+`config.toml` の `sandbox_mode` で設定: `read-only` / `workspace-write` / `danger-full-access`。
 
-| モード | 説明 |
-|---|---|
-| `read-only` | 読み取りのみ許可（デフォルト、最も安全） |
-| `workspace-write` | CWD 配下の書き込みを許可（コマンド実行は OS のサンドボックスで制約） |
-| `danger-full-access` | サンドボックスなし。CI / コンテナ内など既に隔離された環境でのみ使用 |
-
-> **注意**: `--full-auto` フラグは v0.128.0 で非推奨。代わりに `--sandbox workspace-write` を使用すること。
+> **注意**: `--full-auto` フラグは非推奨。代わりに `approval_policy = "Full Auto"` を使用すること。
 
 プラットフォーム固有のサンドボックス実装: macOS は Seatbelt、Linux は Landlock/seccomp。Docker / Podman コンテナ内で動かす場合は `danger-full-access` + 外側のコンテナ隔離を推奨。
 
