@@ -13,7 +13,8 @@ import {
 } from "./knowledge.js";
 import { StabilitySchema } from "./schema.js";
 
-const KNOWLEDGE_DIR = path.resolve(import.meta.dirname, "..", "knowledge");
+const KNOWLEDGE_DIR =
+  process.env.MCP_KNOWLEDGE_DIR || path.resolve(import.meta.dirname, "..", "knowledge");
 
 // ---------------------------------------------------------------------------
 // MCP Server
