@@ -343,6 +343,20 @@ ai/practice/multi-agent-repo:
       - ai/platform/agents-md
       - ai/platform/agent-extensions
 
+ai/practice/multi-agent-coordination:
+  group: weekly
+  sources:
+    docs:
+      - https://www.anthropic.com/research/building-effective-agents
+    github_releases:
+      - openai/swarm
+    web_search:
+      - "multi-agent coordination patterns 2026"
+      - "agent orchestrator vs swarm vs blackboard"
+    related_internal:
+      - ai/practice/agentic-workflow-patterns
+      - ai/practice/multi-agent-repo
+
 ai/practice/prompt-injection:
   group: weekly
   sources:
