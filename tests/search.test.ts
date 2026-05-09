@@ -59,6 +59,20 @@ describe("searchKnowledge", () => {
     expect(results.length).toBeGreaterThan(0);
   });
 
+  it("handles category prefix with trailing slash", async () => {
+    const results = await searchKnowledge(FIXTURES_DIR, "sample", { category: "ai/" });
+    expect(results.every((r) => r.path.startsWith("ai/"))).toBe(true);
+    expect(results.length).toBeGreaterThan(0);
+  });
+
+  it("scores aliases correctly", async () => {
+    // sample-nested-agent has alias "nested-agent"
+    const results = await searchKnowledge(FIXTURES_DIR, "nested-agent");
+    expect(results.some((r) => r.path === "ai/agents/sample-nested-agent")).toBe(true);
+    const r = results.find((r) => r.path === "ai/agents/sample-nested-agent");
+    expect(r?.score).toBeGreaterThanOrEqual(3); // alias match score
+  });
+
   it("filters by required tags (AND)", async () => {
     const results = await searchKnowledge(FIXTURES_DIR, "agent", {
       tags: ["ai-workflow", "cli"],

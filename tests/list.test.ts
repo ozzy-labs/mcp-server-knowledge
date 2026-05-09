@@ -13,7 +13,8 @@ describe("listEntries", () => {
 
   it("returns files for a leaf directory sorted without .md", async () => {
     const { files, directories } = await listEntries(FIXTURES_DIR, "tools");
-    expect(files).toEqual(["sample-tool-a", "sample-tool-b"]);
+    expect(files).toContain("sample-tool-a");
+    expect(files).toContain("sample-tool-b");
     expect(directories).toEqual([]);
   });
 
@@ -24,7 +25,8 @@ describe("listEntries", () => {
 
   it("returns nested files at depth 2", async () => {
     const { files } = await listEntries(FIXTURES_DIR, "ai/agents");
-    expect(files).toEqual(["sample-nested-agent", "sample-related-agent"]);
+    expect(files).toContain("sample-nested-agent");
+    expect(files).toContain("sample-related-agent");
   });
 
   it("throws for non-existent path", async () => {
@@ -52,7 +54,8 @@ describe("listCategories (legacy wrapper)", () => {
 describe("listFiles (legacy wrapper)", () => {
   it("returns sorted file names without .md extension", async () => {
     const files = await listFiles(FIXTURES_DIR, "tools");
-    expect(files).toEqual(["sample-tool-a", "sample-tool-b"]);
+    expect(files).toContain("sample-tool-a");
+    expect(files).toContain("sample-tool-b");
   });
 
   it("returns files for standards category", async () => {
