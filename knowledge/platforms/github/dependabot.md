@@ -78,8 +78,8 @@ updates:
     target-branch: develop              # マージ先（デフォルト: default branch）
     versioning-strategy: increase       # 制約の更新方法
     labels: [dependencies]
-    reviewers: [ozzy-labs/maintainers]
-    assignees: [ozzy-3]
+    reviewers: [your-org/maintainers]
+    assignees: [your-username]
     commit-message:
       prefix: chore                     # Conventional Commits prefix
       include: scope                    # scope に依存名を含める

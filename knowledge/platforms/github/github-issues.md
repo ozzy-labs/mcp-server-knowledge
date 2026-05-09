@@ -108,7 +108,7 @@ body:
 blank_issues_enabled: false
 contact_links:
   - name: Question
-    url: https://github.com/ozzy-labs/repo/discussions
+    url: https://github.com/your-org/your-repo/discussions
     about: 質問は Discussions へ
 ```
 
@@ -124,7 +124,7 @@ resolve / resolves / resolved
 
 ```text
 Fixes #123
-Closes ozzy-labs/other-repo#45
+Closes your-org/other-repo#45
 Fixes #100, fixes #101
 ```
 

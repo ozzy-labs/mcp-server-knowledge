@@ -73,7 +73,7 @@ PR 本文に closing keyword を書くと、デフォルトブランチへのマ
 
 ```text
 Closes #123
-Fixes ozzy-labs/other-repo#45
+Fixes your-org/other-repo#45
 ```
 
 詳細は [`github-issues.md`](github-issues.md#closing-keywordspr-から-issue-を閉じる) を参照。
@@ -161,15 +161,15 @@ gh pr merge --auto --squash --delete-branch
 # .github/CODEOWNERS
 
 # 全体のフォールバック
-*           @ozzy-labs/maintainers
+*           @your-org/maintainers
 
 # 領域別
-/src/api/   @ozzy-labs/backend
-/src/web/   @ozzy-labs/frontend
-*.md        @ozzy-labs/docs
+/src/api/   @your-org/backend
+/src/web/   @your-org/frontend
+*.md        @your-org/docs
 
 # CODEOWNERS 自体の改変保護
-/.github/CODEOWNERS  @ozzy-labs/maintainers
+/.github/CODEOWNERS  @your-org/maintainers
 ```
 
 - パスにマッチした owner が自動的に reviewer に追加される

@@ -128,7 +128,7 @@ PR を作るだけで auto-merge はしない。レビュー機会を残す。
       "customType": "regex",
       "fileMatch": ["^\\.commons/sync\\.yaml$"],
       "matchStrings": ["commit:\\s+(?<currentDigest>[a-f0-9]+)"],
-      "depNameTemplate": "ozzy-labs/commons",
+      "depNameTemplate": "your-org/commons",
       "datasourceTemplate": "git-refs",
       "currentValueTemplate": "main"
     }
@@ -139,7 +139,7 @@ PR を作るだけで auto-merge はしない。レビュー機会を残す。
 ```json
 // 受信リポの renovate.json
 {
-  "extends": ["github>ozzy-labs/commons:commons-sync"]
+  "extends": ["github>your-org/commons:commons-sync"]
 }
 ```
 
