@@ -36,6 +36,11 @@ describe("readKnowledge", () => {
     await expect(readKnowledge(FIXTURES_DIR, "tools/../../package")).rejects.toThrow(
       "Path traversal",
     );
+    await expect(readKnowledge(FIXTURES_DIR, "/etc/passwd")).rejects.toThrow("Path traversal");
+    await expect(readKnowledge(FIXTURES_DIR, "..\\..\\package.json")).rejects.toThrow(
+      "Path traversal",
+    );
+    await expect(readKnowledge(FIXTURES_DIR, "tools\0/secret")).rejects.toThrow();
   });
 });
 

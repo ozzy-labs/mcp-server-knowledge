@@ -29,6 +29,27 @@ describe("parseFrontmatter", () => {
     const { frontmatter } = parseFrontmatter(content);
     expect(frontmatter.reviewed).toBe("2026-05-03");
   });
+
+  it("handles unclosed frontmatter", () => {
+    const content = ["---", "reviewed: 2026-05-03", "# Title"].join("\n");
+    const { frontmatter, bodyOffset } = parseFrontmatter(content);
+    // Should parse until end of file if no closing ---
+    expect(frontmatter.reviewed).toBe("2026-05-03");
+    expect(bodyOffset).toBeGreaterThan(0);
+  });
+
+  it("handles malformed key-value pairs", () => {
+    const content = ["---", "key without colon", "valid: value", "---"].join("\n");
+    const { frontmatter } = parseFrontmatter(content);
+    expect(frontmatter.valid).toBe("value");
+    expect(frontmatter).not.toHaveProperty("key");
+  });
+
+  it("handles inconsistent indentation in block lists", () => {
+    const content = ["---", "tags:", "  - valid", "- invalid", "---"].join("\n");
+    const { frontmatter } = parseFrontmatter(content);
+    expect(frontmatter.tags).toEqual(["valid"]);
+  });
 });
 
 describe("validateFrontmatter", () => {
