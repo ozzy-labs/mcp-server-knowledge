@@ -10,13 +10,29 @@ function assertWithinDir(knowledgeDir: string, resolved: string): void {
   }
 }
 
+function sanitizePath(filePath: string): string {
+  if (filePath.includes("\0")) {
+    throw new Error("Invalid path: null byte detected");
+  }
+  if (
+    path.isAbsolute(filePath) ||
+    filePath.startsWith("/") ||
+    filePath.startsWith("\\") ||
+    filePath.includes("\\")
+  ) {
+    throw new Error("Path traversal detected");
+  }
+  return filePath;
+}
+
 export interface ListEntries {
   directories: string[];
   files: string[];
 }
 
 export async function listEntries(knowledgeDir: string, subPath = ""): Promise<ListEntries> {
-  const target = subPath === "" ? knowledgeDir : path.join(knowledgeDir, subPath);
+  const sanitized = sanitizePath(subPath);
+  const target = sanitized === "" ? knowledgeDir : path.join(knowledgeDir, sanitized);
   assertWithinDir(knowledgeDir, target);
   const entries = await readdir(target, { withFileTypes: true });
   const directories = entries
@@ -51,7 +67,8 @@ export async function* walkArticles(
   knowledgeDir: string,
   subPath = "",
 ): AsyncGenerator<ArticleEntry> {
-  const target = subPath === "" ? knowledgeDir : path.join(knowledgeDir, subPath);
+  const sanitized = sanitizePath(subPath);
+  const target = sanitized === "" ? knowledgeDir : path.join(knowledgeDir, sanitized);
   assertWithinDir(knowledgeDir, target);
   const entries = await readdir(target, { withFileTypes: true });
   entries.sort((a, b) => a.name.localeCompare(b.name));
@@ -69,7 +86,8 @@ export async function* walkArticles(
 }
 
 export async function readKnowledge(knowledgeDir: string, filePath: string): Promise<string> {
-  const resolved = path.join(knowledgeDir, `${filePath}.md`);
+  const sanitized = sanitizePath(filePath);
+  const resolved = path.join(knowledgeDir, `${sanitized}.md`);
   assertWithinDir(knowledgeDir, resolved);
   return readFile(resolved, "utf-8");
 }
