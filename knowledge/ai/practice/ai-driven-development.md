@@ -109,7 +109,7 @@ LLM は API 名・フラグ・URL を捏造する。**verified knowledge base / 
 
 ## 参考
 
-- 関連: `ai/practice/spec-driven-development.md` / `ai/practice/ai-context-management.md` / `ai/practice/prompt-injection.md` / `ai/practice/multi-agent-repo.md` / `ai/practice/scheduled-tasks.md`
+- 関連: `ai/practice/spec-driven-development.md` / `ai/practice/ai-context-management.md` / `ai/practice/prompt-injection.md` / `ai/practice/multi-agent-repo.md` / `ai/practice/scheduled-tasks.md` / `standards/test-driven-development.md`
 - エージェント CLI: `ai/agents/claude-code.md` / `ai/agents/codex-cli.md` / `ai/agents/gemini-cli.md` / `ai/agents/github-copilot-cli.md`
 - 拡張機構: `ai/platform/agent-extensions.md`
 - AGENTS.md: `ai/platform/agents-md.md`
