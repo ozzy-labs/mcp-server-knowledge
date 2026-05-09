@@ -1,12 +1,12 @@
 ---
-reviewed: 2026-05-06
+reviewed: 2026-05-10
 tags: [ai-workflow, commercial, github]
 aliases: [copilot]
 ---
 
 # GitHub Copilot CLI
 
-GitHub が提供する AI コーディングエージェント CLI。GitHub アカウントと深く統合され、コードの編集・テスト実行・Git ワークフローをエージェントが自律的に行う。2026-02-25 に GA。拡張機構の横断比較は `ai/platform/agent-extensions.md` を参照。
+GitHub が提供する AI コーディングエージェント CLI。GitHub アカウントと深く統合され、計画・実行・テスト・レビューを自律的に行う。2026-02-25 に GA。
 
 ## インストール
 
@@ -20,7 +20,7 @@ brew install copilot-cli
 # npm
 npm install -g @github/copilot
 
-# WinGet（Windows）
+# WinGet
 winget install GitHub.Copilot
 ```
 
@@ -28,88 +28,43 @@ winget install GitHub.Copilot
 
 OAuth デバイスフローまたは GitHub Personal Access Token (PAT) で認証。
 
-```bash
-export GH_TOKEN="your_github_token"
-# または
-export GITHUB_TOKEN="your_github_token"
-```
-
 ## 基本コマンド
 
 ```bash
 copilot                  # インタラクティブセッション開始
+copilot --name my-fix    # 名前付きセッションの作成 (v1.0.35+)
+copilot --resume my-fix  # セッションの再開
+copilot update           # CLI を最新版に更新
 ```
 
 ## セッション内コマンド
 
 | コマンド | 説明 |
 |---|---|
-| `/help` | ヘルプ表示 |
-| `/login` | 認証 |
-| `/ask` | 会話に影響せずに質問 |
-| `/share` | セッション共有 |
-| `/context` | 会話コンテキスト表示（トークン内訳） |
-| `/compact` | 会話コンテキストを手動圧縮 |
+| `/help` | ヘルプ表示（スラッシュコマンドはタブ補完に対応） |
+| `/model` | モデル切り替え（Auto mode はサーバー側で最適モデルを選択） |
+| `/experimental` | 実験的機能（ラバーダック・エージェント等）を有効化 |
+| `/remote on/off` | GitHub.com やモバイルアプリからのリモート制御を切り替え |
+| `/statusline` | ステータスラインの表示（ユーザー名等）をカスタマイズ |
 | `/usage` | クォータ使用状況表示 |
-| `/env` | 環境変数一覧表示 |
-| `/model` | 使用モデルの切り替え |
-| `/mcp` | 設定済み MCP サーバー一覧 |
-| `/agent <name>` | カスタムエージェントを起動 |
-| `/lsp` | LSP サーバーの状態表示 |
-| `/diff` | 変更差分のレビュー |
-| `/undo` | 直前の操作を取り消し |
-| `/remote` | リモートセッション情報表示 |
-| `/keep-alive` | セッションをバックグラウンドで維持 |
-| `/clear` / `/new` | 会話リセット（アクティブエージェント選択もリセット） |
-| `/feedback` | フィードバック・バグ報告 |
-| `/version` | バージョン表示 |
-| `/update` | CLI アップデート |
-| `/exit` | セッション終了 |
+| `/clear` | 会話リセット |
 
 ## 設定ファイル
 
 | パス | 用途 | Git 管理 |
 |---|---|---|
-| `~/.copilot/settings.json` | ユーザー設定（v1.0.35 で `config.json` から分離） | - |
-| `~/.copilot/config.json` | CLI 内部ステート（自動管理） | - |
-| `~/.copilot/mcp-config.json` | グローバル MCP サーバー設定 | - |
-| `~/.copilot/copilot-instructions.md` | 個人グローバル指示（全プロジェクト共通） | - |
-| `~/.copilot/instructions/*.instructions.md` | 個人グローバル追加指示（v1.0.12 以降、自動読み込み） | - |
-| `~/.copilot/agents/<name>.agent.md` | ユーザー custom agent | - |
-| `~/.copilot/skills/<name>/SKILL.md` | ユーザー skill | - |
-| `AGENTS.md` | プロジェクト固有の指示（repo root / CWD / `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` で指定したディレクトリで読まれる） | Yes |
-| `.github/instructions/**/*.instructions.md` | プロジェクト追加指示（自動読み込み） | Yes |
-| `.github/agents/<name>.agent.md` | プロジェクト custom agent | Yes |
-| `.github/skills/<name>/SKILL.md` | プロジェクト skill（`.claude/skills/` / `.agents/skills/` も読む） | Yes |
-| `.github/hooks/hooks.json` | プロジェクト hooks | Yes |
-| `.mcp.json` | プロジェクト MCP（v1.0.22 で `.vscode/mcp.json` / `.devcontainer/devcontainer.json` のサポートを廃止し `.mcp.json` に標準化） | Yes |
-| `.github/copilot-instructions.md` | カスタム指示（レガシー） | Yes |
+| `~/.copilot/settings.json` | ユーザー設定 | - |
+| `AGENTS.md` | プロジェクト固有の指示 | Yes |
+| `.mcp.json` | プロジェクト MCP 設定 | Yes |
 
-`COPILOT_HOME` 環境変数で設定ディレクトリを変更可能（`--config-dir` フラグは v1.0.35 で deprecated）。
-
-### 環境変数
-
-| 変数 | 用途 |
-|---|---|
-| `GH_TOKEN` / `GITHUB_TOKEN` | GitHub 認証トークン |
-| `GH_HOST` | カスタム GitHub ホスト（GHES） |
-| `HTTPS_PROXY` / `HTTP_PROXY` | プロキシ設定 |
-| `NO_PROXY` | プロキシ除外リスト |
-| `NO_COLOR` | カラー出力無効化 |
-| `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` | カスタム指示ディレクトリ |
-| `COPILOT_HOME` | 設定ディレクトリの上書き（`--config-dir` フラグの後継） |
-| `COPILOT_GH_HOST` | GitHub ホスト名（`GH_HOST` の Copilot 専用変数） |
-| `COPILOT_DISABLE_TERMINAL_TITLE` | ターミナルタイトル更新の無効化 |
+`COPILOT_HOME` 環境変数で設定ディレクトリを変更可能。
 
 ## 主要機能
 
-- **Autopilot モード**: 計画・実行・テスト・修正を自律的に繰り返す
-- **ファイル編集**: コードの読み取り・編集・新規作成
-- **コマンド実行**: テスト・ビルド・Git 操作を自動実行
-- **リモートコントロール**: GitHub Web / モバイルアプリからセッションを監視・操作
-- **コンテキストヒント**: `@files` や `#issues` でコンテキストを指定
-- **カスタムエージェント**: Markdown で専門エージェントを定義
-- **LSP 統合**: TypeScript Language Server と連携して型情報を活用
+- **Autopilot モード**: 計画・実行・テスト・修正の自律ループ
+- **サーバーサイド・モデルルーティング**: Auto mode においてリアルタイムで最適なモデルを自動選択
+- **リモート制御**: ブラウザやモバイルから CLI セッションを監視・操作可能
+- **LSP 統合**: TypeScript Language Server 等と連携した型情報の活用
 - **MCP 統合**: Model Context Protocol サーバーとの連携
 
 ## カスタムエージェント

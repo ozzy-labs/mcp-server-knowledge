@@ -1,11 +1,11 @@
 ---
-reviewed: 2026-05-06
+reviewed: 2026-05-10
 tags: [ai-workflow, commercial, gcp]
 ---
 
 # Gemini CLI
 
-Google が提供するオープンソースの AI エージェント CLI。ReAct（Reason and Act）ループにより、複雑なコーディングタスク・デバッグ・自動化をターミナルから実行する。拡張機構の横断比較は `ai/platform/agent-extensions.md` を参照。
+Google が提供するオープンソースの AI エージェント CLI。ReAct（Reason and Act）ループにより、複雑なコーディングタスク・デバッグ・自動化をターミナルから実行する。
 
 ## インストール
 
@@ -18,31 +18,13 @@ npx @google/gemini-cli
 
 # MacPorts
 sudo port install gemini-cli
-
-# リリースチャンネル
-npm install -g @google/gemini-cli@latest     # 安定版
-npm install -g @google/gemini-cli@preview    # プレビュー版
-npm install -g @google/gemini-cli@nightly    # ナイトリー
 ```
 
 Google Cloud Shell にはプリインストール済み。
 
 ## 認証
 
-3 つの認証方式:
-
-```bash
-# 1. Google アカウント OAuth（デフォルト、個人利用）
-gemini                   # 初回起動時にブラウザ認証
-gemini --reauth          # 再認証
-
-# 2. API キー（https://aistudio.google.com/apikey で取得）
-export GEMINI_API_KEY="YOUR_API_KEY"
-
-# 3. Vertex AI（エンタープライズ）
-export GOOGLE_GENAI_USE_VERTEXAI=true
-export GOOGLE_CLOUD_PROJECT=your-project-id
-```
+3 つの認証方式（OAuth, API Key, Vertex AI）。`/auth` コマンドで対話的に変更可能。
 
 ## 基本コマンド
 
@@ -50,6 +32,7 @@ export GOOGLE_CLOUD_PROJECT=your-project-id
 gemini                   # インタラクティブセッション開始
 gemini --version         # バージョン表示
 gemini --help            # ヘルプ表示
+gemini update            # CLI を最新版に更新
 ```
 
 ## セッション内コマンド
@@ -57,121 +40,38 @@ gemini --help            # ヘルプ表示
 | コマンド | 説明 |
 |---|---|
 | `/about` | バージョン情報表示 |
-| `/agents` | サブエージェントの管理（list, reload, enable, disable） |
-| `/auth` | 認証方式の変更ダイアログ |
-| `/chat list` | 保存済みチェックポイント一覧 |
-| `/chat save <tag>` | 現在の会話を保存 |
-| `/chat resume <tag>` | 保存した会話を再開 |
-| `/chat share [file]` | 会話を Markdown/JSON にエクスポート |
-| `/clear` | ターミナルクリア（Ctrl+L）。`/new` も同エイリアス |
-| `/commands reload` | カスタムコマンドの再読み込み |
-| `/compress` | 会話コンテキストを要約に置換してトークン節約 |
-| `/memory add\|list\|refresh\|show` | 記憶コンテキストの管理 |
-| `/model set\|manage` | 使用モデルの変更 |
+| `/memory` | メモリ管理（add, list, inbox, refresh, show） |
+| `/model` | 使用モデルの変更（Gemma 4 等の実験的モデルも選択可） |
+| `/agents` | サブエージェントの管理 |
 | `/plan` | Plan Mode への切替 |
-| `/resume` | セッションのブラウズ・再開（`/chat` はエイリアス） |
-| `/rewind` | 会話を1ターン遡る（Esc×2 ショートカット） |
-| `/bug` | Issue の報告 |
-
-## 設定ファイル
-
-| パス | 用途 | Git 管理 |
-|---|---|---|
-| `~/.gemini/settings.json` | グローバル設定 | - |
-| `.gemini/settings.json` | プロジェクト固有の設定 | Yes |
-| `AGENTS.md` | プロジェクト固有の指示 | Yes |
-| `GEMINI.md` / `CONTEXT.md` | 追加コンテキスト指示 | Yes |
-
-### settings.json の主要セクション
-
-```json
-{
-  "general": {
-    "defaultApprovalMode": "default",
-    "checkpointing": { "enabled": true }
-  },
-  "model": {
-    "name": "auto"
-  },
-  "context": {
-    "fileName": ["GEMINI.md", "CONTEXT.md"],
-    "includeDirectoryTree": true
-  },
-  "tools": {
-    "sandbox": "docker",
-    "useRipgrep": true,
-    "shell": {
-      "enableInteractiveShell": true,
-      "inactivityTimeout": 300
-    }
-  },
-  "security": {
-    "disableYoloMode": false,
-    "folderTrust": { "enabled": true }
-  },
-  "experimental": {
-    "enableAgents": true
-  }
-}
-```
-
-### 選択可能なモデル（2026-04 時点）
-
-| モデル | 位置付け |
-|---|---|
-| `auto` | **新デフォルト**。タスク複雑度に応じてルーティング |
-| `gemini-3.1-pro` | フラグシップ（2026-02 リリース） |
-| `gemini-3-pro` | v0.29.0 で preview フラグ解除されデフォルト昇格した経緯あり |
-| `gemini-3-flash` | v0.21.0（2025-12）で追加、高速・コスト効率モデル |
-| `gemini-3.1-flash-lite` | 軽量・高速（2026-03 API 公開） |
-| `gemini-2.5-pro` / `gemini-2.5-flash` / `gemini-2.5-flash-lite` | 旧世代、継続提供 |
-| `gemma`（ローカル） | 実験的 |
-
-旧資料の `gemini-2.5-pro` デフォルトは陳腐化。**モデル解決の優先度**: `--model` フラグ → `GEMINI_MODEL` 環境変数 → `settings.json` の `model.name` → ローカル Gemma ルータ。
-
-> **注意**: 旧 Issue [#5373](https://github.com/google-gemini/gemini-cli/issues/5373) で報告された「ハードコード `DEFAULT_GEMINI_MODEL` が `settings.json` を上書きする」問題は PR [#5527](https://github.com/google-gemini/gemini-cli/pull/5527)（2025-08 merge）で解消済み。現在は `--model` フラグ → `settings.json` の `model.name` → ハードコード fallback の順で評価される。期待モデルで起動していなければ `--model` フラグまたは `GEMINI_MODEL` 環境変数で強制指定するのが確実。
-
-## ビルトインツール
-
-| ツール | 説明 |
-|---|---|
-| ReadFile | ファイル読み取り |
-| WriteFile | ファイル書き込み |
-| EditFile | ファイル編集（差分適用） |
-| FindFiles | ファイル検索（glob / regex） |
-| SearchText | テキスト検索（grep） |
-| Shell | シェルコマンド実行 |
-| GoogleSearch | Google 検索 |
-| WebFetch | Web ページ取得 |
+| `/clear` | ターミナルクリア |
+| `/resume` | セッションの再開 |
 
 ## 主要機能
 
 - **ReAct ループ**: 推論と行動を交互に繰り返す自律型アーキテクチャ
-- **サブエージェント**: `/agents` で専門エージェントを有効化・管理
-- **セッション管理**: チェックポイントで会話を保存・再開
-- **サンドボックス**: Docker / Podman / macOS Seatbelt / Windows ネイティブ対応
+- **リアルタイム音声モード (v0.41.0+)**: 音声による対話が可能（クラウド/ローカル対応）
+- **ワークスペース・トラスト**: 自動化スクリプト実行時の信頼済みフォルダ管理
+- **オフライン検索**: `ripgrep` がバンドルされ、高速なローカル検索が可能
+- **4 層メモリ管理システム**: プロンプト駆動型の高度な記憶保持機能
 - **MCP 統合**: Model Context Protocol サーバーとの連携
-- **カスタムコマンド**: `.toml` ファイルでスラッシュコマンドを定義
-- **コンテキストファイル**: `GEMINI.md` / `CONTEXT.md` で追加指示
+
+## 選択可能なモデル（2026-05 時点）
+
+| モデル | 位置付け |
+|---|---|
+| `auto` | デフォルト。タスク複雑度に応じて動的ルーティング |
+| `gemini-3.1-pro` | フラグシップモデル |
+| `gemini-3.1-flash-lite` | 超高速・軽量モデル |
+| `gemma-4` | **最新オープンモデル**（実験的サポート） |
 
 ## 承認モード
 
-| モード | 説明 |
-|---|---|
-| `default` | ファイル変更・コマンド実行を確認 |
-| `auto_edit` | ファイル編集は自動、コマンドは確認 |
-| `plan` | 計画のみ作成、実行は手動 |
-
-`settings.json` の `general.defaultApprovalMode` で設定。
+`default`（確認あり）/ `auto_edit`（編集自動）/ `plan`（計画のみ）の 3 モード。
 
 ## サンドボックス
 
-| モード | 説明 |
-|---|---|
-| `docker` | Docker コンテナ内で実行 |
-| `podman` | Podman コンテナ内で実行 |
-| `true` | OS ネイティブサンドボックス（macOS Seatbelt / Windows） |
-| `false` | サンドボックスなし |
+Docker / Podman / OS ネイティブサンドボックスに対応。`settings.json` で詳細設定可能。
 
 ## Skills
 
