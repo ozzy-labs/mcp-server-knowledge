@@ -159,10 +159,10 @@ describe("validateAllFrontmatter", () => {
   });
 
   it("identifies issues in a directory with invalid frontmatter", async () => {
-    const tmpDir = path.resolve(import.meta.dirname, "tmp-invalid");
-    const issues = await validateAllFrontmatter(tmpDir);
+    const invalidDir = path.resolve(import.meta.dirname, "fixtures/invalid-knowledge");
+    const issues = await validateAllFrontmatter(invalidDir);
     expect(issues.length).toBe(1);
-    expect(issues[0].path).toBe("invalid");
+    expect(issues[0].path).toBe("invalid-frontmatter");
     expect(issues[0].errors.length).toBeGreaterThan(0);
   });
 });
