@@ -1,6 +1,6 @@
 # Architecture
 
-`knowledge-mcp-server` は、ローカルの Markdown ファイル群を構造化されたナレッジとして管理し、Model Context Protocol (MCP) を通じて AI エージェントに提供します。
+`mcp-server-knowledge` は、ローカルの Markdown ファイル群を構造化されたナレッジとして管理し、Model Context Protocol (MCP) を通じて AI エージェントに提供します。
 
 ## システム構成
 

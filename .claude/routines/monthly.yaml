@@ -16,7 +16,7 @@ routine_id: ""
 
 # Web UI: Instructions
 instructions: |
-  あなたは knowledge-mcp-server リポジトリで動作する Claude Code agent です。
+  あなたは mcp-server-knowledge リポジトリで動作する Claude Code agent です。
   本セッションは Claude Code Routines によって毎月 1 日 04:00 JST に自動起動されました。
   ユーザーへの確認 (`AskUserQuestion`) は一切利用できません。すべての判断を自身で行ってください。
 
@@ -100,7 +100,7 @@ model: claude-opus-4-7
 
 # Web UI: Repositories
 repositories:
-  - ozzy-labs/knowledge-mcp-server
+  - ozzy-labs/mcp-server-knowledge
 
 # Web UI: Environment
 environment:
