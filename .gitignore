@@ -29,8 +29,8 @@ coverage/
 
 # Knowledge
 knowledge/INDEX.md
-knowledge/private/*
-!knowledge/private/README.md
+knowledge/_private/*
+!knowledge/_private/README.md
 
 # Claude Code runtime lock (created by the schedule skill at runtime)
 .claude/scheduled_tasks.lock
