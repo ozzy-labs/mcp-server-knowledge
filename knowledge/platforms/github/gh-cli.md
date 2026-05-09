@@ -12,6 +12,8 @@ GitHub 公式の CLI。PR・Issue・Actions・Releases・Secrets などブラウ
 
 ## インストール
 
+様々なパッケージマネージャーに対応している。OS ごとの推奨手法については `standards/software-distribution.md` を参照。
+
 ```bash
 # Homebrew
 brew install gh

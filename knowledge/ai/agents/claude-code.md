@@ -73,15 +73,14 @@ claude update             # CLI を最新版に更新
 - `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN=1` — フルスクリーンモードを無効化し、ネイティブスクロールを維持。
 - `CLAUDE_CODE_SESSION_ID` — セッション ID を参照可能（フック用）。
 
-## 主要機能
+### 主要機能
 
-### コア機能
-
+- **エディタ統合**: VS Code や Cursor ターミナルでの動作最適化。拡張機能開発の基礎は [`platforms/vscode/vscode-extensions.md`](../../platforms/vscode/vscode-extensions.md) を参照。
 - **ファイル編集**: コードの読み取り・編集・新規作成
 - **コマンド実行**: シェルコマンドの実行と結果の解釈
 - **Git 操作**: コミット・ブランチ・PR 作成を自然言語で
-- **Routines (v2.1.130+)**: 非同期で PR 修正や定期タスクを実行する高次プロンプト。
-- **Claude Code on Desktop (2026-05 発表)**: GUI ベースで画像やリッチな出力を確認できるデスクトップ版。
+- **Routines (v2.1.130+)**: 非同期で PR 修正や定期タスクを実行する高次プロンプト（→ [`claude-code-routines.md`](claude-code-routines.md)）。
+- **Claude Code on Desktop (2026-05 発表)**: GUI ベースで画像やリッチな出力を確認できるデスクトップ版。自律エージェント機能は [`claude-cowork.md`](claude-cowork.md) を参照。
 
 ### 拡張機構
 
