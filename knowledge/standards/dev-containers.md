@@ -199,7 +199,7 @@ CI で「Dev Container と同じ環境でテストを回す」用途、または
     "ghcr.io/devcontainers/features/common-utils:2": {},
     "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
   },
-  "postCreateCommand": "claude mcp add --scope user knowledge -- node /workspaces/knowledge-mcp-server/dist/index.js",
+  "postCreateCommand": "claude mcp add --scope user knowledge -- node /workspaces/mcp-server-knowledge/dist/index.js",
   "remoteEnv": {
     "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}"
   }

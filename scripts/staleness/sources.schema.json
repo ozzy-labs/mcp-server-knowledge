@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/ozzy-labs/knowledge-mcp-server/scripts/staleness/sources.schema.json",
+  "$id": "https://github.com/ozzy-labs/mcp-server-knowledge/scripts/staleness/sources.schema.json",
   "title": "Knowledge MCP staleness sources",
   "description": "Maps each knowledge article path to the sources that should be consulted when re-verifying its content via Claude Code Routines.",
   "type": "object",

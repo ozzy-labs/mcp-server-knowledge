@@ -170,7 +170,7 @@ gemini extensions install <github-url>
   "mcpServers": {
     "knowledge": {
       "command": "node",
-      "args": ["/path/to/knowledge-mcp-server/dist/index.js"],
+      "args": ["/path/to/mcp-server-knowledge/dist/index.js"],
       "timeout": 15000,
       "trust": false
     }

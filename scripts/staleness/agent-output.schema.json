@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/ozzy-labs/knowledge-mcp-server/schemas/staleness/agent-output.schema.json",
+  "$id": "https://github.com/ozzy-labs/mcp-server-knowledge/schemas/staleness/agent-output.schema.json",
   "title": "staleness-researcher agent output",
   "type": "object",
   "additionalProperties": false,

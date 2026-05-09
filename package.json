@@ -1,13 +1,24 @@
 {
-  "name": "@ozzylabs/knowledge-mcp-server",
+  "name": "@ozzylabs/mcp-server-knowledge",
   "version": "0.1.0",
   "description": "MCP server providing verified, up-to-date knowledge base for AI agents",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "knowledge",
+    "!knowledge/private",
+    "LICENSE",
+    "README.md"
+  ],
   "bin": {
-    "knowledge-mcp-server": "dist/index.js"
+    "mcp-server-knowledge": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "pnpm run build && pnpm run typecheck && pnpm run test",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -35,5 +46,16 @@
       "hono": "^4.12.16"
     }
   },
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ozzy-labs/mcp-server-knowledge.git"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "knowledge-base",
+    "ai-agents"
+  ],
+  "author": "ozzy-labs"
 }

@@ -21,7 +21,7 @@ const KNOWLEDGE_DIR =
 // ---------------------------------------------------------------------------
 
 const server = new McpServer(
-  { name: "knowledge", version: "0.2.0" },
+  { name: "mcp-server-knowledge", version: "0.2.0" },
   {
     instructions:
       "Provides verified, up-to-date knowledge for AI agents. " +
@@ -209,7 +209,7 @@ async function main() {
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("knowledge-mcp-server running on stdio");
+  console.error("mcp-server-knowledge running on stdio");
 }
 
 main().catch((error) => {

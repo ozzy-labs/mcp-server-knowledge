@@ -11,7 +11,7 @@
 
 ## プロジェクト概要
 
-`knowledge-mcp-server`: 検証済みの最新ナレッジを MCP サーバーとして AI エージェントに提供するローカルサーバー
+`mcp-server-knowledge`: 検証済みの最新ナレッジを MCP サーバーとして AI エージェントに提供するローカルサーバー
 
 ## Tech Stack
 
