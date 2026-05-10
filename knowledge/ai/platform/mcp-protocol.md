@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-07
+reviewed: 2026-05-10
 tags: [ai-workflow, methodology]
 ---
 
@@ -146,5 +146,5 @@ DB の行検索 → ツール。プロジェクトの README → リソース。
 ## 参考実装
 
 - **reference servers**: [github.com/modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers)（filesystem、GitHub、Slack 等）
-- **SDK**: TypeScript / Python / Go / Rust / Kotlin / Swift
+- **SDK**: TypeScript / Python / C# / Go（Tier 1）/ Java / Rust（Tier 2）/ Swift / Ruby / PHP（Tier 3）/ Kotlin（TBD）
 - **Inspector**: `npx @modelcontextprotocol/inspector <command>` でサーバーを対話デバッグ
