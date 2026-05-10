@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-07
+reviewed: 2026-05-10
 tags: [ai-workflow, commercial, github]
 aliases: [copilot]
 ---
@@ -78,7 +78,7 @@ copilot completion <bash|zsh|fish>       # シェル補完スクリプト出力
 | `/export` | セッションをエクスポート |
 | `/reset` | 設定リセット |
 | `/version` | バージョン表示 |
-| `/update` | CLI アップデート（ダウンロード進捗を表示。v1.0.43） |
+| `/update` | CLI アップデート（ダウンロード進捗を表示。v1.0.43。`prerelease` 引数で prerelease ビルドを取得可能、v1.0.44） |
 | `/exit` | セッション終了 |
 
 ## 設定ファイル
