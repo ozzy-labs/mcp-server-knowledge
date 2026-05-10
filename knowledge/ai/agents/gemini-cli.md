@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-07
+reviewed: 2026-05-10
 tags: [ai-workflow, commercial, gcp]
 ---
 
@@ -62,6 +62,7 @@ gemini update            # CLI を最新版に更新
 |---|---|
 | `auto` | デフォルト。タスク複雑度に応じて動的ルーティング |
 | `gemini-3.1-pro` | フラグシップモデル |
+| `gemini-3-flash` | フロンティア級性能をコスト効率よく提供 |
 | `gemini-3.1-flash-lite` | 超高速・軽量モデル |
 | `gemma-4` | **最新オープンモデル**（実験的サポート） |
 
