@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-10
 tags: [style, markdown]
 ---
 
@@ -33,7 +33,7 @@ knowledge/
 
 ```markdown
 ---
-reviewed: 2026-04-18
+reviewed: 2026-05-10
 ---
 
 # 記事タイトル
@@ -218,6 +218,12 @@ lefthook の pre-commit が自動修正する（`stage_fixed: true`）。
 - `MD033` インライン HTML: 表内の `<br>` 等を想定して許容
 - `MD041` ファイル先頭は H1: 有効
 - `MD024` 重複見出し: 無効（`トラブルシュート` 配下のサブ見出しが被るため）
+
+## 他のツールとの関係
+
+- [`markdownlint`](../tools/markdownlint.md) — 構文ルール検査（Linter）
+- [`yamlfmt`](../tools/yamlfmt.md) — Frontmatter のフォーマット
+- [`MarkItDown`](../tools/markitdown.md) — 各種ドキュメント（Word, PDF 等）の Markdown 変換ツール
 
 ## チェックリスト（記事を書いたら）
 
