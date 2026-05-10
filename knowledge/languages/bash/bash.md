@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-05-10
 tags: [bash]
 ---
 
@@ -244,6 +244,7 @@ tty 判定を入れる: `[[ -t 1 ]] && red=$'\e[31m' reset=$'\e[0m'`。パイプ
 
 ## 他ツールとの関係
 
+- **git submodule**（`tools/git-submodule.md`）: 外部のシェルスクリプトライブラリをプロジェクトに取り込み、依存関係として管理する際に使用する。
 - **ShellCheck**（`tools/shellcheck.md`）: 書いたら必ず通す。SC2086 / 2155 / 2164 は AI エージェントの定番ミス。
 - **shfmt**（`tools/shfmt.md`）: フォーマッタ。`.editorconfig` で `indent_size` / `binary_next_line` / `space_redirects` を揃える。
 - **lefthook**（`tools/lefthook.md`）: pre-commit で shellcheck + shfmt を自動実行する構成がリポ既定。

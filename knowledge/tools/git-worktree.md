@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-05
+reviewed: 2026-05-10
 tags: [cli]
 ---
 
@@ -169,4 +169,4 @@ git worktree repair
 ## 参考
 
 - [git-worktree - Git Documentation](https://git-scm.com/docs/git-worktree)
-- [Git 2.5 Release Notes](https://github.com/git/git/blob/master/Documentation/RelNotes/2.5.0.txt)
+- [Git 2.5 Release Notes](https://github.com/git/git/blob/main/Documentation/RelNotes/2.5.0.txt)
