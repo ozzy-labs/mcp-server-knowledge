@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/ozzy-labs/mcp-server-knowledge/compare/v0.1.0...v0.1.1) (2026-05-10)
+
+
+### Bug Fixes
+
+* **lint:** ignore CHANGELOG.md in markdownlint ([#210](https://github.com/ozzy-labs/mcp-server-knowledge/issues/210)) ([a25bb28](https://github.com/ozzy-labs/mcp-server-knowledge/commit/a25bb281c7ce98107f35f4e1e58c9387edc31ae7))
+
 ## [0.1.0](https://github.com/ozzy-labs/mcp-server-knowledge/compare/v0.1.0...v0.1.0) (2026-05-10)
 
 
