@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-10
+reviewed: 2026-05-11
 tags: [ai-workflow, commercial]
 ---
 
@@ -27,7 +27,7 @@ brew install --cask codex
 - ChatGPT アカウント（有料プラン推奨）でブラウザ OAuth
 - OpenAI API key（`OPENAI_API_KEY` 環境変数）
 
-なお、`gpt-5.5` は ChatGPT サインイン経由でのみ利用可能。
+`gpt-5.5` は ChatGPT サインインおよび OpenAI API（モデル ID `gpt-5.5`、2026-04-24 提供開始）の双方から利用可能。
 
 ## 基本コマンド
 
@@ -66,8 +66,9 @@ model = "gpt-5.5"
 # 推論の深さ（minimal, low, medium, high, xhigh）
 model_reasoning_effort = "medium"
 
-# 承認ポリシー: "Suggest", "Auto Edit", "Full Auto"
-approval_policy = "Auto Edit"
+# 承認ポリシー: "untrusted", "on-request"（デフォルト）, "never"
+# 旧 "on-failure" は deprecated（"on-request" もしくは "never" を使用）
+approval_policy = "on-request"
 ```
 
 ### 同梱モデル（rust-v0.129.0 時点、2026-05-07）
@@ -92,17 +93,18 @@ approval_policy = "Auto Edit"
 
 | ポリシー | 説明 |
 |---|---|
-| `Suggest` | 提案のみ（実行はすべて要承認） |
-| `Auto Edit` | ファイル書き換えは自動、コマンド実行は確認 |
-| `Full Auto` | コマンド実行まで自動 |
+| `untrusted` | 既知の安全な読み取り専用コマンドのみ自動実行、他は承認待ち |
+| `on-request` | モデルが必要と判断したときに確認（デフォルト） |
+| `never` | 一切確認しない（非対話実行向け。リスク高） |
+| `{ granular = { ... } }` | カテゴリ別に許可/自動拒否を個別指定 |
 
-`config.toml` の `approval_policy` で設定。
+`config.toml` の `approval_policy` で設定。`on-failure` は deprecated。
 
 ## サンドボックス
 
 `config.toml` の `sandbox_mode` で設定: `read-only` / `workspace-write` / `danger-full-access`。
 
-> **注意**: `--full-auto` フラグは非推奨。代わりに `approval_policy = "Full Auto"` を使用すること。
+> **注意**: `--full-auto` フラグは v0.128.0 で deprecated（互換のため警告付きで残存）。代わりに `--sandbox workspace-write` と `--ask-for-approval never` を明示的に指定する（または `approval_policy = "never"` + `sandbox_mode = "workspace-write"` を設定する）。
 
 プラットフォーム固有のサンドボックス実装: macOS は Seatbelt、Linux は Landlock/seccomp。Docker / Podman コンテナ内で動かす場合は `danger-full-access` + 外側のコンテナ隔離を推奨。
 
