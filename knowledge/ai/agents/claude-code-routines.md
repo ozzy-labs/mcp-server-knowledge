@@ -1,21 +1,21 @@
 ---
-reviewed: 2026-05-10
+reviewed: 2026-05-11
 tags: [ai-workflow, commercial, cloud-hosted]
 stability: research-preview
 ---
 
 # Claude Code Routines
 
-Anthropic 管理のクラウドインフラで Claude Code を非対話に動かす仕組み。2026年5月のアップデートにより、**Claude Opus 4.7** と **100万トークンコンテキスト** を標準サポートし、自律的な「クラウドエージェントプラットフォーム」へと進化した。
+Anthropic 管理のクラウドインフラで Claude Code を非対話に動かす仕組み（research preview）。プロンプト・リポジトリ・コネクタを保存した「ルーチン」を、Scheduled / API / GitHub event の各トリガーで自動実行する。Claude Code on the web が有効な Pro / Max / Team / Enterprise プランで利用可能。
 
 公式: [Automate work with routines](https://code.claude.com/docs/en/routines)
 
-## 主要な最新機能 (2026-05)
+## 作成・管理
 
-- **Opus 4.7 & 1M Context**: 大規模リポジトリ全体の依存関係を一度に解析可能。
-- **Dreaming (研究プレビュー)**: 過去のセッションを振り返り、パターンを学習して自己改善する機能。実行を重ねるごとに精度が向上する。
-- **Native Git Worktrees**: `worktree.baseRef` 設定により、独立したブランチで並行してタスクを実行可能。
-- **`/ultrareview`**: クラウド上のエージェント群が並行してバグハンティングを行い、結果を集約する。
+- Web: [claude.ai/code/routines](https://claude.ai/code/routines)
+- CLI: `/schedule` で会話的に作成（schedule trigger のみ。API / GitHub trigger は Web 限定）
+- Desktop アプリ: **Routines → New routine → Remote**
+- ルーチン作成フォームでモデルを選択でき、毎回そのモデルで実行される
 
 ## 動作モデル
 
@@ -27,11 +27,11 @@ Anthropic 管理のクラウドインフラで Claude Code を非対話に動か
 
 | トリガー | 用途 |
 |---|---|
-| **Scheduled** | 特定周期（Cron 式対応）や一回限りの実行。 |
-| **API** | HTTP POST (`/fire`) で外部から起動。 |
-| **GitHub** | PR 作成や Push 等のイベントに反応。 |
+| **Scheduled** | hourly / daily / weekdays / weekly のプリセット、または一回限りの実行。最小間隔 **1 時間**（カスタム cron は `/schedule update` で設定、1 時間未満は拒否される）。one-off は実行後に自動 disable され daily cap を消費しない。 |
+| **API** | per-routine の HTTP POST endpoint (`/fire`) を bearer token で叩いて起動。`text` フィールドで run-specific context を渡せる（最大 65,536 文字、freeform string）。 |
+| **GitHub** | Pull request / Release イベントに反応。フィルタは author / title / body / base branch / head branch / labels / is draft / is merged。Claude GitHub App のインストールが必須。 |
 
-## 利用枠 (2026-05 改定)
+## 利用枠
 
 | プラン | 1 日あたりの上限 |
 |---|---|
@@ -41,8 +41,10 @@ Anthropic 管理のクラウドインフラで Claude Code を非対話に動か
 
 ## AI エージェントがよくやるミス
 
-1. **`AskUserQuestion` を含むスキルをルーチン化** — ルーチンは承認 prompt を返さない。
-2. **Setup script でリポ依存処理を試みる** — Setup script はリポ clone 前に実行される。`uv sync` 等は手順 1 に記述する。
-3. **`network_access: trusted` の制限を忘れる** — RSS フィード取得等は `full` が必要。
-4. **`routine_id` プレフィックスの誤認** — 正解は **`trig_`**。
-5. **`/fire` のレスポンスで完了を待つ** — エンドポイントはセッション作成時に即リターンする。
+1. **`AskUserQuestion` を含むスキルをルーチン化** — ルーチンは承認 prompt を返さない（permission-mode picker なし、approval prompt なし）。
+2. **Setup script でリポ依存処理を試みる** — Setup script は環境キャッシュされ clone 前に実行される。`uv sync` 等はプロンプトに記述する。
+3. **`network_access: trusted` の制限を忘れる** — 許可外ホストは `403 x-deny-reason: host_not_allowed`。任意ドメイン許可は `Custom`、全開放は `Full`。MCP コネクタ通信は Anthropic 経由なので allowlist 不要。
+4. **`routine_id` プレフィックスの誤認** — URL では `routine_id` だが、実際の値は **`trig_`** プレフィックス。
+5. **`/fire` のレスポンスで完了を待つ** — エンドポイントはセッション作成時に即リターンする（`claude_code_session_id` / `claude_code_session_url` のみ返る）。`anthropic-beta: experimental-cc-routine-2026-04-01` ヘッダ必須。
+6. **既存ブランチに直 push できると思い込む** — デフォルトは `claude/`-prefix のみ。**Allow unrestricted branch pushes** を per-repository で有効化する必要がある。
+7. **GitHub trigger を `/web-setup` だけで有効化** — `/web-setup` は clone 用のリポアクセスを付けるだけで、webhook 配信には Claude GitHub App のインストールが別途必要。
