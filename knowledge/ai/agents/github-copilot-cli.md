@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-07
+reviewed: 2026-05-17
 tags: [ai-workflow, commercial, github]
 aliases: [copilot]
 ---
@@ -70,6 +70,8 @@ copilot completion <bash|zsh|fish>       # シェル補完スクリプト出力
 | `/chronicle` | セッション履歴レビュー・standup（v1.0.31 追加、experimental） |
 | `/research` | リサーチアシスタント（v1.0.41 追加。orchestrator/subagent モデルを利用） |
 | `/pr` | PR の作成・参照（v1.0.40 追加） |
+| `/autopilot` | interactive ↔ autopilot モードのトグル（v1.0.45 追加） |
+| `/fork [name]` | 現セッションを独立した新セッションに fork（v1.0.45 追加。v1.0.47 で optional name と origin 表示） |
 | `/session` | セッション管理（`delete` / `delete-all`、`--name` で命名） |
 | `/plugin` | プラグイン管理（`install` / `list` / `remove`） |
 | `/clear` / `/new` | 会話リセット（アクティブエージェント選択もリセット） |
@@ -78,7 +80,7 @@ copilot completion <bash|zsh|fish>       # シェル補完スクリプト出力
 | `/export` | セッションをエクスポート |
 | `/reset` | 設定リセット |
 | `/version` | バージョン表示 |
-| `/update` | CLI アップデート（ダウンロード進捗を表示。v1.0.43） |
+| `/update` | CLI アップデート（v1.0.43 でダウンロード進捗表示、v1.0.44 で optional `prerelease` 引数追加） |
 | `/exit` | セッション終了 |
 
 ## 設定ファイル
@@ -107,8 +109,10 @@ copilot completion <bash|zsh|fish>       # シェル補完スクリプト出力
 
 ## 主要機能
 
-- **Autopilot モード**: 計画・実行・テスト・修正の自律ループ
+- **Autopilot モード**: 計画・実行・テスト・修正の自律ループ。`/autopilot` でトグル（v1.0.45）
 - **サーバーサイド・モデルルーティング**: Auto mode においてリアルタイムで最適なモデルを自動選択
+- **read-only `gh` の自動承認**: v1.0.46 以降、`gh list` / `view` / `status` / `diff` 等の read-only サブコマンドはプロンプトなしで実行
+- **OpenTelemetry**: v1.0.45 で GenAI semantic conventions に整合化、MCP tool 呼び出しは標準 `tool_call` span、`gen_ai.client.operation.duration` メトリックで tool 実行時間を計測
 - **リモート制御**: ブラウザやモバイルから CLI セッションを監視・操作可能
 - **LSP 統合**: TypeScript Language Server 等と連携した型情報の活用
 - **MCP 統合**: Model Context Protocol サーバーとの連携
@@ -184,7 +188,7 @@ copilot --agent db-specialist --prompt "..."      # CLI フラグ
 |---|---|
 | `sessionStart` | セッション開始 |
 | `sessionEnd` | セッション終了 |
-| `userPromptSubmitted` | ユーザー発話直前 |
+| `userPromptSubmitted` | ユーザー発話直前。v1.0.44 以降は LLM 呼び出しをバイパスして直接レスポンスを返却可能 |
 | `preToolUse` | ツール実行前。`permissionDecision: allow\|deny\|ask` を返せる |
 | `postToolUse` | ツール実行後 |
 | `postToolUseFailure` | ツールエラー発生時（v1.0.15 追加） |

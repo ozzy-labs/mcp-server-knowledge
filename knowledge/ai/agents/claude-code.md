@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-07
+reviewed: 2026-05-17
 tags: [ai-workflow, commercial]
 aliases: [cc]
 ---
@@ -17,7 +17,7 @@ irm https://claude.ai/install.ps1 | iex           # Windows PowerShell
 
 # Homebrew（自動アップデートなし）
 brew install --cask claude-code          # stable チャンネル
-brew install --cask claude-code@latest  # latest チャンネル（最新 v2.1.138）
+brew install --cask claude-code@latest  # latest チャンネル（v2.1.143 時点）
 
 # WinGet
 winget install Anthropic.ClaudeCode
@@ -52,8 +52,11 @@ claude update             # CLI を最新版に更新
 | `/model` | モデル切り替え |
 | `/usage` | セッションコスト・プラン使用量・統計を表示。`/cost` と `/stats` は統合済み |
 | `/agents` | サブエージェントの管理 |
+| `/goal` | 永続ゴール設定（v2.1.139+） |
 | `/plugins` | プラグインマネージャ UI |
 | `/color` | セッションごとにランダムな UI 色を割り当て |
+
+`claude agents`（CLI 直叩き、v2.1.139+ Research Preview）で agent view を起動できる。
 
 カスタムコマンドは `.claude/commands/` に Markdown ファイルとして定義可能。
 
@@ -122,13 +125,13 @@ claude update             # CLI を最新版に更新
 
 ツール実行やセッションイベントの前後に自動処理を挟む仕組み。ハンドラ種別は `command`（シェル実行）/ `prompt`（LLM 評価）/ `http`（HTTP POST）/ `agent`（サブエージェント呼び出し）/ `mcp_tool`（MCP ツール直接呼び出し、v2.1.118 追加）の 5 種類。
 
-**主要イベント**（26 種）:
+**主要イベント**（30 種前後）:
 
 | カテゴリ | イベント |
 |---|---|
-| セッション | `SessionStart`, `SessionEnd` |
-| ターン | `UserPromptSubmit`, `Stop`, `StopFailure` |
-| ツール | `PreToolUse`, `PermissionRequest`, `PermissionDenied`, `PostToolUse`, `PostToolUseFailure` |
+| セッション | `SessionStart`, `Setup`（`--init-only`）, `SessionEnd` |
+| ターン | `UserPromptSubmit`, `UserPromptExpansion`, `Stop`, `StopFailure` |
+| ツール | `PreToolUse`, `PermissionRequest`, `PermissionDenied`, `PostToolUse`, `PostToolBatch`, `PostToolUseFailure` |
 | サブエージェント | `SubagentStart`, `SubagentStop` |
 | タスク | `TeammateIdle`, `TaskCreated`, `TaskCompleted` |
 | 非同期 | `Notification`, `CwdChanged`, `FileChanged`, `InstructionsLoaded`, `ConfigChange` |
@@ -152,7 +155,7 @@ claude update             # CLI を最新版に更新
 }
 ```
 
-**応答**: exit 0 = 許可、exit 2 = 拒否（stderr がエラーメッセージとしてフィードバック）。PreToolUse では `hookSpecificOutput.permissionDecision` で `allow` / `deny` / `ask` / `defer`（2025 年末追加）を返してより細かく制御できる。`async`, `asyncRewake`, `statusMessage`, `once`, `shell` フィールドあり。`conditional` の `if` フィールドでパーミッションルール構文（例: `Bash(git *)`）を使い、フックが発火する条件を絞り込める（v2.1.85）。PostToolUse フックは `hookSpecificOutput.updatedToolOutput` で全ツールの出力を差し替え可能（v2.1.121）。
+**応答**: exit 0 = 許可、exit 2 = 拒否（stderr がエラーメッセージとしてフィードバック）。PreToolUse では `hookSpecificOutput.permissionDecision` で `allow` / `deny` / `ask` / `defer`（2025 年末追加）を返してより細かく制御できる。`async`, `asyncRewake`, `statusMessage`, `once`, `shell`, `args`（exec form, シェル経由なし、v2.1.139）フィールドあり。`conditional` の `if` フィールドでパーミッションルール構文（例: `Bash(git *)`）を使い、フックが発火する条件を絞り込める（v2.1.85）。PostToolUse フックは `hookSpecificOutput.updatedToolOutput` で全ツールの出力を差し替え可能（v2.1.121）、`continueOnBlock`（v2.1.139）で deny されても次の hook を続行可能。`terminalSequence`（v2.1.141）で OSC 9/777 等の terminal escape を出力して desktop 通知を出せる。
 
 ## サブエージェント
 
@@ -162,12 +165,14 @@ claude update             # CLI を最新版に更新
 ---
 name: code-explorer
 description: Explore and understand codebases. Use when analyzing project structure.
-model: claude-haiku-4-5-20251001
+model: haiku
 tools: Grep Glob Read
 ---
 
 コードベースを体系的に分析してください...
 ```
+
+`model` は `sonnet` / `opus` / `haiku` のエイリアス、または `claude-sonnet-4-6` / `claude-opus-4-7` のような明示 ID、`inherit`（親セッション継承）を指定できる。
 
 | フィールド | 説明 |
 |---|---|
@@ -206,7 +211,7 @@ tools: Grep Glob Read
 | `Plan` | 親モデル継承、read-only。実装計画を立てる |
 | `general-purpose` | 汎用的な委譲先 |
 | `statusline-setup` | ステータスライン設定の対話 |
-| `Claude Code Guide` | Claude Code の機能に関する質問対応 |
+| `claude-code-guide` | Claude Code の機能に関する質問対応 |
 
 v2.1.63 以降、旧名 `Task` ツールは `Agent` にリネームされている（エイリアスは残存）。
 
@@ -232,9 +237,15 @@ allowed-tools: Read Grep Glob
 | `name` | スキル名（省略時はディレクトリ名。`/name` で呼び出し可能） |
 | `description` | **発見の鍵**。`description` + `when_to_use` 合わせて最大 1,536 文字。冒頭にユースケースを置く |
 | `when_to_use` | 追加のトリガー説明 |
+| `argument-hint` / `arguments` | `/skill-name <args>` 呼び出し時の引数説明・解析定義 |
 | `user-invocable` | `false` なら Claude のみ呼び出し可（デフォルト true） |
 | `disable-model-invocation` | `true` ならユーザーのみ呼び出し可（デフォルト false） |
 | `allowed-tools` | スキル有効中に許可確認をスキップするツール |
+| `paths` | glob で自動発火対象パスを制限 |
+| `model` | per-skill モデル上書き（`sonnet` / `opus` / `haiku` 等） |
+| `effort` | per-skill 効果レベル（`xhigh` / `high` / `medium` / `low`） |
+| `shell` | スキル内コマンドのシェル指定（`bash` / `powershell`） |
+| `hooks` | このスキル有効中だけ作用する hooks |
 | `context` | `fork` でサブエージェントコンテキストで実行 |
 | `agent` | `context: fork` 時のエージェント名（デフォルト `general-purpose`） |
 
@@ -339,11 +350,11 @@ echo "[$MODEL] $PCT% context"
 **JSON で受け取れる主なフィールド**:
 
 - `model.display_name`, `model.id`
-- `workspace.current_dir`, `workspace.project_dir`, `workspace.git_worktree`（linked worktree 内で設定）
+- `workspace.current_dir`（`cwd` エイリアス）, `workspace.project_dir`, `workspace.git_worktree`（linked worktree 内で設定）
 - `context_window.used_percentage`, `context_window.remaining_percentage`
-- `cost.total_cost_usd`, `cost.total_duration_ms`
+- `cost.total_cost_usd`, `cost.total_duration_ms`, `cost.total_api_duration_ms`
 - `session_id`, `session_name`
-- `rate_limits.five_hour.used_percentage`, `rate_limits.seven_day.used_percentage`
+- `rate_limits.five_hour.used_percentage`, `rate_limits.five_hour.resets_at`（Unix epoch）, `rate_limits.seven_day.used_percentage`, `rate_limits.seven_day.resets_at`
 - `effort.level`, `thinking.enabled`（v2.1.119 追加）
 
 **クイック設定**: `/statusline モデル名とコンテキスト使用率を表示` と送れば Claude がスクリプトを生成して自動設定する。
