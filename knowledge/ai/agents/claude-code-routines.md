@@ -1,21 +1,24 @@
 ---
-reviewed: 2026-05-10
+reviewed: 2026-05-17
 tags: [ai-workflow, commercial, cloud-hosted]
 stability: research-preview
 ---
 
 # Claude Code Routines
 
-Anthropic 管理のクラウドインフラで Claude Code を非対話に動かす仕組み。2026年5月のアップデートにより、**Claude Opus 4.7** と **100万トークンコンテキスト** を標準サポートし、自律的な「クラウドエージェントプラットフォーム」へと進化した。
+Anthropic 管理のクラウドインフラで Claude Code を非対話に動かす仕組み。`/model` セレクタで **Claude Opus 4.7** と **100 万トークンコンテキスト** を選択でき、トリガー駆動の自律実行プラットフォームとして使える。
 
 公式: [Automate work with routines](https://code.claude.com/docs/en/routines)
 
-## 主要な最新機能 (2026-05)
+## 主要機能
 
-- **Opus 4.7 & 1M Context**: 大規模リポジトリ全体の依存関係を一度に解析可能。
-- **Dreaming (研究プレビュー)**: 過去のセッションを振り返り、パターンを学習して自己改善する機能。実行を重ねるごとに精度が向上する。
-- **Native Git Worktrees**: `worktree.baseRef` 設定により、独立したブランチで並行してタスクを実行可能。
-- **`/ultrareview`**: クラウド上のエージェント群が並行してバグハンティングを行い、結果を集約する。
+- **Opus 4.7 & 1M Context**: モデルセレクタで選択可能。大規模リポジトリ全体の依存関係を一度に解析できる。
+- **fresh clone モデル**: トリガー毎にリポジトリを default branch から clone し、変更は `claude/`-prefix ブランチに push。**Allow unrestricted branch pushes** を有効化すると既存ブランチへの push も可能。
+
+### 関連機能（Routines 本体ではないが併用される）
+
+- **Dreaming**（[Managed Agents](https://platform.claude.com/docs/en/managed-agents/dreams)）: 過去のセッションログを材料に memory store を再編成する研究プレビュー機能。Routines と同じ Claude Code エコシステムだが別レイヤー。研究プレビュー中は `claude-opus-4-7` / `claude-sonnet-4-6` をサポート。
+- **`/ultrareview`**（[Claude Code 本体のスラッシュコマンド](https://code.claude.com/docs/en/ultrareview)）: カレントブランチと default ブランチの diff をレビューする multi-lens パイプライン。Routines 経由でも呼び出せる。
 
 ## 動作モデル
 
@@ -27,17 +30,19 @@ Anthropic 管理のクラウドインフラで Claude Code を非対話に動か
 
 | トリガー | 用途 |
 |---|---|
-| **Scheduled** | 特定周期（Cron 式対応）や一回限りの実行。 |
-| **API** | HTTP POST (`/fire`) で外部から起動。 |
-| **GitHub** | PR 作成や Push 等のイベントに反応。 |
+| **Scheduled** | 特定周期（Cron 式対応）や一回限りの実行。最小実行間隔は 1 時間。 |
+| **API** | HTTP POST (`/fire`) で外部から起動。`experimental-cc-routine-2026-04-01` beta header が必須。 |
+| **GitHub** | Pull request / Release の 2 カテゴリのイベントに反応。 |
 
-## 利用枠 (2026-05 改定)
+## 利用枠
 
-| プラン | 1 日あたりの上限 |
+research preview 中の参考値（変動するため、最新は [claude.ai/code/routines](https://claude.ai/code/routines) や `settings/usage` で確認）:
+
+| プラン | 1 日あたりの目安 |
 |---|---|
 | **Pro** | 5 回 |
 | **Max** | 15 回 |
-| **Team/Enterprise** | 25 回以上（順次緩和中） |
+| **Team / Enterprise** | 25 回 |
 
 ## AI エージェントがよくやるミス
 
