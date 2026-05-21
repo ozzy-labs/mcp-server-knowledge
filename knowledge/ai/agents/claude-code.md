@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-17
+reviewed: 2026-05-21
 tags: [ai-workflow, commercial]
 aliases: [cc]
 ---
@@ -17,7 +17,7 @@ irm https://claude.ai/install.ps1 | iex           # Windows PowerShell
 
 # Homebrew（自動アップデートなし）
 brew install --cask claude-code          # stable チャンネル
-brew install --cask claude-code@latest  # latest チャンネル（v2.1.143 時点）
+brew install --cask claude-code@latest  # latest チャンネル（v2.1.146 時点）
 
 # WinGet
 winget install Anthropic.ClaudeCode
