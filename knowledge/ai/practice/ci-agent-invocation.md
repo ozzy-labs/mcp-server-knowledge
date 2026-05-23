@@ -67,7 +67,7 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
 
-Bedrock / Vertex は `aws-actions/configure-aws-credentials@v4` / `google-github-actions/auth@v2` で先に認証し、`use_bedrock` / `use_vertex` を立てて `claude_args: '--model <id>'` でモデル指定する。モデル ID は現行世代（Sonnet 4.6 / Opus 4.7 系）の Bedrock / Vertex 表記に置き換える。
+Bedrock / Vertex は `aws-actions/configure-aws-credentials@v4` / `google-github-actions/auth@v2` で先に認証し、`use_bedrock` / `use_vertex` を立てて `claude_args: '--model <id>'` でモデル指定する。`<id>` には現行世代（Sonnet 4.6 / Opus 4.7 系）のモデル文字列を入れる。正確な文字列は Bedrock と Vertex で表記が異なるため、各プロバイダのモデルカタログと `docs/cloud-providers.md` を参照する（固定の例は陳腐化しやすいので転記しない）。
 
 **Claude には「サブスク込みで自前 CI を回す」正規ルートが無い。** サブスク枠で背景実行したい場合は Anthropic クラウドの Routines（`ai/practice/scheduled-tasks.md`）が該当し、自前 GitHub Actions は API キー / Bedrock / Vertex（従量）が正規。
 
@@ -117,7 +117,7 @@ ChatGPT サインインで生成される `~/.codex/auth.json` を Secret 化し
 
 | 入力 | 認証 | 課金 |
 |---|---|---|
-| `gemini_api_key: ${{ secrets.GEMINI_API_KEY }}` | AI Studio API キー | **無料枠内なら追加なし**（超過で従量、無料枠はデータ学習利用の可能性） |
+| `gemini_api_key: ${{ secrets.GEMINI_API_KEY }}` | AI Studio API キー | **無料枠内なら追加なし**（超過で従量。無料枠＝AI Studio / unpaid quota は送信内容が Google の製品改善に利用される。有料 / Vertex は対象外。下記 Gemini API Terms 参照） |
 | `use_gemini_code_assist: true`（`GOOGLE_GENAI_USE_GCA`） | Gemini Code Assist ライセンス | 月額定額（トークン課金なし） |
 | `use_vertex_ai: true` + `gcp_workload_identity_provider` + `gcp_project_id` | Vertex AI + WIF | 従量 |
 
@@ -179,6 +179,6 @@ ChatGPT サインインで生成される `~/.codex/auth.json` を Secret 化し
 - [OpenAI Terms of Use](https://openai.com/policies/terms-of-use/)
 - [anthropics/claude-code-action](https://github.com/anthropics/claude-code-action)（`docs/setup.md` / `docs/cloud-providers.md`）
 - [Anthropic Consumer Terms](https://www.anthropic.com/legal/consumer-terms) / [Legal and compliance](https://code.claude.com/docs/en/legal-and-compliance)
-- [google-gemini/run-gemini-cli](https://github.com/google-gemini/run-gemini-cli) / [Gemini Code Assist pricing](https://cloud.google.com/products/gemini/code-assist)
+- [google-gemini/run-gemini-cli](https://github.com/google-gemini/run-gemini-cli) / [Gemini Code Assist pricing](https://cloud.google.com/products/gemini/code-assist) / [Gemini API Terms（無料/有料のデータ利用差）](https://ai.google.dev/gemini-api/terms)
 - [About GitHub Copilot CLI](https://docs.github.com/en/copilot/concepts/agents/about-copilot-cli) / [Requests in GitHub Copilot](https://docs.github.com/en/copilot/managing-copilot/monitoring-usage-and-entitlements/about-premium-requests)
 - 関連: `ai/practice/scheduled-tasks.md` / `ai/agents/claude-code.md` / `ai/agents/codex-cli.md` / `ai/agents/gemini-cli.md` / `ai/agents/github-copilot-cli.md`
