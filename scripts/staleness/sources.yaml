@@ -375,6 +375,8 @@ ai/practice/scheduled-tasks:
       - https://code.claude.com/docs/en/web-scheduled-tasks
       - https://code.claude.com/docs/en/desktop-scheduled-tasks
       - https://developers.openai.com/codex/cloud
+      - https://jules.google
+      - https://docs.github.com/en/copilot/concepts/agents/coding-agent
       - https://code.claude.com/docs/en/legal-and-compliance
     related_internal:
       - ai/agents/claude-code-routines
