@@ -52,6 +52,35 @@ Anthropic 管理のクラウドインフラで Claude Code を非対話に動か
   3. Claude Code on the web セッション内（Web UI で操作する）。
   4. CLI が v2.1.81 未満（`claude update`）。
 
+### create body のフィールド能力境界
+
+`/schedule` の create が叩く `POST /v1/code/triggers` の body は **strict schema**（未知フィールドを reject）。CLI/API で設定できるフィールドと Web UI でしか設定できないフィールドが分かれる。
+
+**CLI / API で設定可能**（既存 routine で実証）:
+
+| 項目 | create body 内のパス |
+|---|---|
+| model（例 `claude-opus-4-7[1m]`） | `job_config.ccr.session_context.model` |
+| カスタム instructions（prompt 全文） | `job_config.ccr.events[].data.message.content` |
+| 対象リポジトリ | `job_config.ccr.session_context.sources[].git_repository.url` |
+| allowed_tools | `job_config.ccr.session_context.allowed_tools` |
+| 環境（environment） | `job_config.ccr.environment_id` |
+| cron（最小 1h・UTC） / `run_once_at` / `enabled` / `mcp_connections` | top-level |
+
+→ **model も instructions も CLI/API で設定できる**。公開 docs の会話フロー記述だけを見て「instructions / model は Web UI 専用」と誤解しないこと。`/schedule`(CLI) は **`allow_unrestricted_git_push` 以外すべて**を登録できる。
+
+**Web UI 専用**（create body に入れると reject）:
+
+- **`allow_unrestricted_git_push`**（Web UI の **Allow unrestricted branch pushes**）は create body に渡すと strict schema が弾く:
+
+  ```text
+  HTTP 400
+  {"type":"error","error":{"type":"invalid_request_error",
+   "message":"allow_unrestricted_git_push: Extra inputs are not permitted"}}
+  ```
+
+  この権限は Web の Permissions でのみ設定可能。`claude/`-prefix 以外の既存ブランチ（`main` 等）への push を許可する設定なので、「routine が自分の PR を main に auto-merge する」設計は CLI 登録だけでは完結せず、Web で 1 度この権限を付与する必要がある。
+
 ### API — 起動（fire）専用、CRUD は不可
 
 HTTP API でできるのは **既存ルーチンの起動のみ**。list / create / update / delete の管理 API は存在しない（`/fire` は claude.ai ユーザー専用で、Claude Platform API の一部ではない）。
@@ -116,3 +145,4 @@ research preview 中の参考値（変動するため、最新は [claude.ai/cod
 6. **公開 API でルーチンを CRUD しようとする** — 公開 API は起動専用。作成・更新は CLI（schedule trigger のみ）か Web、トークンの生成・失効は Web のみ。
 7. **`/web-setup` で GitHub App が入ると誤解** — `/web-setup` は clone 用のリポアクセスを付与するだけ。GitHub trigger には別途 Claude GitHub App のインストールが必要（trigger 設定時に促される）。
 8. **CLI / API でルーチンを削除しようとする** — 削除アクションは存在しない。CLI（`/schedule`）でできるのは無効化（`/schedule update` の `enabled: false`）まで。削除は Web / Desktop の detail ページからのみ。
+9. **`allow_unrestricted_git_push` を create body に渡せると誤解** — create API は strict schema で未知フィールドを弾き、`400 Extra inputs are not permitted` を返す。この権限（既存ブランチへの push 許可）は Web UI の Permissions でのみ設定可能で、CLI/API では設定できない。
