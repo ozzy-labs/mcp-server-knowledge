@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-17
+reviewed: 2026-05-24
 tags: [ai-workflow, methodology]
 ---
 
@@ -35,11 +35,16 @@ AI コーディングエージェント（Claude Code / Codex 等）を recurrin
 - MCP コネクタを per-routine で選択
 - 完全自律実行（permission prompt なし）
 
-### 作成方法
+### 作成・管理方法
+
+`/schedule` は **cloud routine（クラウドに保存される設定エンティティ）を操作する CLI スラッシュコマンド**。同名の Desktop ローカル scheduled task（後述）とは別物。3 つの作成面は同じ claude.ai アカウントに書き込むため、どこで作っても即座に他面に反映される。
 
 - Web: [claude.ai/code/routines](https://claude.ai/code/routines)
-- CLI: `/schedule daily PR review at 9am` のように自然言語で（CLI は schedule trigger のみ作成可、API/GitHub trigger は Web で追加）
-- Desktop アプリ: Routines サイドバーから **New routine → Remote**
+- CLI:
+  - `/schedule daily PR review at 9am` のように自然言語で作成（CLI で作れるトリガーは **schedule のみ**。API/GitHub trigger は Web で追加）
+  - `/schedule list`（一覧） / `/schedule update`（変更・cron 式の直接指定） / `/schedule run`（即時起動）で既存ルーチンを管理
+  - `/schedule` が "Unknown command" になる場合は claude.ai サブスクログイン必須・API key 認証や telemetry 無効化が原因（詳細は `ai/agents/claude-code-routines.md`）
+- Desktop アプリ: Routines サイドバーから **New routine → Remote**（**Local** を選ぶと下記の Desktop scheduled task になる）
 
 ### 制約
 
