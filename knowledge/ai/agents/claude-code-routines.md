@@ -39,9 +39,12 @@ Anthropic 管理のクラウドインフラで Claude Code を非対話に動か
 |---|---|
 | `/schedule <自然言語>` | scheduled routine を作成。例: `/schedule daily PR review at 9am`、one-off は `/schedule in 2 weeks, open a cleanup PR ...` |
 | `/schedule list` | 全ルーチンを一覧 |
-| `/schedule update` | 既存ルーチンを変更（cron 式の直接指定・コネクタ変更もここ） |
+| `/schedule update` | 既存ルーチンを変更（cron 式の直接指定・コネクタ変更・`enabled` フラグの切替もここ） |
 | `/schedule run` | 即時起動 |
 
+- **`/schedule` の正体**: Claude Code CLI の組み込みスラッシュコマンド。近年は bundled skill として実装され、内部で claude.ai の管理エンドポイント（`/v1/code/triggers` の list/get/create/update/run）を **in-process の OAuth トークン**で呼ぶ。**ルーチン管理用の公開 REST API は無い**（curl 想定でもない内部 API）。公開 API は後述 `/fire` の起動のみ。
+- **無効化 / 有効化**: `/schedule update` で `enabled` を切替（`false` で設定を残したまま発火を停止、`true` で再開）。Web / Desktop の **Repeats トグル**（pause / resume）でも可。
+- **削除は CLI 不可** — Web / Desktop の detail ページからのみ（削除しても過去の実行セッションは残る）。CLI / 公開 API は削除アクションを持たず、CLI でできるのは無効化（`enabled: false`）まで。
 - **CLI で作れるトリガーは schedule のみ**。API / GitHub trigger の追加・編集、および API トークンの生成・失効は Web（[claude.ai/code/routines](https://claude.ai/code/routines)）でのみ可能。
 - `/schedule` が **"Unknown command"** になる主因（CLI が要件未達だと非表示になる）:
   1. Console API key / Bedrock / Vertex / Foundry 認証になっている。`ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` / `settings.json` の `apiKeyHelper` は claude.ai ログインより優先されるため外す（`/schedule` は claude.ai サブスクリプションログインが必須）。
@@ -110,5 +113,6 @@ research preview 中の参考値（変動するため、最新は [claude.ai/cod
 3. **network access の制限を忘れる** — Default 環境は Trusted で、許可外ホストへの outbound は `403` + `x-deny-reason: host_not_allowed`。RSS フィード取得や自前サービスへの到達には Custom / Full が必要。
 4. **`routine_id` プレフィックスの誤認** — 正解は **`trig_`**。
 5. **`/fire` のレスポンスで完了を待つ** — エンドポイントはセッション作成時に即リターンする。
-6. **API でルーチンを CRUD しようとする** — API は起動専用。作成・更新・削除・トークン管理は CLI（schedule のみ）か Web。
+6. **公開 API でルーチンを CRUD しようとする** — 公開 API は起動専用。作成・更新は CLI（schedule trigger のみ）か Web、トークンの生成・失効は Web のみ。
 7. **`/web-setup` で GitHub App が入ると誤解** — `/web-setup` は clone 用のリポアクセスを付与するだけ。GitHub trigger には別途 Claude GitHub App のインストールが必要（trigger 設定時に促される）。
+8. **CLI / API でルーチンを削除しようとする** — 削除アクションは存在しない。CLI（`/schedule`）でできるのは無効化（`/schedule update` の `enabled: false`）まで。削除は Web / Desktop の detail ページからのみ。
