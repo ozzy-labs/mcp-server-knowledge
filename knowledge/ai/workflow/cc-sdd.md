@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-05-17
 tags: [ai-workflow, spec, oss, npm, javascript]
 stability: beta
 ---
@@ -55,26 +55,36 @@ npx cc-sdd@latest --antigravity                      # Antigravity（experimenta
 | `/kiro-spec-design` | アーキテクチャ + Mermaid 図 + File Structure Plan |
 | `/kiro-spec-tasks` | 境界・依存 annotation 付きタスクリスト |
 | `/kiro-spec-batch` | roadmap から複数 spec を並列生成 + cross-spec review |
-| `/kiro-impl` | 長時間自律実行（per-task subagent + reviewer + auto-debug） |
+| `/kiro-impl` | 実装実行。task 引数なし = autonomous mode（per-task subagent trio）/ task 引数あり = manual mode（main context で TDD + review gate） |
+| `/kiro-validate-impl` | feature レベルの統合検証。tasks 横断で requirements coverage / design alignment / full-suite evidence を確認し `GO` / `NO-GO` / `MANUAL_VERIFY_REQUIRED` を返す |
 | `/kiro-steering` | プロジェクト全体に効くガイダンスファイル更新 |
-| `/kiro-validate-gap` | 既存 system に対する gap 検証 |
+
+### Supporting Skills（`/kiro-impl` の内部から呼ばれる）
+
+| Skill | 役割 |
+|---|---|
+| `kiro-review` | adversarial review protocol。spec 準拠 / 境界 / mechanical verification / RED phase evidence をチェック |
+| `kiro-debug` | root-cause-first 解析。`ROOT_CAUSE` / `CATEGORY` / `FIX_PLAN` / `NEXT_ACTION` を返す（最大 2 round） |
+| `kiro-verify-completion` | fresh-evidence gate。`VERIFIED` / `NOT_VERIFIED` / `MANUAL_VERIFY_REQUIRED` を返す |
 
 ### 推奨フロー
 
 | シナリオ | フロー |
 |---|---|
-| 新機能 / 製品サイズの企画 | `kiro-discovery` → `kiro-spec-init` → `kiro-spec-requirements` → `kiro-spec-design` → `kiro-spec-tasks` → `kiro-impl` |
-| 既存システム拡張 | `kiro-steering` → `kiro-discovery` or `kiro-spec-init` → 任意 `kiro-validate-gap` → `kiro-spec-design` → `kiro-spec-tasks` → `kiro-impl` |
+| 新機能 / 製品サイズの企画 | `kiro-discovery` → `kiro-spec-init` → `kiro-spec-requirements` → `kiro-spec-design` → `kiro-spec-tasks` → `kiro-impl` → `kiro-validate-impl` |
+| 既存システム拡張 | `kiro-steering` → `kiro-discovery` or `kiro-spec-init` → `kiro-spec-design` → `kiro-spec-tasks` → `kiro-impl` → `kiro-validate-impl` |
 | 大型施策の分解 | `kiro-discovery` → `kiro-spec-batch` |
 | spec 不要な小変更 | `kiro-discovery` → 直接実装 |
 
 ### `/kiro-impl` の内部
 
-各タスクで以下を独立 subagent として spawn:
+`task 引数なし` で呼ぶと **autonomous mode**: 各タスクで以下を独立 subagent として spawn（実体は上記 Supporting Skills にマップ）:
 
 1. **Implementer**: TDD（RED → GREEN）で feature flag 後ろに実装
-2. **Reviewer**: 独立した文脈で review。境界違反 / 仕様逸脱を検出
-3. **Auto-debug**: implementer が詰まる or reviewer が 2 回 reject した時、clean context で root cause 調査
+2. **Reviewer** (`kiro-review`): 独立した文脈で review。境界違反 / 仕様逸脱を検出
+3. **Auto-debug** (`kiro-debug`): implementer が詰まる or reviewer が 2 回 reject した時、clean context で root cause 調査
+
+`task 引数あり` で呼ぶと **manual mode**: メインコンテキスト内で TDD を回し、review gate のみ走らせる。
 
 学びは `tasks.md` 内の `## Implementation Notes` を介して後続タスクに伝播。1 task / 1 iteration、中断後の再実行が安全。
 
@@ -94,7 +104,7 @@ npx cc-sdd@latest --antigravity                      # Antigravity（experimenta
 
 8 つの Skills variants は**同じ 17 skill セットを共有**。「Beta」は機能差ではなく platform integration の実運用量の差。
 
-レガシーモード（slash command 直配置の `--claude` / `--cursor` 等）は v3 で deprecated。`/kiro:*` 命名は legacy で、現行は `/kiro-*`（コロンなし）。
+レガシーモード（slash command 直配置の `--claude` / `--claude-agent` / `--cursor` / `--copilot` / `--windsurf` / `--opencode` / `--opencode-agent` / `--gemini`）は v3 で **deprecated**（次バージョンで削除予定だが現時点では動作する）。`--codex`（prompts mode）のみ **blocked**（インストール時にエラー）。`/kiro:*` 命名は legacy で、現行は `/kiro-*`（コロンなし）。
 
 ## 哲学
 
@@ -123,7 +133,7 @@ cc-sdd は **「Kiro の spec 形式を Kiro 以外でも使う」**用途と **
 ## AI エージェントがよくやるミス
 
 1. **`/kiro:*`（コロン付き）を使う** — v2.x までの命名。v3 Skills mode は `/kiro-*`（ハイフン）。Migration Guide 参照
-2. **`--claude` / `--cursor` 等の legacy mode で install** — 現行は `--*-skills`。legacy は deprecated（Codex は blocked = 廃止）
+2. **`--claude` / `--cursor` 等の legacy mode で install** — 現行は `--*-skills`。legacy フラグは deprecated（次バージョンで削除予定）。`--codex` のみ blocked（インストール時にエラー）
 3. **デフォルト install で全エージェント分が入ると思う** — 1 回の `npx cc-sdd@latest` で**1 つのエージェント**しか install されない。複数エージェントには複数回実行が必要
 4. **`/kiro-impl` を 1 セッションで全タスク消化させようとする** — 各タスクは別 subagent で走る設計。並行 / 中断・再開可能だが、メインセッションで全部待つとコンテキスト窓を消費する
 5. **`requirements.md` を箇条書きで書く** — Kiro 互換の EARS 記法が前提。`/kiro-spec-requirements` 経由で生成しないと後段の reviewer が境界違反を誤検出
