@@ -43,11 +43,12 @@ instructions: |
   3. 各 source method (`docs` / `github_releases` / `rss` / `raw_files` / `npm` / `pypi` / `eol` / `web_search` / `related_internal`) で並列フェッチ
   4. 既存記事との差分を取得し、4 段階 confidence (`high` / `medium` / `low` / `fail`) で判定
   5. confidence 別に PR / バッチ PR / issue を起票:
-     - **high**: 個別 PR、ブランチ `claude/staleness/<path>/<YYYYMMDD>`、タイトル `docs(knowledge): refresh <path> (<YYYY-MM-DD>)`
+     - **high**: 個別 PR、ブランチ `docs/staleness-<path-slug>-<YYYYMMDD>`、タイトル `docs(knowledge): refresh <path> (<YYYY-MM-DD>)`
+       - `<path-slug>` は `<path>` 内の `/` を `-` に置換した文字列（例: `ai/agents/claude-code` → `ai-agents-claude-code`）。リポの branch 命名規則 `^(feat|fix|docs|...|chore)/.+` に準拠させるため
      - **medium**: 個別 PR + `staleness:needs-review` ラベル
-     - **low**: バッチ PR、ブランチ `claude/staleness/batch/monthly/<YYYYMMDD>`、タイトル `chore(knowledge): verified N monthly articles (<YYYY-MM-DD>)`
+     - **low**: バッチ PR、ブランチ `chore/staleness-monthly-<YYYYMMDD>`、タイトル `chore(knowledge): verified N monthly articles (<YYYY-MM-DD>)`
      - **fail**: 記事は変更せず、`staleness:fetch-failed` ラベル付き issue を起票
-  6. 既に open PR が `claude/staleness/<path>/*` ブランチに存在する記事は衝突回避のためスキップ
+  6. 既に open PR が `docs/staleness-<path-slug>-*` ブランチに存在する記事は衝突回避のためスキップ
 
   ### Step 2: ベース全体の audit
 
@@ -64,7 +65,7 @@ instructions: |
 
   - **構造的問題（リンク切れ / frontmatter 不正 / 重複）**: 個別 issue を起票、ラベル `staleness:audit`（必要に応じて事前作成）
   - **stale 警告**: 既存の routine スケジュールでカバーされる範囲なら issue 不要。範囲外（カテゴリ未登録など）は issue 起票
-  - **自動修正可能（リンク先 URL 末尾の slash 整合等）**: ブランチ `claude/staleness/audit/<YYYYMMDD>` で個別 PR
+  - **自動修正可能（リンク先 URL 末尾の slash 整合等）**: ブランチ `chore/staleness-audit-<YYYYMMDD>` で個別 PR
 
   ## 完了報告
 
