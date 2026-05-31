@@ -27,7 +27,7 @@ brew install --cask codex
 - ChatGPT アカウント（有料プラン推奨）でブラウザ OAuth
 - OpenAI API key（`OPENAI_API_KEY` 環境変数）
 
-なお、`gpt-5.5` は ChatGPT サインイン経由でのみ利用可能。
+`gpt-5.5` は ChatGPT サインインおよび OpenAI API（モデル ID `gpt-5.5`、2026-04-24 提供開始）の双方から利用可能。
 
 ## 基本コマンド
 
@@ -76,7 +76,8 @@ model = "gpt-5.5"
 # 推論の深さ（minimal, low, medium, high, xhigh）
 model_reasoning_effort = "medium"
 
-# 承認ポリシー: "untrusted" / "on-request" / "never" / "granular"
+# 承認ポリシー: "untrusted" / "on-request"（デフォルト） / "never" / "granular"
+# 旧 "on-failure" は deprecated（"on-request" もしくは "never" を使用）
 approval_policy = "on-request"
 ```
 
@@ -102,18 +103,18 @@ approval_policy = "on-request"
 
 | ポリシー | 説明 |
 |---|---|
-| `untrusted` | すべてのコマンドに承認が必要 |
+| `untrusted` | 既知の安全な読み取り専用コマンドのみ自動実行、他は承認待ち |
 | `on-request` | エージェントが必要に応じて承認を求める（デフォルト推奨） |
-| `never` | 承認を求めない（sandbox_mode と組み合わせて使う） |
-| `granular` | 細粒度制御。`sandbox_approval` / `rules` / `mcp_elicitations` / `request_permissions` / `skill_approval` 等の sub-options を持つ |
+| `never` | 承認を求めない（非対話実行向け。`sandbox_mode` と組み合わせて使う。リスク高） |
+| `granular` | カテゴリ別に細粒度制御。`sandbox_approval` / `rules` / `mcp_elicitations` / `request_permissions` / `skill_approval` 等の sub-options を持つ |
 
-`config.toml` の `approval_policy` で設定。TUI ピッカーの表示ラベル（Suggest / Auto Edit / Full Auto）は旧 UI 由来で、TOML の値とは異なる。
+`config.toml` の `approval_policy` で設定。旧 `on-failure` は deprecated（`on-request` もしくは `never` を使用）。TUI ピッカーの表示ラベル（Suggest / Auto Edit / Full Auto）は旧 UI 由来で、TOML の値とは異なる。
 
 ## サンドボックス
 
 `config.toml` の `sandbox_mode` で設定: `read-only` / `workspace-write` / `danger-full-access`。
 
-> **注意**: `--full-auto` フラグは非推奨。代わりに `approval_policy = "never"` + `sandbox_mode = "danger-full-access"` の組み合わせを使用すること。
+> **注意**: `--full-auto` フラグは v0.128.0 で deprecated（互換のため警告付きで残存）。代わりに `--sandbox workspace-write` と `--ask-for-approval never` を明示的に指定する（または `approval_policy = "never"` + `sandbox_mode = "workspace-write"` を設定する）。よりリスクの高い `sandbox_mode = "danger-full-access"` への置換も可能だが、隔離されたコンテナ等での利用に限る。
 
 プラットフォーム固有のサンドボックス実装: macOS は Seatbelt、Linux は Landlock/seccomp。Docker / Podman コンテナ内で動かす場合は `danger-full-access` + 外側のコンテナ隔離を推奨。
 
