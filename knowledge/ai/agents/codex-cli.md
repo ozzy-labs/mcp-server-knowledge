@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-07
+reviewed: 2026-05-17
 tags: [ai-workflow, commercial]
 ---
 
@@ -44,11 +44,21 @@ codex remote-control     # リモート制御エントリポイント (v0.130+)
 |---|---|
 | `/model` | モデル切り替え |
 | `/goal` | 永続ゴール設定（作成・一時停止・再開・クリア） |
+| `/plan` | プラン作成・編集 |
+| `/status` | セッションステータス表示 |
+| `/resume` `/fork [name]` | セッション再開 / 独立フォーク |
+| `/agent` | サブエージェント呼び出し |
+| `/permissions` | 承認ポリシーの切り替え（旧 `/approvals` は `/approve` にリネーム） |
+| `/diff` `/review` | 変更差分のレビュー |
+| `/compact` | コンテキスト圧縮 |
+| `/plugins` `/apps` `/mcp` | プラグイン・アプリ・MCP サーバー管理 |
+| `/init` | プロジェクト初期化 |
 | `/vim` | composer の Vim モーダル編集をトグル（v0.129.0+） |
 | `/hooks` | hooks の参照・有効化トグル（v0.129.0+） |
-| `/help` | ヘルプ表示 |
-| `/share` | セッション共有 |
-| `/exit` | セッション終了 |
+| `/keymap` `/statusline` `/title` | UI カスタマイズ |
+| `/help` `/quit` `/exit` | ヘルプ / 終了 |
+
+公式の全量は [Codex CLI slash commands](https://developers.openai.com/codex/cli/slash-commands) を参照。
 
 ## 設定ファイル
 
@@ -66,11 +76,11 @@ model = "gpt-5.5"
 # 推論の深さ（minimal, low, medium, high, xhigh）
 model_reasoning_effort = "medium"
 
-# 承認ポリシー: "Suggest", "Auto Edit", "Full Auto"
-approval_policy = "Auto Edit"
+# 承認ポリシー: "untrusted" / "on-request" / "never" / "granular"
+approval_policy = "on-request"
 ```
 
-### 同梱モデル（rust-v0.129.0 時点、2026-05-07）
+### 同梱モデル（rust-v0.130.0 時点、2026-05-17）
 
 `/model` ピッカーで選択可能な推奨モデル:
 
@@ -92,17 +102,18 @@ approval_policy = "Auto Edit"
 
 | ポリシー | 説明 |
 |---|---|
-| `Suggest` | 提案のみ（実行はすべて要承認） |
-| `Auto Edit` | ファイル書き換えは自動、コマンド実行は確認 |
-| `Full Auto` | コマンド実行まで自動 |
+| `untrusted` | すべてのコマンドに承認が必要 |
+| `on-request` | エージェントが必要に応じて承認を求める（デフォルト推奨） |
+| `never` | 承認を求めない（sandbox_mode と組み合わせて使う） |
+| `granular` | 細粒度制御。`sandbox_approval` / `rules` / `mcp_elicitations` / `request_permissions` / `skill_approval` 等の sub-options を持つ |
 
-`config.toml` の `approval_policy` で設定。
+`config.toml` の `approval_policy` で設定。TUI ピッカーの表示ラベル（Suggest / Auto Edit / Full Auto）は旧 UI 由来で、TOML の値とは異なる。
 
 ## サンドボックス
 
 `config.toml` の `sandbox_mode` で設定: `read-only` / `workspace-write` / `danger-full-access`。
 
-> **注意**: `--full-auto` フラグは非推奨。代わりに `approval_policy = "Full Auto"` を使用すること。
+> **注意**: `--full-auto` フラグは非推奨。代わりに `approval_policy = "never"` + `sandbox_mode = "danger-full-access"` の組み合わせを使用すること。
 
 プラットフォーム固有のサンドボックス実装: macOS は Seatbelt、Linux は Landlock/seccomp。Docker / Podman コンテナ内で動かす場合は `danger-full-access` + 外側のコンテナ隔離を推奨。
 
@@ -158,7 +169,7 @@ description: Review code for security and best practices
 [agents]
 max_threads = 6       # 並列 spawn 上限
 max_depth = 1         # 再帰の深さ
-job_max_runtime_seconds = 600
+job_max_runtime_seconds = 1800
 ```
 
 **カスタム agent file の frontmatter**:
@@ -177,22 +188,22 @@ job_max_runtime_seconds = 600
 
 **ビルトイン**: `default` / `worker` / `explorer`。
 
-## Hooks（experimental）
+## Hooks
 
-`[features] codex_hooks = true` で有効化。`~/.codex/hooks.json` または `<repo>/.codex/hooks.json`。
+デフォルト有効。無効化は `[features] hooks = false`（`codex_hooks` は deprecated alias、v0.129 でリネーム）。`~/.codex/hooks.json` または `<repo>/.codex/hooks.json`。
 
 **対応イベント（6 種類）**:
 
 | イベント | タイミング |
 |---|---|
 | `SessionStart` | セッション開始・resume 時 |
-| `PreToolUse` | ツール実行前（Bash / apply_patch / MCP ツール）。`permissionDecision: deny` または exit 2 でブロック |
+| `PreToolUse` | ツール実行前（Bash / apply_patch / MCP ツール）。`permissionDecision: deny` または exit 2 でブロック。v0.129 で `additionalContext` サポート追加 |
 | `PermissionRequest` | 承認要求時（権限エスカレーション・ネットワークアクセス等） |
 | `PostToolUse` | ツール実行後 |
 | `UserPromptSubmit` | ユーザー発話直前 |
 | `Stop` | 会話ターン終了 |
 
-**注意**: Windows は一時的にサポート外。仕様は experimental 扱いで流動的。
+v0.129 で compaction 前後でも hook 実行サポート、`/hooks` ブラウザで参照・トグル可能に。
 
 ## エージェント統合
 
@@ -217,10 +228,10 @@ args = ["/path/to/mcp-server-knowledge/dist/index.js"]
 ## 制限事項
 
 - ChatGPT 有料プランが必要
-- Windows はネイティブ PowerShell または WSL2 経由で対応
+- Windows は公式インストール手順上 WSL2 経由のみ案内（ネイティブ x86_64/aarch64 バイナリも release artifact として配布あり）
 
 ## システム要件
 
-- macOS, Linux（フルサポート）、Windows（ネイティブ PowerShell または WSL2 経由）
+- macOS 12+, Ubuntu 20.04+/Debian 10+, Windows 11（WSL2 経由を公式推奨）
 - Node.js 16+（npm install 経由の場合）
 - RAM: 4 GB 以上（8 GB 推奨）

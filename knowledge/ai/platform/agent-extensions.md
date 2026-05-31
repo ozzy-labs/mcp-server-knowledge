@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-05-17
 tags: [ai-workflow, methodology]
 ---
 
@@ -85,11 +85,11 @@ allowed-tools: Read Grep Glob
 
 | 項目 | Claude Code | Codex CLI | Gemini CLI | GitHub Copilot CLI |
 |---|---|---|---|---|
-| イベント数 | 約 23 | 6（experimental） | 11 | 6 |
-| 設定場所 | `settings.json` の `hooks` | `~/.codex/hooks.json` / `<repo>/.codex/hooks.json` | `settings.json` の `hooks` | `.github/hooks/*.json` |
-| 有効化 | デフォルト | `[features] codex_hooks = true` | デフォルト | デフォルト |
+| イベント数 | 約 29 | 6 | 12 | 13 |
+| 設定場所 | `settings.json` の `hooks` | `~/.codex/hooks.json` / `<repo>/.codex/hooks.json` | `settings.json` の `hooks` | `.github/hooks/*.json`（または CWD の `hooks.json`） |
+| 有効化 | デフォルト | デフォルト（無効化は `[features] hooks = false`、`codex_hooks` は deprecated alias） | デフォルト | デフォルト |
 | 決定返却 | `hookSpecificOutput.permissionDecision` (`allow`/`deny`/`ask`/`defer`) | exit 2 or permissionDecision | exit 2 = block | `preToolUse` のみ permissionDecision |
-| ハンドラ種類 | `command` / `http` / `prompt` / `agent` | `command` | `command` | `command`（`bash`/`powershell`） |
+| ハンドラ種類 | `command` / `http` / `prompt` / `agent` / `mcp_tool` | `command` | `command` | `command`（`bash`/`powershell`） |
 
 ### 共通する主要イベント
 
@@ -100,9 +100,10 @@ allowed-tools: Read Grep Glob
 - **PostToolUse**: ツール実行後（結果検証）
 - **UserPromptSubmit**: ユーザー発話直前
 
-Claude Code のみ対応する高度イベント（例）:
+Claude Code が特に充実させているイベント（他 CLI にも一部相当物あり）:
 
-- `SubagentStart` / `SubagentStop` / `PreCompact` / `PostCompact` / `TeammateIdle` / `WorktreeCreate` など
+- `WorktreeCreate` / `WorktreeRemove` / `TeammateIdle` / `InstructionsLoaded` / `CwdChanged` / `FileChanged` / `ConfigChange` / `Elicitation` / `ElicitationResult` など。Claude Code 固有
+- `SubagentStart` / `SubagentStop` は Copilot CLI にも存在、`PreCompact` 系も Gemini (`PreCompress`) / Copilot (`preCompact`) が持つ
 
 ### Hooks の使いどころ
 
@@ -145,7 +146,7 @@ Claude Code のみ対応する高度イベント（例）:
 | AGENTS.md | Yes（CLAUDE.md 優先） | Yes | Yes | Yes |
 | Skills（オープン標準） | Yes | Yes | Yes | Yes |
 | Subagents | Yes（自動委譲） | Yes（明示のみ） | Yes（自動+@） | Yes（複数手段） |
-| Hooks | 23 events | 6 events (experimental) | 11 events | 6 events |
+| Hooks | 約 29 events | 6 events | 12 events | 13 events |
 | Plugins / Extensions | Yes（成熟） | Yes（marketplace） | Yes（Extensions） | Yes |
 | MCP | Yes | Yes | Yes | Yes |
 | Custom slash commands | Skills に統合 | Deprecated（Skills 推奨） | `.toml` ベース | プラグイン経由 |
