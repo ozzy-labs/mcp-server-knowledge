@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-17
+reviewed: 2026-06-01
 tags: [library, commercial, cloud-hosted, ai-workflow]
 aliases: [claude-api]
 ---
@@ -40,11 +40,11 @@ print(message.content[0].text)
 
 | モデル | API ID | コンテキスト | 最大出力 | 位置付け | 価格 (入力/出力 per 1M) |
 |---|---|---|---|---|---|
-| **Opus 4.7** | `claude-opus-4-7` | 1M | 128K | 最高精度。複雑推論・agentic coding。Extended thinking 非対応（adaptive thinking のみ） | $5 / $25 |
+| **Opus 4.7** | `claude-opus-4-7` | 1M | 128K | 最高精度。複雑推論・agentic coding。Extended thinking 非対応（adaptive thinking のみ）。新トークナイザで Opus 4.6 比 1.0〜1.35x のトークン消費（実効コスト最大 +35%） | $5 / $25 |
 | **Sonnet 4.6** | `claude-sonnet-4-6` | 1M | 64K | 速度と知性のバランス（デフォルト推奨）。extended/adaptive 両対応 | $3 / $15 |
 | **Haiku 4.5** | `claude-haiku-4-5-20251001` | 200K | 64K | 最速・最安。near-frontier 知性。extended thinking 対応 | $1 / $5 |
 
-Opus 4.7 は 2026-04-16 リリース。1M context は **2026-03-13 に Opus 4.6 / Sonnet 4.6 で GA**（ヘッダ不要、標準価格）。旧モデル向け beta ヘッダ `context-1m-2025-08-07` は 2026-04-30 に Sonnet 4.5 / Sonnet 4 から廃止され効果なし。`claude-opus` / `claude-sonnet` のエイリアスは各ティアの最新を指す（プロダクション用途ではピン留め推奨）。Sonnet 4 / Opus 4 は 2026-06-15 retire 予定。
+Opus 4.7 は 2026-04-16 リリース。**新トークナイザ採用により Opus 4.6 比で 1.0〜1.35x のトークンを消費**するため、`max_tokens` には余裕を持たせる（コンパクション閾値も同様）。1M context は **2026-03-13 に Opus 4.6 / Sonnet 4.6 で GA**（ヘッダ不要、標準価格）。旧モデル向け beta ヘッダ `context-1m-2025-08-07` は 2026-04-30 に Sonnet 4.5 / Sonnet 4 から廃止され効果なし。`claude-opus` / `claude-sonnet` のエイリアスは各ティアの最新を指す（プロダクション用途ではピン留め推奨）。Sonnet 4 / Opus 4 は 2026-06-15 retire 予定。
 
 ## プロンプトキャッシング — 最重要の最適化
 
@@ -118,7 +118,7 @@ tools = [
 
 ## Extended / Adaptive Thinking
 
-Opus 4.6 以降は **adaptive thinking** が推奨。Opus 4.7 では `thinking: {type: "enabled", budget_tokens: N}` を渡すと **400 エラー** が返る（deprecated ではなくリジェクト）。Opus 4.7 は extended thinking 自体に非対応で adaptive のみサポート。
+Opus 4.6 以降は **adaptive thinking** が推奨。Opus 4.7 では `thinking: {type: "enabled", budget_tokens: N}` を渡すと **400 エラー** が返る（deprecated ではなくリジェクト）。Opus 4.7 は extended thinking 自体に非対応で adaptive のみサポート。**Opus 4.7 では adaptive thinking はデフォルト OFF**。明示的に `thinking={"type": "adaptive"}` を指定しないと thinking なしで動作する。
 
 Opus 4.7 では `temperature` / `top_p` / `top_k` のサポート挙動が以前のモデルと異なる可能性がある。adaptive thinking 利用時はこれらをデフォルトのまま送るのが安全（最新挙動は API リファレンスを参照）。
 
@@ -134,6 +134,8 @@ message = client.messages.create(
 ```
 
 `effort` パラメータは `budget_tokens` の代替で、`thinking` と**並列のトップレベルパラメータ**として渡す（`output_config` 配下ではない）。公式が現行サポートする値は `low` / `medium` / `high` の 3 段階。
+
+**Task budgets（beta、Opus 4.7〜）**: agentic ループ全体（thinking + tool calls + tool results + final output）の合計トークン目安をモデルに伝える。`max_tokens` がハードキャップなのに対し、`task_budget` はモデルが認識する advisory な目安。beta ヘッダ `task-budgets-2026-03-13` を付与し、`output_config={"effort": "high", "task_budget": {"type": "tokens", "total": 128000}}` のように指定（最小 20k）。
 
 Opus 4.7 では **`thinking.display` のデフォルトが `"omitted"`** に変更（Opus 4.6 はデフォルト `"summarized"`）。ストリーミング中に thinking 内容を表示したい場合は明示的に `"display": "summarized"` を指定すること。
 
