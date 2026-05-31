@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-11
+reviewed: 2026-05-17
 tags: [ai-workflow, commercial]
 ---
 
@@ -44,11 +44,21 @@ codex remote-control     # リモート制御エントリポイント (v0.130+)
 |---|---|
 | `/model` | モデル切り替え |
 | `/goal` | 永続ゴール設定（作成・一時停止・再開・クリア） |
+| `/plan` | プラン作成・編集 |
+| `/status` | セッションステータス表示 |
+| `/resume` `/fork [name]` | セッション再開 / 独立フォーク |
+| `/agent` | サブエージェント呼び出し |
+| `/permissions` | 承認ポリシーの切り替え（旧 `/approvals` は `/approve` にリネーム） |
+| `/diff` `/review` | 変更差分のレビュー |
+| `/compact` | コンテキスト圧縮 |
+| `/plugins` `/apps` `/mcp` | プラグイン・アプリ・MCP サーバー管理 |
+| `/init` | プロジェクト初期化 |
 | `/vim` | composer の Vim モーダル編集をトグル（v0.129.0+） |
 | `/hooks` | hooks の参照・有効化トグル（v0.129.0+） |
-| `/help` | ヘルプ表示 |
-| `/share` | セッション共有 |
-| `/exit` | セッション終了 |
+| `/keymap` `/statusline` `/title` | UI カスタマイズ |
+| `/help` `/quit` `/exit` | ヘルプ / 終了 |
+
+公式の全量は [Codex CLI slash commands](https://developers.openai.com/codex/cli/slash-commands) を参照。
 
 ## 設定ファイル
 
@@ -66,12 +76,12 @@ model = "gpt-5.5"
 # 推論の深さ（minimal, low, medium, high, xhigh）
 model_reasoning_effort = "medium"
 
-# 承認ポリシー: "untrusted", "on-request"（デフォルト）, "never"
+# 承認ポリシー: "untrusted" / "on-request"（デフォルト） / "never" / "granular"
 # 旧 "on-failure" は deprecated（"on-request" もしくは "never" を使用）
 approval_policy = "on-request"
 ```
 
-### 同梱モデル（rust-v0.129.0 時点、2026-05-07）
+### 同梱モデル（rust-v0.130.0 時点、2026-05-17）
 
 `/model` ピッカーで選択可能な推奨モデル:
 
@@ -94,17 +104,17 @@ approval_policy = "on-request"
 | ポリシー | 説明 |
 |---|---|
 | `untrusted` | 既知の安全な読み取り専用コマンドのみ自動実行、他は承認待ち |
-| `on-request` | モデルが必要と判断したときに確認（デフォルト） |
-| `never` | 一切確認しない（非対話実行向け。リスク高） |
-| `{ granular = { ... } }` | カテゴリ別に許可/自動拒否を個別指定 |
+| `on-request` | エージェントが必要に応じて承認を求める（デフォルト推奨） |
+| `never` | 承認を求めない（非対話実行向け。`sandbox_mode` と組み合わせて使う。リスク高） |
+| `granular` | カテゴリ別に細粒度制御。`sandbox_approval` / `rules` / `mcp_elicitations` / `request_permissions` / `skill_approval` 等の sub-options を持つ |
 
-`config.toml` の `approval_policy` で設定。`on-failure` は deprecated。
+`config.toml` の `approval_policy` で設定。旧 `on-failure` は deprecated（`on-request` もしくは `never` を使用）。TUI ピッカーの表示ラベル（Suggest / Auto Edit / Full Auto）は旧 UI 由来で、TOML の値とは異なる。
 
 ## サンドボックス
 
 `config.toml` の `sandbox_mode` で設定: `read-only` / `workspace-write` / `danger-full-access`。
 
-> **注意**: `--full-auto` フラグは v0.128.0 で deprecated（互換のため警告付きで残存）。代わりに `--sandbox workspace-write` と `--ask-for-approval never` を明示的に指定する（または `approval_policy = "never"` + `sandbox_mode = "workspace-write"` を設定する）。
+> **注意**: `--full-auto` フラグは v0.128.0 で deprecated（互換のため警告付きで残存）。代わりに `--sandbox workspace-write` と `--ask-for-approval never` を明示的に指定する（または `approval_policy = "never"` + `sandbox_mode = "workspace-write"` を設定する）。よりリスクの高い `sandbox_mode = "danger-full-access"` への置換も可能だが、隔離されたコンテナ等での利用に限る。
 
 プラットフォーム固有のサンドボックス実装: macOS は Seatbelt、Linux は Landlock/seccomp。Docker / Podman コンテナ内で動かす場合は `danger-full-access` + 外側のコンテナ隔離を推奨。
 
@@ -160,7 +170,7 @@ description: Review code for security and best practices
 [agents]
 max_threads = 6       # 並列 spawn 上限
 max_depth = 1         # 再帰の深さ
-job_max_runtime_seconds = 600
+job_max_runtime_seconds = 1800
 ```
 
 **カスタム agent file の frontmatter**:
@@ -179,22 +189,22 @@ job_max_runtime_seconds = 600
 
 **ビルトイン**: `default` / `worker` / `explorer`。
 
-## Hooks（experimental）
+## Hooks
 
-`[features] codex_hooks = true` で有効化。`~/.codex/hooks.json` または `<repo>/.codex/hooks.json`。
+デフォルト有効。無効化は `[features] hooks = false`（`codex_hooks` は deprecated alias、v0.129 でリネーム）。`~/.codex/hooks.json` または `<repo>/.codex/hooks.json`。
 
 **対応イベント（6 種類）**:
 
 | イベント | タイミング |
 |---|---|
 | `SessionStart` | セッション開始・resume 時 |
-| `PreToolUse` | ツール実行前（Bash / apply_patch / MCP ツール）。`permissionDecision: deny` または exit 2 でブロック |
+| `PreToolUse` | ツール実行前（Bash / apply_patch / MCP ツール）。`permissionDecision: deny` または exit 2 でブロック。v0.129 で `additionalContext` サポート追加 |
 | `PermissionRequest` | 承認要求時（権限エスカレーション・ネットワークアクセス等） |
 | `PostToolUse` | ツール実行後 |
 | `UserPromptSubmit` | ユーザー発話直前 |
 | `Stop` | 会話ターン終了 |
 
-**注意**: Windows は一時的にサポート外。仕様は experimental 扱いで流動的。
+v0.129 で compaction 前後でも hook 実行サポート、`/hooks` ブラウザで参照・トグル可能に。
 
 ## エージェント統合
 
@@ -219,10 +229,10 @@ args = ["/path/to/mcp-server-knowledge/dist/index.js"]
 ## 制限事項
 
 - ChatGPT 有料プランが必要
-- Windows はネイティブ PowerShell または WSL2 経由で対応
+- Windows は公式インストール手順上 WSL2 経由のみ案内（ネイティブ x86_64/aarch64 バイナリも release artifact として配布あり）
 
 ## システム要件
 
-- macOS, Linux（フルサポート）、Windows（ネイティブ PowerShell または WSL2 経由）
+- macOS 12+, Ubuntu 20.04+/Debian 10+, Windows 11（WSL2 経由を公式推奨）
 - Node.js 16+（npm install 経由の場合）
 - RAM: 4 GB 以上（8 GB 推奨）

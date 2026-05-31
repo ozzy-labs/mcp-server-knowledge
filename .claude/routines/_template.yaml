@@ -38,7 +38,7 @@ instructions: |
 
   - Do NOT use `AskUserQuestion` — the run is autonomous.
   - Do NOT call MCP servers (`knowledge`, `context7`); they are not configured in the cloud environment.
-  - Do NOT push to `main` directly. Always use a `claude/<scope>/...` branch.
+  - Do NOT push to `main` directly. Always use a branch matching `^(feat|fix|docs|style|refactor|perf|test|build|ci|chore)/.+` (repo `pr-check` workflow enforces this).
   - Do NOT amend or force-push.
   - Do NOT modify files outside the scope of this routine.
   - Use Conventional Commits with the appropriate `type(scope):` prefix.
@@ -105,5 +105,5 @@ behavior:
 
 # Web UI: Permissions
 permissions:
-  # claude/* ブランチ以外への push を許可するか。デフォルト false。
+  # Conventional Commits prefix (feat/fix/docs/.../chore) 以外のブランチへの push を許可するか。デフォルト false。
   allow_unrestricted_git_push: false

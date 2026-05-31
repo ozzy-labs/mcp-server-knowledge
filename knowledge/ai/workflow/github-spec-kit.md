@@ -1,12 +1,12 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-05-17
 tags: [ai-workflow, spec, oss, github, cli]
 stability: beta
 ---
 
 # GitHub Spec Kit
 
-GitHub が公式に提供する OSS の SDD オーケストレータ。Python 製の CLI `specify` と、エージェント向け slash command / Agent Skill のテンプレート群を配布する。30+ の AI コーディングエージェント（Claude Code, Codex, Cursor, Copilot, Gemini CLI, Windsurf, Antigravity, OpenCode 等）に対して**同一の SDD ワークフロー**をインストールできる agent-agnostic な orchestrator。
+GitHub が公式に提供する OSS の SDD オーケストレータ。Python 製の CLI `specify` と、エージェント向け slash command / Agent Skill のテンプレート群を配布する。40+ の AI コーディングエージェント（Claude Code, Codex, Cursor, Copilot, Gemini CLI, Windsurf, Antigravity, OpenCode, Kiro CLI, Forge, Goose, Junie 等。公式 integrations reference 基準で 40。README は依然 30+ 表記）に対して**同一の SDD ワークフロー**をインストールできる agent-agnostic な orchestrator。
 
 公式: [github.com/github/spec-kit](https://github.com/github/spec-kit) / Docs: [github.github.io/spec-kit](https://github.github.io/spec-kit/) / Releases: [Releases](https://github.com/github/spec-kit/releases)
 
@@ -119,10 +119,12 @@ specify preset add <name>
 
 ## Extension と Preset
 
-| 種類 | 役割 | コマンド |
+| 種類 | 役割 | 主要コマンド |
 |---|---|---|
-| **Extension** | 新コマンド・新ワークフローを追加 | `specify extension add <name>` |
-| **Preset** | 既存コマンドのテンプレート / 用語を上書き | `specify preset add <name>` |
+| **Extension** | 新コマンド・新ワークフローを追加 | `specify extension search` / `add` / `remove` / `list` / `info` / `update` / `enable` / `disable` / `set-priority` |
+| **Preset** | 既存コマンドのテンプレート / 用語を上書き | `specify preset search` / `add` / `remove` / `list` / `info` / `enable` / `disable` / `set-priority` |
+
+加えて `specify extension catalog list/add/remove` で外部カタログ（コミュニティリポジトリ等）を管理できる。完全な一覧は [Extensions Reference](https://github.github.io/spec-kit/reference/extensions.html) / [Presets Reference](https://github.github.io/spec-kit/reference/presets.html) を参照。
 
 Extension の代表例: GitHub Issues 同期, Jira 連携, MAQA（Multi-Agent QA）, V-Model（test 仕様の並行生成）, Worktree Isolation, Security Review。
 
@@ -132,9 +134,11 @@ Community catalog は [Community Extensions](https://speckit-community.github.io
 
 ## 対応エージェント
 
-公式には 30+ の AI coding agent をサポート（CLI + IDE 両方）。`specify integration list` で installed バージョンの利用可能リストが見られる。代表例:
+公式 integrations reference では **40 integrations** をサポート（CLI + IDE 両方。README は依然 30+ 表記）。`specify integration list` で installed バージョンの利用可能リストが見られる。代表例:
 
-- Claude Code, Codex CLI, Cursor IDE, GitHub Copilot, Gemini CLI, Windsurf, OpenCode, Antigravity, Qwen Code, Continue, Aider, Kilo Code, Roo Code 等
+- Amp, Antigravity, Auggie CLI, Claude Code, CodeBuddy CLI, Codex CLI, Cursor, Devin for Terminal, Forge, Gemini CLI, GitHub Copilot, Goose, IBM Bob, iFlow CLI, Junie, Kilo Code, Kimi Code, Kiro CLI, Lingma, Mistral Vibe, opencode, Pi Coding Agent, Qoder CLI, Qwen Code, Roo Code, SHAI, Tabnine CLI, Trae, Windsurf, Generic 等
+
+全量と最新リストは [Supported AI Coding Agent Integrations](https://github.github.io/spec-kit/reference/integrations.html) を参照。
 
 `--integration <agent>` フラグで特定エージェント向けの初期化を行う。
 
@@ -144,7 +148,7 @@ Community catalog は [Community Extensions](https://speckit-community.github.io
 |---|---|---|---|
 | 提供元 | GitHub 公式 | AWS | OSS（gotalab） |
 | 形態 | Python CLI + templates | IDE + CLI | npm package + skills |
-| エージェント数 | 30+ | (Kiro 単体) | 8 |
+| エージェント数 | 40+ | (Kiro 単体) | 8 |
 | OSS | Yes (MIT) | No（商用） | Yes (MIT) |
 | 入口 | `uv tool install` / `pipx` | `curl install.sh` / Desktop | `npx cc-sdd@latest` |
 | spec 形式 | core templates 上書き可 | EARS + design + tasks | Kiro 互換（EARS + design + tasks）|
