@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/ozzy-labs/mcp-server-knowledge/compare/v0.1.1...v0.1.2) (2026-05-31)
+
+
+### Bug Fixes
+
+* **deps:** override transitive qs to ^6.15.2 for CVE-2026-8723 ([#237](https://github.com/ozzy-labs/mcp-server-knowledge/issues/237)) ([a6e5ce9](https://github.com/ozzy-labs/mcp-server-knowledge/commit/a6e5ce9fb1f0f4c6e7d239c9653494586884a108))
+
 ## [0.1.1](https://github.com/ozzy-labs/mcp-server-knowledge/compare/v0.1.0...v0.1.1) (2026-05-10)
 
 
