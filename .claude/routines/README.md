@@ -103,7 +103,7 @@ yq -r '.environment.setup_script' .claude/routines/<name>.yaml
 
 - 完全自律実行を前提に self-contained に書く（`AskUserQuestion` は使わない）
 - ローカル MCP サーバー（`knowledge` / `context7` 等）はクラウド環境に存在しない前提で書く
-- リポの branch 命名規則 `^(feat|fix|docs|...|chore)/.+`（`.github/workflows/pr-check.yaml` で強制）に従ったブランチで PR を立てる運用に揃える（main 直 push を要求しない）
+- `claude/*` ブランチで PR を立てる運用に揃える（main 直 push を要求しない）
 - YAML リテラルブロック（`|`）でインデントを保ったまま格納する
 
 ### `environment.setup_script`
