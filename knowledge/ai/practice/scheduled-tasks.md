@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-24
+reviewed: 2026-06-07
 tags: [ai-workflow, methodology]
 ---
 
@@ -113,25 +113,25 @@ on:
 
 ## 5. 他の CLI エコシステムの Routines 相当
 
-主要 4 コーディングエージェント CLI それぞれに、クラウドで自律/定期実行する「Routines 相当」がある（多くは CLI 本体とは別プロダクト）。Routines の定義特性（**クラウド非同期 × スケジュール/API/GitHub トリガー × 自律 PR**）で並べると、3 トリガーすべてを 1 プロダクトに束ねているのは **Claude Code Routines と Google Jules**。**Codex cloud と Copilot coding agent は native schedule を欠き**（定期実行は別プロダクト / GitHub Actions で代替）、Codex cloud は API トリガーも公式 docs に明記がない。
+主要 4 コーディングエージェント CLI それぞれに、クラウドで自律/定期実行する「Routines 相当」がある（多くは CLI 本体とは別プロダクト）。Routines の定義特性（**クラウド非同期 × スケジュール/API/GitHub トリガー × 自律 PR**）で並べると、3 トリガーすべてを 1 プロダクトに束ねているのは **Claude Code Routines・Google Jules・GitHub Copilot cloud agent**（Copilot は 2026-06-02 の **Automations** で native schedule を獲得）。**Codex cloud のみ native schedule を欠き**（定期実行は別プロダクト / GitHub Actions で代替）、API トリガーも公式 docs に明記がない。
 
 | CLI エコシステム | クラウド自律プロダクト | スケジュール | API/webhook 起動 | GitHub イベント | 自律 PR | 成熟度 |
 |---|---|---|---|---|---|---|
 | **Claude Code** | **Routines** | ✓（最小 1h） | ✓（`/fire`） | ✓（PR/Release） | ✓ | research preview |
 | **Codex CLI**（OpenAI） | **Codex cloud** ＋ Workspace agents ＋ ChatGPT Scheduled Tasks | △（Workspace agents / ChatGPT tasks 側） | 不明（Codex cloud の docs に明記なし） | ✓（`@codex` を issue/PR にタグ） | ✓ | Codex cloud: 提供中（GA/preview 明記なし）/ Workspace agents: research preview |
 | **Gemini CLI**（Google） | **Jules**（非同期コーディングエージェント）＋ Gemini CLI GitHub Action | ✓（Daily/Weekly 等の recurring） | ✓（REST API `v1alpha/sessions`） | ✓（issue に `jules` ラベル → PR） | ✓ | alpha（experimental） |
-| **GitHub Copilot CLI** | **Copilot coding agent** | ✗（単体は無し。Actions の cron+API で代替） | ✓ | ✓（issue assign 等） | ✓（指定で即 PR） | GA |
+| **GitHub Copilot CLI** | **Copilot cloud agent**（旧 coding agent） | ✓（**Automations**: hourly/daily/weekly、2026-06-02 GA） | ✓ | ✓（issue assign / issue・PR イベント） | ✓（指定で即 PR） | GA |
 
-凡例: ✓=対応 / ✗=非対応 / △=条件付き・別プロダクト経由 / 不明=公式 docs で未確認（2026-05 時点）。
+凡例: ✓=対応 / ✗=非対応 / △=条件付き・別プロダクト経由 / 不明=公式 docs で未確認（2026-06 時点）。
 
-> **ソース確認状況**: Routines / Codex cloud / Jules（scheduled-tasks・API reference 含む）/ Copilot coding agent は各社公式 docs を直接 fetch して確認済み。**Workspace agents のみ** OpenAI の blog / help center が automated fetch を `403` で拒否するため、KB 既検証値（2026-05-24）に依拠している。
+> **ソース確認状況**: Routines / Codex cloud / Jules（scheduled-tasks・API reference 含む）/ Copilot cloud agent（Automations 含む）は各社公式 docs を直接 fetch して確認済み。**Workspace agents のみ** OpenAI の blog / help center が automated fetch を `403` で拒否するため、KB 既検証値（2026-05-24）に依拠している。
 
 ### 各エコシステムの要点
 
 - **Codex CLI（OpenAI）**: クラウド非同期は [Codex cloud](https://developers.openai.com/codex/cloud)（バックグラウンド/並列実行、Plus / Pro / Business / Edu / Enterprise に込み、Free 除く。docs は GA/preview を明記せず）。トリガーは web / IDE 拡張 / GitHub の `@codex` タグで、PR を作成できる。**API・スケジュールでの起動は Codex cloud の docs に明記なし**。定期実行が必要なら [Workspace agents](https://openai.com/index/introducing-workspace-agents-in-chatgpt/)（スケジュール + Slack 連携、Business / Enterprise / Edu / Teachers 限定の research preview）か、ChatGPT の Scheduled Tasks（汎用パーソナルアシスタント。コーディング/PR 自動化エージェントではない）。Routines に最も近いのは Workspace agents だが個人プランでは選べない。
   > **注意**: Workspace Agents は **ChatGPT Plus / Pro では利用不可**。チーム/エンタープライズプラン限定。**2026-05-06 に無料期間が終了**し、現在は Business / Enterprise / Edu / Teachers の月次クレジットプールから token 単位（credits/million input/cached/output tokens）で消費されるクレジットベース課金。詳細は OpenAI Help Center [Flexible pricing for the Enterprise, Edu, and Business plans](https://help.openai.com/en/articles/11487671-flexible-pricing-for-the-enterprise-edu-and-business-plans) を参照。
 - **Gemini CLI（Google）**: Google の非同期コーディングエージェントは [Jules](https://jules.google)。**トリガー 3 種がそろう**（Routines に最も近い）: ① GitHub issue の `jules` ラベル → PR、② [REST API](https://jules.google/docs/api/reference/)（`POST https://jules.googleapis.com/v1alpha/sessions` で session 起動、`X-Goog-Api-Key` 認証、**alpha**）、③ [Scheduled tasks](https://jules.google/docs/scheduled-tasks/)（Daily / Weekly 等の recurring で routine 的な保守を自動実行）。タスク数ベースの無料 / Pro / Ultra（15 / 100 / 300 tasks/day）で "experimental" 表記。Gemini CLI 本体を CI で回すなら `run-gemini-cli` の GitHub Action。
-- **GitHub Copilot CLI**: クラウド自律は [Copilot coding agent](https://docs.github.com/en/copilot/concepts/agents/coding-agent)（GitHub Actions 基盤、GA）。issue アサイン / Copilot Chat / Slack・Teams・Jira・Linear 等から起動し PR を作る（プロンプトで「すぐ PR」を指定可）。Pro / Pro+ / Business / Enterprise、課金は Actions 分 + Copilot premium request。**エージェント単体に cron は無く**、定期実行は GitHub Actions の schedule + API 呼び出しで代替する。
+- **GitHub Copilot CLI**: クラウド自律は [Copilot cloud agent](https://docs.github.com/en/copilot/concepts/agents/coding-agent)（旧 coding agent、GitHub Actions 基盤、GA）。issue アサイン / Copilot Chat / Slack・Teams・Jira・Linear 等から起動し PR を作る（プロンプトで「すぐ PR」を指定可）。Pro / Pro+ / Max / Business / Enterprise、課金は Actions 分 + GitHub AI Credits。**2026-06-02 に [Automations](https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-automations) が GA となり native schedule を獲得**: hourly / daily / weekly の recurring、または issue 作成 / PR 作成・更新イベントで cloud agent セッションを自動起動できる（[changelog](https://github.blog/changelog/2026-06-02-schedule-and-automate-tasks-with-copilot-cloud-agent/)）。private / internal リポジトリ対象（public は coming soon）。GitHub Actions の自前 cron で代替する必要はなくなった。
 
 ## 認証と課金（重要）
 
@@ -194,6 +194,6 @@ on:
 - [Legal and compliance（OAuth と API key の使い分け）](https://code.claude.com/docs/en/legal-and-compliance)
 - [OpenAI Codex Cloud](https://developers.openai.com/codex/cloud)
 - [Google Jules](https://jules.google)
-- [GitHub Copilot coding agent](https://docs.github.com/en/copilot/concepts/agents/coding-agent)
+- [GitHub Copilot cloud agent（旧 coding agent）](https://docs.github.com/en/copilot/concepts/agents/coding-agent) / [Copilot Automations](https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-automations)
 - [OpenAI Workspace Agents](https://openai.com/index/introducing-workspace-agents-in-chatgpt/)
 - 関連: `platforms/github-actions.md` / `ai/agents/claude-code.md` / `ai/practice/multi-agent-repo.md`

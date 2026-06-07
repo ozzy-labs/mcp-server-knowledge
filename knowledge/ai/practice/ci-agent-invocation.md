@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-23
+reviewed: 2026-06-07
 tags: [ai-workflow, methodology, github]
 ---
 
@@ -113,7 +113,7 @@ ChatGPT サインインで生成される `~/.codex/auth.json` を Secret 化し
 
 ## Gemini CLI
 
-公式 Action `google-gemini/run-gemini-cli`。認証方式で課金とバックエンドが切り替わる。
+公式 Action `google-github-actions/run-gemini-cli`（旧 `google-gemini/run-gemini-cli` から移管。旧 slug は 404）。認証方式で課金とバックエンドが切り替わる。
 
 | 入力 | 認証 | 課金 |
 |---|---|---|
@@ -122,7 +122,7 @@ ChatGPT サインインで生成される `~/.codex/auth.json` を Secret 化し
 | `use_vertex_ai: true` + `gcp_workload_identity_provider` + `gcp_project_id` | Vertex AI + WIF | 従量 |
 
 ```yaml
-- uses: google-gemini/run-gemini-cli@main
+- uses: google-github-actions/run-gemini-cli@v0
   with:
     gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
 ```
@@ -179,6 +179,6 @@ ChatGPT サインインで生成される `~/.codex/auth.json` を Secret 化し
 - [OpenAI Terms of Use](https://openai.com/policies/terms-of-use/)
 - [anthropics/claude-code-action](https://github.com/anthropics/claude-code-action)（`docs/setup.md` / `docs/cloud-providers.md`）
 - [Anthropic Consumer Terms](https://www.anthropic.com/legal/consumer-terms) / [Legal and compliance](https://code.claude.com/docs/en/legal-and-compliance)
-- [google-gemini/run-gemini-cli](https://github.com/google-gemini/run-gemini-cli) / [Gemini Code Assist pricing](https://cloud.google.com/products/gemini/code-assist) / [Gemini API Terms（無料/有料のデータ利用差）](https://ai.google.dev/gemini-api/terms)
+- [google-github-actions/run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli) / [Gemini Code Assist pricing](https://cloud.google.com/products/gemini/code-assist) / [Gemini API Terms（無料/有料のデータ利用差）](https://ai.google.dev/gemini-api/terms)
 - [About GitHub Copilot CLI](https://docs.github.com/en/copilot/concepts/agents/about-copilot-cli) / [Requests in GitHub Copilot](https://docs.github.com/en/copilot/managing-copilot/monitoring-usage-and-entitlements/about-premium-requests)
 - 関連: `ai/practice/scheduled-tasks.md` / `ai/agents/claude-code.md` / `ai/agents/codex-cli.md` / `ai/agents/gemini-cli.md` / `ai/agents/github-copilot-cli.md`
