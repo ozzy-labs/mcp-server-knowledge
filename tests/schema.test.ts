@@ -74,7 +74,7 @@ describe("validateFrontmatter", () => {
 
   it("provides root-level error message when required field is missing", () => {
     // Passing a non-object should trigger a root-level error
-    const result = validateFrontmatter(null as any);
+    const result = validateFrontmatter(null as unknown as Record<string, unknown>);
     expect(result.ok).toBe(false);
     expect(result.errors?.[0]).toContain("<root>");
   });
