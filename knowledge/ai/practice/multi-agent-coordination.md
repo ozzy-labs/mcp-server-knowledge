@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-10
+reviewed: 2026-06-07
 tags: [ai-workflow, multi-agent, methodology]
 ---
 
@@ -61,6 +61,6 @@ Orchestrator 型に似ているが、サブエージェントに「永続性（P
 
 ## 参考
 
-- [Anthropic: Multi-agent coordination patterns (April 2026 Update)](https://www.anthropic.com/research/multi-agent-coordination-patterns)
-- [OpenAI: Agents SDK Documentation](https://platform.openai.com/docs/guides/agents)
+- [Anthropic: Multi-agent coordination patterns: Five approaches and when to use them (2026)](https://claude.com/blog/multi-agent-coordination-patterns)
+- [OpenAI: Agents SDK Documentation](https://developers.openai.com/api/docs/guides/agents)
 - 関連: [`ai/practice/agentic-workflow-patterns.md`](agentic-workflow-patterns.md), [`ai/practice/multi-agent-repo.md`](multi-agent-repo.md)
