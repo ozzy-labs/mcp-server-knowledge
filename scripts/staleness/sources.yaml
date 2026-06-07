@@ -37,7 +37,7 @@ defaults:
     confidence_threshold: medium
 
 # ==============================================================================
-# Daily group (8 articles, 02:00 JST)
+# Daily group (9 articles, 02:00 JST)
 # ==============================================================================
 
 ai/agents/claude-code:
@@ -69,6 +69,16 @@ ai/agents/claude-code-routines:
     related_internal:
       - ai/agents/claude-code
       - ai/practice/scheduled-tasks
+
+ai/agents/claude-code-dynamic-workflows:
+  group: daily
+  sources:
+    docs:
+      - https://code.claude.com/docs/en/workflows
+    web_search:
+      - "claude code dynamic workflows update"
+    related_internal:
+      - ai/agents/claude-code
 
 ai/agents/codex-cli:
   group: daily
@@ -156,7 +166,7 @@ ai/platform/mcp-typescript-sdk:
       - ai/platform/mcp-protocol
 
 # ==============================================================================
-# Weekly group (24 articles, 03:00 JST Saturday)
+# Weekly group (29 articles, 03:00 JST Saturday)
 # ==============================================================================
 
 # --- tools 活発系 (12) ---
@@ -297,7 +307,20 @@ tools/markitdown:
     pypi:
       - markitdown
 
-# --- ai/practice (6) ---
+# --- ai/agents (1) ---
+
+ai/agents/claude-cowork:
+  group: weekly
+  sources:
+    docs:
+      - https://www.anthropic.com/product/claude-cowork
+      - https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork
+    web_search:
+      - "claude cowork update"
+    related_internal:
+      - ai/agents/claude-code
+
+# --- ai/practice (8) ---
 
 ai/practice/ai-context-management:
   group: weekly
@@ -399,6 +422,30 @@ ai/practice/spec-driven-development:
       - ai/workflow/kiro
       - ai/workflow/cc-sdd
 
+ai/practice/agentic-workflow-patterns:
+  group: weekly
+  sources:
+    docs:
+      - https://www.anthropic.com/research/building-effective-agents
+    web_search:
+      - "agentic workflow patterns 2026"
+    related_internal:
+      - ai/practice/multi-agent-coordination
+
+ai/practice/ci-agent-invocation:
+  group: weekly
+  sources:
+    docs:
+      - https://developers.openai.com/codex/github-action
+      - https://docs.github.com/en/copilot/concepts/agents/about-copilot-cli
+    github_releases:
+      - anthropics/claude-code-action
+    web_search:
+      - "claude code github actions CI update"
+    related_internal:
+      - ai/agents/claude-code
+      - ai/practice/scheduled-tasks
+
 # --- ai/workflow (3) ---
 
 ai/workflow/cc-sdd:
@@ -460,6 +507,16 @@ ai/platform/agents-md:
     related_internal:
       - ai/practice/multi-agent-repo
 
+ai/platform/agent-skills-spec:
+  group: weekly
+  sources:
+    docs:
+      - https://agentskills.io/
+    web_search:
+      - "agent skills specification update"
+    related_internal:
+      - ai/platform/agent-extensions
+
 # --- platforms (1) ---
 
 platforms/github/github-actions:
@@ -471,7 +528,7 @@ platforms/github/github-actions:
       - https://github.blog/changelog/feed/
 
 # ==============================================================================
-# Monthly group (33 articles incl 2 skip, 04:00 JST 1st of month)
+# Monthly group (35 articles incl 2 skip, 04:00 JST 1st of month)
 # ==============================================================================
 
 # --- tools 安定系 (21) ---
@@ -786,3 +843,25 @@ platforms/docker/docker:
     rss:
       - https://www.docker.com/blog/feed/
     eol: docker-engine
+
+# --- ai (2) ---
+
+ai/practice/human-in-the-loop:
+  group: monthly
+  sources:
+    docs:
+      - https://artificialintelligenceact.eu/
+    web_search:
+      - "human in the loop AI agent patterns"
+    related_internal:
+      - ai/practice/prompt-injection
+
+ai/workflow/spec-driven-presentation-maker:
+  group: monthly
+  sources:
+    github_releases:
+      - aws-samples/sample-spec-driven-presentation-maker
+    raw_files:
+      - aws-samples/sample-spec-driven-presentation-maker/HEAD/README.md
+    related_internal:
+      - ai/practice/spec-driven-development
