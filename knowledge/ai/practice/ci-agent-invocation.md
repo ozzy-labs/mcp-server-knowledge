@@ -67,7 +67,7 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
 
-Bedrock / Vertex は `aws-actions/configure-aws-credentials@v4` / `google-github-actions/auth@v2` で先に認証し、`use_bedrock` / `use_vertex` を立てて `claude_args: '--model <id>'` でモデル指定する。`<id>` には現行世代（Sonnet 4.6 / Opus 4.7 系）のモデル文字列を入れる。正確な文字列は Bedrock と Vertex で表記が異なるため、各プロバイダのモデルカタログと `docs/cloud-providers.md` を参照する（固定の例は陳腐化しやすいので転記しない）。
+Bedrock / Vertex は `aws-actions/configure-aws-credentials@v4` / `google-github-actions/auth@v2` で先に認証し、`use_bedrock` / `use_vertex` を立てて `claude_args: '--model <id>'` でモデル指定する。`<id>` には現行世代（Sonnet 4.6 / Opus 4.8 系）のモデル文字列を入れる。正確な文字列は Bedrock と Vertex で表記が異なるため、各プロバイダのモデルカタログと `docs/cloud-providers.md` を参照する（固定の例は陳腐化しやすいので転記しない）。
 
 **Claude には「サブスク込みで自前 CI を回す」正規ルートが無い。** サブスク枠で背景実行したい場合は Anthropic クラウドの Routines（`ai/practice/scheduled-tasks.md`）が該当し、自前 GitHub Actions は API キー / Bedrock / Vertex（従量）が正規。
 
