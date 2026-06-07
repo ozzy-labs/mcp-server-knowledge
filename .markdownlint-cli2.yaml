@@ -10,3 +10,4 @@ config:
 ignores:
   - "**/node_modules"
   - "**/.claude/plans"
+  - "CHANGELOG.md"
