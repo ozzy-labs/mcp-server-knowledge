@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-21
+reviewed: 2026-06-07
 tags: [library, typescript, ai-workflow]
 ---
 

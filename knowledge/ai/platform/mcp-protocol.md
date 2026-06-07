@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-17
+reviewed: 2026-06-07
 tags: [ai-workflow, methodology]
 ---
 
@@ -143,9 +143,9 @@ DB の行検索 → ツール。プロジェクトの README → リソース。
 
 2026年1月、**MCP Apps** が最初の公式 MCP 拡張として発表された。コアプロトコルを変更せず、ツールが `_meta.ui.resourceUri` フィールドで `ui://` スキームの UI リソースを指すことで、インタラクティブな React ベースの UI（ダッシュボード・フォーム・可視化等）をレスポンスとして返せる。Claude・ChatGPT・VS Code・Goose 等が対応済み。
 
-## 将来動向（draft, 次リビジョン）
+## 次リビジョン（2026-07-28 RC）
 
-2026-05 時点で draft 段階にあり、次リビジョンで反映予定の重要 SEP（次リビジョン番号・リリース日は未確定）:
+2026-05-29 に **2025-11-25 以来最大の改訂**となる 2026-07-28 リビジョンの RC（release candidate）が公開された。RC は 2026-05-21 にロックされ、最終リリースは **2026-07-28** 予定（SDK の追従はバージョンごとに任意ペース）。RC に確定取り込みされた主要 SEP:
 
 - **SEP-2577 (Final, 2026-05-15 merge)**: Roots / Sampling / Logging を **deprecation 入り**。既存実装は migration window 中は引き続き動作するが、新規実装は非推奨。
 - **SEP-2663**: Tasks をコアプロトコルから公式 extension `io.modelcontextprotocol/tasks` に切り出し。blocking `tasks/result` を polling `tasks/get` に置換、`tasks/update` 追加、`tasks/list` 削除。
@@ -155,7 +155,9 @@ DB の行検索 → ツール。プロジェクトの README → リソース。
 - **SEP-2549**: `tools/list` 等に `ttlMs` と `cacheScope`（public/private）を追加してクライアントキャッシュをヒント化。
 - **SEP-2243**: Streamable HTTP POST に `Mcp-Method` / `Mcp-Name` ヘッダを必須化、`x-mcp-header` で tool パラメータからのカスタムヘッダ対応。
 
-詳細は [modelcontextprotocol.io/specification/draft/changelog](https://modelcontextprotocol.io/specification/draft/changelog) と [SEP リポジトリ](https://github.com/modelcontextprotocol/modelcontextprotocol/tree/main/seps) を参照。
+あわせて **feature lifecycle / deprecation policy**（SEP-2596）が正式採択され、Active / Deprecated / Removed の 3 状態と最低 **12 か月の deprecation window** が定義された。HTTP+SSE トランスポートもこのポリシー下で正式に Deprecated へ再分類。Extensions は reverse-DNS 識別子と独立バージョニングの正式プロセス（SEP-2133）を獲得し、MCP Apps（SEP-1865）と Tasks（SEP-2663）が公式 extension として同梱される。
+
+詳細は [modelcontextprotocol.io/specification/draft/changelog](https://modelcontextprotocol.io/specification/draft/changelog)、[2026-07-28 RC blog](https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/)、[SEP リポジトリ](https://github.com/modelcontextprotocol/modelcontextprotocol/tree/main/seps) を参照。
 
 ## 参考実装
 
