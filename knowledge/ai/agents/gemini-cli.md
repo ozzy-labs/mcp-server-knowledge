@@ -47,8 +47,7 @@ gemini update            # CLI を最新版に更新
 |---|---|
 | `/about` | バージョン情報表示 |
 | `/auth` | 認証方式の対話的変更 |
-| `/memory` | メモリ管理（add, list, inbox, refresh, show）。v0.42 で Auto Memory inbox フロー追加 |
-| `/bug-memory` | メモリ関連バグ報告（v0.42 新規） |
+| `/memory` | メモリ管理（list / refresh / show）。v0.42 で Auto Memory inbox フローを追加したが、memoryV2 移行に伴い公式 commands リファレンスのサブコマンドは list / refresh / show に整理された |
 | `/model` | 使用モデルの変更 |
 | `/agents` | サブエージェント管理（list / reload / enable / disable / config） |
 | `/plan` | Plan Mode への切替 |
@@ -73,7 +72,7 @@ gemini update            # CLI を最新版に更新
 - **4 層メモリ管理システム**: プロンプト駆動型の高度な記憶保持機能
 - **MCP 統合**: Model Context Protocol サーバーとの連携
 
-## 選択可能なモデル（v0.42 時点）
+## 選択可能なモデル（v0.45 時点）
 
 `--model` フラグ（または `/model` ダイアログ）でエイリアス指定。
 
@@ -86,7 +85,7 @@ gemini update            # CLI を最新版に更新
 
 Gemini 3.1 系（`gemini-3.1-pro-preview` 等）は `/model` Manual または `-m gemini-3.1-pro-preview` で直接指定可能（順次ロールアウト中）。
 
-**Gemma 4**: v0.41 で実験追加、v0.42 で Gemini API 経由のデフォルト有効化（#26307）。
+**Gemma 4**: v0.41 で実験追加、v0.42 で Gemini API 経由のデフォルト有効化（#26307）。現行 stable は v0.45 系（v0.45.2）。
 
 フォールバック: Gemini 3 Pro が上限到達時は Gemini 2.5 Pro → 2.5 Flash に自動降格。
 

@@ -87,10 +87,12 @@ approval_policy = "on-request"
 
 | モデル | 説明 |
 |---|---|
-| `gpt-5.5` | **新推奨モデル**。複雑コーディング・Computer Use 向け |
+| `gpt-5.5` | **新推奨モデル**。複雑コーディング・Computer Use・知識作業・リサーチ向け |
 | `gpt-5.4` | Flagship。フォールバック用 |
 | `gpt-5.4-mini` | 軽量・高速版 |
-| `gpt-5.3-codex` | 旧コーディング特化モデル |
+| `gpt-5.3-codex-spark` | research preview（ChatGPT Pro 向け） |
+
+> **注意**: 旧 `gpt-5.3-codex` および `gpt-5.2` は ChatGPT サインイン時の Codex で deprecated。`gpt-5.5` 等の現行推奨モデルへ移行する。
 
 ## 主要機能
 
