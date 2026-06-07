@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-10
+reviewed: 2026-06-07
 tags: [ai-agent, desktop, anthropic]
 ---
 
@@ -7,7 +7,7 @@ tags: [ai-agent, desktop, anthropic]
 
 Anthropic が提供する、デスクトップ（GUI）ベースの自律型 AI エージェント。開発者向けの CLI ツールである「Claude Code」と同じエージェントエンジンを搭載し、一般のナレッジワーカー向けに複雑なファイル操作やワークフローの自動化を提供する。
 
-公式: [anthropic.com/news/claude-cowork](https://www.anthropic.com/news/claude-cowork)
+公式: [anthropic.com/product/claude-cowork](https://www.anthropic.com/product/claude-cowork)
 
 ## 主な特徴
 
@@ -36,10 +36,11 @@ Anthropic が提供する、デスクトップ（GUI）ベースの自律型 AI 
 
 ## 利用条件
 
-2026 年 5 月時点では **リサーチプレビュー** として提供されている。
+リサーチプレビューを経て、Claude Desktop アプリの機能として一般提供されている。
 
-- **プラン**: Claude Max サブスクリプション（月額 $100〜 のパワーユーザー向けプラン）が必要。
-- **OS**: macOS 版が先行リリース（Windows 版は 2026 年中旬予定）。
+- **プラン**: いずれかの**有料プラン**（Pro / Max / Team / Enterprise）が必要。
+- **OS**: macOS 版・Windows 版の両方を提供（Windows は最新版が必要）。
+- **常駐**: 作業中は Claude Desktop アプリを開いたままにする必要がある（閉じるとセッションが終了する）。
 
 ## ベストプラクティス
 
@@ -49,5 +50,5 @@ Anthropic が提供する、デスクトップ（GUI）ベースの自律型 AI 
 
 ## 参考
 
-- [Claude Cowork Release Note](https://www.anthropic.com/news/claude-cowork)
-- [Anthropic Help Center: Claude Cowork FAQ](https://support.anthropic.com/)
+- [Claude Cowork 製品ページ](https://www.anthropic.com/product/claude-cowork)
+- [Claude Help Center: Get started with Claude Cowork](https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork)

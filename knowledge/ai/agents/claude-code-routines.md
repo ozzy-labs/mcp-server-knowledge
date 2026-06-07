@@ -1,18 +1,18 @@
 ---
-reviewed: 2026-05-24
+reviewed: 2026-06-07
 tags: [ai-workflow, commercial, cloud-hosted]
 stability: research-preview
 ---
 
 # Claude Code Routines
 
-Anthropic 管理のクラウドインフラで Claude Code を非対話に動かす仕組み。`/model` セレクタで **Claude Opus 4.7** と **100 万トークンコンテキスト** を選択でき、トリガー駆動の自律実行プラットフォームとして使える。プロンプト + リポジトリ + コネクタを 1 つの設定として保存し、トリガーで自動起動する。Pro / Max / Team / Enterprise プランで **Claude Code on the web を有効化** している場合に利用可能（research preview）。
+Anthropic 管理のクラウドインフラで Claude Code を非対話に動かす仕組み。`/model` セレクタで **Claude Opus 4.8**（前世代の Opus 4.7 も選択可）と **100 万トークンコンテキスト** を選択でき、トリガー駆動の自律実行プラットフォームとして使える。プロンプト + リポジトリ + コネクタを 1 つの設定として保存し、トリガーで自動起動する。Pro / Max / Team / Enterprise プランで **Claude Code on the web を有効化** している場合に利用可能（research preview）。
 
 公式: [Automate work with routines](https://code.claude.com/docs/en/routines)
 
 ## 主要機能
 
-- **Opus 4.7 & 1M Context**: モデルセレクタで選択可能。大規模リポジトリ全体の依存関係を一度に解析できる。
+- **Opus 4.8 & 1M Context**: モデルセレクタで選択可能（前世代の Opus 4.7 も引き続き選べる）。大規模リポジトリ全体の依存関係を一度に解析できる。
 - **fresh clone モデル**: トリガー毎にリポジトリを default branch から clone し、変更は `claude/`-prefix ブランチに push。**Allow unrestricted branch pushes** を有効化すると既存ブランチへの push も可能。
 
 ### 関連機能（Routines 本体ではないが併用される）
@@ -60,7 +60,7 @@ Anthropic 管理のクラウドインフラで Claude Code を非対話に動か
 
 | 項目 | create body 内のパス |
 |---|---|
-| model（例 `claude-opus-4-7[1m]`） | `job_config.ccr.session_context.model` |
+| model（例 `claude-opus-4-8[1m]`） | `job_config.ccr.session_context.model` |
 | カスタム instructions（prompt 全文） | `job_config.ccr.events[].data.message.content` |
 | 対象リポジトリ | `job_config.ccr.session_context.sources[].git_repository.url` |
 | allowed_tools | `job_config.ccr.session_context.allowed_tools` |
