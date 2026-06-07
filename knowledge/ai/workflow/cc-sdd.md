@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-17
+reviewed: 2026-06-07
 tags: [ai-workflow, spec, oss, npm, javascript]
 stability: beta
 ---
@@ -72,7 +72,7 @@ npx cc-sdd@latest --antigravity                      # Antigravity（experimenta
 | シナリオ | フロー |
 |---|---|
 | 新機能 / 製品サイズの企画 | `kiro-discovery` → `kiro-spec-init` → `kiro-spec-requirements` → `kiro-spec-design` → `kiro-spec-tasks` → `kiro-impl` → `kiro-validate-impl` |
-| 既存システム拡張 | `kiro-steering` → `kiro-discovery` or `kiro-spec-init` → `kiro-spec-design` → `kiro-spec-tasks` → `kiro-impl` → `kiro-validate-impl` |
+| 既存システム拡張 | `kiro-steering` → `kiro-discovery` or `kiro-spec-init` → `kiro-validate-gap`（任意・既存コードとの差分検証） → `kiro-spec-design` → `kiro-spec-tasks` → `kiro-impl` → `kiro-validate-impl` |
 | 大型施策の分解 | `kiro-discovery` → `kiro-spec-batch` |
 | spec 不要な小変更 | `kiro-discovery` → 直接実装 |
 

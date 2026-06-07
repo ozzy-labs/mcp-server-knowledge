@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-17
+reviewed: 2026-06-07
 tags: [ai-workflow, spec, oss, github, cli]
 stability: beta
 ---
@@ -60,6 +60,12 @@ specify extension search
 specify extension add <name>
 specify preset search
 specify preset add <name>
+
+# CLI 自己管理（インストール済み specify を更新）
+specify self check                 # 新リリースの有無を確認（read-only）
+specify self upgrade --dry-run     # 実行内容をプレビュー
+specify self upgrade               # 最新安定版へその場で更新（uv tool / pipx を自動判別）
+specify self upgrade --tag vX.Y.Z  # 特定タグへ固定更新
 ```
 
 ## SDD ワークフロー
