@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-17
+reviewed: 2026-06-07
 tags: [ai-workflow, commercial, github]
 aliases: [copilot]
 ---
@@ -42,7 +42,7 @@ copilot --experimental                   # experimental 機能を有効化
 copilot -C <dir>                         # 起動前に作業ディレクトリを変更（v1.0.42）
 copilot --attachment <file>              # prompt mode でファイルを添付（v1.0.41）
 copilot --max-autopilot-continues <n>    # autopilot の連続継続上限（既定 5、v1.0.40）
-copilot --resume                         # 過去セッションをピッカーから再開
+copilot --resume                         # 過去セッションをピッカーから再開（-r ショートハンド、v1.0.60）
 copilot completion <bash|zsh|fish>       # シェル補完スクリプト出力
 ```
 
@@ -70,7 +70,11 @@ copilot completion <bash|zsh|fish>       # シェル補完スクリプト出力
 | `/chronicle` | セッション履歴レビュー・standup（v1.0.31 追加、experimental） |
 | `/research` | リサーチアシスタント（v1.0.41 追加。orchestrator/subagent モデルを利用） |
 | `/pr` | PR の作成・参照（v1.0.40 追加） |
-| `/autopilot` | interactive ↔ autopilot モードのトグル（v1.0.45 追加） |
+| `/autopilot` | interactive ↔ autopilot モードのトグル（v1.0.45 追加）。`/autopilot <objective>`（`/goal` エイリアス）で目標を固定（v1.0.55） |
+| `/security-review` | コード変更のセキュリティ脆弱性レビュー（v1.0.51 追加） |
+| `/memory` | Copilot Memory の有効化・無効化・状態表示（`on` / `off` / `show`、v1.0.49 追加。永続） |
+| `/rubber-duck` | ラバーダックエージェントで作業に独立した批評を得る（v1.0.49 追加。v1.0.58 で既定有効化） |
+| `/every` / `/after` | スケジュール実行プロンプト（v1.0.58 追加、experimental） |
 | `/fork [name]` | 現セッションを独立した新セッションに fork（v1.0.45 追加。v1.0.47 で optional name と origin 表示） |
 | `/session` | セッション管理（`delete` / `delete-all`、`--name` で命名） |
 | `/plugin` | プラグイン管理（`install` / `list` / `remove`） |
@@ -116,6 +120,7 @@ copilot completion <bash|zsh|fish>       # シェル補完スクリプト出力
 - **リモート制御**: ブラウザやモバイルから CLI セッションを監視・操作可能
 - **LSP 統合**: TypeScript Language Server 等と連携した型情報の活用
 - **MCP 統合**: Model Context Protocol サーバーとの連携
+- **Rubber Duck エージェント**: 作業への独立した批評。v1.0.58 で既定有効化（`builtInAgents.rubberDuck` / `builtInAgents.rubberDuckAutoInvoke` で制御）。Remote JSON RPC も v1.0.58 で既定有効化
 
 ## カスタムエージェント
 
@@ -193,6 +198,7 @@ copilot --agent db-specialist --prompt "..."      # CLI フラグ
 | `postToolUse` | ツール実行後 |
 | `postToolUseFailure` | ツールエラー発生時（v1.0.15 追加） |
 | `permissionRequest` | スクリプトから programmatic に承認可能（v1.0.16 追加） |
+| `preMcpToolCall` | 送信する MCP リクエストの metadata を制御（v1.0.51 追加） |
 | `subagentStart` | subagent spawn 時（v1.0.7 追加） |
 | `agentStop` / `subagentStop` | エージェント終了制御（v1.0.22 追加） |
 | `preCompact` | コンテキスト圧縮直前（v1.0.5 追加） |

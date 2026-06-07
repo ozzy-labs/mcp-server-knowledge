@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-17
+reviewed: 2026-06-07
 tags: [ai-workflow, commercial]
 ---
 
@@ -81,7 +81,7 @@ model_reasoning_effort = "medium"
 approval_policy = "on-request"
 ```
 
-### 同梱モデル（rust-v0.130.0 時点、2026-05-17）
+### 同梱モデル（rust-v0.137.0 時点、2026-06-04）
 
 `/model` ピッカーで選択可能な推奨モデル:
 
