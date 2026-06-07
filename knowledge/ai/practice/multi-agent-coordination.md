@@ -54,9 +54,9 @@ Orchestrator 型に似ているが、サブエージェントに「永続性（P
 ## 2026 年の実装トレンド
 
 - **Agent SDK の成熟**:
-  - **Anthropic Agent SDK**: Claude 4.6 と共にリリース。サブエージェントをツールとして呼び出すことでオーケストレーションを最小化。
-  - **OpenAI Agents SDK**: Handoff ベースの制御移譲と永続メモリを標準化。
-- **Model Tiering**: ルーティングに Haiku 4.5、推論に Sonnet 4.6 を使い分けるコスト・速度最適化。
+  - **Claude Agent SDK**（旧 Claude Code SDK、2025 年 9 月改称）: Claude Code を支える汎用エージェント基盤をライブラリ化。サブエージェントを隔離コンテキストのツールとして呼び出し、オーケストレーションを最小化。2026 年には Dynamic Workflows（research preview）で 1 run あたり最大 1,000 サブエージェント（同時最大 16）の並列駆動に到達。
+  - **OpenAI Agents SDK**: Handoff ベースの制御移譲と永続メモリを標準化（前身の実験的 Swarm を置き換える本番向け進化版）。
+- **Model Tiering**: ルーティングに Haiku 4.5、推論に Opus 4.8（現行フラグシップ）を使い分けるコスト・速度最適化。
 - **MCP 2.0**: フレームワークを跨いでエージェントがツールとコンテキストを共有するための共通言語。
 
 ## 参考
