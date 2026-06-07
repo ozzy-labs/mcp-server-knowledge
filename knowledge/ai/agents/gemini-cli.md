@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-17
+reviewed: 2026-06-07
 tags: [ai-workflow, commercial, gcp]
 ---
 
@@ -92,7 +92,7 @@ Gemini 3.1 系（`gemini-3.1-pro-preview` 等）は `/model` Manual または `-
 
 ## 承認モード
 
-`default`（確認あり）/ `auto_edit`（編集自動）/ `plan`（計画のみ）の 3 モード。
+`default`（確認あり）/ `auto_edit`（編集自動）/ `plan`（計画のみ）/ `yolo`（全アクション自動承認）の 4 モード。`--approval-mode` フラグまたは `settings.json` の `general.defaultApprovalMode` で指定する。`yolo` はコマンドラインからのみ有効化可能（`--yolo` / `-y` は deprecated、`--approval-mode=yolo` を推奨）。`security.disableYoloMode` で無効化できる。
 
 ## サンドボックス
 
