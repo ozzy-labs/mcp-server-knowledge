@@ -1,15 +1,15 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-06-07
 tags: [ai-workflow, methodology, markdown]
 ---
 
 # AGENTS.md
 
-AI コーディングエージェント向けのプロジェクトガイダンスを記述する共通ファイル。単一の `AGENTS.md` で OpenAI Codex / Gemini CLI / GitHub Copilot Coding Agent / Cursor / Windsurf / Devin / Jules / JetBrains Junie / Aider / goose / opencode / Zed / Warp / VS Code / Amp / RooCode / Augment Code / Factory / Ona / Kilo Code / Phoenix / Semgrep など 20 を超えるエージェントにまたがって方針を共有する（公式サイト掲載分。2026-05 時点）。
+AI コーディングエージェント向けのプロジェクトガイダンスを記述する共通ファイル。単一の `AGENTS.md` で OpenAI Codex / Gemini CLI / Jules / GitHub Copilot Coding Agent / Cursor / Windsurf / Devin / JetBrains Junie / Aider / goose / opencode / Zed / Warp / VS Code / Amp / RooCode / Augment Code / Factory / Ona / Kilo Code / Phoenix / Semgrep / UiPath Autopilot & Coded Agents など 20 を超えるエージェントにまたがって方針を共有する（公式サイト掲載分。2026-06 時点で 60k+ の OSS プロジェクトが採用）。
 
 ## 背景
 
-従来は各エージェントが固有のファイル名（`CLAUDE.md`, `.github/copilot-instructions.md`, `GEMINI.md`, `.cursorrules` 等）を要求していた。`AGENTS.md` は 2025 年 8 月にオープンな共通規約として提案され（`agentsmd/agents.md` リポジトリ作成日）、主要 CLI / IDE エージェントが順次採用した（2026-05 時点で 20+ 件）。
+従来は各エージェントが固有のファイル名（`CLAUDE.md`, `.github/copilot-instructions.md`, `GEMINI.md`, `.cursorrules` 等）を要求していた。`AGENTS.md` は 2025 年 8 月にオープンな共通規約として提案され（`openai/agents.md` リポジトリ作成日: 2025-08-19）、主要 CLI / IDE エージェントが順次採用した（2026-06 時点で 60k+ の OSS プロジェクトが採用）。現在は Linux Foundation 傘下の Agentic AI Foundation がフォーマットを steward している。
 
 ## 配置と読み込み
 
