@@ -17,4 +17,3 @@ pinned:
   - lefthook.yaml
   - .gitignore
   - .github/workflows/pr-check.yaml
-  - .github/workflows/sync-commons.yaml
