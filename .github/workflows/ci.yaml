@@ -21,6 +21,12 @@ jobs:
         with:
           install: true
           cache: true
+          # Pin mise: 2026.6.10 regressed the pipx backend — on a cold cache it
+          # fails to set up pipx's shared pip/setuptools/wheel venv ("Failed to
+          # upgrade shared libraries"), breaking pipx:yamllint / pipx:mdformat.
+          # 2026.5.16 installs them cleanly. Unpin once the regression is fixed
+          # upstream (jdx/mise).
+          version: 2026.5.16
           # Explicit token: authenticates mise's aqua / GitHub release lookups
           # (defaults exist but normalize for clarity and future repo rollout).
           github_token: ${{ secrets.GITHUB_TOKEN }}
