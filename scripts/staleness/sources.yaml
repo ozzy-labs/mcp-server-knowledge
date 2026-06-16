@@ -245,6 +245,17 @@ languages/js/pnpm:
       - pnpm
     eol: pnpm
 
+languages/js/bun:
+  group: weekly
+  sources:
+    docs:
+      - https://bun.com/docs
+      - https://bun.com/docs/installation
+    github_releases:
+      - oven-sh/bun
+    npm:
+      - bun
+
 languages/python/uv:
   group: weekly
   sources:
