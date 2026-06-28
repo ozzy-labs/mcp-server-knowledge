@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-06-28
 tags: [package, version-manager, python, rust, fast]
 ---
 
@@ -156,7 +156,7 @@ my-core = { workspace = true }
 ## CI でのパターン
 
 ```yaml
-- uses: actions/checkout@v6
+- uses: actions/checkout@v7
 - uses: astral-sh/setup-uv@v8
   with:
     enable-cache: true
