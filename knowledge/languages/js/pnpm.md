@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-06-28
 tags: [package, npm, javascript, fast]
 ---
 
@@ -7,7 +7,7 @@ tags: [package, npm, javascript, fast]
 
 高速・ディスク効率の良い Node.js パッケージマネージャ。グローバルストアへのハードリンクで依存を共有し、厳格な node_modules ツリー（hoisting しない）で間接依存への依存を防ぐ。
 
-2026-05 時点の `latest` dist-tag は **v10.33.2** のまま。v11.0.4（2026-04-28）はリリース済みだが `latest-11` / `next-11` での opt-in 配布で、`corepack use pnpm@latest` や `npm install -g pnpm` は v10 を取得する。
+2026-06 時点の `latest` dist-tag は **v11.9.0**（v11 は 2026-04-28 に v11.0.0 として GA）。`corepack use pnpm@latest` や `npm install -g pnpm` は v11 を取得する。v10 系は `latest-10` dist-tag で保守継続中（最新 **v10.34.4**）。
 
 v11 の主な変更点は **Node.js 22+ 必須**、純 ESM 配布、サプライチェーン保護がデフォルト ON（`minimumReleaseAge: 1440` で公開後 24 時間未満のパッケージは解決されない）、設定の `.npmrc` → `pnpm-workspace.yaml` 移行。
 
@@ -18,23 +18,23 @@ v11 の主な変更点は **Node.js 22+ 必須**、純 ESM 配布、サプライ
 ```bash
 # Corepack 経由（Node.js 同梱、推奨）
 corepack enable pnpm
-corepack use pnpm@latest          # v10 系（latest dist-tag）
-corepack use pnpm@next-11         # v11 系を opt-in
+corepack use pnpm@latest          # v11 系（latest dist-tag）
+corepack use pnpm@latest-10       # v10 系に固定
 
 # スタンドアロンインストーラ（Node.js / Corepack なしで pnpm 単体を導入）
-curl -fsSL https://get.pnpm.io/install.sh | sh -                          # latest dist-tag（現在 v10）
-curl -fsSL https://get.pnpm.io/install.sh | env PNPM_VERSION=11.0.4 sh -  # 任意バージョンを PNPM_VERSION で固定
+curl -fsSL https://get.pnpm.io/install.sh | sh -                           # latest dist-tag（現在 v11）
+curl -fsSL https://get.pnpm.io/install.sh | env PNPM_VERSION=10.34.4 sh -   # 任意バージョンを PNPM_VERSION で固定
 
 # mise / asdf
-mise use pnpm@10                  # latest 系
-mise use pnpm@11                  # opt-in v11
+mise use pnpm@11                  # latest 系
+mise use pnpm@10                  # v10 系に固定
 
 # Homebrew
 brew install pnpm
 
 # npm 経由
-npm install -g pnpm               # v10 系（latest dist-tag）
-npm install -g pnpm@next-11       # v11 系を opt-in
+npm install -g pnpm               # v11 系（latest dist-tag）
+npm install -g pnpm@latest-10     # v10 系に固定
 ```
 
 ## バージョン固定
@@ -42,7 +42,7 @@ npm install -g pnpm@next-11       # v11 系を opt-in
 `package.json` の `packageManager` フィールドで固定（Corepack が自動適用）:
 
 ```json
-{ "packageManager": "pnpm@10.33.2" }
+{ "packageManager": "pnpm@11.9.0" }
 ```
 
 ## 主要コマンド
@@ -139,10 +139,10 @@ registries:
 ## CI でのベストプラクティス
 
 ```yaml
-- uses: actions/checkout@v6
+- uses: actions/checkout@v7
 - uses: pnpm/action-setup@v6
   with:
-    version: 10              # v11 を opt-in する場合はここを 11 に
+    version: 11              # v10 に固定する場合はここを 10 に
 - uses: actions/setup-node@v6
   with:
     node-version: 22

@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-06-16
+reviewed: 2026-06-28
 tags: [package, test, build, javascript, typescript, fast]
 ---
 
