@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-06-07
+reviewed: 2026-06-28
 tags: [ai-workflow, commercial]
 aliases: [cc]
 ---
@@ -18,7 +18,7 @@ curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del in
 
 # Homebrew（自動アップデートなし）
 brew install --cask claude-code          # stable チャンネル
-brew install --cask claude-code@latest  # latest チャンネル（v2.1.146 時点）
+brew install --cask claude-code@latest  # latest チャンネル（v2.1.195 時点）
 
 # WinGet
 winget install Anthropic.ClaudeCode
