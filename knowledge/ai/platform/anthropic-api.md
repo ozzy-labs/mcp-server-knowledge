@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-06-07
+reviewed: 2026-06-28
 tags: [library, commercial, cloud-hosted, ai-workflow]
 aliases: [claude-api]
 ---
@@ -40,11 +40,12 @@ print(message.content[0].text)
 
 | モデル | API ID | コンテキスト | 最大出力 | 位置付け | 価格 (入力/出力 per 1M) |
 |---|---|---|---|---|---|
-| **Opus 4.8** | `claude-opus-4-8` | 1M | 128K | 最高精度。複雑推論・long-horizon agentic coding・高自律タスク。Extended thinking 非対応（adaptive thinking のみ）。`effort` デフォルト `high` | $5 / $25 |
+| **Fable 5** | `claude-fable-5` | 1M | 128K | 最も高性能な widely released モデル。最難関の推論・long-horizon agentic 向け。thinking 常時 ON（`thinking` 省略、明示 `disabled` は 400）。30 日データ保持必須（ZDR 不可）。`refusal` stop reason あり | $10 / $50 |
+| **Opus 4.8** | `claude-opus-4-8` | 1M | 128K | 現行 Opus 階層フラッグシップ。複雑推論・long-horizon agentic coding・高自律タスク。Extended thinking 非対応（adaptive thinking のみ）。`effort` デフォルト `high` | $5 / $25 |
 | **Sonnet 4.6** | `claude-sonnet-4-6` | 1M | 64K | 速度と知性のバランス（デフォルト推奨）。extended/adaptive 両対応 | $3 / $15 |
 | **Haiku 4.5** | `claude-haiku-4-5-20251001` | 200K | 64K | 最速・最安。near-frontier 知性。extended thinking 対応 | $1 / $5 |
 
-Opus 4.8 は 2026-05-28 リリースで Opus 4.7 を置き換える現行フラッグシップ。Opus 4.7 と同じ $5 / $25 価格・1M context・128K 最大出力で、tool / platform 機能セットも Opus 4.7 と同等。Opus 4.7 / Opus 4.6 は legacy 扱い（引き続き利用可だが移行推奨）。Opus 4.8 は **adaptive thinking が enabled 時のみ無駄な thinking トークンを削減**し、long-horizon agentic coding・compaction 回復・tool triggering が Opus 4.7 比で改善。1M context は **2026-03-13 に Opus 4.6 / Sonnet 4.6 で GA**（ヘッダ不要、標準価格）し、Opus 4.7 / 4.8 もデフォルトで 1M。旧モデル向け beta ヘッダ `context-1m-2025-08-07` は 2026-04-30 に Sonnet 4.5 / Sonnet 4 から廃止され効果なし。4.6 世代以降の dateless ID（`claude-opus-4-8` 等）も pinned snapshot で evergreen ポインタではない。**deprecation**: Opus 4.1（`claude-opus-4-1-20250805`）は 2026-08-05 retire、Sonnet 4 / Opus 4 は 2026-06-15 retire 予定。
+Opus 4.8 は 2026-05-28 リリースで Opus 4.7 を置き換える現行の **Opus 階層フラッグシップ**。Opus 4.7 と同じ $5 / $25 価格・1M context・128K 最大出力で、tool / platform 機能セットも Opus 4.7 と同等。なお Anthropic 最高性能の widely released モデルは **Claude Fable 5**（`claude-fable-5`、$10 / $50）で、Opus 階層より上位だが API 挙動が異なる（thinking 常時 ON で `thinking` パラメータは省略、`temperature` 等のサンプリングパラメータ不可、30 日データ保持必須）。コーディング/エージェントのデフォルトは引き続き Opus 4.8、最高性能が必要なときのみ Fable 5 を選ぶ。Project Glasswing 限定の **Mythos 5**（`claude-mythos-5`）は Fable 5 と同等。Opus 4.7 / Opus 4.6 は legacy 扱い（引き続き利用可だが移行推奨）。Opus 4.8 は **adaptive thinking が enabled 時のみ無駄な thinking トークンを削減**し、long-horizon agentic coding・compaction 回復・tool triggering が Opus 4.7 比で改善。1M context は **2026-03-13 に Opus 4.6 / Sonnet 4.6 で GA**（ヘッダ不要、標準価格）し、Opus 4.7 / 4.8 もデフォルトで 1M。旧モデル向け beta ヘッダ `context-1m-2025-08-07` は 2026-04-30 に Sonnet 4.5 / Sonnet 4 から廃止され効果なし。4.6 世代以降の dateless ID（`claude-opus-4-8` 等）も pinned snapshot で evergreen ポインタではない。**deprecation**: Opus 4.1（`claude-opus-4-1-20250805`）は 2026-08-05 retire 予定。Sonnet 4（`claude-sonnet-4-20250514`）/ Opus 4（`claude-opus-4-20250514`）は 2026-06-15 が当初の retire 予定日で本日（2026-06-28）時点で経過済み — 未移行なら `claude-opus-4-8` / `claude-sonnet-4-6` へ即時移行する。
 
 ## プロンプトキャッシング — 最重要の最適化
 
@@ -71,7 +72,7 @@ message = client.messages.create(
 ```
 
 - **TTL**: デフォルト 5 分 / 拡張 1 時間（**2025-08-13 に GA、ヘッダ不要**。旧 beta ヘッダ `extended-cache-ttl-2025-04-11` は廃止）
-- **最小キャッシュ長**: Opus 4.8 は 1,024 トークン（Opus 4.7 より低い。短いプロンプトもコード変更なしでキャッシュ可能に）
+- **最小キャッシュ長**: Opus 4.8 / 4.7 / 4.6 / Haiku 4.5 は **4,096 トークン**、Fable 5 / Sonnet 4.6 は **2,048 トークン**、Sonnet 4.5 系は 1,024 トークン。これ未満のプレフィックスはブレークポイントを置いてもサイレントにキャッシュされない（`cache_creation_input_tokens: 0` のまま、エラーは出ない）
 - **ブレークポイント上限**: 1 リクエストあたり最大 4 個
 - **無効化**: ブレークポイントより前のコンテンツが変わるとそれ以降のキャッシュは失効する
 - **対象ブロック**: `system` / `messages.content` のテキスト・画像・PDF、ツール定義
