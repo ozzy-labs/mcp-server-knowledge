@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-06-07
+reviewed: 2026-06-28
 tags: [ai-workflow, commercial, github]
 aliases: [copilot]
 ---
@@ -51,7 +51,7 @@ copilot completion <bash|zsh|fish>       # シェル補完スクリプト出力
 | コマンド | 説明 |
 |---|---|
 | `/help` | ヘルプ表示（スラッシュコマンドはタブ補完に対応） |
-| `/model` | モデル切り替え（Auto mode はサーバー側で最適モデルを選択） |
+| `/model` | モデル切り替え（Auto mode はサーバー側で最適モデルを選択）。`opus` / `sonnet` / `haiku` / `gpt` / `gemini` のモデルファミリーエイリアスに対応（v1.0.64） |
 | `/experimental` | 実験的機能（ラバーダック・エージェント等）を有効化 |
 | `/remote on/off` | GitHub.com やモバイルアプリからのリモート制御を切り替え |
 | `/statusline` | ステータスラインの表示（ユーザー名等）をカスタマイズ |
@@ -62,7 +62,7 @@ copilot completion <bash|zsh|fish>       # シェル補完スクリプト出力
 | `/model` | 使用モデルの切り替え |
 | `/mcp` | 設定済み MCP サーバー一覧 |
 | `/agent <name>` | カスタムエージェントを起動 |
-| `/skills` | skill 一覧・管理（`list` / `info` / `reload` / `remove`） |
+| `/skills` | skill 一覧・管理（`list` / `info` / `reload` / `remove`）。`/skill` エイリアス追加（v1.0.65） |
 | `/lsp` | LSP サーバーの状態表示 |
 | `/diff` | 変更差分のレビュー |
 | `/undo` | 直前の操作を取り消し |
@@ -73,13 +73,19 @@ copilot completion <bash|zsh|fish>       # シェル補完スクリプト出力
 | `/research` | リサーチアシスタント（v1.0.41 追加。orchestrator/subagent モデルを利用） |
 | `/pr` | PR の作成・参照（v1.0.40 追加） |
 | `/autopilot` | interactive ↔ autopilot モードのトグル（v1.0.45 追加）。`/autopilot <objective>`（`/goal` エイリアス）で目標を固定（v1.0.55） |
-| `/security-review` | コード変更のセキュリティ脆弱性レビュー（v1.0.51 追加） |
+| `/security-review` | コード変更のセキュリティ脆弱性レビュー（v1.0.51 追加。v1.0.64 で `--experimental` 不要の一般提供化） |
 | `/memory` | Copilot Memory の有効化・無効化・状態表示（`on` / `off` / `show`、v1.0.49 追加。永続） |
 | `/rubber-duck` | ラバーダックエージェントで作業に独立した批評を得る（v1.0.49 追加。v1.0.58 で既定有効化） |
-| `/every` / `/after` | スケジュール実行プロンプト（v1.0.58 追加、experimental） |
-| `/fork [name]` | 現セッションを独立した新セッションに fork（v1.0.45 追加。v1.0.47 で optional name と origin 表示） |
+| `/every` / `/after` | スケジュール実行プロンプト（v1.0.58 追加、experimental）。`/loop` エイリアスあり |
+| `/fork [name]` | 現セッションを独立した新セッションに fork（v1.0.45 追加。v1.0.47 で optional name と origin 表示）。`/branch` エイリアス追加（v1.0.64、Claude Code に整合） |
 | `/session` | セッション管理（`delete` / `delete-all`、`--name` で命名） |
 | `/plugin` | プラグイン管理（`install` / `list` / `remove`） |
+| `/subagents` / `/agents` | subagent の一覧・設定（model / reasoning effort / context tier、v1.0.62 追加） |
+| `/cd` | 作業ディレクトリ変更（v1.0.65 で resume 時に永続化。新ディレクトリの custom agent も探索） |
+| `/diagnose` | セッションログを解析（v1.0.64 追加） |
+| `/app` | GitHub アプリ／ブラウザを開く（v1.0.62 追加） |
+| `/theme` | テーマ選択（default / dim / high-contrast / colorblind） |
+| `/settings` | 設定をインラインで参照・変更 |
 | `/clear` / `/new` | 会話リセット（アクティブエージェント選択もリセット） |
 | `/bug` / `/feedback` | フィードバック・バグ報告 |
 | `/release-notes` | リリースノート表示 |
@@ -120,6 +126,7 @@ copilot completion <bash|zsh|fish>       # シェル補完スクリプト出力
 - **read-only `gh` の自動承認**: v1.0.46 以降、`gh list` / `view` / `status` / `diff` 等の read-only サブコマンドはプロンプトなしで実行
 - **OpenTelemetry**: v1.0.45 で GenAI semantic conventions に整合化、MCP tool 呼び出しは標準 `tool_call` span、`gen_ai.client.operation.duration` メトリックで tool 実行時間を計測
 - **リモート制御**: ブラウザやモバイルから CLI セッションを監視・操作可能
+- **タブ型ターミナル UI**: 2026-06-23 に新ターミナルインターフェースが GA。画面上部に Session / Gists タブ、リポジトリ内では Issues / Pull requests タブを表示。`/theme`（default / dim / high-contrast / colorblind）でテーマ切替。GitHub テーマと home タブは v1.0.64 で全ユーザー既定有効
 - **LSP 統合**: TypeScript Language Server 等と連携した型情報の活用
 - **MCP 統合**: Model Context Protocol サーバーとの連携
 - **Rubber Duck エージェント**: 作業への独立した批評。v1.0.58 で既定有効化（`builtInAgents.rubberDuck` / `builtInAgents.rubberDuckAutoInvoke` で制御）。Remote JSON RPC も v1.0.58 で既定有効化
@@ -183,7 +190,7 @@ copilot --agent db-specialist --prompt "..."      # CLI フラグ
 | `allowed-tools` | - | 許可確認スキップ |
 | `license` | - | ライセンス表記 |
 
-**管理コマンド**: `/skills list | info | reload | remove`。2026-04 以降は `gh skill` サブコマンドで GitHub CLI 経由でも管理可能。
+**管理コマンド**: `/skills list | info | reload | remove`（`/skill` エイリアス、v1.0.65）。`copilot skill` サブコマンドでファイル / URL / ディレクトリから skill を list / add / remove 可能（v1.0.65）。2026-04 以降は `gh skill` サブコマンドで GitHub CLI 経由でも管理可能。
 
 ## Hooks
 
