@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-10
+reviewed: 2026-06-28
 tags: [github, yaml]
 ---
 
@@ -25,7 +25,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
         with:
           version: 10
@@ -74,7 +74,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - run: pnpm biome ci
 
   test:
@@ -84,7 +84,7 @@ jobs:
       matrix:
         node: [20, 22, 24]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
@@ -104,7 +104,7 @@ jobs:
 
 | Action | 用途 |
 |---|---|
-| `actions/checkout@v6` | リポジトリ取得（必須） |
+| `actions/checkout@v7` | リポジトリ取得（必須） |
 | `actions/setup-node@v6` | Node セットアップ + キャッシュ |
 | `pnpm/action-setup@v6` | pnpm インストール |
 | `actions/setup-python@v6` | Python |
@@ -112,7 +112,7 @@ jobs:
 | `actions/cache@v5` | 汎用キャッシュ |
 | `actions/upload-artifact@v7` / `download-artifact@v8` | Job 間のファイル受け渡し |
 | `actions/github-script@v9` | GitHub API を Node で叩く |
-| `softprops/action-gh-release@v2` | リリース作成 |
+| `softprops/action-gh-release@v3` | リリース作成 |
 | `jdx/mise-action@v4` | mise 経由でツールインストール |
 
 バージョンは**メジャー固定 + パッチ追従**（`@v4`）が一般的。完全固定（SHA）が最もセキュアだが更新負荷が高い。
@@ -214,7 +214,7 @@ jobs:
     outputs:
       coverage: ${{ steps.cov.outputs.percent }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
@@ -369,7 +369,7 @@ on: pull_request_target
 jobs:
   build:
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}    # ← 危険
       - run: pnpm test
@@ -402,7 +402,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: aws-actions/configure-aws-credentials@v5
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::123456789012:role/GitHubDeployRole
           aws-region: ap-northeast-1
