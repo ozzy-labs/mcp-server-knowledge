@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-06-28
 tags: [security, go]
 ---
 
@@ -13,7 +13,7 @@ Aqua Security が提供する包括的なセキュリティスキャナ。コン
 
 ```bash
 # mise
-mise use trivy@0.70
+mise use trivy@0.71
 
 # Homebrew
 brew install trivy
