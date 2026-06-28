@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-06-28
 tags: [lint, format, javascript, typescript, json, rust, fast]
 ---
 
@@ -41,7 +41,7 @@ brew install biome
 
 ```json
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.14/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
   "files": {
     "includes": ["src/**", "tests/**", "*.json", "!**/node_modules", "!**/dist"],
     "ignoreUnknown": true
