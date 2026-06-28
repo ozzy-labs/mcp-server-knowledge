@@ -63,4 +63,4 @@ Orchestrator 型に似ているが、サブエージェントに「永続性（P
 
 - [Anthropic: Multi-agent coordination patterns: Five approaches and when to use them (2026)](https://claude.com/blog/multi-agent-coordination-patterns)
 - [OpenAI: Agents SDK Documentation](https://developers.openai.com/api/docs/guides/agents)
-- 関連: [`ai/practice/agentic-workflow-patterns.md`](agentic-workflow-patterns.md), [`ai/practice/multi-agent-repo.md`](multi-agent-repo.md)
+- 関連: [`ai/practice/agentic-workflow-patterns.md`](agentic-workflow-patterns.md), [`ai/practice/multi-agent-repo.md`](multi-agent-repo.md), [ループエンジニアリング](loop-engineering.md), [オブザーバビリティ](agentic-observability.md)（サブエージェントのトレース）

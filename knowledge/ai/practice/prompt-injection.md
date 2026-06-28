@@ -152,3 +152,4 @@ messages = [
 - [OWASP Top 10 for LLM Applications 2025](https://genai.owasp.org/llmrisk/llm01-prompt-injection/) — LLM01:2025 Prompt Injection（直接 / 間接の2分類、7つの緩和策）
 - [Simon Willison's prompt injection series](https://simonwillison.net/tags/prompt-injection/) — 実事例の豊富なレビュー、lethal trifecta の出典
 - [Anthropic: Mitigate jailbreaks and prompt injections](https://platform.claude.com/docs/en/docs/test-and-evaluate/strengthen-guardrails/mitigate-jailbreaks) — 直接注入（Harmlessness screens / Input validation）と間接注入（tool_result 配置 / JSON エンコード / ツール出力スクリーニング）を分けた実装ガイド。Chain safeguards で多層化
+- 本リポジトリの [`ai/practice/agent-reliability-guardrails.md`](agent-reliability-guardrails.md) — ガードレール・サンドボックス・最小権限など、プロンプトインジェクションを含む防御層の全体像
