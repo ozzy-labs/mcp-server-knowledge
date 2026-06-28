@@ -130,12 +130,12 @@ message = client.messages.create(
     model="claude-opus-4-8",
     max_tokens=16000,
     thinking={"type": "adaptive"},
-    effort="medium",  # low / medium / high（Opus 4.8 のデフォルトは high）
+    output_config={"effort": "medium"},  # low / medium / high / xhigh / max（Opus 4.8 のデフォルトは high）
     messages=[{"role": "user", "content": "複雑な問題..."}],
 )
 ```
 
-`effort` パラメータは `budget_tokens` の代替で、`thinking` と**並列のトップレベルパラメータ**として渡す（`output_config` 配下ではない）。公式が現行サポートする値は `low` / `medium` / `high` の 3 段階。
+`effort` パラメータは `budget_tokens` の代替で、**`output_config` 配下**に渡す（トップレベルではない）。値は `low` / `medium` / `high` / `xhigh` / `max`。`xhigh` は Opus 4.7 で追加（コーディング/エージェントの推奨）、`max` は Opus 4.6 以降と Sonnet 4.6 で利用可（Haiku 4.5 は不可）。デフォルトは `high`（省略時と同等）。
 
 **Task budgets（beta、Opus 4.7 / 4.8）**: agentic ループ全体（thinking + tool calls + tool results + final output）の合計トークン目安をモデルに伝える。`max_tokens` がハードキャップなのに対し、`task_budget` はモデルが認識する advisory な目安。beta ヘッダ `task-budgets-2026-03-13` を付与し、`output_config={"effort": "high", "task_budget": {"type": "tokens", "total": 128000}}` のように指定（最小 20k）。
 
