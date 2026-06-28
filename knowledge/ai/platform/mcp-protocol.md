@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-06-07
+reviewed: 2026-06-28
 tags: [ai-workflow, methodology]
 ---
 
