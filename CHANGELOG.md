@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/ozzy-labs/mcp-server-knowledge/compare/v0.1.2...v0.1.3) (2026-06-29)
+
+
+### Bug Fixes
+
+* **deps:** override transitive hono to ^4.12.21 for CVE-2026-47673~47676 ([#240](https://github.com/ozzy-labs/mcp-server-knowledge/issues/240)) ([065a343](https://github.com/ozzy-labs/mcp-server-knowledge/commit/065a3435139597b3f2bc69803f308d2d6296fc7b))
+
 ## [0.1.2](https://github.com/ozzy-labs/mcp-server-knowledge/compare/v0.1.1...v0.1.2) (2026-05-31)
 
 
