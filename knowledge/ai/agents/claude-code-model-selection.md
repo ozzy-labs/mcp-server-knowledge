@@ -87,7 +87,7 @@ curl -s https://api.anthropic.com/api/oauth/usage \
   -H "Authorization: Bearer $TOKEN" -H "anthropic-beta: oauth-2025-04-20" | jq .
 ```
 
-レスポンス（要点）: `five_hour` / `seven_day` の各 `utilization`（消費%）・`resets_at`（ISO 8601）に加え、**`limits[]` 配列に枠ごとの内訳**が入る。`kind` は `session`（5時間）/ `weekly_all`（週次全体・通常これが `is_active:true` の律速）/ **`weekly_scoped`（モデル別枠。`scope.model.display_name` に対象モデル名）**。
+レスポンス（要点）: `five_hour` / `seven_day` の各 `utilization`（消費%）・`resets_at`（ISO 8601）に加え、**`limits[]` 配列に枠ごとの内訳**が入る（各エントリの消費%は `percent` フィールド ── トップレベル窓の `utilization` とはフィールド名が違うだけで同じ「消費%」を指す）。`kind` は `session`（5時間）/ `weekly_all`（週次全体・通常これが `is_active:true` の律速）/ **`weekly_scoped`（モデル別枠。`scope.model.display_name` に対象モデル名）**。
 
 ```jsonc
 {
