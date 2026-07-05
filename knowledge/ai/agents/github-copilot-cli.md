@@ -1,6 +1,6 @@
 ---
 reviewed: 2026-06-28
-tags: [ai-workflow, commercial, github]
+tags: [ai-agent, ai-workflow, commercial, github]
 aliases: [copilot]
 ---
 

@@ -1,6 +1,6 @@
 ---
 reviewed: 2026-06-28
-tags: [ai-workflow, commercial]
+tags: [ai-agent, ai-workflow, commercial]
 ---
 
 # Codex CLI

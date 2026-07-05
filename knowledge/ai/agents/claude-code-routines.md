@@ -1,6 +1,6 @@
 ---
 reviewed: 2026-06-07
-tags: [ai-workflow, commercial, cloud-hosted]
+tags: [ai-agent, ai-workflow, commercial, cloud-hosted]
 stability: research-preview
 ---
 

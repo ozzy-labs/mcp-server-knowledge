@@ -1,6 +1,6 @@
 ---
 reviewed: 2026-07-04
-tags: [ai-workflow, commercial]
+tags: [ai-agent, ai-workflow, commercial]
 aliases: [model-selection, fallbackModel, opusplan, oauth-usage, fast-mode]
 ---
 
