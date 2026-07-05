@@ -1,6 +1,6 @@
 ---
 reviewed: 2026-06-07
-tags: [specification, testing]
+tags: [spec, test]
 ---
 
 # Chrome DevTools Protocol (CDP)

@@ -1,6 +1,6 @@
 ---
 reviewed: 2026-06-07
-tags: [methodology, ai-workflow]
+tags: [ai-driven-development, methodology, ai-workflow]
 ---
 
 # AI-Driven Development (AIDD)

@@ -1,6 +1,6 @@
 ---
 reviewed: 2026-06-28
-tags: [ai-workflow, commercial, gcp]
+tags: [ai-agent, ai-workflow, commercial, gcp]
 ---
 
 # Gemini CLI

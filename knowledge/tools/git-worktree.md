@@ -1,6 +1,6 @@
 ---
 reviewed: 2026-05-10
-tags: [cli]
+tags: [git, cli]
 ---
 
 # git worktree

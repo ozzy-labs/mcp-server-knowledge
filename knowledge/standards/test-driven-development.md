@@ -1,6 +1,6 @@
 ---
 reviewed: 2026-05-10
-tags: [standards, testing, ai-driven-development]
+tags: [standards, test, ai-driven-development]
 ---
 
 # Test-Driven Development (TDD)

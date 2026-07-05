@@ -1,6 +1,6 @@
 ---
 reviewed: 2026-07-05
-tags: [ai-workflow, commercial]
+tags: [ai-agent, ai-workflow, commercial]
 aliases: [codex-model, model_reasoning_effort, gpt-5.5, codex-usage, codex-model-fallback]
 ---
 

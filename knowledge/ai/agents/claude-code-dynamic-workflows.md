@@ -1,6 +1,6 @@
 ---
 reviewed: 2026-06-07
-tags: [ai-workflow, commercial, multi-agent]
+tags: [ai-agent, ai-workflow, commercial, multi-agent]
 stability: research-preview
 aliases: [dynamic-workflows, ultracode]
 ---
