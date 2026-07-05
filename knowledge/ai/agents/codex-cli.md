@@ -87,18 +87,11 @@ model_reasoning_effort = "medium"
 approval_policy = "on-request"
 ```
 
-### 同梱モデル（rust-v0.142.3 時点、2026-06-26）
+### 同梱モデル
 
-`/model` ピッカーで選択可能な推奨モデル:
+`/model` ピッカーの推奨モデルは `gpt-5.5`（現行推奨デフォルト）/ `gpt-5.4`（flagship）/ `gpt-5.4-mini`（軽量・subagent 向け）/ `gpt-5.3-codex-spark`（research preview・ChatGPT Pro 限定）。旧 `gpt-5.3-codex` / `gpt-5.2` は ChatGPT サインイン時の Codex で deprecated。
 
-| モデル | 説明 |
-|---|---|
-| `gpt-5.5` | **新推奨モデル**。複雑コーディング・Computer Use・知識作業・リサーチ向け |
-| `gpt-5.4` | Flagship。フォールバック用 |
-| `gpt-5.4-mini` | 軽量・高速版 |
-| `gpt-5.3-codex-spark` | research preview（ChatGPT Pro 向け） |
-
-> **注意**: 旧 `gpt-5.3-codex` および `gpt-5.2` は ChatGPT サインイン時の Codex で deprecated。`gpt-5.5` 等の現行推奨モデルへ移行する。
+> モデル選択の単位・reasoning effort・フォールバック（Codex に自動フォールバックは無い）・使用量（ChatGPT プラン枠 / API 従量）の詳細は [`codex-cli-model-selection.md`](codex-cli-model-selection.md) を参照。
 
 ## 主要機能
 
