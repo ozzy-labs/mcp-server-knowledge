@@ -104,7 +104,7 @@ describe("adder", () => {
 - Run with: `node --test` / `node --test --watch` / `node --test-name-pattern="adder"` / `--test-concurrency=N`.
 - Coverage: `--experimental-test-coverage` + `--test-reporter=lcov`.
 - `.ts` files can be run directly via strip-types support since Node 23.6+.
-- Choosing between this and vitest: use `node:test` for **small-to-medium scale, lightweight CI, zero-dep** needs; use `vitest` (`tools/vitest.md`) for UI, jsdom, Vite integration, or rich mocking.
+- Choosing between this and vitest: use `node:test` for **small-to-medium scale, lightweight CI, zero-dep** needs; use `vitest` (`languages/js/vitest.md`) for UI, jsdom, Vite integration, or rich mocking.
 
 ## Execution flags
 
@@ -232,8 +232,8 @@ Typically caused by the process itself writing to a watched file (e.g. a log fil
 ## Related articles
 
 - `languages/typescript-esm.md` — Configuration for running TS as ESM on Node.js, import type, dual packages
-- `tools/pnpm.md` — Package manager (via corepack)
-- `tools/vitest.md` — Choosing between this and node:test
+- `languages/js/pnpm.md` — Package manager (via corepack)
+- `languages/js/vitest.md` — Choosing between this and node:test
 - `tools/mise.md` — Current de facto standard for Node.js version management
 
 ## References
