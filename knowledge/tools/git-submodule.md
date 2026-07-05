@@ -1,6 +1,6 @@
 ---
 reviewed: 2026-05-05
-tags: [cli]
+tags: [git, cli]
 ---
 
 # git submodule

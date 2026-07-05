@@ -1,6 +1,6 @@
 ---
 reviewed: 2026-07-05
-tags: [ai-platform, standards, specification]
+tags: [ai-platform, standards, spec]
 ---
 
 # Agent Skills Standard Specification (`SKILL.md`)
