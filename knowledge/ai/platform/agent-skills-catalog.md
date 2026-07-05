@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-06-23
+reviewed: 2026-07-05
 tags: [ai-platform, cli, practice]
 ---
 
@@ -15,13 +15,13 @@ Agent Skills is an open standard (`SKILL.md` requires `name` / `description`). T
 
 | | Claude Code | Codex CLI |
 |---|---|---|
-| Standard discovery | `.claude/skills/` + cross-tool convention `.agents/skills/` | **Primary location is `.agents/skills/`** (`$CWD` → parent → repo root → `$HOME` → `/etc/codex/skills` → built-in) |
+| Standard discovery | `.claude/skills/` **only** (does **not** read `.agents/skills/`): project (walking to repo root) + `~/.claude/skills/` | **Primary location is `.agents/skills/`** (`$CWD` → parent → repo root → `$HOME` → `/etc/codex/skills` → built-in) |
 | Explicit invocation | `/skill-name` | `$skill-name` or `/skills` |
 | Implicit invocation | Auto-delegation on description match (aggressive) | Auto-selection on description match, but conservative. Controlled via `policy.allow_implicit_invocation` in `agents/openai.yaml` |
 | Tool permissions | `allowed-tools` (experimental) | `allowed-tools` has low reliability. Use `agents/openai.yaml` policy + `approval_policy="granular"` in `config.toml` → `skill_approval` |
 | Distribution unit | plugin marketplace (`/plugin`) | **Plugins** (bundles skills/apps/MCP; `openai/plugins`) |
 
-- **Interoperability**: Standard-compliant skills placed in `.agents/skills/` work on both tools. However, Claude-specific frontmatter (`when_to_use` / `argument-hint` / `paths` / `hooks`) is ignored by Codex, and Codex-specific `agents/openai.yaml` is ignored by Claude. **Body content + `name` / `description` are portable**, but functional parity is not guaranteed.
+- **Interoperability**: **Body content + `name` / `description` are portable**, but the location differs — `.agents/skills/` is read by Codex (and Gemini / Copilot), whereas **Claude Code reads only `.claude/skills/`** (place a copy/symlink there, or ship a plugin). Claude-specific frontmatter (`when_to_use` / `argument-hint` / `paths` / `hooks`) is ignored by Codex, and Codex-specific `agents/openai.yaml` is ignored by Claude; functional parity is not guaranteed. See [`agent-skills-distribution.md`](agent-skills-distribution.md).
 - **Codex's token budget**: The skill list shown at startup is capped at "2% of context, or 8,000 characters if unknown." Body content loads only when selected (progressive disclosure).
 - **AGENTS.md** originated at OpenAI and is now a cross-vendor standard (agents.md). It is an always-on instruction independent of skills, with no direct coupling.
 - Codex's legacy `~/.codex/prompts/*.md` (custom prompts) was deprecated on 2026-01-22; migration to Skills is the official direction.
@@ -111,7 +111,7 @@ Agent Skills is an open standard (`SKILL.md` requires `name` / `description`). T
 ## General selection and operating guidance
 
 - **Trust order: official > vendor-official > community.** Awesome-list aggregators (`ComposioHQ/awesome-claude-skills` 66k★, `VoltAgent/awesome-agent-skills` 26k★) are **indexes**; stars do not guarantee the quality of any individual skill.
-- **Cross-tool operation**: place standard-compliant skills in `.agents/skills/`. Keep the body content portable on the assumption that Claude/Codex-specific frontmatter will be ignored by the other tool.
+- **Cross-tool operation**: place standard-compliant skills in `.agents/skills/` for Codex / Gemini / Copilot, and add a `.claude/skills/` copy/symlink (or a plugin) for Claude Code. Keep the body portable on the assumption that each tool ignores the other's frontmatter.
 - **Security**: community skills bundle executable scripts. Before adopting, audit scripts/dependencies/instructions that could redirect execution externally (prompt-injection vectors). `allowed-tools` is experimental and should not be trusted as a boundary.
 
 ## References

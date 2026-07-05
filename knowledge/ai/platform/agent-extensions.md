@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-06-07
+reviewed: 2026-07-05
 tags: [ai-workflow, methodology]
 ---
 
@@ -27,7 +27,7 @@ As of early 2026, two common standards are established.
 - **`AGENTS.md`**: A common file for project guidance. Standardized by the Agentic AI Foundation under the Linux Foundation. All 4 CLIs support it (Claude Code primarily uses `CLAUDE.md` but also reads `AGENTS.md`). See `ai/platform/agents-md.md` for details
 - **Agent Skills (`SKILL.md`)**: A common format for skill definitions. `name` / `description` are required frontmatter. All 4 CLIs — Claude Code / Codex CLI / Gemini CLI / GitHub Copilot CLI — load it
 
-As a result, **a single `SKILL.md` can be shared across multiple agents**. Placing it under the repository's `.agents/skills/` makes it discoverable by all 4 CLIs.
+As a result, **a single `SKILL.md` is portable across agents** (only `name` / `description` are required, and each tool ignores frontmatter it does not recognize). But the storage location is not universal: `.agents/skills/` is discovered by **Codex CLI / Gemini CLI / GitHub Copilot CLI**, whereas **Claude Code reads only `.claude/skills/`** — to share a skill with Claude Code, add a `.claude/skills/` copy/symlink or ship it as a plugin. See [`agent-skills-distribution.md`](agent-skills-distribution.md).
 
 ## Skills cross-comparison
 

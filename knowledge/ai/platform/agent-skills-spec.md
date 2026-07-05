@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-06-07
+reviewed: 2026-07-05
 tags: [ai-platform, standards, specification]
 ---
 
@@ -68,6 +68,8 @@ Agents typically scan the following scopes:
 3. **Project (Workspace)**: `<project>/.agents/skills/` (project-specific) plus client-specific `<project>/.<client>/skills/`.
 
 `.agents/skills/` is a common convention for making skills interoperable across clients. **On a name collision, the project level overrides the user level** — a rule shared across implementations.
+
+> **Caveat**: `.agents/skills/` is honored by Codex CLI, Gemini CLI, and GitHub Copilot CLI, but **Claude Code reads only `.claude/skills/`** — for Claude Code the client-specific path is the sole path, not an addition to `.agents/skills/`. See [`agent-skills-distribution.md`](agent-skills-distribution.md).
 
 ## References
 
