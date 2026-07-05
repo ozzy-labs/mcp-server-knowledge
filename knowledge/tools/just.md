@@ -48,6 +48,7 @@ The `justfile` is searched for in the current directory, its parents, and **recu
 # justfile
 
 default: build test    # The first recipe is the default. Multiple dependencies can be listed
+
 build:
     cargo build
 

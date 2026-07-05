@@ -125,7 +125,7 @@ gh pr reopen 123
 
 | Flag | Meaning |
 |---|---|
-| `--json <fields>` | JSON output (pairs well with `jq`) |
+| `--json <fields>` | JSON output (essential to combine with `jq`) |
 | `--template <tpl>` | Format output with a Go template |
 | `--web` | Open in browser |
 | `-R owner/repo` | Target a different repository |

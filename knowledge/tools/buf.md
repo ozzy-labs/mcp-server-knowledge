@@ -120,7 +120,7 @@ Key changes:
 | Category | Use case |
 |---|---|
 | `FILE` (default) | File-level generated-code compatibility. For languages like Python/C++ where file layout affects output |
-| `PACKAGE` | Package-level. Allows moving files between files within the same package |
+| `PACKAGE` | Package-level. Allows moving definitions between files within the same package |
 | `WIRE_JSON` | Compatible with both wire (binary) and JSON encoding — the practical minimum recommendation |
 | `WIRE` | Binary wire compatibility only |
 

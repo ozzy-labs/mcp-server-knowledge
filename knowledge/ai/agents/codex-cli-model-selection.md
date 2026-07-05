@@ -12,7 +12,7 @@ This article covers Codex CLI's model selection ("which model, at which scope, h
 
 ## Scopes for Model Selection
 
-Model and reasoning effort can be specified at the following **scopes**, and **unlike Claude Code there is no automatic selection based on task content** (everything is manual or pre-configured). Lower entries (closer to launch/runtime) take precedence.
+Model and reasoning effort can be specified at the following **scopes**, and **as with Claude Code, there is no automatic selection based on task content** (everything is manual or pre-configured). Lower entries (closer to launch/runtime) take precedence.
 
 | Scope | How to specify | Type |
 |---|---|---|

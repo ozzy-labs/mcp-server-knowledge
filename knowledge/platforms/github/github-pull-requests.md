@@ -123,7 +123,7 @@ The PR's `Checks` tab lists workflow results such as GitHub Actions runs. Regist
 | Rebase and merge | Replays each commit onto the base (new SHAs) | Only when linear history is needed and each commit carries meaning |
 | Merge commit | Creates a merge commit, preserving history | Exceptions like preserving a hotfix's history |
 
-For detailed trade-offs see [`standards/github-flow.md`](../../standards/github-flow.md#merge-戦略).
+For detailed trade-offs see [`standards/github-flow.md`](../../standards/github-flow.md#merge-strategy).
 
 You can restrict which merge methods are allowed in repository settings (Settings → General → Pull Requests). Allowing only Squash is the simplest option.
 
