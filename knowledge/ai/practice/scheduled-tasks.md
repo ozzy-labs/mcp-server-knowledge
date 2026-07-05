@@ -3,79 +3,79 @@ reviewed: 2026-06-07
 tags: [ai-workflow, methodology]
 ---
 
-# AI エージェントの定期実行
+# Scheduled Execution of AI Agents
 
-AI コーディングエージェント（Claude Code / Codex 等）を recurring に走らせるための選択肢と選び方。「knowledge ベースを週次で再検証する」「PR レビューを毎朝実行する」「失敗ジョブを夜間に修復する」のような用途で必要になる。各 CLI の個別仕様は `ai/agents/claude-code.md` / `ai/agents/codex-cli.md` 他を参照。
+Options and selection criteria for running AI coding agents (Claude Code / Codex etc.) recurringly. Needed for use cases like "re-verify the knowledge base weekly," "run PR review every morning," or "fix failed jobs overnight." For per-CLI specifics, see `ai/agents/claude-code.md` / `ai/agents/codex-cli.md` and others.
 
-## 選択肢の全体像（Claude Code）
+## Overview of options (Claude Code)
 
-公式 docs の比較表（[Run prompts on a schedule](https://code.claude.com/docs/en/scheduled-tasks)）:
+Comparison table from the official docs ([Run prompts on a schedule](https://code.claude.com/docs/en/scheduled-tasks)):
 
-| 観点 | Cloud (Routines) | Desktop scheduled tasks | `/loop` |
+| Aspect | Cloud (Routines) | Desktop scheduled tasks | `/loop` |
 |---|---|---|---|
-| 実行場所 | Anthropic クラウド | 自分のマシン | 自分のマシン |
-| マシン起動が必要 | No | Yes | Yes |
-| セッション開きっぱなし必要 | No | No | Yes |
-| 再起動を跨いで永続 | Yes | Yes | `--resume` で復元（未失効のみ） |
-| ローカルファイルにアクセス | No（fresh clone） | Yes | Yes |
-| 最小実行間隔 | 1 hour | 1 minute | 1 minute |
-| トリガー種別 | schedule + API + GitHub event | schedule のみ | schedule のみ |
-| 仕様の安定度 | research preview | GA | GA |
+| Execution location | Anthropic cloud | Your own machine | Your own machine |
+| Requires machine to be on | No | Yes | Yes |
+| Requires session to stay open | No | No | Yes |
+| Persists across restarts | Yes | Yes | Restored via `--resume` (only if not yet expired) |
+| Access to local files | No (fresh clone) | Yes | Yes |
+| Minimum interval | 1 hour | 1 minute | 1 minute |
+| Trigger types | schedule + API + GitHub event | schedule only | schedule only |
+| Spec stability | research preview | GA | GA |
 
-これに **GitHub Actions の `schedule` トリガー**（外部 CI）を加えた 4 つが Claude Code 系の選択肢。OpenAI 系は **Codex Cloud / Workspace Agents** が同等機能を提供する。
+Adding **GitHub Actions' `schedule` trigger** (external CI) to this gives 4 options in the Claude Code family. In the OpenAI family, **Codex Cloud / Workspace Agents** provide equivalent functionality.
 
 ## 1. Cloud Routines (`/schedule`)
 
-[Automate work with routines](https://code.claude.com/docs/en/routines)。Anthropic のクラウド VM で Claude Code を定期実行する。Pro / Max / Team / Enterprise プランで利用可能（research preview）。
+[Automate work with routines](https://code.claude.com/docs/en/routines). Runs Claude Code periodically on Anthropic's cloud VMs. Available on Pro / Max / Team / Enterprise plans (research preview).
 
-### 何ができるか
+### Capabilities
 
-- **トリガー 3 種を組み合わせ可能**: Scheduled (cron) / API (HTTP POST) / GitHub event (PR opened など)
-- リポジトリを fresh clone → 作業 → `claude/`-prefix のブランチに push → PR 作成
-- MCP コネクタを per-routine で選択
-- 完全自律実行（permission prompt なし）
+- **Combine 3 trigger types**: Scheduled (cron) / API (HTTP POST) / GitHub event (PR opened, etc.)
+- Fresh clone the repository → do the work → push to a `claude/`-prefixed branch → create a PR
+- Choose MCP connectors per-routine
+- Fully autonomous execution (no permission prompts)
 
-### 作成・管理方法
+### Creation and management
 
-`/schedule` は **cloud routine（クラウドに保存される設定エンティティ）を操作する CLI スラッシュコマンド**。同名の Desktop ローカル scheduled task（後述）とは別物。3 つの作成面は同じ claude.ai アカウントに書き込むため、どこで作っても即座に他面に反映される。
+`/schedule` is a **CLI slash command that manipulates cloud routines (configuration entities stored in the cloud)**. It is distinct from the identically-named local Desktop scheduled task (described below). All 3 creation surfaces write to the same claude.ai account, so changes made anywhere are immediately reflected on the other surfaces.
 
 - Web: [claude.ai/code/routines](https://claude.ai/code/routines)
 - CLI:
-  - `/schedule daily PR review at 9am` のように自然言語で作成（CLI で作れるトリガーは **schedule のみ**。API/GitHub trigger は Web で追加）
-  - `/schedule list`（一覧） / `/schedule update`（変更・cron 式の直接指定） / `/schedule run`（即時起動）で既存ルーチンを管理
-  - `/schedule` が "Unknown command" になる場合は claude.ai サブスクログイン必須・API key 認証や telemetry 無効化が原因（詳細は `ai/agents/claude-code-routines.md`）
-- Desktop アプリ: Routines サイドバーから **New routine → Remote**（**Local** を選ぶと下記の Desktop scheduled task になる）
+  - Create with natural language, e.g. `/schedule daily PR review at 9am` (only the **schedule** trigger can be created from the CLI; add API/GitHub triggers via the Web UI)
+  - Manage existing routines with `/schedule list` (list) / `/schedule update` (modify, including specifying a cron expression directly) / `/schedule run` (trigger immediately)
+  - If `/schedule` returns "Unknown command," this is usually caused by not being logged into a claude.ai subscription — API key auth or disabled telemetry are typical culprits (details in `ai/agents/claude-code-routines.md`)
+- Desktop app: from the Routines sidebar, **New routine → Remote** (choosing **Local** creates a Desktop scheduled task instead, see below)
 
-### 制約
+### Constraints
 
-- 最小実行間隔は **1 時間**
-- 1 アカウント当たりの **日次 routine run cap** あり（[claude.ai/code/routines](https://claude.ai/code/routines) で確認）
-- デフォルトは `claude/`-prefix ブランチへのみ push（既存ブランチに書く場合は **Allow unrestricted branch pushes** を明示的に有効化）
-- One-off run は daily cap に含まれないが、サブスク枠は通常通り消費
-- 仕様変更の可能性あり（research preview）
+- Minimum interval is **1 hour**
+- There is a **daily routine run cap** per account (check at [claude.ai/code/routines](https://claude.ai/code/routines))
+- By default, pushes only to `claude/`-prefixed branches (to write to an existing branch, explicitly enable **Allow unrestricted branch pushes**)
+- One-off runs don't count against the daily cap, but still consume subscription usage normally
+- Subject to change (research preview)
 
-### 課金
+### Billing
 
-公式: > Routines draw down subscription usage the same way interactive sessions do.
+Official docs: > Routines draw down subscription usage the same way interactive sessions do.
 
-サブスク枠から消費される（API 課金は発生しない）。サブスク枠を超えた場合、"extra usage" を有効化していれば従量に流れる。
+Consumed from subscription usage (no API billing). If subscription usage is exceeded, it falls through to pay-as-you-go if "extra usage" is enabled.
 
 ## 2. Desktop scheduled tasks
 
-[Schedule recurring tasks in Claude Code Desktop](https://code.claude.com/docs/en/desktop-scheduled-tasks)。Desktop アプリ内で動くローカル版。
+[Schedule recurring tasks in Claude Code Desktop](https://code.claude.com/docs/en/desktop-scheduled-tasks). The local version that runs inside the Desktop app.
 
-- アプリ起動中かつマシンが起きている時のみ実行（ノート閉じると停止）
-- ローカルファイルに直接アクセス可能（clone 不要）
-- 最小実行間隔 **1 分**
-- 7 日以内の missed run を **1 回だけ** catch up
-- タスクごとに permission mode 設定可能（Ask モードだと承認待ちで stall）
-- 定義は `~/.claude/scheduled-tasks/<task-name>/SKILL.md` に保存される
+- Only runs while the app is running and the machine is awake (stops when the laptop is closed)
+- Can access local files directly (no cloning needed)
+- Minimum interval **1 minute**
+- Catches up on missed runs within the last 7 days, **once only**
+- Permission mode can be configured per task (Ask mode will stall waiting for approval)
+- Definitions are stored at `~/.claude/scheduled-tasks/<task-name>/SKILL.md`
 
-クラウドに送りたくないコード、ローカルにしかない依存、Routines の daily cap 到達時の代替として有効。
+Useful for code you don't want to send to the cloud, dependencies that only exist locally, or as a fallback when Routines' daily cap is hit.
 
-## 3. `/loop`（セッション内）
+## 3. `/loop` (within a session)
 
-[Run prompts on a schedule](https://code.claude.com/docs/en/scheduled-tasks)。**現在のセッション中のみ**動く軽量スケジューラ。Claude Code v2.1.72+ 必須。
+[Run prompts on a schedule](https://code.claude.com/docs/en/scheduled-tasks). A lightweight scheduler that runs **only during the current session**. Requires Claude Code v2.1.72+.
 
 ```text
 /loop 5m check if the deployment finished
@@ -84,116 +84,116 @@ AI コーディングエージェント（Claude Code / Codex 等）を recurrin
 /loop 20m /review-pr 1234
 ```
 
-| 入力 | 挙動 |
+| Input | Behavior |
 |---|---|
-| interval + prompt | 固定 cron で実行 |
-| prompt のみ | Claude が iteration ごとに interval（1 分〜1 時間）を動的決定 |
-| interval のみ / 引数なし | 組み込みメンテナンスプロンプトが走る（または `loop.md` を読む） |
+| interval + prompt | Runs on a fixed cron schedule |
+| prompt only | Claude dynamically decides the interval (1 minute–1 hour) per iteration |
+| interval only / no arguments | Runs a built-in maintenance prompt (or reads `loop.md`) |
 
-- セッションスコープ（`--continue` / `--resume` で復元、ただし 7 日以内）
-- **7 日で自動失効**
-- セッション内最大 50 タスク
-- `Esc` で待機中ループを停止
-- `.claude/loop.md` または `~/.claude/loop.md` でデフォルトプロンプトを上書き
-- 内部的には `CronCreate` / `CronList` / `CronDelete` ツールを使用
+- Session-scoped (restored via `--continue` / `--resume`, but only within 7 days)
+- **Auto-expires after 7 days**
+- Maximum 50 tasks per session
+- `Esc` stops a pending loop
+- Override the default prompt via `.claude/loop.md` or `~/.claude/loop.md`
+- Internally uses the `CronCreate` / `CronList` / `CronDelete` tools
 
-ビルドの様子見・PR ベイビーシッティング・短期ポーリング向け。長期 cron 用途には不向き。
+Suited for watching a build, babysitting a PR, or short-term polling. Not suited for long-term cron use cases.
 
-## 4. GitHub Actions の `schedule` トリガー
+## 4. GitHub Actions `schedule` trigger
 
-CI で定期実行する古典的方法。詳細は `platforms/github-actions.md`。
+The classic method of running periodically in CI. See `platforms/github-actions.md` for details.
 
 ```yaml
 on:
   schedule:
-    - cron: "0 9 * * 1"   # 毎週月曜 09:00 UTC
+    - cron: "0 9 * * 1"   # every Monday 09:00 UTC
 ```
 
-エージェント CLI を Action 内で起動する場合、Anthropic の利用ポリシーにより **API key 認証推奨**（後述）。サブスクの OAuth トークンは技術的には使えるが、CI 自動化は "ordinary individual use" の範囲外と明文化されている。
+When launching an agent CLI inside an Action, Anthropic's usage policy **recommends API key authentication** (details below). A subscription's OAuth token technically works, but it is explicitly stated that CI automation falls outside "ordinary individual use."
 
-## 5. 他の CLI エコシステムの Routines 相当
+## 5. Routines-equivalents in other CLI ecosystems
 
-主要 4 コーディングエージェント CLI それぞれに、クラウドで自律/定期実行する「Routines 相当」がある（多くは CLI 本体とは別プロダクト）。Routines の定義特性（**クラウド非同期 × スケジュール/API/GitHub トリガー × 自律 PR**）で並べると、3 トリガーすべてを 1 プロダクトに束ねているのは **Claude Code Routines・Google Jules・GitHub Copilot cloud agent**（Copilot は 2026-06-02 の **Automations** で native schedule を獲得）。**Codex cloud のみ native schedule を欠き**（定期実行は別プロダクト / GitHub Actions で代替）、API トリガーも公式 docs に明記がない。
+Each of the 4 major coding-agent CLIs has some "Routines equivalent" for autonomous/periodic cloud execution (often a separate product from the CLI itself). Ranked by Routines' defining traits (**cloud async × schedule/API/GitHub trigger × autonomous PR**), the products bundling all 3 trigger types into a single offering are **Claude Code Routines, Google Jules, and GitHub Copilot cloud agent** (Copilot gained native scheduling via **Automations** on 2026-06-02). **Only Codex cloud lacks native scheduling** (periodic execution is handled by a separate product / GitHub Actions instead), and API triggering isn't documented officially either.
 
-| CLI エコシステム | クラウド自律プロダクト | スケジュール | API/webhook 起動 | GitHub イベント | 自律 PR | 成熟度 |
+| CLI ecosystem | Cloud autonomous product | Schedule | API/webhook trigger | GitHub event | Autonomous PR | Maturity |
 |---|---|---|---|---|---|---|
-| **Claude Code** | **Routines** | ✓（最小 1h） | ✓（`/fire`） | ✓（PR/Release） | ✓ | research preview |
-| **Codex CLI**（OpenAI） | **Codex cloud** ＋ Workspace agents ＋ ChatGPT Scheduled Tasks | △（Workspace agents / ChatGPT tasks 側） | 不明（Codex cloud の docs に明記なし） | ✓（`@codex` を issue/PR にタグ） | ✓ | Codex cloud: 提供中（GA/preview 明記なし）/ Workspace agents: research preview |
-| **Gemini CLI**（Google） | **Jules**（非同期コーディングエージェント）＋ Gemini CLI GitHub Action | ✓（Daily/Weekly 等の recurring） | ✓（REST API `v1alpha/sessions`） | ✓（issue に `jules` ラベル → PR） | ✓ | alpha（experimental） |
-| **GitHub Copilot CLI** | **Copilot cloud agent**（旧 coding agent） | ✓（**Automations**: hourly/daily/weekly、2026-06-02 GA） | ✓ | ✓（issue assign / issue・PR イベント） | ✓（指定で即 PR） | GA |
+| **Claude Code** | **Routines** | ✓ (min 1h) | ✓ (`/fire`) | ✓ (PR/Release) | ✓ | research preview |
+| **Codex CLI** (OpenAI) | **Codex cloud** + Workspace agents + ChatGPT Scheduled Tasks | △ (via Workspace agents / ChatGPT tasks) | Unknown (not documented for Codex cloud) | ✓ (tag `@codex` on issue/PR) | ✓ | Codex cloud: available (GA/preview not specified) / Workspace agents: research preview |
+| **Gemini CLI** (Google) | **Jules** (async coding agent) + Gemini CLI GitHub Action | ✓ (Daily/Weekly recurring, etc.) | ✓ (REST API `v1alpha/sessions`) | ✓ (`jules` label on issue → PR) | ✓ | alpha (experimental) |
+| **GitHub Copilot CLI** | **Copilot cloud agent** (formerly coding agent) | ✓ (**Automations**: hourly/daily/weekly, GA 2026-06-02) | ✓ | ✓ (issue assign / issue・PR events) | ✓ (immediate PR if specified) | GA |
 
-凡例: ✓=対応 / ✗=非対応 / △=条件付き・別プロダクト経由 / 不明=公式 docs で未確認（2026-06 時点）。
+Legend: ✓=supported / ✗=not supported / △=conditional, via a separate product / Unknown=not confirmed in official docs (as of 2026-06).
 
-> **ソース確認状況**: Routines / Codex cloud / Jules（scheduled-tasks・API reference 含む）/ Copilot cloud agent（Automations 含む）は各社公式 docs を直接 fetch して確認済み。**Workspace agents のみ** OpenAI の blog / help center が automated fetch を `403` で拒否するため、KB 既検証値（2026-05-24）に依拠している。
+> **Source verification status**: Routines / Codex cloud / Jules (including scheduled-tasks and API reference) / Copilot cloud agent (including Automations) were confirmed by directly fetching each vendor's official docs. **Workspace agents alone** relies on a previously verified KB value (2026-05-24), since OpenAI's blog / help center pages return `403` to automated fetches.
 
-### 各エコシステムの要点
+### Key points per ecosystem
 
-- **Codex CLI（OpenAI）**: クラウド非同期は [Codex cloud](https://developers.openai.com/codex/cloud)（バックグラウンド/並列実行、Plus / Pro / Business / Edu / Enterprise に込み、Free 除く。docs は GA/preview を明記せず）。トリガーは web / IDE 拡張 / GitHub の `@codex` タグで、PR を作成できる。**API・スケジュールでの起動は Codex cloud の docs に明記なし**。定期実行が必要なら [Workspace agents](https://openai.com/index/introducing-workspace-agents-in-chatgpt/)（スケジュール + Slack 連携、Business / Enterprise / Edu / Teachers 限定の research preview）か、ChatGPT の Scheduled Tasks（汎用パーソナルアシスタント。コーディング/PR 自動化エージェントではない）。Routines に最も近いのは Workspace agents だが個人プランでは選べない。
-  > **注意**: Workspace Agents は **ChatGPT Plus / Pro では利用不可**。チーム/エンタープライズプラン限定。**2026-05-06 に無料期間が終了**し、現在は Business / Enterprise / Edu / Teachers の月次クレジットプールから token 単位（credits/million input/cached/output tokens）で消費されるクレジットベース課金。詳細は OpenAI Help Center [Flexible pricing for the Enterprise, Edu, and Business plans](https://help.openai.com/en/articles/11487671-flexible-pricing-for-the-enterprise-edu-and-business-plans) を参照。
-- **Gemini CLI（Google）**: Google の非同期コーディングエージェントは [Jules](https://jules.google)。**トリガー 3 種がそろう**（Routines に最も近い）: ① GitHub issue の `jules` ラベル → PR、② [REST API](https://jules.google/docs/api/reference/)（`POST https://jules.googleapis.com/v1alpha/sessions` で session 起動、`X-Goog-Api-Key` 認証、**alpha**）、③ [Scheduled tasks](https://jules.google/docs/scheduled-tasks/)（Daily / Weekly 等の recurring で routine 的な保守を自動実行）。タスク数ベースの無料 / Pro / Ultra（15 / 100 / 300 tasks/day）で "experimental" 表記。Gemini CLI 本体を CI で回すなら `run-gemini-cli` の GitHub Action。
-- **GitHub Copilot CLI**: クラウド自律は [Copilot cloud agent](https://docs.github.com/en/copilot/concepts/agents/coding-agent)（旧 coding agent、GitHub Actions 基盤、GA）。issue アサイン / Copilot Chat / Slack・Teams・Jira・Linear 等から起動し PR を作る（プロンプトで「すぐ PR」を指定可）。Pro / Pro+ / Max / Business / Enterprise、課金は Actions 分 + GitHub AI Credits。**2026-06-02 に [Automations](https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-automations) が GA となり native schedule を獲得**: hourly / daily / weekly の recurring、または issue 作成 / PR 作成・更新イベントで cloud agent セッションを自動起動できる（[changelog](https://github.blog/changelog/2026-06-02-schedule-and-automate-tasks-with-copilot-cloud-agent/)）。private / internal リポジトリ対象（public は coming soon）。GitHub Actions の自前 cron で代替する必要はなくなった。
+- **Codex CLI (OpenAI)**: The async cloud offering is [Codex cloud](https://developers.openai.com/codex/cloud) (background/parallel execution, included with Plus / Pro / Business / Edu / Enterprise, excluding Free; docs don't specify GA/preview status). Triggered via web / IDE extension / tagging `@codex` on GitHub, and it can create PRs. **API- or schedule-based triggering is not documented for Codex cloud.** If periodic execution is needed, use [Workspace agents](https://openai.com/index/introducing-workspace-agents-in-chatgpt/) (scheduling + Slack integration, research preview limited to Business / Enterprise / Edu / Teachers) or ChatGPT's Scheduled Tasks (a general-purpose personal assistant, not a coding/PR automation agent). Workspace agents is the closest analog to Routines, but it's unavailable on individual plans.
+  > **Note**: Workspace Agents is **not available on ChatGPT Plus / Pro**. It's limited to team/enterprise plans. The free period **ended on 2026-05-06**, and it's now credit-based billing consumed per-token (credits per million input/cached/output tokens) from the monthly credit pool for Business / Enterprise / Edu / Teachers plans. See OpenAI Help Center [Flexible pricing for the Enterprise, Edu, and Business plans](https://help.openai.com/en/articles/11487671-flexible-pricing-for-the-enterprise-edu-and-business-plans) for details.
+- **Gemini CLI (Google)**: Google's async coding agent is [Jules](https://jules.google). **It supports all 3 trigger types** (the closest analog to Routines): ① a `jules` label on a GitHub issue → PR, ② [REST API](https://jules.google/docs/api/reference/) (start a session with `POST https://jules.googleapis.com/v1alpha/sessions`, authenticated via `X-Goog-Api-Key`, **alpha**), ③ [Scheduled tasks](https://jules.google/docs/scheduled-tasks/) (Daily / Weekly recurring maintenance runs). Billed by task count on Free / Pro / Ultra (15 / 100 / 300 tasks/day), labeled "experimental." To run the Gemini CLI itself in CI, use the `run-gemini-cli` GitHub Action.
+- **GitHub Copilot CLI**: Cloud autonomy is provided by [Copilot cloud agent](https://docs.github.com/en/copilot/concepts/agents/coding-agent) (formerly coding agent, built on GitHub Actions, GA). Triggered by issue assignment / Copilot Chat / Slack, Teams, Jira, Linear, etc., and creates PRs (can specify "create PR immediately" in the prompt). Available on Pro / Pro+ / Max / Business / Enterprise, billed via Actions minutes + GitHub AI Credits. **[Automations](https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-automations) reached GA on 2026-06-02, adding native scheduling**: hourly / daily / weekly recurrence, or automatic cloud agent session launches on issue creation / PR creation-update events (see the [changelog](https://github.blog/changelog/2026-06-02-schedule-and-automate-tasks-with-copilot-cloud-agent/)). Applies to private / internal repositories (public repos coming soon). No longer necessary to fall back on a hand-rolled GitHub Actions cron.
 
-## 認証と課金（重要）
+## Authentication and billing (Important)
 
-[Anthropic Legal and compliance](https://code.claude.com/docs/en/legal-and-compliance) の "Authentication and credential use" より:
+From [Anthropic Legal and compliance](https://code.claude.com/docs/en/legal-and-compliance), "Authentication and credential use":
 
 > OAuth authentication is intended exclusively for purchasers of Claude Free, Pro, Max, Team, and Enterprise subscription plans and is designed to support **ordinary use of Claude Code and other native Anthropic applications**.
 >
 > Developers building products or services that interact with Claude's capabilities, including those using the Agent SDK, should use **API key authentication** through Claude Console or a supported cloud provider.
 
-意味するところ:
+What this means:
 
-| 実行手段 | サブスクの OAuth で動かしてよいか | 推奨認証 |
+| Execution method | OK to run with subscription OAuth? | Recommended auth |
 |---|---|---|
-| Routines / Desktop / `/loop` | Yes（Anthropic 公式アプリ内で動く） | OAuth (サブスク枠) |
-| GitHub Actions / 自前 CI | No（"ordinary individual use" の範囲外） | `ANTHROPIC_API_KEY`（従量課金） |
-| Agent SDK / `claude -p`（スクリプト実行） | サブスクでも可だが**別枠課金**（下記 Note） | OAuth または API key |
-| プロダクト組み込み | No | API key |
+| Routines / Desktop / `/loop` | Yes (runs inside official Anthropic apps) | OAuth (subscription usage) |
+| GitHub Actions / self-hosted CI | No (outside "ordinary individual use") | `ANTHROPIC_API_KEY` (pay-as-you-go) |
+| Agent SDK / `claude -p` (scripted execution) | Allowed even on subscription, but **billed separately** (see Note below) | OAuth or API key |
+| Embedded in a product | No | API key |
 
-「サブスクで動くから無料」と「Anthropic がポリシー的に許容する用途」は別軸。CI 自動化を OAuth で運用すると、policy 上の措置（Anthropic は事前通知なしで取りうる）と個人アカウント枠の浪費の両方がリスクになる。
+"It works with a subscription so it's free" and "a use Anthropic's policy permits" are separate axes. Running CI automation on OAuth risks both policy enforcement action (which Anthropic can take without prior notice) and wasting individual account usage.
 
-> **Note (2026-06-15〜)**: Agent SDK および `claude -p` の利用は subscription plan 下でも「月次 Agent SDK credit」という別枠から消費される（インタラクティブ利用枠とは分離）。Routines / Desktop / `/loop` は公式アプリ枠で従来通りインタラクティブ枠を消費するが、自前スクリプトで Agent SDK を回す場合は別計算になる。詳細: [Use the Claude Agent SDK with your Claude plan](https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan)。
+> **Note (from 2026-06-15)**: Usage of the Agent SDK and `claude -p`, even under a subscription plan, is consumed from a separate "monthly Agent SDK credit" pool (distinct from the interactive-use allowance). Routines / Desktop / `/loop` still consume the traditional interactive allowance as part of the official app usage, but running the Agent SDK yourself in a script is billed separately. Details: [Use the Claude Agent SDK with your Claude plan](https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan).
 
-## 選び方フロー
+## Decision flow
 
 ```text
-ノートを閉じても動いてほしい？
-├─ Yes → 公式アプリの範囲内で済ませたい（policy 準拠 & 追加課金なし）？
+Should it keep running after closing the laptop?
+├─ Yes → Want to stay within the official apps (policy-compliant & no extra billing)?
 │        ├─ Yes → Cloud Routines
 │        └─ No  → GitHub Actions + ANTHROPIC_API_KEY
-└─ No  → セッションを開きっぱなしにできる？
+└─ No  → Can you leave a session open?
          ├─ Yes → /loop
          └─ No  → Desktop scheduled tasks
 ```
 
-追加の判断軸:
+Additional decision factors:
 
-- **ローカルファイル必須** → Desktop or `/loop`（Routines は fresh clone で `~/.gitignore` 配下や untracked file を見れない）
-- **GitHub event トリガー** → Routines（PR opened / Release published 等）or GitHub Actions
-- **API トリガー（外部システムから叩く）** → Routines の `/fire` endpoint
-- **1 時間より短い間隔が必須** → Routines 不可。Desktop / `/loop` / GitHub Actions
-- **チーム運用・個人枠を消費したくない** → API key 利用の GitHub Actions が無難
+- **Local files are required** → Desktop or `/loop` (Routines does a fresh clone, so it can't see files under `~/.gitignore` or untracked files)
+- **GitHub event trigger** → Routines (PR opened / Release published, etc.) or GitHub Actions
+- **API trigger (invoked from an external system)** → Routines' `/fire` endpoint
+- **Interval shorter than 1 hour is required** → Routines is not an option. Use Desktop / `/loop` / GitHub Actions
+- **Team operation, don't want to consume individual allowance** → GitHub Actions with an API key is the safest choice
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **GitHub Actions で OAuth トークンを使う** — `CLAUDE_CODE_OAUTH_TOKEN` は技術的に動くが、Anthropic の利用ポリシーで CI 自動化は API key 推奨と明文化されている。policy 違反リスクと個人アカウント枠の浪費の両方
-2. **`/loop` で長期 cron を作る** — `/loop` は 7 日失効 + セッションスコープ。月次レポートや週次更新は Routines / Desktop / GitHub Actions
-3. **Routines に main 直 push を期待する** — デフォルトでは `claude/`-prefix ブランチにしか push できない。既存ブランチに書くなら **Allow unrestricted branch pushes** を有効化する必要あり
-4. **Desktop scheduled tasks を「ノート閉じても動く」と誤解** — 動かない。アプリ起動中かつマシンが起きている時のみ
-5. **Routines の cron に 30 分を指定** — 最小は 1 時間。短い周期が必要なら別手段
-6. **catch-up を当てにする** — Desktop は 7 日内の missed run を 1 回だけ catch up、Routines は仕様非公開、`/loop` と GitHub Actions は catch up なし。時刻が重要ならプロンプト内にガードを書く（例: 「今 17:00 を過ぎていたらスキップしてサマリのみ」）
-7. **fresh clone を忘れる** — Routines は毎回 fresh clone なので `.gitignore` のローカル設定や untracked file は反映されない。必要な設定は repo にコミット、または `.claude/settings.json` の SessionStart hook で再構成
+1. **Using an OAuth token in GitHub Actions** — `CLAUDE_CODE_OAUTH_TOKEN` technically works, but Anthropic's usage policy explicitly recommends an API key for CI automation. This risks both policy violation and wasting individual account allowance
+2. **Building a long-lived cron with `/loop`** — `/loop` expires after 7 days and is session-scoped. Use Routines / Desktop / GitHub Actions for monthly reports or weekly updates
+3. **Expecting Routines to push directly to `main`** — By default it can only push to `claude/`-prefixed branches. Writing to an existing branch requires enabling **Allow unrestricted branch pushes**
+4. **Assuming Desktop scheduled tasks run with the laptop closed** — They don't. They only run while the app is running and the machine is awake
+5. **Specifying a 30-minute interval in Routines cron** — The minimum is 1 hour. Use a different method if a shorter cycle is needed
+6. **Relying on catch-up** — Desktop catches up on missed runs within 7 days, once only; Routines' behavior is undocumented; `/loop` and GitHub Actions have no catch-up. If timing matters, put a guard in the prompt itself (e.g. "skip and just summarize if it's already past 17:00")
+7. **Forgetting the fresh clone** — Since Routines does a fresh clone every time, local `.gitignore`-based configuration or untracked files won't be reflected. Commit any required configuration to the repo, or reconstruct it via a SessionStart hook in `.claude/settings.json`
 
-## 参考
+## References
 
-- [Routines（クラウド定期実行）](https://code.claude.com/docs/en/routines)
+- [Routines (cloud scheduled execution)](https://code.claude.com/docs/en/routines)
 - [Desktop scheduled tasks](https://code.claude.com/docs/en/desktop-scheduled-tasks)
-- [`/loop` とセッション内スケジューラ](https://code.claude.com/docs/en/scheduled-tasks)
+- [`/loop` and the in-session scheduler](https://code.claude.com/docs/en/scheduled-tasks)
 - [Claude Code GitHub Actions](https://code.claude.com/docs/en/github-actions)
 - [Claude Code on the web](https://code.claude.com/docs/en/claude-code-on-the-web)
-- [Legal and compliance（OAuth と API key の使い分け）](https://code.claude.com/docs/en/legal-and-compliance)
+- [Legal and compliance (OAuth vs. API key usage)](https://code.claude.com/docs/en/legal-and-compliance)
 - [OpenAI Codex Cloud](https://developers.openai.com/codex/cloud)
 - [Google Jules](https://jules.google)
-- [GitHub Copilot cloud agent（旧 coding agent）](https://docs.github.com/en/copilot/concepts/agents/coding-agent) / [Copilot Automations](https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-automations)
+- [GitHub Copilot cloud agent (formerly coding agent)](https://docs.github.com/en/copilot/concepts/agents/coding-agent) / [Copilot Automations](https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-automations)
 - [OpenAI Workspace Agents](https://openai.com/index/introducing-workspace-agents-in-chatgpt/)
-- 関連: `platforms/github-actions.md` / `ai/agents/claude-code.md` / `ai/practice/multi-agent-repo.md`
+- Related: `platforms/github-actions.md` / `ai/agents/claude-code.md` / `ai/practice/multi-agent-repo.md`

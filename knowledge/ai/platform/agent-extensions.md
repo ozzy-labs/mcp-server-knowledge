@@ -3,44 +3,44 @@ reviewed: 2026-06-07
 tags: [ai-workflow, methodology]
 ---
 
-# AI エージェントの拡張機構（Skills / Subagents / Hooks / Plugins）
+# AI Agent Extension Mechanisms (Skills / Subagents / Hooks / Plugins)
 
-Claude Code / Codex CLI / Gemini CLI / GitHub Copilot CLI の 4 大コーディングエージェント CLI が、2026 年時点でほぼ共通のメンタルモデルで**拡張機構**を持つようになった。本記事はそれらを横断比較する。個別 CLI の仕様は `ai/agents/claude-code.md` / `ai/agents/codex-cli.md` / `ai/agents/gemini-cli.md` / `ai/agents/github-copilot-cli.md` を参照。
+As of 2026, the four major coding-agent CLIs — Claude Code / Codex CLI / Gemini CLI / GitHub Copilot CLI — have converged on a nearly common mental model for **extension mechanisms**. This article compares them across CLIs. For individual CLI specifications, see `ai/agents/claude-code.md` / `ai/agents/codex-cli.md` / `ai/agents/gemini-cli.md` / `ai/agents/github-copilot-cli.md`.
 
-## 4 つの拡張機構
+## The 4 extension mechanisms
 
-現代のエージェント CLI はすべて以下の 4 層で拡張される。
+Every modern agent CLI is extended through the following four layers.
 
-| 層 | 目的 | 典型的な置き場所 |
+| Layer | Purpose | Typical location |
 |---|---|---|
-| **Skills** | 「この種のタスクが来たら読む」プロンプト + コンテキストのバンドル | `.agents/skills/<name>/SKILL.md`（オープン標準） |
-| **Subagents (Custom agents)** | 独立コンテキストで動く専門エージェントの定義 | `.<cli>/agents/<name>.md` |
-| **Hooks** | ツール実行・セッションイベントにフックするシェルスクリプト | `hooks.json` / 設定ファイルの `hooks` セクション |
-| **Plugins / Extensions** | 上記を束ねて配布するパッケージ | プラグインマーケットプレイス |
+| **Skills** | A bundle of prompt + context "to read when this kind of task comes up" | `.agents/skills/<name>/SKILL.md` (open standard) |
+| **Subagents (Custom agents)** | Definitions of specialized agents that run in independent context | `.<cli>/agents/<name>.md` |
+| **Hooks** | Shell scripts hooked into tool execution / session events | `hooks.json` / the `hooks` section of the config file |
+| **Plugins / Extensions** | Packages that bundle and distribute the above | Plugin marketplaces |
 
-これらは補完関係にある。**Skills は「オンデマンドで呼び出す再利用可能なタスクプロンプト」、Subagents は「委譲先の永続的エージェント定義」、Hooks は「イベント駆動の自動化」、Plugins は「その配布単位」**。
+These are complementary. **Skills are "reusable task prompts invoked on demand," Subagents are "persistent agent definitions to delegate to," Hooks are "event-driven automation," and Plugins are "the distribution unit for all of it."**
 
-## オープン標準: `AGENTS.md` と Agent Skills
+## Open standards: `AGENTS.md` and Agent Skills
 
-2026 年初頭時点で 2 つの共通標準が確立している。
+As of early 2026, two common standards are established.
 
-- **`AGENTS.md`**: プロジェクトガイダンスの共通ファイル。Linux Foundation 配下の Agentic AI Foundation が標準化。4 CLI すべてが対応（Claude Code は `CLAUDE.md` を主軸にしつつ `AGENTS.md` も併読）。詳細は `ai/platform/agents-md.md`
-- **Agent Skills（`SKILL.md`）**: スキル定義の共通フォーマット。`name` / `description` が必須 frontmatter。Claude Code / Codex CLI / Gemini CLI / GitHub Copilot CLI の全 4 CLI が読み込む
+- **`AGENTS.md`**: A common file for project guidance. Standardized by the Agentic AI Foundation under the Linux Foundation. All 4 CLIs support it (Claude Code primarily uses `CLAUDE.md` but also reads `AGENTS.md`). See `ai/platform/agents-md.md` for details
+- **Agent Skills (`SKILL.md`)**: A common format for skill definitions. `name` / `description` are required frontmatter. All 4 CLIs — Claude Code / Codex CLI / Gemini CLI / GitHub Copilot CLI — load it
 
-結果として、**1 つの `SKILL.md` を複数エージェントで共有できる**。リポジトリ `.agents/skills/` 配下に置けば 4 CLI すべてが発見する。
+As a result, **a single `SKILL.md` can be shared across multiple agents**. Placing it under the repository's `.agents/skills/` makes it discoverable by all 4 CLIs.
 
-## Skills 横断比較
+## Skills cross-comparison
 
-| 項目 | Claude Code | Codex CLI | Gemini CLI | GitHub Copilot CLI |
+| Item | Claude Code | Codex CLI | Gemini CLI | GitHub Copilot CLI |
 |---|---|---|---|---|
-| Project path | `.claude/skills/` | `.agents/skills/` | `.gemini/skills/` または `.agents/skills/` | `.github/skills/` / `.claude/skills/` / `.agents/skills/` |
-| Personal path | `~/.claude/skills/` | `~/.agents/skills/` | `~/.gemini/skills/` | `~/.copilot/skills/` 他 |
-| 管理コマンド | `/plugin` UI 内 | `/skills` | `/skills list\|link\|disable\|enable\|reload` | `/skills list\|info\|reload\|remove` |
-| 自動発火 | `description` マッチで自動 | `$skill-name` メンション + 暗黙 | `activate_skill` ツール（ユーザー確認） | 推論ベース |
+| Project path | `.claude/skills/` | `.agents/skills/` | `.gemini/skills/` or `.agents/skills/` | `.github/skills/` / `.claude/skills/` / `.agents/skills/` |
+| Personal path | `~/.claude/skills/` | `~/.agents/skills/` | `~/.gemini/skills/` | `~/.copilot/skills/` etc. |
+| Management command | Within the `/plugin` UI | `/skills` | `/skills list\|link\|disable\|enable\|reload` | `/skills list\|info\|reload\|remove` |
+| Auto-trigger | Automatic on `description` match | `$skill-name` mention + implicit | `activate_skill` tool (user confirmation) | Inference-based |
 
-**注意**: GitHub Copilot CLI は `.claude/skills/` と `.agents/skills/` も同時にサポートする設計になっており、**他 CLI の skills を相互運用できる**。
+**Note**: GitHub Copilot CLI is designed to also support `.claude/skills/` and `.agents/skills/` simultaneously, allowing it to **interoperate with other CLIs' skills**.
 
-### SKILL.md の標準 frontmatter
+### Standard SKILL.md frontmatter
 
 ```markdown
 ---
@@ -49,135 +49,135 @@ description: Review code for best practices and security. Use when reviewing PRs
 allowed-tools: Read Grep Glob
 ---
 
-コードレビュー時は以下をチェック:
-- セキュリティ脆弱性
-- パフォーマンス問題
+When reviewing code, check the following:
+- Security vulnerabilities
+- Performance issues
 ```
 
-`name` と `description` は必須。`allowed-tools` は多くの CLI が共通サポート。Claude Code 固有に `when_to_use` / `argument-hint` / `paths` / `hooks` / `effort` / `context: fork` 等、Copilot CLI 固有に `license`、Codex CLI 固有に `agents/openai.yaml` がある。
+`name` and `description` are required. `allowed-tools` is commonly supported by many CLIs. Claude Code has its own `when_to_use` / `argument-hint` / `paths` / `hooks` / `effort` / `context: fork`, etc.; Copilot CLI has its own `license`; Codex CLI has its own `agents/openai.yaml`.
 
 ### Progressive disclosure
 
-全 4 CLI が共通して、**起動時は `description` のみ常駐**し、トリガーされた時点で本文がロードされる。これによりスキル数が増えてもコンテキストを食わない。詳細は `ai/practice/ai-context-management.md`。
+Across all 4 CLIs, **only the `description` is resident at startup**, and the body is loaded once triggered. This keeps the context footprint low even as the number of skills grows. See `ai/practice/ai-context-management.md` for details.
 
-## Subagents 横断比較
+## Subagents cross-comparison
 
-| 項目 | Claude Code | Codex CLI | Gemini CLI | GitHub Copilot CLI |
+| Item | Claude Code | Codex CLI | Gemini CLI | GitHub Copilot CLI |
 |---|---|---|---|---|
 | Project path | `.claude/agents/<name>.md` | `.codex/agents/` | `.gemini/agents/` | `.github/agents/<name>.agent.md` |
 | Personal path | `~/.claude/agents/` | `~/.codex/agents/` | `~/.gemini/agents/` | `~/.copilot/agents/` |
-| 発火モデル | 自動委譲 + `/agents` + Agent ツール | **明示的 spawn のみ** | 自動委譲 + `@name` 強制 | `/agent` + `--agent` + 推論 |
-| 必須 frontmatter | `name`, `description` | `name`, `description`, `developer_instructions` | `name`, `description` | `description`（`name` は省略可） |
-| モデル継承 | `inherit` | model 指定必須 | `inherit` 可 | model 指定可 |
-| 再帰呼び出し | `Agent` ツール経由で可能 | `max_depth` で制御（デフォルト 1） | **不可** | 仕様不明 |
+| Trigger model | Auto-delegation + `/agents` + Agent tool | **Explicit spawn only** | Auto-delegation + forced `@name` | `/agent` + `--agent` + inference |
+| Required frontmatter | `name`, `description` | `name`, `description`, `developer_instructions` | `name`, `description` | `description` (`name` is optional) |
+| Model inheritance | `inherit` | Model must be specified | `inherit` allowed | Model can be specified |
+| Recursive invocation | Possible via the `Agent` tool | Controlled via `max_depth` (default 1) | **Not possible** | Unspecified |
 
-**発火モデルの違いに注意**: Codex CLI の subagent は**ユーザーが明示的にリクエストしない限り spawn しない**。Claude Code の自動委譲とは設計思想が異なる。
+**Note the difference in trigger models**: Codex CLI subagents **spawn only when the user explicitly requests it**. This is a different design philosophy from Claude Code's auto-delegation.
 
-### 委譲判断の原則
+### Principles for delegation decisions
 
-- 探索範囲が広い（多数ファイルの grep / 読み込み）→ 委譲
-- 失敗が多く試行錯誤が必要 → 委譲（親コンテキスト汚染回避）
-- 結果が小さく親で直接やった方が早い → 委譲しない
+- Broad exploration scope (grepping/reading many files) → delegate
+- Many failures requiring trial and error → delegate (avoids polluting the parent context)
+- Result is small and faster to do directly in the parent → don't delegate
 
-詳細は `ai/practice/ai-context-management.md` のサブエージェント節。
+See the subagent section of `ai/practice/ai-context-management.md` for details.
 
-## Hooks 横断比較
+## Hooks cross-comparison
 
-| 項目 | Claude Code | Codex CLI | Gemini CLI | GitHub Copilot CLI |
+| Item | Claude Code | Codex CLI | Gemini CLI | GitHub Copilot CLI |
 |---|---|---|---|---|
-| イベント数 | 約 29 | 10 | 12 | 13 |
-| 設定場所 | `settings.json` の `hooks` | `~/.codex/hooks.json` / `<repo>/.codex/hooks.json` | `settings.json` の `hooks` | `.github/hooks/*.json`（または CWD の `hooks.json`） |
-| 有効化 | デフォルト | デフォルト（無効化は `[features] hooks = false`、`codex_hooks` は deprecated alias） | デフォルト | デフォルト |
-| 決定返却 | `hookSpecificOutput.permissionDecision` (`allow`/`deny`/`ask`/`defer`) | exit 2 or permissionDecision | exit 2 = block | `preToolUse` のみ permissionDecision |
-| ハンドラ種類 | `command` / `http` / `prompt` / `agent` / `mcp_tool` | `command` | `command` | `command`（`bash`/`powershell`） |
+| Number of events | ~29 | 10 | 12 | 13 |
+| Configuration location | `hooks` in `settings.json` | `~/.codex/hooks.json` / `<repo>/.codex/hooks.json` | `hooks` in `settings.json` | `.github/hooks/*.json` (or `hooks.json` in CWD) |
+| Enabled by | Default | Default (disable via `[features] hooks = false`; `codex_hooks` is a deprecated alias) | Default | Default |
+| Decision return | `hookSpecificOutput.permissionDecision` (`allow`/`deny`/`ask`/`defer`) | exit 2 or permissionDecision | exit 2 = block | permissionDecision only for `preToolUse` |
+| Handler types | `command` / `http` / `prompt` / `agent` / `mcp_tool` | `command` | `command` | `command` (`bash`/`powershell`) |
 
-### 共通する主要イベント
+### Common core events
 
-4 CLI すべてが対応する中核イベント:
+Core events supported by all 4 CLIs:
 
-- **SessionStart / SessionEnd**: 起動・終了時のフック
-- **PreToolUse**: ツール実行前（許可/拒否の判定機会）
-- **PostToolUse**: ツール実行後（結果検証）
-- **UserPromptSubmit**: ユーザー発話直前
+- **SessionStart / SessionEnd**: Hooks at startup/shutdown
+- **PreToolUse**: Before tool execution (opportunity to allow/deny)
+- **PostToolUse**: After tool execution (result verification)
+- **UserPromptSubmit**: Immediately before the user's utterance
 
-Claude Code が特に充実させているイベント（他 CLI にも一部相当物あり）:
+Events that Claude Code has particularly fleshed out (other CLIs have some equivalents):
 
-- `WorktreeCreate` / `WorktreeRemove` / `TeammateIdle` / `InstructionsLoaded` / `CwdChanged` / `FileChanged` / `ConfigChange` / `Elicitation` / `ElicitationResult` など。Claude Code 固有
-- `SubagentStart` / `SubagentStop` は Codex CLI / Copilot CLI にも存在、`PreCompact` 系も Codex (`PreCompact` / `PostCompact`) / Gemini (`PreCompress`) / Copilot (`preCompact`) が持つ
+- `WorktreeCreate` / `WorktreeRemove` / `TeammateIdle` / `InstructionsLoaded` / `CwdChanged` / `FileChanged` / `ConfigChange` / `Elicitation` / `ElicitationResult`, etc. — Claude Code specific
+- `SubagentStart` / `SubagentStop` also exist in Codex CLI / Copilot CLI; `PreCompact`-family events are also present in Codex (`PreCompact` / `PostCompact`), Gemini (`PreCompress`), and Copilot (`preCompact`)
 
-### Hooks の使いどころ
+### Where to use hooks
 
-- **PreToolUse で破壊的コマンドを拒否**（`rm -rf`、`git push --force` の検査）
-- **PostToolUse で自動フォーマッタ**（編集後に prettier / biome を回す）
-- **SessionStart でシークレットスキャン**（Gitleaks で commit 済みシークレットを確認）
-- **PreCompact で重要情報をメモリに退避**（Claude Code のみ）
+- **Deny destructive commands in PreToolUse** (inspecting `rm -rf`, `git push --force`)
+- **Auto-formatter in PostToolUse** (running prettier / biome after an edit)
+- **Secret scanning in SessionStart** (checking for already-committed secrets with Gitleaks)
+- **Evacuate important information to memory in PreCompact** (Claude Code only)
 
-詳細は各 CLI の記事を参照。
+See each CLI's article for details.
 
-## Plugins / Extensions 横断比較
+## Plugins / Extensions cross-comparison
 
-| 項目 | Claude Code | Codex CLI | Gemini CLI | GitHub Copilot CLI |
+| Item | Claude Code | Codex CLI | Gemini CLI | GitHub Copilot CLI |
 |---|---|---|---|---|
-| マニフェスト | `.claude-plugin/plugin.json` | Plugin marketplace（2026 初頭追加） | `gemini-extension.json` | `plugin.json` |
-| 含められるもの | skills / agents / hooks / commands / MCP / monitors | skills / agents / MCP | commands / hooks / skills / agents / policies / themes / MCP | agents / skills / hooks / MCP / LSP |
-| インストール | `/plugin install <name>` | `/plugins`（インタラクティブブラウザ） | `gemini extensions install <github-url>` | `/plugin install owner/repo` |
-| 名前空間 | `plugin-name:skill-name` | `<plugin>@<marketplace>`（例 `gmail@openai-curated`） | 同名衝突時に `<extension>.<command>` | リポジトリ名ベース |
+| Manifest | `.claude-plugin/plugin.json` | Plugin marketplace (added early 2026) | `gemini-extension.json` | `plugin.json` |
+| What can be bundled | skills / agents / hooks / commands / MCP / monitors | skills / agents / MCP | commands / hooks / skills / agents / policies / themes / MCP | agents / skills / hooks / MCP / LSP |
+| Installation | `/plugin install <name>` | `/plugins` (interactive browser) | `gemini extensions install <github-url>` | `/plugin install owner/repo` |
+| Namespacing | `plugin-name:skill-name` | `<plugin>@<marketplace>` (e.g. `gmail@openai-curated`) | `<extension>.<command>` on name collision | Repository-name based |
 
-**セキュリティ制約**:
+**Security constraints**:
 
-- **Claude Code**: プラグインから提供されるサブエージェントは `hooks` / `mcpServers` / `permissionMode` をサポートしない（昇格攻撃対策）
-- **Gemini CLI**: プロジェクト hooks をフィンガープリントし、変更時に警告を出す
+- **Claude Code**: Subagents provided by plugins do not support `hooks` / `mcpServers` / `permissionMode` (to prevent privilege-escalation attacks)
+- **Gemini CLI**: Fingerprints project hooks and warns when they change
 
-## MCP（Model Context Protocol）統合
+## MCP (Model Context Protocol) integration
 
-すべての CLI が MCP サーバーをネイティブ統合。これは**拡張機構の外部リソース接続面**。詳細は `ai/platform/mcp-protocol.md`。
+All CLIs natively integrate MCP servers. This is **the external-resource-connection facet of the extension mechanism**. See `ai/platform/mcp-protocol.md` for details.
 
-| CLI | 設定場所 | スコープ |
+| CLI | Configuration location | Scope |
 |---|---|---|
-| Claude Code | `~/.claude.json`（user）/ `.mcp.json`（project）/ `settings.local.json`（local） | Local > Project > User |
-| Codex CLI | `~/.codex/config.toml` の `[mcp_servers.<id>]` | - |
-| Gemini CLI | `settings.json` の `mcpServers` | Project > User |
+| Claude Code | `~/.claude.json` (user) / `.mcp.json` (project) / `settings.local.json` (local) | Local > Project > User |
+| Codex CLI | `[mcp_servers.<id>]` in `~/.codex/config.toml` | - |
+| Gemini CLI | `mcpServers` in `settings.json` | Project > User |
 | Copilot CLI | `~/.copilot/mcp-config.json` / `.mcp.json` / `.github/mcp.json` | - |
 
-## 機能対応マトリクス
+## Feature support matrix
 
-| 機能 | Claude Code | Codex CLI | Gemini CLI | Copilot CLI |
+| Feature | Claude Code | Codex CLI | Gemini CLI | Copilot CLI |
 |---|---|---|---|---|
-| AGENTS.md | Yes（CLAUDE.md 優先） | Yes | Yes | Yes |
-| Skills（オープン標準） | Yes | Yes | Yes | Yes |
-| Subagents | Yes（自動委譲） | Yes（明示のみ） | Yes（自動+@） | Yes（複数手段） |
-| Hooks | 約 29 events | 10 events | 12 events | 13 events |
-| Plugins / Extensions | Yes（成熟） | Yes（marketplace） | Yes（Extensions） | Yes |
+| AGENTS.md | Yes (CLAUDE.md takes priority) | Yes | Yes | Yes |
+| Skills (open standard) | Yes | Yes | Yes | Yes |
+| Subagents | Yes (auto-delegation) | Yes (explicit only) | Yes (auto + @) | Yes (multiple methods) |
+| Hooks | ~29 events | 10 events | 12 events | 13 events |
+| Plugins / Extensions | Yes (mature) | Yes (marketplace) | Yes (Extensions) | Yes |
 | MCP | Yes | Yes | Yes | Yes |
-| Custom slash commands | Skills に統合 | Deprecated（Skills 推奨） | `.toml` ベース | プラグイン経由 |
+| Custom slash commands | Integrated into Skills | Deprecated (Skills recommended) | `.toml`-based | Via plugins |
 | Output styles | Yes | No | No | No |
 | Status line | Yes | No | No | No |
 
-## 自動発火トリガーの違い
+## Differences in auto-trigger conditions
 
-エージェントが **Skills / Subagents をいつ発火するか** は CLI ごとに設計思想が異なる。
+**When an agent fires Skills / Subagents** differs by CLI design philosophy.
 
-- **Claude Code**: `description` テキストのマッチングで積極的に自動委譲。`disable-model-invocation: true` / `user-invocable: false` で制御
-- **Codex CLI**: Subagent は**ユーザーが明示的にリクエストしないと spawn しない**設計。Skills は暗黙発火もあるが保守的
-- **Gemini CLI**: Skills は `activate_skill` ツール経由でユーザー確認必須。Subagent は自動委譲 + `@name` 強制
-- **Copilot CLI**: 推論ベースで自動。`/agent` で明示選択も可
+- **Claude Code**: Aggressively auto-delegates by matching `description` text. Controlled via `disable-model-invocation: true` / `user-invocable: false`
+- **Codex CLI**: Subagents are designed to **spawn only when the user explicitly requests it**. Skills have some implicit triggering but are conservative
+- **Gemini CLI**: Skills require user confirmation via the `activate_skill` tool. Subagents use auto-delegation + forced `@name`
+- **Copilot CLI**: Inference-based auto-triggering. Explicit selection also possible via `/agent`
 
-この違いは**コンテキスト汚染とセキュリティ**のトレードオフ。自動発火は便利だが、プロンプトインジェクションで悪意あるスキルを呼ばされるリスクがある（`ai/practice/prompt-injection.md` 参照）。
+This difference is a tradeoff between **context pollution and security**. Auto-triggering is convenient, but carries the risk of a malicious skill being invoked via prompt injection (see `ai/practice/prompt-injection.md`).
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **スキルとサブエージェントを混同** — スキルは「タスク用プロンプト」、サブエージェントは「委譲先の独立コンテキスト」。`context: fork` を指定して初めてスキルが子エージェントで実行される
-2. **`allowed-tools` を deny リストだと誤認** — 許可確認をスキップするホワイトリストにすぎない。禁止は `disallowed-tools` / `denyTools` 等で明示する
-3. **CLI ごとのディレクトリパスを混同** — GitHub Copilot CLI の custom agents は `.github/agents/`（`.agents/` ではない）、拡張子は `.agent.md`
-4. **Claude Code subagent の `skip-tools` と書く** — 正しくは `disallowedTools`。古いドキュメントに残る誤記
-5. **Hooks で exit 2 と exit 1 を混同** — 多くの CLI で exit 2 が「ブロック」、exit 1 は「エラー終了だがブロックしない」
-6. **プラグインの名前空間を忘れる** — Claude Code のプラグイン skill は `plugin-name:skill-name` で呼ぶ必要がある
+1. **Confusing skills with subagents** — A skill is a "task prompt"; a subagent is "an independent context to delegate to." A skill only runs in a child agent once `context: fork` is specified
+2. **Mistaking `allowed-tools` for a deny list** — It is merely a whitelist that skips the permission confirmation. Prohibitions must be made explicit via `disallowed-tools` / `denyTools`, etc.
+3. **Confusing directory paths between CLIs** — GitHub Copilot CLI's custom agents live in `.github/agents/` (not `.agents/`), with the extension `.agent.md`
+4. **Writing `skip-tools` for Claude Code subagents** — The correct key is `disallowedTools`. This typo persists in older documentation
+5. **Confusing exit 2 with exit 1 in hooks** — In many CLIs, exit 2 means "block," while exit 1 means "error exit but does not block"
+6. **Forgetting the plugin namespace** — A Claude Code plugin skill must be invoked as `plugin-name:skill-name`
 
-## 参考
+## References
 
-- [Agent Skills オープン標準](https://agentskills.io/)
+- [Agent Skills open standard](https://agentskills.io/)
 - [AGENTS.md](https://agents.md/)
-- 本リポジトリの `ai/platform/agents-md.md` — 共通指示ファイル
-- 本リポジトリの `ai/practice/ai-context-management.md` — コンテキスト設計
-- 本リポジトリの `ai/practice/prompt-injection.md` — 拡張機構のセキュリティ
-- 本リポジトリの `ai/practice/multi-agent-repo.md` — 複数エージェント対応リポジトリの設計
+- This repository's `ai/platform/agents-md.md` — common instruction files
+- This repository's `ai/practice/ai-context-management.md` — context design
+- This repository's `ai/practice/prompt-injection.md` — security of extension mechanisms
+- This repository's `ai/practice/multi-agent-repo.md` — designing repositories for multiple agents

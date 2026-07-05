@@ -3,93 +3,93 @@ reviewed: 2026-06-23
 tags: [ai-platform, practice, methodology]
 ---
 
-# Agent Skills オーサリングのベストプラクティス
+# Agent Skills Authoring Best Practices
 
-`SKILL.md` の書き方と、効果的なスキル設計の指針をまとめる。フォーマット仕様・フィールド定義・ディスカバリティアは `ai/platform/agent-skills-spec.md` を参照。本記事は **どう書けば良いスキルになるか**（オーサリング）と、**参考にできるメジャーな公開スキル**に焦点を当てる。
+This article summarizes how to write `SKILL.md` and guidelines for effective skill design. For format spec, field definitions, and discovery tiers, see `ai/platform/agent-skills-spec.md`. This article focuses on **how to write a good skill** (authoring) and **notable major public skills** worth referencing.
 
-出典は Anthropic 公式の "Skill authoring best practices" ドキュメントおよび公式リポジトリ `anthropics/skills`。スキルは Claude.ai / Claude Code / Claude Agent SDK / Claude Developer Platform で動作し、オープン標準として 26+ ツール（Codex CLI, Gemini CLI, GitHub Copilot, Cursor, VS Code 等）が採用する。
+Sources: Anthropic's official "Skill authoring best practices" documentation and the official repository `anthropics/skills`. Skills run on Claude.ai / Claude Code / Claude Agent SDK / Claude Developer Platform, and are adopted as an open standard by 26+ tools (Codex CLI, Gemini CLI, GitHub Copilot, Cursor, VS Code, etc.).
 
-## Progressive Disclosure を前提に書く
+## Write with Progressive Disclosure in mind
 
-スキルは 3 段階でロードされる。**各段階のトークン予算を意識して情報を配置する**のがオーサリングの核心。
+Skills load in 3 stages. **Being conscious of the token budget at each stage** is the core of authoring.
 
-1. **メタデータ（約 100 トークン・常駐）**: 全スキルの `name` + `description` が起動時に常時ロードされる。
-2. **本文（5000 トークン未満を推奨）**: スキルがアクティブになった時に `SKILL.md` 本文がロードされる。
-3. **リソース（参照時のみ）**: `scripts/` / `references/` / `assets/` は読まれるまでコンテキストを消費しない。
+1. **Metadata (~100 tokens, always resident)**: the `name` + `description` of every skill are always loaded at startup.
+2. **Body (recommended under 5000 tokens)**: the `SKILL.md` body loads when a skill becomes active.
+3. **Resources (loaded only on reference)**: `scripts/` / `references/` / `assets/` consume no context until read.
 
-配置の指針:
+Placement guidelines:
 
-- **`SKILL.md` 本文は 500 行以内。** 超えそうなら別ファイルに分割する。
-- **参照ファイルは `SKILL.md` から 1 階層まで。** 深くネストすると、エージェントが `head -100` のプレビューだけで判断して不完全な情報を得るリスクがある。
-- **100 行を超える参照ファイルには目次を付ける。** 部分読みでも全体像が伝わる。
-- ドメイン別にファイルを分ける（`references/finance.md`, `references/sales.md` 等）。無関係なコンテキストをロードさせない。
+- **Keep the `SKILL.md` body under 500 lines.** If it's likely to exceed this, split into separate files.
+- **Keep reference files at most 1 level deep from `SKILL.md`.** Deeper nesting risks the agent judging based only on a `head -100` preview and getting incomplete information.
+- **Add a table of contents to reference files over 100 lines.** This conveys the overall picture even from a partial read.
+- Split files by domain (`references/finance.md`, `references/sales.md`, etc.). Don't force loading of irrelevant context.
 
-## `description` の書き方（発見の鍵・最重要）
+## Writing `description` (the key to discovery — most important)
 
-エージェントは 100+ のスキルの中から `description` だけを見て使うものを選ぶ。最重要フィールド（最大 1024 文字）。
+Agents select which skill to use from among 100+ skills based solely on the `description`. This is the most important field (max 1024 characters).
 
-- **「何をするか」と「いつ使うか」の両方を含める。** トリガーとなる具体的なキーワードを入れる。
-- **必ず三人称で書く。** Good: `Processes Excel files and generates reports.` / Avoid: `I can help you…` `You can use this to…`
-- **良い例**: `Extract text and tables from PDF files, fill forms, merge documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction.`
-- **避ける**: `Helps with documents` / `Processes data` のような曖昧な記述。
+- **Include both "what it does" and "when to use it."** Include concrete trigger keywords.
+- **Always write in third person.** Good: `Processes Excel files and generates reports.` / Avoid: `I can help you…` `You can use this to…`
+- **Good example**: `Extract text and tables from PDF files, fill forms, merge documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction.`
+- **Avoid**: vague descriptions like `Helps with documents` / `Processes data`.
 
-## 命名規則
+## Naming conventions
 
-- **動名詞形を推奨**: `processing-pdfs`, `analyzing-spreadsheets`, `testing-code`。名詞句（`pdf-processing`）や動詞形（`process-pdfs`）も可。
-- `helper` / `utils` / `tools` / `documents` / `data` のような汎用語は避ける。
-- 制約: 1–64 文字、小文字英数字とハイフンのみ、親ディレクトリ名と一致、予約語 `anthropic` / `claude` は不可（仕様詳細は spec 記事）。
+- **Gerund form recommended**: `processing-pdfs`, `analyzing-spreadsheets`, `testing-code`. Noun phrases (`pdf-processing`) or verb forms (`process-pdfs`) are also acceptable.
+- Avoid generic terms like `helper` / `utils` / `tools` / `documents` / `data`.
+- Constraints: 1–64 characters, lowercase alphanumerics and hyphens only, must match the parent directory name, reserved words `anthropic` / `claude` are not allowed (see the spec article for details).
 
-## 簡潔に書く（コンテキストは公共財）
+## Write concisely (context is a public good)
 
 > "The context window is a public good."
 
-デフォルトの前提は **「Claude はすでに賢い」**。Claude が持っていない情報だけを足す。各段落のトークンコストを問い直す。冗長な説明（150 トークン）より要点（50 トークン）。
+The default assumption is **"Claude is already smart."** Only add information Claude doesn't already have. Question the token cost of every paragraph. Prefer the essential point (50 tokens) over a verbose explanation (150 tokens).
 
-## 自由度を調整する（指示 vs スクリプト）
+## Calibrate degrees of freedom (instructions vs. scripts)
 
-タスクの壊れやすさに応じて指示の具体度を変える。狭い橋にはガードレールを、開けた野原には大まかな方向だけを。
+Adjust the specificity of instructions to the fragility of the task. Guardrails for a narrow bridge, only rough direction for an open field.
 
-| 自由度 | 形式 | 適する場面 |
+| Freedom | Format | Suited for |
 |---|---|---|
-| 高 | 散文の指示 | 正解が複数・文脈依存（例: コードレビュー） |
-| 中 | 擬似コード / パラメータ付きスクリプト | 推奨パターンがある |
-| 低 | 固定スクリプト（パラメータなし） | 壊れやすく一貫性が重要（例: DB マイグレーション。「このスクリプトを正確に実行。変更するな」） |
+| High | Prose instructions | Multiple valid answers, context-dependent (e.g., code review) |
+| Medium | Pseudocode / parameterized scripts | A recommended pattern exists |
+| Low | Fixed script (no parameters) | Fragile, consistency matters (e.g., DB migration. "Run this script exactly. Do not modify it.") |
 
-## スクリプトをバンドルする判断
+## Deciding whether to bundle scripts
 
-決定性・効率が要る処理はコードにする（「トークン生成でソートするのはソートアルゴリズムを実行するより遥かに高コスト」）。ユーティリティスクリプトは **信頼性が高く・トークンを節約し・時間を節約し・一貫性を保証する**。
+Turn processes that need determinism and efficiency into code ("sorting via token generation is far more costly than running a sorting algorithm"). Utility scripts **improve reliability, save tokens, save time, and guarantee consistency**.
 
-- **実行意図を明示する**: `Run analyze_form.py`（実行）と `See analyze_form.py for the algorithm`（読む）を区別する。
-- **「punt せず解決する」**: エラーは明示的に処理する。
-- **「voodoo 定数」を置かない**: マジックナンバーには根拠を書く。
+- **Make execution intent explicit**: distinguish `Run analyze_form.py` (execute) from `See analyze_form.py for the algorithm` (read).
+- **"Fix, don't punt"**: handle errors explicitly.
+- **No "voodoo constants"**: document the rationale behind magic numbers.
 
-## テストと反復（評価駆動）
+## Testing and iteration (evaluation-driven)
 
-- **評価を先に作る（evaluation-driven development）**: スキルなしで Claude を走らせてギャップを特定 → 3 つ以上のテストシナリオ作成 → ベースライン測定 → 最小限の指示を書く → 反復。（公式ドキュメントの eval JSON スキーマには `skills` / `query` / `files` / `expected_behavior` フィールドがあるが、**公式ランナーは存在しない**ので自前で組む。）
-- **対象モデル全てでテストする**: Haiku / Sonnet / Opus。Opus で動いても Haiku ではより詳細な指示が要ることがある。
-- **Claude A / Claude B ループ**: 一方の Claude にスキルを書かせ、新規の Claude に使わせて、ギャップを観察してフィードバックする。
+- **Build evaluations first (evaluation-driven development)**: run Claude without the skill to identify gaps → create 3+ test scenarios → measure a baseline → write minimal instructions → iterate. (The official documentation's eval JSON schema has `skills` / `query` / `files` / `expected_behavior` fields, but **there is no official runner**, so you must build your own.)
+- **Test across all target models**: Haiku / Sonnet / Opus. A skill that works on Opus may need more detailed instructions on Haiku.
+- **Claude A / Claude B loop**: have one Claude write the skill, have a fresh Claude use it, observe the gaps, and feed back.
 
-## アンチパターン（公式が明示）
+## Anti-patterns (explicitly called out officially)
 
-- Windows 形式のバックスラッシュパス（常にスラッシュを使う。クロスプラットフォームで動く）。
-- 選択肢を出しすぎる（「pypdf か pdfplumber か PyMuPDF か…」）。**1 つのデフォルト + 逃げ道**を示す。
-- 時限的情報（「2025 年 8 月より前は…」）。代わりに折りたたみの "Old patterns" セクションを使う。
-- 用語の不統一（endpoint / URL / route を混在）。
-- 深いネスト、曖昧なファイル名（`doc2.md`）。
-- パッケージがインストール済みと仮定する（依存は明示列挙）。
-- MCP ツールは常に完全修飾 `ServerName:tool_name` で書く。
+- Windows-style backslash paths (always use forward slashes; this works cross-platform).
+- Offering too many choices ("pypdf or pdfplumber or PyMuPDF or…"). Present **one default plus an escape hatch**.
+- Time-bound information ("before August 2025…"). Instead, use a collapsible "Old patterns" section.
+- Inconsistent terminology (mixing endpoint / URL / route).
+- Deep nesting, ambiguous file names (`doc2.md`).
+- Assuming a package is already installed (list dependencies explicitly).
+- Always write MCP tools with the fully qualified `ServerName:tool_name` form.
 
-## セキュリティ
+## Security
 
-- **「信頼できるソースからのみスキルをインストールする」**。コード依存・バンドルリソース・Claude を外部の信頼できないソースへ誘導する指示（プロンプトインジェクションの経路）を監査する。
-- `allowed-tools`（確認なしで許可するツールのスペース区切り指定）は**実験的**で、実装間で対応差がある。保証された境界として扱わない。
-- 実行環境の差: claude.ai は npm / PyPI / GitHub からインストールできるが、**Claude API はネットワークアクセスもランタイムのパッケージインストールも持たない**。
+- **"Only install skills from trusted sources."** Audit code dependencies, bundled resources, and instructions that could direct Claude to untrusted external sources (a prompt-injection vector).
+- `allowed-tools` (a space-separated list of tools allowed without confirmation) is **experimental**, with differing support across implementations. Do not treat it as a guaranteed boundary.
+- Execution environment differences: claude.ai can install from npm / PyPI / GitHub, but the **Claude API has neither network access nor runtime package installation**.
 
-## メジャーな公開 Skills: `anthropics/skills`
+## Notable public Skills: `anthropics/skills`
 
-公式リポジトリ `github.com/anthropics/skills`（`./skills` / `./spec` / `./template`）。大半は Apache-2.0、4 つのドキュメントスキル（docx/pdf/pptx/xlsx）は source-available（OSS ではない本番リファレンス実装）。「デモ・教育目的で提供」との免責あり。
+The official repository `github.com/anthropics/skills` (`./skills` / `./spec` / `./template`). Most are Apache-2.0; the four document skills (docx/pdf/pptx/xlsx) are source-available (a production reference implementation, not OSS). Disclaimed as "provided for demo and educational purposes."
 
-Claude Code でのインストール例:
+Installation example in Claude Code:
 
 ```text
 /plugin marketplace add anthropics/skills
@@ -97,33 +97,33 @@ Claude Code でのインストール例:
 /plugin install example-skills@anthropic-agent-skills
 ```
 
-| スキル | 区分 | 用途 |
+| Skill | Category | Purpose |
 |---|---|---|
-| `skill-creator` | メタ | スキルの作成・改善・計測。eval 実行、分散分析付きベンチマーク、トリガー精度のための description 最適化 |
-| `pdf` | ドキュメント | PDF のテキスト/表抽出、結合・分割、回転、透かし、生成、フォーム入力、暗号化、画像抽出、OCR |
-| `docx` | ドキュメント | Word `.docx` の作成・読込・編集（TOC、見出し、ページ番号、レターヘッド、画像、変更履歴、コメント） |
-| `pptx` | ドキュメント | `.pptx` の作成・抽出・編集・結合分割、テンプレート、レイアウト、スピーカーノート |
-| `xlsx` | ドキュメント | スプレッドシート（`.xlsx/.xlsm/.csv/.tsv`）の読込・編集、数式、書式、グラフ、整形 |
-| `mcp-builder` | 開発 | 高品質な MCP サーバー構築ガイド（Python FastMCP / Node TypeScript SDK） |
-| `webapp-testing` | 開発 | Playwright でローカル Web アプリをテスト（検証・デバッグ・スクショ・ブラウザログ） |
-| `web-artifacts-builder` | 開発 | claude.ai の複数コンポーネント HTML アーティファクト（React / Tailwind / shadcn/ui） |
-| `claude-api` | 開発 | Claude API / Anthropic SDK のリファレンス（model id、料金、streaming、tool use、caching 等） |
-| `algorithmic-art` | クリエイティブ | p5.js による生成アート（シード乱数、flow field、particle system） |
-| `canvas-design` | クリエイティブ | `.png` / `.pdf` のビジュアルアート（ポスター・デザイン） |
-| `frontend-design` | クリエイティブ | 意図的で独自性のある UI ビジュアルデザイン |
-| `theme-factory` | クリエイティブ | アーティファクトのスタイリング（10 プリセット or 生成テーマ） |
-| `slack-gif-creator` | クリエイティブ | Slack 最適化のアニメ GIF（制約 + 検証ツール付き） |
-| `brand-guidelines` | エンタープライズ | Anthropic 公式ブランドカラー/タイポをアーティファクトに適用 |
-| `internal-comms` | エンタープライズ | 社内コミュニケーション文書（ステータス報告、リーダー向け更新、FAQ、インシデント報告） |
-| `doc-coauthoring` | エンタープライズ | ドキュメント/提案/仕様/意思決定文書の共同執筆ワークフロー |
+| `skill-creator` | Meta | Creating/improving/measuring skills. Runs evals, benchmarking with variance analysis, description optimization for trigger accuracy |
+| `pdf` | Document | PDF text/table extraction, merge/split, rotation, watermarking, generation, form filling, encryption, image extraction, OCR |
+| `docx` | Document | Creating/reading/editing Word `.docx` (TOC, headings, page numbers, letterhead, images, track changes, comments) |
+| `pptx` | Document | Creating/extracting/editing/merging/splitting `.pptx`, templates, layouts, speaker notes |
+| `xlsx` | Document | Reading/editing spreadsheets (`.xlsx/.xlsm/.csv/.tsv`), formulas, formatting, charts, cleanup |
+| `mcp-builder` | Development | Guide for building high-quality MCP servers (Python FastMCP / Node TypeScript SDK) |
+| `webapp-testing` | Development | Testing local web apps with Playwright (verification, debugging, screenshots, browser logs) |
+| `web-artifacts-builder` | Development | Multi-component HTML artifacts on claude.ai (React / Tailwind / shadcn/ui) |
+| `claude-api` | Development | Claude API / Anthropic SDK reference (model ids, pricing, streaming, tool use, caching, etc.) |
+| `algorithmic-art` | Creative | Generative art with p5.js (seeded randomness, flow fields, particle systems) |
+| `canvas-design` | Creative | Visual art as `.png` / `.pdf` (posters, designs) |
+| `frontend-design` | Creative | Intentional, distinctive UI visual design |
+| `theme-factory` | Creative | Artifact styling (10 presets or generated themes) |
+| `slack-gif-creator` | Creative | Slack-optimized animated GIFs (with constraints + validation tools) |
+| `brand-guidelines` | Enterprise | Applying Anthropic's official brand colors/typography to artifacts |
+| `internal-comms` | Enterprise | Internal communication documents (status reports, leadership updates, FAQs, incident reports) |
+| `doc-coauthoring` | Enterprise | Co-authoring workflow for documents/proposals/specs/decision documents |
 
-`skill-creator` メタスキルが推奨する指針: description は明示的なトリガーで「pushy」に書く、剛直な "ALWAYS" より命令形 + *なぜ* を説明する、繰り返すヘルパーは `scripts/` に束ねる、300 行超の参照には目次を付ける。README には partner skill として **Notion Skills for Claude** も参照されている。
+Guidelines recommended by the `skill-creator` meta-skill: write descriptions "pushy" with explicit triggers; prefer imperative + *why* over rigid "ALWAYS"; bundle repeated helpers into `scripts/`; add a table of contents to references over 300 lines. The README also references **Notion Skills for Claude** as a partner skill.
 
-## 参考
+## References
 
 - [Skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)
-- [Equipping agents for the real world with Agent Skills（engineering blog）](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)
+- [Equipping agents for the real world with Agent Skills (engineering blog)](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)
 - [Agent Skills overview](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)
-- [anthropics/skills（公式公開スキルリポジトリ）](https://github.com/anthropics/skills)
+- [anthropics/skills (official public skills repository)](https://github.com/anthropics/skills)
 - [skill-creator SKILL.md](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md)
-- 関連: `ai/platform/agent-skills-spec.md`（フォーマット仕様）, `ai/platform/agent-extensions.md`（CLI ごとの対応状況）
+- Related: `ai/platform/agent-skills-spec.md` (format spec), `ai/platform/agent-extensions.md` (per-CLI support status)

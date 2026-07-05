@@ -3,38 +3,38 @@ reviewed: 2026-06-07
 tags: [methodology, practice, governance]
 ---
 
-# Human-in-the-Loop (HITL) パターン
+# Human-in-the-Loop (HITL) Patterns
 
-AI エージェントの自律性と人間の制御（ガバナンス）を両立させるための設計パターン。2026 年時点では、単なる確認プロンプトを超え、リスクや確信度に基づいた「制御された自律性 (Controlled Autonomy)」の実現が標準となっている。
+A design pattern for balancing AI agent autonomy with human control (governance). As of 2026, the standard has moved beyond simple confirmation prompts to realizing "Controlled Autonomy" based on risk and confidence.
 
-## 主要な 5 つの HITL パターン
+## The 5 Core HITL Patterns
 
-| パターン | 用途 | 仕組み |
+| Pattern | Use Case | Mechanism |
 |---|---|---|
-| **Approval Gate** | 不可逆なアクション（送金、削除、デプロイ） | 実行直前に一時停止し、人間が内容を承認するまで待機。 |
-| **Escalation Ladder** | 能力不足、または確信度が低い場合 | 自動的に上位の人間（または専門家）へタスクを転送する。 |
-| **Confidence-Based Routing** | ルーチン業務の効率化 | AI の確信度スコアが閾値を下回る場合のみ人間がレビュー。 |
-| **Collaborative Drafting** | 創造的、またはニュアンスが重要な作業 | エージェントが下書きを作成し、人間が方向修正を行う。 |
-| **Audit Trail with Lazy Review** | 低リスク、または可逆的なアクション | アクションは即時実行し、事後にログをまとめてレビューする。 |
+| **Approval Gate** | Irreversible actions (payments, deletion, deployment) | Pause immediately before execution and wait until a human approves the content. |
+| **Escalation Ladder** | Insufficient capability or low confidence | Automatically forward the task to a higher-level human (or expert). |
+| **Confidence-Based Routing** | Efficiency for routine work | Human review only when the AI's confidence score falls below a threshold. |
+| **Collaborative Drafting** | Creative or nuance-sensitive work | The agent produces a draft and the human provides direction/corrections. |
+| **Audit Trail with Lazy Review** | Low-risk or reversible actions | Execute the action immediately and review the aggregated logs after the fact. |
 
-## ガバナンス・フレームワーク
+## Governance Frameworks
 
-- **Human-on-the-Loop (HOTL)**: 人間はリアルタイムで監視し、異常時にのみ介入する（パイロットとオートパイロットの関係）。
-- **Human-above-the-Loop (HATL)**: 人間は戦略的目標と境界条件（ガードレール）の設定を行い、全体的なガバナンスを管理する。
+- **Human-on-the-Loop (HOTL)**: A human monitors in real time and intervenes only on anomalies (like a pilot and autopilot).
+- **Human-above-the-Loop (HATL)**: A human sets strategic goals and boundary conditions (guardrails) and manages overall governance.
 
-## 実装の重要ポイント
+## Key Implementation Points
 
-1. **アーキテクチャによる強制**: 「実行前に聞いてください」というプロンプト指示だけではなく、モデル外部の実行エンジン（LangGraph や CLI の権限設定）で物理的にゲートを設ける。
-2. **フィードバックの学習データ化**: 人間による修正や拒否の結果を「トレーニング信号」として保存し、エージェントの将来の挙動改善に役立てる。
-3. **EU AI Act 対応**: EU AI Act は高リスクな AI システムに「人間による監視 (Human Oversight, Article 14)」の実装を法的に義務付ける。2026 年 5 月の改正合意（Digital Omnibus）により高リスク義務の適用開始は後ろ倒しされ、Annex III（用途ベース）は 2027 年 12 月 2 日、Annex I（製品規制）は 2028 年 8 月 2 日が適用日となった（2026 年 8 月は透明性義務等が中心）。
+1. **Enforce via architecture**: Don't rely solely on prompt instructions like "please ask before executing" — physically enforce the gate in an execution engine external to the model (e.g., LangGraph or CLI permission settings).
+2. **Turn feedback into training data**: Store the results of human corrections or rejections as a "training signal" to improve the agent's future behavior.
+3. **EU AI Act compliance**: The EU AI Act legally mandates "Human Oversight (Article 14)" for high-risk AI systems. The May 2026 amendment agreement (Digital Omnibus) pushed back the application of high-risk obligations: Annex III (use-case based) now applies from December 2, 2027, and Annex I (product regulation) from August 2, 2028 (August 2026 mainly covers transparency obligations, etc.).
 
-## AI エージェントがよくやるミス
+## Common AI Agent Mistakes
 
-1. **承認のスキップ** — 複雑な手順の中で、重要度の高いアクション（DB スキーマ変更等）を独断で進めてしまう。
-2. **情報不足の承認依頼** — 「やっていいですか？」とだけ聞き、変更による影響範囲やリスクを人間に提示しない。
-3. **無限ループへの陥入** — 人間からの修正指示を正しく理解できず、同じ誤りを繰り返して承認を求め続ける。
+1. **Skipping approval** — Proceeding unilaterally with a high-importance action (e.g., a DB schema change) buried within a complex procedure.
+2. **Requesting approval without sufficient information** — Simply asking "is it OK to proceed?" without presenting the human with the scope of impact or risk of the change.
+3. **Falling into infinite loops** — Failing to correctly understand a human's correction instructions, repeating the same mistake, and continuing to request approval.
 
-## 参考
+## References
 
 - [EU AI Act: Human Oversight](https://artificialintelligenceact.eu/)
-- 関連: `ai/practice/ai-driven-development.md`, `ai/practice/prompt-injection.md`
+- Related: `ai/practice/ai-driven-development.md`, `ai/practice/prompt-injection.md`

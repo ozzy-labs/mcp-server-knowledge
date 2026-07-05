@@ -6,70 +6,70 @@ aliases: [sdpm, sample-spec-driven-presentation-maker]
 
 # Spec-Driven Presentation Maker
 
-AWS Samples が公開する OSS の **spec 駆動プレゼンテーション生成ツールキット**（`aws-samples/sample-spec-driven-presentation-maker`、MIT-0）。「**何を伝えるか（spec）を先に決めて、どう見せるか（slide）は AI が作る**」という SDD の発想をプレゼン制作に適用する。Agent Skill / ローカル MCP / Amazon Bedrock AgentCore Runtime 上のリモート MCP / React Web UI の **4 層構成**で、必要なレイヤーだけを取り入れる設計。
+An OSS **spec-driven presentation generation toolkit** published by AWS Samples (`aws-samples/sample-spec-driven-presentation-maker`, MIT-0). It applies the SDD idea of "**decide what to convey (spec) first, let AI decide how to show it (slide)**" to presentation creation. Built as **4 layers** — Agent Skill / local MCP / remote MCP on Amazon Bedrock AgentCore Runtime / React Web UI — so you adopt only the layers you need.
 
-公式: [github.com/aws-samples/sample-spec-driven-presentation-maker](https://github.com/aws-samples/sample-spec-driven-presentation-maker) / [Workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/a275330a-0ae0-40b2-ad35-264e263c3882/en-US)
+Official: [github.com/aws-samples/sample-spec-driven-presentation-maker](https://github.com/aws-samples/sample-spec-driven-presentation-maker) / [Workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/a275330a-0ae0-40b2-ad35-264e263c3882/en-US)
 
-SDD 概念全体は `ai/practice/spec-driven-development.md`。同領域だが**コード生成向け**の OSS は `ai/workflow/cc-sdd.md` / `ai/workflow/github-spec-kit.md` / `ai/workflow/kiro.md` を参照。本ツールは spec 出力先が**コードではなく `.pptx`** という点で位置づけが異なる。
+For the overall SDD concept see `ai/practice/spec-driven-development.md`. For OSS in the same space but aimed at **code generation**, see `ai/workflow/cc-sdd.md` / `ai/workflow/github-spec-kit.md` / `ai/workflow/kiro.md`. This tool differs in that the spec's output target is **not code but `.pptx`**.
 
-## 哲学
+## Philosophy
 
-| | 従来 | Spec-Driven |
+| | Traditional | Spec-Driven |
 |---|---|---|
-| 起点 | 空のスライド | source（資料・要件） |
-| 設計 | 作りながら考える | 論理構造を spec として先に確定 |
-| 構築 | 手動レイアウト | template に従って AI が自動生成 |
-| 品質 | 場当たり | spec ベースでレビュー可能 |
+| Starting point | Blank slide | Source (materials, requirements) |
+| Design | Think while building | Logical structure fixed as spec first |
+| Construction | Manual layout | AI auto-generates following a template |
+| Quality | Ad hoc | Reviewable at the spec level |
 
-「全機能を最初に固める」waterfall ではなく、**briefing → outline → art direction → spec persisted → slide-by-slide build → PPTX** をループする。
+Rather than a waterfall that "fixes all features up front," it loops through **briefing → outline → art direction → spec persisted → slide-by-slide build → PPTX**.
 
-## 4 層アーキテクチャ
+## 4-Layer Architecture
 
-| Layer | ディレクトリ | 用途 | AWS |
+| Layer | Directory | Purpose | AWS |
 |---|---|---|:---:|
-| **Layer 1** | `skill/` | Engine + reference + template。SKILL.md 対応エージェントから直接呼ぶ | 不要 |
-| **Layer 2** | `skill/` + `mcp-local/` | ローカル stdio MCP サーバー。Claude Desktop / Claude Cowork など | 不要 |
-| **Layer 3** | + `mcp-server/` + `infra/` | LibreOffice 内蔵の HTTP MCP（Amazon Bedrock AgentCore Runtime にデプロイ） | 必須 |
-| **Layer 4** | + `agent/` + `api/` + `web-ui/` | Strands Agent + REST API + React Web UI のフルスタック | 必須 |
+| **Layer 1** | `skill/` | Engine + reference + template. Called directly by SKILL.md-compatible agents | Not required |
+| **Layer 2** | `skill/` + `mcp-local/` | Local stdio MCP server. Claude Desktop / Claude Cowork, etc. | Not required |
+| **Layer 3** | + `mcp-server/` + `infra/` | HTTP MCP with LibreOffice built in (deployed on Amazon Bedrock AgentCore Runtime) | Required |
+| **Layer 4** | + `agent/` + `api/` + `web-ui/` | Full stack: Strands Agent + REST API + React Web UI | Required |
 
-各層は前の層の薄いラッパー。1 リポジトリで全部入りだが、**自分の使い方に必要な層だけセットアップする**設計。
+Each layer is a thin wrapper around the previous one. It's all in one repository, but the design lets you **set up only the layers your use case needs**.
 
-## 対応エージェント / クライアント
+## Supported Agents / Clients
 
-| Layer | 利用クライアント |
+| Layer | Client used |
 |---|---|
-| 1 | **Agent Skill 対応 CLI**: Claude Code / Codex CLI / Cursor / Kiro / VS Code の GitHub Copilot |
-| 2 | **ローカル MCP クライアント**: Claude Desktop / Claude Cowork / VS Code / Kiro |
-| 3 | **リモート MCP only クライアント**: Claude.ai Web（ローカルプロセス起動不可） |
-| 4 | ブラウザの同梱 React Web UI |
+| 1 | **Agent Skill-compatible CLIs**: Claude Code / Codex CLI / Cursor / Kiro / VS Code's GitHub Copilot |
+| 2 | **Local MCP clients**: Claude Desktop / Claude Cowork / VS Code / Kiro |
+| 3 | **Remote-MCP-only clients**: Claude.ai Web (cannot start a local process) |
+| 4 | The bundled React Web UI in the browser |
 
-リポジトリには `AGENTS.md` と `CLAUDE.md` が同梱されており、`「このリポジトリをセットアップして」`「Layer 2 として Claude Desktop から使えるようにして」`と話しかけるだけでエージェントが適切な層とコマンドを選んでセットアップを進める設計（spec-driven ではなく agent-driven な「ホストオンボーディング」）。
+The repository ships with `AGENTS.md` and `CLAUDE.md`, designed so that simply saying "set up this repository" or "make it usable from Claude Desktop as Layer 2" lets the agent pick the right layer and commands and carry out setup itself (an agent-driven "host onboarding," not spec-driven).
 
-## 前提
+## Prerequisites
 
 - Python 3.10+
-- [uv](https://docs.astral.sh/uv/getting-started/installation/)（`tools/uv.md` ではなく `languages/python/uv.md` を参照）
-- Layer 3〜4 をローカル CDK で直接デプロイする場合は AWS アカウント + Node.js 18+ + Docker または Finch + AWS CLI が追加で必要
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) (see `languages/python/uv.md`, not `tools/uv.md`)
+- If deploying Layers 3-4 directly with local CDK, you additionally need an AWS account + Node.js 18+ + Docker or Finch + AWS CLI
 
-## クイックスタート
+## Quick Start
 
-### Layer 1（Agent Skill のみ）
+### Layer 1 (Agent Skill only)
 
 ```bash
 cd skill
 uv sync
 
-# アイコン取得（任意・推奨）
+# Fetch icons (optional, recommended)
 uv run python3 scripts/download_aws_icons.py
 uv run python3 scripts/download_material_icons.py
 
-# 動作確認
+# Sanity check
 uv run python3 scripts/pptx_builder.py examples
 ```
 
-`SKILL.md` + engine + reference（design pattern / workflow / guide）+ sample template（dark / light）が `skill/` に同梱。エージェント側のスキルディレクトリにコピーするか symlink で取り込む。
+`SKILL.md` + engine + reference (design pattern / workflow / guide) + sample templates (dark / light) are bundled under `skill/`. Copy them into the agent's skill directory, or bring them in via a symlink.
 
-### Layer 2（ローカル MCP）
+### Layer 2 (local MCP)
 
 ```bash
 cd mcp-local
@@ -77,7 +77,7 @@ uv sync
 uv run python server.py
 ```
 
-クライアントの MCP 設定（`claude_desktop_config.json` / `.vscode/mcp.json` 等）に登録:
+Register it in the client's MCP config (`claude_desktop_config.json`, `.vscode/mcp.json`, etc.):
 
 ```json
 {
@@ -90,119 +90,119 @@ uv run python server.py
 }
 ```
 
-接続後、エージェントに「プレゼンテーションを作って」と頼むと以下が走る:
+Once connected, asking the agent to "create a presentation" triggers:
 
-1. MCP Server Instructions から workflow ファイルを読み取り
-2. トピック・対象者・目的についてヒアリング
-3. **briefing → outline → art direction** を設計し、`specs/` に永続化
-4. スライドを 1 枚ずつ構築
-5. `.pptx` を出力してプレビュー表示
+1. Reading the workflow file from the MCP Server Instructions
+2. Gathering the topic, audience, and purpose
+3. Designing **briefing → outline → art direction** and persisting it to `specs/`
+4. Building slides one at a time
+5. Outputting the `.pptx` and showing a preview
 
-### Layer 3〜4（AWS デプロイ）
+### Layers 3-4 (AWS deployment)
 
-ワンクリック CloudFormation を **東京 / バージニア北部 / オレゴン**で提供。CloudShell から `scripts/deploy.sh` を実行する経路が推奨（ローカルに CDK / Docker をインストール不要、CodeBuild 経由でデプロイ）。
+One-click CloudFormation is provided in **Tokyo / N. Virginia / Oregon**. Running `scripts/deploy.sh` from CloudShell is the recommended path (no need to install CDK/Docker locally; deploys via CodeBuild).
 
-ローカル CDK で直接デプロイする場合:
+To deploy directly with local CDK:
 
 ```bash
 cd infra
 npm ci
 cp config.example.yaml config.yaml
-# config.yaml で stacks: data/runtime/agent/webUi を選択
-npx cdk deploy --all                                # Docker Desktop 利用時
-CDK_DOCKER=finch npx cdk deploy --all               # Finch 利用時
+# In config.yaml, choose stacks: data/runtime/agent/webUi
+npx cdk deploy --all                                # When using Docker Desktop
+CDK_DOCKER=finch npx cdk deploy --all               # When using Finch
 CDK_DOCKER=finch npx cdk deploy --all --require-approval never  # CI/CD
 ```
 
-デプロイには 15〜30 分。
+Deployment takes 15-30 minutes.
 
-## モデル設定
+## Model Configuration
 
-デフォルトモデル: **`global.anthropic.claude-sonnet-4-6`**（Amazon Bedrock 経由）。Opus 等への切替えは `infra/config.yaml`:
+Default model: **`global.anthropic.claude-sonnet-4-6`** (via Amazon Bedrock). To switch to Opus etc., edit `infra/config.yaml`:
 
 ```yaml
 model:
   modelId: "global.anthropic.claude-opus-4-6-v1"
 ```
 
-データ主権が要件のときは cross-region inference profile を避ける。Bedrock Model Invocation Logging は `features.enableInvocationLogging: true` で任意有効化。
+Avoid the cross-region inference profile when data sovereignty is a requirement. Bedrock Model Invocation Logging can be enabled optionally via `features.enableInvocationLogging: true`.
 
-## Spec / Template の構造
+## Spec / Template Structure
 
-| ファイル | 役割 |
+| File | Role |
 |---|---|
-| `.pptx` | テンプレート。**任意の `.pptx`** を template として使える（layout / colors / fonts / placeholder を自動解析） |
-| `slides.json` | プレゼンテーションの spec。`type` / `src` / `x` / `y` / `width` / `height` を持つ slide object のリスト |
-| `manifest.json` | アセットメタデータ（icons / images の一覧） |
-| `config.json` | ユーザー設定（出力ディレクトリ、追加アセットソース） |
-| `.html` | カスタムスタイルガイド（CSS variables） |
+| `.pptx` | Template. **Any `.pptx`** can be used as a template (layout / colors / fonts / placeholders are auto-parsed) |
+| `slides.json` | The presentation spec. A list of slide objects with `type` / `src` / `x` / `y` / `width` / `height` |
+| `manifest.json` | Asset metadata (list of icons / images) |
+| `config.json` | User settings (output directory, additional asset sources) |
+| `.html` | Custom style guide (CSS variables) |
 
-アセット参照は `"assets:{source}/{name}"`（例: `"assets:aws/Lambda"`）の形式。
+Asset references use the form `"assets:{source}/{name}"` (e.g. `"assets:aws/Lambda"`).
 
-ユーザーローカルの persistent ディレクトリ:
+User-local persistent directory:
 
 - macOS / Linux: `~/.config/sdpm/`
 - Windows: `%APPDATA%\sdpm\`
 
-パッケージ更新後もテンプレ / スタイル / アセットが残る。
+Templates / styles / assets survive package updates.
 
-## ユースケース
+## Use Cases
 
-- **資料からの自動構成**: URL / PDF / CSV / 議事録 / 業界別データを入力に、spec → PPTX を一気通貫で生成
-- **テンプレ準拠の量産**: 社内テンプレ `.pptx` を template に指定すれば layout・色・フォントが揃った deck が量産できる
-- **Teams / Slack 連携**: `docs/en/teams-slack-integration.md` で chat 経由のリクエストを受ける運用パターンを提供
-- **Workshop**: 製造 / 金融 / ヘルスケア / IT の業界別シナリオで実データから slide を起こす公式ハンズオン
+- **Auto-composition from materials**: generate spec → PPTX end-to-end from URL / PDF / CSV / meeting minutes / industry-specific data as input
+- **Template-conformant mass production**: specifying an internal template `.pptx` as the template lets you mass-produce decks with consistent layout, colors, and fonts
+- **Teams / Slack integration**: `docs/en/teams-slack-integration.md` documents an operational pattern for handling requests via chat
+- **Workshop**: official hands-on covering manufacturing / finance / healthcare / IT industry scenarios building slides from real data
 
-## 他 SDD ツールとの差分
+## Differences from Other SDD Tools
 
 | | SDPM | cc-sdd | GitHub Spec Kit | Kiro |
 |---|---|---|---|---|
-| 出力物 | **`.pptx`** | コード | コード | コード |
-| 提供元 | AWS Samples | OSS（gotalab） | GitHub 公式 | AWS |
-| spec 形式 | `slides.json` + `.pptx` template | EARS + design + tasks | core template（上書き可） | EARS native |
-| デプロイ形態 | Skill / ローカル MCP / AWS リモート MCP / Web UI | npm package | Python CLI | IDE + CLI |
-| 主要 LLM | Bedrock 経由 Claude Sonnet 4.6（変更可） | エージェント側に依存 | エージェント側に依存 | Claude Sonnet 4.5 既定 |
-| エージェント数 | 5〜（SKILL.md 対応 + MCP 対応） | 8 | 40+ | 1（Kiro 単体） |
-| ライセンス | MIT-0 | MIT | MIT | 商用 |
+| Output | **`.pptx`** | Code | Code | Code |
+| Provider | AWS Samples | OSS (gotalab) | GitHub official | AWS |
+| Spec format | `slides.json` + `.pptx` template | EARS + design + tasks | Core template (overridable) | EARS native |
+| Deployment form | Skill / local MCP / AWS remote MCP / Web UI | npm package | Python CLI | IDE + CLI |
+| Primary LLM | Claude Sonnet 4.6 via Bedrock (changeable) | Depends on the agent | Depends on the agent | Claude Sonnet 4.5 by default |
+| Number of agents | 5+ (SKILL.md-compatible + MCP-compatible) | 8 | 40+ | 1 (Kiro alone) |
+| License | MIT-0 | MIT | MIT | Commercial |
 
-**「spec 駆動で作るのはコードではなく deck」**である点が他 3 ツールとの最大の差分。SDD の方法論を共有しつつ、エンジンと出力は別物。
+The biggest difference from the other three tools is that **"what's built spec-driven is a deck, not code."** It shares the SDD methodology but has a distinct engine and output.
 
-## セキュリティ
+## Security
 
-「**production 利用ではなく demonstration / educational sample**」と明示。デフォルトで実装済みの control:
+Explicitly documented as "**a demonstration / educational sample, not for production use**." Controls implemented by default:
 
-- S3: public access blocked、SSE-S3、versioning
-- DynamoDB: encryption at rest、PITR
+- S3: public access blocked, SSE-S3, versioning
+- DynamoDB: encryption at rest, PITR
 - TLS in transit
 - API Gateway: Cognito JWT authorizer
-- CloudFront: OAI、HTTPS-only、security headers
-- IAM: least-privilege（wildcard resource なし）
+- CloudFront: OAI, HTTPS-only, security headers
+- IAM: least-privilege (no wildcard resources)
 
-デフォルトでは **入っていない** 環境依存 control（要評価）:
+Environment-dependent controls **not included** by default (evaluate as needed):
 
-1. CloudTrail（アカウント単位設定の競合回避のため）
-2. VPC endpoint（このスタックは VPC 内 deploy ではないため）
-3. WAF の IP allowlist（環境依存、`config.yaml` で設定）
-4. CORS の絞り込み
+1. CloudTrail (to avoid conflicting with account-level settings)
+2. VPC endpoint (this stack is not deployed inside a VPC)
+3. WAF IP allowlist (environment-dependent, configure in `config.yaml`)
+4. CORS restriction
 5. S3 access logging
-6. Cognito MFA / compromised-credentials 検出
-7. Bedrock cross-region inference profile（データ主権要件があれば回避）
+6. Cognito MFA / compromised-credentials detection
+7. Bedrock cross-region inference profile (avoid if there's a data sovereignty requirement)
 
-## AI エージェントがよくやるミス
+## Common Mistakes AI Agents Make
 
-1. **Layer 1 だけで足りるのに AWS 全層をデプロイする** — Claude Code / Codex CLI / Cursor / Kiro なら Skill だけで動く。MCP 経由が要らないなら Layer 2 以降は不要
-2. **spec を書かずに「これでスライド作って」と頼む** — briefing → outline → art direction の workflow が走らないと出力が不安定。MCP Server Instructions で workflow を読ませる経路を踏む
-3. **任意の `.pptx` をテンプレに置けばそのまま動くと思う** — layout / placeholder の解析は自動だが、極端に独自レイアウトの slide master だと marker が見つからず失敗。`docs/*/custom-template.md` に従って placeholder を整備する
-4. **デフォルトモデルが Sonnet なのを把握せず Opus を期待する** — `infra/config.yaml` の `model.modelId` を明示する
-5. **AGENTS.md / CLAUDE.md を読ませずに手動で `pip install` を試みる** — リポジトリ同梱の指示ファイルをエージェントに読ませれば自動でセットアップする設計。手作業より速い
-6. **Layer 3 デプロイで Docker 不在エラーに遭う** — `CDK_DOCKER=finch` で Finch にフォールバックできる。CloudShell 経由なら local Docker 不要
-7. **Cognito MFA / WAF を本番想定で外したまま動かす** — sample stack の前提を超える運用には security team review が必須
-8. **アセット参照を `icons:Lambda` のまま書く** — backward compatibility は残るが現行は `assets:{source}/{name}`（例: `assets:aws/Lambda`）
-9. **`~/.config/sdpm/` の存在を知らずパッケージ再 install で template が消えると誤認** — ユーザーローカル persistent ディレクトリにあるので消えない
+1. **Deploying the full AWS stack when Layer 1 alone would suffice** — with Claude Code / Codex CLI / Cursor / Kiro, the Skill alone works. If you don't need MCP, Layer 2 and above are unnecessary
+2. **Asking "build me slides from this" without writing a spec** — output is unstable unless the briefing → outline → art direction workflow runs. Take the path of having the workflow read via the MCP Server Instructions
+3. **Assuming any `.pptx` dropped in as a template will just work** — layout / placeholder parsing is automatic, but an extremely custom slide master can fail because no markers are found. Prepare placeholders per `docs/*/custom-template.md`
+4. **Expecting Opus without realizing the default model is Sonnet** — set `model.modelId` in `infra/config.yaml` explicitly
+5. **Manually trying `pip install` without having the agent read AGENTS.md / CLAUDE.md** — the bundled instruction files are designed to let the agent set things up automatically; that's faster than doing it by hand
+6. **Hitting a "Docker not found" error during a Layer 3 deployment** — `CDK_DOCKER=finch` lets you fall back to Finch. Via CloudShell, local Docker isn't needed at all
+7. **Running with Cognito MFA / WAF stripped out as if it were production-ready** — any usage beyond the sample stack's assumptions requires a security team review
+8. **Still writing asset references as `icons:Lambda`** — backward compatibility is retained, but the current form is `assets:{source}/{name}` (e.g. `assets:aws/Lambda`)
+9. **Assuming templates are lost on package reinstall, not knowing about `~/.config/sdpm/`** — they live in the user-local persistent directory, so they aren't lost
 
-## 参考
+## References
 
 - [aws-samples/sample-spec-driven-presentation-maker](https://github.com/aws-samples/sample-spec-driven-presentation-maker)
 - [Architecture](https://github.com/aws-samples/sample-spec-driven-presentation-maker/blob/main/docs/en/architecture.md) / [Getting Started](https://github.com/aws-samples/sample-spec-driven-presentation-maker/blob/main/docs/en/getting-started.md) / [Custom Templates](https://github.com/aws-samples/sample-spec-driven-presentation-maker/blob/main/docs/en/custom-template.md)
-- [Workshop（業界別ハンズオン）](https://catalog.us-east-1.prod.workshops.aws/workshops/a275330a-0ae0-40b2-ad35-264e263c3882/en-US)
-- 関連: `ai/practice/spec-driven-development.md` / `ai/workflow/cc-sdd.md` / `ai/workflow/github-spec-kit.md` / `ai/workflow/kiro.md` / `ai/platform/agent-skills-spec.md` / `ai/platform/mcp-protocol.md`
+- [Workshop (industry-specific hands-on)](https://catalog.us-east-1.prod.workshops.aws/workshops/a275330a-0ae0-40b2-ad35-264e263c3882/en-US)
+- Related: `ai/practice/spec-driven-development.md` / `ai/workflow/cc-sdd.md` / `ai/workflow/github-spec-kit.md` / `ai/workflow/kiro.md` / `ai/platform/agent-skills-spec.md` / `ai/platform/mcp-protocol.md`

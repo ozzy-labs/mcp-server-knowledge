@@ -5,11 +5,11 @@ tags: [git-hook, go]
 
 # lefthook
 
-Go で書かれた高速な Git フック管理ツール。並列実行、ファイルフィルタ、ステージ更新、複数リポジトリ横断の設定共有をサポート。husky / pre-commit の置き換えとして採用が進む。
+A fast Git hook manager written in Go. Supports parallel execution, file filters, stage updates, and shared configuration across multiple repositories. Increasingly adopted as a replacement for husky / pre-commit.
 
-公式: [github.com/evilmartians/lefthook](https://github.com/evilmartians/lefthook)
+Official: [github.com/evilmartians/lefthook](https://github.com/evilmartians/lefthook)
 
-## インストール
+## Installation
 
 ```bash
 # mise / asdf
@@ -25,19 +25,19 @@ pnpm add -D lefthook
 go install github.com/evilmartians/lefthook@latest
 ```
 
-## 有効化
+## Enabling
 
 ```bash
 lefthook install
 ```
 
-`.git/hooks/` に lefthook のディスパッチャスクリプトを配置する。`package.json` の `scripts.prepare`（pnpm / npm）に書くと clone 後の `pnpm install` で自動セットアップできる:
+This places lefthook's dispatcher script in `.git/hooks/`. Adding it to `scripts.prepare` in `package.json` (pnpm / npm) lets it auto-set-up via `pnpm install` after a clone:
 
 ```json
 { "scripts": { "prepare": "lefthook install" } }
 ```
 
-## 設定ファイル `lefthook.yaml`
+## Configuration file `lefthook.yaml`
 
 ```yaml
 commit-msg:
@@ -65,52 +65,52 @@ pre-push:
       run: npx tsc --noEmit
 ```
 
-## 主要フィールド
+## Key fields
 
-### トップレベル
+### Top level
 
-| フィールド | 説明 |
+| Field | Description |
 |---|---|
-| `<hook-name>:` | `pre-commit` / `commit-msg` / `pre-push` / `post-checkout` 等、Git が定義するフック名 |
-| `extends:` | 他の yaml ファイルをマージ（monorepo や共通設定の共有） |
-| `min_version:` | lefthook の最小要求バージョン |
-| `glob_matcher:` | `doublestar`（推奨、`**` が再帰的にマッチ） |
+| `<hook-name>:` | A Git-defined hook name such as `pre-commit` / `commit-msg` / `pre-push` / `post-checkout` |
+| `extends:` | Merges other yaml files (for sharing config across monorepos or common setups) |
+| `min_version:` | Minimum required lefthook version |
+| `glob_matcher:` | `doublestar` (recommended; `**` matches recursively) |
 
-### hook 内
+### Inside a hook
 
-| フィールド | 説明 |
+| Field | Description |
 |---|---|
-| `parallel: true` | コマンドを並列実行 |
-| `piped: true` | 直列実行で前段の失敗で中断 |
-| `skip:` | 条件付きスキップ（`- merge` / `- rebase` / `ref: refs/heads/main` 等） |
-| `only:` | 条件付き実行（逆） |
-| `commands:` | 実行する個別コマンド |
+| `parallel: true` | Run commands in parallel |
+| `piped: true` | Run sequentially, aborting on the first failure |
+| `skip:` | Conditional skip (e.g. `- merge` / `- rebase` / `ref: refs/heads/main`) |
+| `only:` | Conditional run (inverse of `skip`) |
+| `commands:` | The individual commands to run |
 
-### command 内
+### Inside a command
 
-| フィールド | 説明 |
+| Field | Description |
 |---|---|
-| `run:` | 実行するシェルコマンド |
-| `glob:` | 対象ファイルの glob パターン |
-| `exclude:` | 除外パターン |
-| `tags:` | フック呼び出し時のフィルタ用ラベル |
-| `stage_fixed: true` | コマンド後に変更ファイルを再ステージ |
-| `fail_text:` | 失敗時に表示するメッセージ |
-| `root:` | 実行する作業ディレクトリ（monorepo） |
+| `run:` | The shell command to execute |
+| `glob:` | Glob pattern for target files |
+| `exclude:` | Exclusion pattern |
+| `tags:` | Labels for filtering when invoking the hook |
+| `stage_fixed: true` | Re-stage modified files after the command runs |
+| `fail_text:` | Message shown on failure |
+| `root:` | Working directory to run in (for monorepos) |
 
-## 変数
+## Variables
 
-| 変数 | 展開 |
+| Variable | Expands to |
 |---|---|
-| `{staged_files}` | ステージ中のファイル（pre-commit） |
-| `{push_files}` | push 対象のファイル（pre-push） |
-| `{all_files}` | 追跡中の全ファイル |
-| `{files}` | `glob` にマッチしたファイル |
-| `{1}` / `{2}` ... | フックに渡された引数（`{1}` は commit-msg の COMMIT_EDITMSG パス） |
+| `{staged_files}` | Files currently staged (pre-commit) |
+| `{push_files}` | Files being pushed (pre-push) |
+| `{all_files}` | All tracked files |
+| `{files}` | Files matched by `glob` |
+| `{1}` / `{2}` ... | Arguments passed to the hook (`{1}` is the COMMIT_EDITMSG path for commit-msg) |
 
-## `extends` によるベース設定の共有
+## Sharing base config via `extends`
 
-組織で複数リポジトリを運用する場合、共通部分を別リポジトリに切り出してシンボリックリンク or `git subtree` で配置:
+When operating multiple repositories in an organization, extract the common parts into a separate repository and place it via a symlink or `git subtree`:
 
 ```yaml
 # lefthook-base.yaml
@@ -129,7 +129,7 @@ pre-commit:
 ```
 
 ```yaml
-# 各リポジトリの lefthook.yaml
+# each repository's lefthook.yaml
 extends:
   - lefthook-base.yaml
 
@@ -141,22 +141,22 @@ pre-commit:
       stage_fixed: true
 ```
 
-## スキップ方法
+## How to skip
 
-### ユーザー側
+### User side
 
 ```bash
-# 単一のフックをスキップ
+# Skip a single hook
 LEFTHOOK=0 git commit
 LEFTHOOK_EXCLUDE=biome,gitleaks git commit
 
-# 特定コマンドのみ実行
+# Run only a specific command
 lefthook run pre-commit --commands biome
 ```
 
-CLAUDE.md やチーム規約では `--no-verify` を原則禁止とするプロジェクトが多い。`LEFTHOOK_EXCLUDE` で個別スキップする方が目的明確。
+Many projects prohibit `--no-verify` in principle per their CLAUDE.md or team conventions. Skipping individually via `LEFTHOOK_EXCLUDE` makes the intent clearer.
 
-### 設定側
+### Config side
 
 ```yaml
 pre-commit:
@@ -170,45 +170,45 @@ pre-commit:
         ref: "refs/heads/main"
 ```
 
-## 実行順とエラー
+## Execution order and errors
 
-- `parallel: true`: 全コマンドを並列実行。どれか失敗しても他は走りきる
-- `piped: true`: 直列、前段失敗で即中断
-- デフォルト（両方なし）: 直列だが全コマンド実行
+- `parallel: true`: runs all commands in parallel; other commands still run to completion even if one fails
+- `piped: true`: sequential; aborts immediately on the first failure
+- Default (neither set): sequential, but all commands run
 
-終了コードが非 0 なら hook 全体が fail し、Git 操作が中断される。
+If any exit code is non-zero, the whole hook fails and the Git operation is aborted.
 
-## Windows 対応
+## Windows support
 
-Git Bash / WSL で動作。ネイティブ Windows では `run:` のコマンドが POSIX shell 前提のものは失敗する。クロスプラットフォーム化するときは Node スクリプト経由にするのが安全。
+Works under Git Bash / WSL. On native Windows, `run:` commands that assume a POSIX shell will fail. For cross-platform setups, routing through a Node script is the safer option.
 
-## よくあるトラブル
+## Common issues
 
-### `lefthook install` が何もしない
+### `lefthook install` does nothing
 
-`.git/hooks/` が既存のフックで埋まっている場合、`lefthook install --force` で上書き。事前に既存フックをバックアップすること。
+If `.git/hooks/` is already populated with existing hooks, use `lefthook install --force` to overwrite. Back up existing hooks beforehand.
 
-### ステージに乗っていないファイルまで直してしまう
+### Files not staged also get modified
 
-`stage_fixed: true` を付けていても、コマンドが `{staged_files}` 以外を触ると意図せず変更される。`glob` と `{staged_files}` の併用が安全。
+Even with `stage_fixed: true` set, if the command touches files beyond `{staged_files}`, unintended changes can occur. Combining `glob` with `{staged_files}` is the safe approach.
 
-### 既存 husky からの移行
+### Migrating from existing husky
 
-1. `.husky/` 内のスクリプトを `lefthook.yaml` に書き直す
-2. `package.json` から `husky` を削除、`"prepare": "husky"` を `"lefthook install"` に
-3. `.husky/` を削除
+1. Rewrite the scripts in `.husky/` into `lefthook.yaml`
+2. Remove `husky` from `package.json`; change `"prepare": "husky"` to `"lefthook install"`
+3. Delete `.husky/`
 
-### commitlint が走らない
+### commitlint doesn't run
 
-`commit-msg` フックの命名ミス（`commit_msg` ではない）、`{1}` 引数忘れが典型。
+Typical causes are a misnamed `commit-msg` hook (not `commit_msg`) or forgetting the `{1}` argument.
 
-## 他ツールとの比較
+## Comparison with other tools
 
-| 観点 | lefthook | husky | pre-commit (Python) |
+| Aspect | lefthook | husky | pre-commit (Python) |
 |---|---|---|---|
-| 言語 | Go（単一バイナリ） | シェル + Node | Python |
-| インストール | バイナリ | npm | pip |
-| 並列実行 | ネイティブ | なし | あり |
-| ファイルフィルタ | glob 内蔵 | 個別処理 | pattern 対応 |
-| 設定共有 | `extends` | なし | `repos` 参照 |
-| 速度 | 速い | 普通 | Python 起動分遅い |
+| Language | Go (single binary) | Shell + Node | Python |
+| Installation | Binary | npm | pip |
+| Parallel execution | Native | None | Supported |
+| File filtering | Built-in glob | Handled individually | Pattern support |
+| Config sharing | `extends` | None | `repos` reference |
+| Speed | Fast | Average | Slower due to Python startup |

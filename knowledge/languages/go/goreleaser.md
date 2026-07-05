@@ -5,36 +5,36 @@ tags: [go, release, ci]
 
 # GoReleaser
 
-Go バイナリの **クロスコンパイル + マルチチャネル配布** を 1 コマンドで完結させる OSS。`.goreleaser.yaml` 1 つ書いて SemVer タグを push すれば、各 OS / Arch のバイナリビルド・チェックサム・SBOM・署名・GitHub Release・Homebrew tap・Docker push・apt/rpm パッケージ等を自動実行する。
+An OSS tool that completes **cross-compilation + multi-channel distribution** of Go binaries in a single command. Write one `.goreleaser.yaml` and push a SemVer tag, and it automatically builds binaries for each OS/Arch, generates checksums, SBOMs, signatures, GitHub Releases, Homebrew taps, Docker pushes, apt/rpm packages, and more.
 
-公式: [goreleaser.com](https://goreleaser.com/) / [GitHub](https://github.com/goreleaser/goreleaser)
+Official: [goreleaser.com](https://goreleaser.com/) / [GitHub](https://github.com/goreleaser/goreleaser)
 
-最新は v2 系（v2.15+）。**v2 では設定に `version: 2` ヘッダが必須**。
+Latest is the v2 series (v2.15+). **In v2, a `version: 2` header is required in the config.**
 
-## エディション
+## Editions
 
-OSS で十分にフル機能。**Pro 専用**は以下:
+OSS is fully featured for most needs. **Pro-only** features:
 
-- macOS `.pkg` / `.dmg` / `.app` のネイティブ署名・notarize
-- Windows MSI / NSIS インストーラ
-- prepare / publish 二段階リリース、changelog プレビュー
-- monorepo の path フィルタ、AI changelog 強化
-- npm publish、Cloudsmith / Gemfury 連携
-- Podman 対応、設定の include / templating
-- ライセンスは `GORELEASER_KEY` で渡す
+- Native signing/notarization of macOS `.pkg` / `.dmg` / `.app`
+- Windows MSI / NSIS installers
+- Two-stage prepare/publish releases, changelog preview
+- Monorepo path filters, enhanced AI changelog
+- npm publish, Cloudsmith / Gemfury integration
+- Podman support, config include/templating
+- License is passed via `GORELEASER_KEY`
 
-## インストール
+## Installation
 
-| 方法 | OSS | Pro |
+| Method | OSS | Pro |
 |---|---|---|
 | Homebrew | `brew install --cask goreleaser/tap/goreleaser` | `goreleaser/tap/goreleaser-pro` |
-| go install | `go install github.com/goreleaser/goreleaser/v2@latest` | （不可） |
+| go install | `go install github.com/goreleaser/goreleaser/v2@latest` | (not available) |
 | Docker | `goreleaser/goreleaser` | `goreleaser/goreleaser-pro` |
 | Snap | `sudo snap install --classic goreleaser` | — |
-| apt / yum | 公式 repo（鍵設定が必要） | 同左 |
-| script | `curl -sfL https://goreleaser.com/static/run \| VERSION=v2.15.4 bash -s -- check` | 同 |
+| apt / yum | Official repo (key setup required) | Same |
+| script | `curl -sfL https://goreleaser.com/static/run \| VERSION=v2.15.4 bash -s -- check` | Same |
 
-## 設定ファイル `.goreleaser.yaml`
+## Config file `.goreleaser.yaml`
 
 ```yaml
 version: 2
@@ -106,59 +106,59 @@ release:
   github:
     owner: your-org
     name: myapp
-  prerelease: auto      # vX.Y.Z-rc.N を自動で prerelease 扱い
+  prerelease: auto      # automatically treats vX.Y.Z-rc.N as a prerelease
   draft: false
 ```
 
-## 主要セクション
+## Key sections
 
-| セクション | 役割 |
+| Section | Role |
 |---|---|
-| `version: 2` | v2 必須 |
-| `before:` | リリース前フック（`go mod tidy` 等） |
-| `builds:` | クロスコンパイル定義 |
-| `archives:` | tar.gz / zip 生成、`name_template` で命名 |
-| `checksum:` | SHA256 チェックサム（既定） |
-| `signs:` | cosign / GPG 署名 |
-| `sboms:` | SBOM 生成（既定 syft / SPDX-JSON） |
-| `snapshot:` | タグ無し時のバージョン |
-| `changelog:` | 自動生成 changelog（github / gitlab / git ベース） |
+| `version: 2` | Required for v2 |
+| `before:` | Pre-release hooks (e.g. `go mod tidy`) |
+| `builds:` | Cross-compilation definitions |
+| `archives:` | tar.gz / zip generation, naming via `name_template` |
+| `checksum:` | SHA256 checksums (default) |
+| `signs:` | cosign / GPG signing |
+| `sboms:` | SBOM generation (default: syft / SPDX-JSON) |
+| `snapshot:` | Version used when there is no tag |
+| `changelog:` | Auto-generated changelog (github / gitlab / git-based) |
 | `release:` | GitHub / GitLab / Gitea Release |
 
-## 配布チャネル
+## Distribution channels
 
-| キー | 配布先 |
+| Key | Destination |
 |---|---|
-| `brews:` | Homebrew tap への自動 PR |
-| `homebrew_casks:` | macOS GUI アプリ向け cask（v2.10+） |
+| `brews:` | Automatic PR to a Homebrew tap |
+| `homebrew_casks:` | Cask for macOS GUI apps (v2.10+) |
 | `nfpms:` | deb / rpm / apk / ipk / Archlinux |
-| `dockers:` | Docker image（要 Dockerfile） |
-| `docker_manifests:` | マルチアーキ manifest list |
-| `kos:` | ko 連携、Dockerfile レス |
-| `winget:` | winget-pkgs への自動 PR（OSS） |
+| `dockers:` | Docker image (requires a Dockerfile) |
+| `docker_manifests:` | Multi-arch manifest list |
+| `kos:` | ko integration, Dockerfile-less |
+| `winget:` | Automatic PR to winget-pkgs (OSS) |
 | `aurs:` / `scoops:` / `chocolateys:` | AUR / Scoop / Chocolatey |
 | `snapcrafts:` / `flatpaks:` | Snap / Flatpak |
-| `npms:` | Pro のみ |
+| `npms:` | Pro only |
 
-## 主要コマンド
+## Key commands
 
 ```bash
-goreleaser init                              # 雛形生成
-goreleaser check                             # 設定検証 + 非推奨警告
-goreleaser healthcheck                       # 必要外部ツール（cosign, syft, docker 等）の確認
+goreleaser init                              # generate a template
+goreleaser check                             # validate config + deprecation warnings
+goreleaser healthcheck                       # check required external tools (cosign, syft, docker, etc.)
 
-# ローカルテスト
-goreleaser build --snapshot --clean          # タグ無しでビルドのみ
-goreleaser release --snapshot --clean        # 全工程ドライラン
-goreleaser release --skip=publish,sign       # 一部スキップ
+# Local testing
+goreleaser build --snapshot --clean          # build only, no tag needed
+goreleaser release --snapshot --clean        # full dry run
+goreleaser release --skip=publish,sign       # skip specific steps
 
-# 本番
-goreleaser release --clean                   # タグ push 時のフルリリース
+# Production
+goreleaser release --clean                   # full release on tag push
 ```
 
-v2 で削除されたフラグ: `--rm-dist`（→ `--clean`）, `--skip-*`（→ `--skip=...`）, `--debug`（→ `--verbose`）。
+Flags removed in v2: `--rm-dist` (→ `--clean`), `--skip-*` (→ `--skip=...`), `--debug` (→ `--verbose`).
 
-## CI 統合（GitHub Actions）
+## CI integration (GitHub Actions)
 
 ```yaml
 name: release
@@ -167,18 +167,18 @@ on:
     tags: ["v*"]
 permissions:
   contents: write       # release / archive upload
-  packages: write       # GHCR push 時
-  id-token: write       # cosign keyless (OIDC) 用
+  packages: write       # for GHCR push
+  id-token: write       # for cosign keyless (OIDC)
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0    # 必須: 履歴全取得（タグ検出のため）
+          fetch-depth: 0    # required: full history (for tag detection)
       - uses: actions/setup-go@v5
-      - uses: sigstore/cosign-installer@v3   # 署名する場合
-      - uses: anchore/sbom-action/download-syft@v0   # SBOM 生成する場合
+      - uses: sigstore/cosign-installer@v3   # if signing
+      - uses: anchore/sbom-action/download-syft@v0   # if generating SBOMs
       - uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
@@ -186,25 +186,25 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}  # Pro 用
+          # GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}  # for Pro
 ```
 
-`goreleaser-action` 自体は Docker / GPG / Cosign を **インストールしない**ので別途 setup が必要。
+`goreleaser-action` itself does **not** install Docker / GPG / Cosign, so they must be set up separately.
 
-### 別リポへの commit が必要なチャネル
+### Channels that require committing to another repo
 
-`brews:` の Homebrew tap や `scoops:` の Scoop bucket は別リポへの commit を伴う。`GITHUB_TOKEN` は実行リポへの権限しか持たないため、**別途 PAT を `HOMEBREW_TAP_GITHUB_TOKEN` 等で渡す**:
+Channels like `brews:` (Homebrew tap) and `scoops:` (Scoop bucket) involve committing to a different repo. Since `GITHUB_TOKEN` only has permissions on the executing repo, **a separate PAT must be passed via e.g. `HOMEBREW_TAP_GITHUB_TOKEN`**:
 
 ```yaml
 env:
   HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
 ```
 
-## 署名 / SBOM / 再現性
+## Signing / SBOM / Reproducibility
 
-### cosign keyless（推奨）
+### cosign keyless (recommended)
 
-GitHub OIDC を使った鍵レス署名。`id-token: write` 権限が必要:
+Keyless signing using GitHub OIDC. Requires `id-token: write` permission:
 
 ```yaml
 signs:
@@ -217,7 +217,7 @@ signs:
       - --yes
 ```
 
-検証側: `cosign verify-blob --bundle file.tar.gz.sigstore.json file.tar.gz`。
+Verification side: `cosign verify-blob --bundle file.tar.gz.sigstore.json file.tar.gz`.
 
 ### SBOM
 
@@ -226,23 +226,23 @@ sboms:
   - artifacts: archive
 ```
 
-既定で syft が SPDX-JSON を生成。コンテナイメージは未対応（イメージ側は `cosign attest` を別途使う）。
+By default, syft generates SPDX-JSON. Container images are not supported (use `cosign attest` separately for images).
 
-### 再現性
+### Reproducibility
 
-`-trimpath` + 固定 `ldflags` でほぼ再現可能。`CGO_ENABLED=0` がさらに安定。
+`-trimpath` + fixed `ldflags` make builds nearly reproducible. `CGO_ENABLED=0` makes it even more stable.
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **`fetch-depth: 0` 忘れ** — checkout 既定の shallow clone だと過去タグが見えず、`goreleaser` が「no tag」エラー
-2. **タグの形式ミス** — `vX.Y.Z` の **leading `v` 必須**。`1.0.0` だと SemVer として認識されず失敗
-3. **`version: 2` 行を書き忘れる** — v2 環境で v1 形式の設定だと警告（将来エラー化）。`goreleaser check` で検証
-4. **Homebrew tap 用 token に `GITHUB_TOKEN` を使う** — 別リポへ commit できない。専用 PAT を発行して別 secret に登録
-5. **`--rm-dist` を使う** — v2 で削除。`--clean` を使う
-6. **cosign keyless で `id-token: write` 忘れ** — OIDC token が取れず署名失敗
-7. **macOS バイナリの notarize を OSS でやろうとする** — 未対応。Pro が必要
+1. **Forgetting `fetch-depth: 0`** — with checkout's default shallow clone, past tags aren't visible and `goreleaser` fails with a "no tag" error
+2. **Wrong tag format** — the **leading `v` in `vX.Y.Z` is required**. `1.0.0` won't be recognized as SemVer and will fail
+3. **Forgetting the `version: 2` line** — a v1-style config in a v2 environment produces a warning (will become an error in the future). Validate with `goreleaser check`
+4. **Using `GITHUB_TOKEN` for the Homebrew tap token** — can't commit to another repo. Issue a dedicated PAT and register it as a separate secret
+5. **Using `--rm-dist`** — removed in v2. Use `--clean`
+6. **Forgetting `id-token: write` for cosign keyless** — fails to obtain an OIDC token, causing signing to fail
+7. **Trying to notarize macOS binaries with OSS** — not supported. Requires Pro
 
-## 参考
+## References
 
 - [Install](https://goreleaser.com/install/)
 - [Customization](https://goreleaser.com/customization/)

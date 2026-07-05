@@ -6,11 +6,11 @@ aliases: [claude-api]
 
 # Anthropic API (Claude API)
 
-Anthropic が提供する Claude モデルの API。本記事は API 本体（SDK 経由のアプリ実装）を対象。Claude Code CLI は別記事 `ai/agents/claude-code.md` を参照。
+The API for Claude models provided by Anthropic. This article covers the API itself (app implementation via the SDK). For the Claude Code CLI, see the separate article `ai/agents/claude-code.md`.
 
-公式: [platform.claude.com/docs](https://platform.claude.com/docs)
+Official: [platform.claude.com/docs](https://platform.claude.com/docs)
 
-## SDK インストールと認証
+## SDK installation and authentication
 
 ```bash
 # Python
@@ -20,14 +20,14 @@ pip install anthropic
 npm install @anthropic-ai/sdk
 ```
 
-認証は環境変数 `ANTHROPIC_API_KEY`（または SDK コンストラクタ `apiKey` 引数）。SDK が `x-api-key` / `anthropic-version` / `content-type` ヘッダを自動付与する。
+Authentication uses the `ANTHROPIC_API_KEY` environment variable (or the `apiKey` argument to the SDK constructor). The SDK automatically attaches the `x-api-key` / `anthropic-version` / `content-type` headers.
 
-### 最小 Messages リクエスト
+### Minimal Messages request
 
 ```python
 import anthropic
 
-client = anthropic.Anthropic()  # env var から読む
+client = anthropic.Anthropic()  # reads from env var
 message = client.messages.create(
     model="claude-opus-4-8",
     max_tokens=1024,
@@ -36,24 +36,24 @@ message = client.messages.create(
 print(message.content[0].text)
 ```
 
-## 現行モデル（2026-07 時点）
+## Current models (as of 2026-07)
 
-| モデル | API ID | コンテキスト | 最大出力 | 位置付け | 価格 (入力/出力 per 1M) |
+| Model | API ID | Context | Max output | Positioning | Price (input/output per 1M) |
 |---|---|---|---|---|---|
-| **Fable 5** | `claude-fable-5` | 1M | 128K | 最も高性能な widely released モデル。最難関の推論・long-horizon agentic 向け。thinking 常時 ON（`thinking` 省略、明示 `disabled` は 400）。30 日データ保持必須（ZDR 不可）。`refusal` stop reason あり | $10 / $50 |
-| **Opus 4.8** | `claude-opus-4-8` | 1M | 128K | 現行 Opus 階層フラッグシップ。複雑推論・long-horizon agentic coding・高自律タスク。Extended thinking 非対応（adaptive thinking のみ）。`effort` デフォルト `high` | $5 / $25 |
-| **Sonnet 5** | `claude-sonnet-5` | 1M | 128K | Sonnet 階層の現行。速度と知性のバランスに優れ、コーディング/エージェントで near-Opus。adaptive thinking がデフォルト ON（`thinking` 省略時も adaptive、`budget_tokens` は 400）。`effort` は `low`〜`max`（Sonnet 階層で初の `xhigh` 対応）。新トークナイザで同一テキストが Sonnet 4.6 比 約+30% トークン | $3 / $15（〜2026-08-31 は導入価格 $2 / $10） |
-| **Haiku 4.5** | `claude-haiku-4-5-20251001` | 200K | 64K | 最速・最安。near-frontier 知性。extended thinking 対応 | $1 / $5 |
+| **Fable 5** | `claude-fable-5` | 1M | 128K | The most capable widely released model. For the hardest reasoning and long-horizon agentic work. Thinking is always ON (`thinking` is omitted; explicitly setting `disabled` returns 400). Requires 30-day data retention (ZDR not available). Has a `refusal` stop reason | $10 / $50 |
+| **Opus 4.8** | `claude-opus-4-8` | 1M | 128K | Current Opus-tier flagship. Complex reasoning, long-horizon agentic coding, high-autonomy tasks. Extended thinking not supported (adaptive thinking only). `effort` defaults to `high` | $5 / $25 |
+| **Sonnet 5** | `claude-sonnet-5` | 1M | 128K | Current Sonnet tier. Excellent balance of speed and intelligence; near-Opus for coding/agents. Adaptive thinking is ON by default (adaptive even when `thinking` is omitted; `budget_tokens` returns 400). `effort` ranges `low`–`max` (first Sonnet tier to support `xhigh`). With the new tokenizer, the same text uses ~30% more tokens than Sonnet 4.6 | $3 / $15 (introductory price $2 / $10 through 2026-08-31) |
+| **Haiku 4.5** | `claude-haiku-4-5-20251001` | 200K | 64K | Fastest and cheapest. Near-frontier intelligence. Supports extended thinking | $1 / $5 |
 
-Opus 4.8 は 2026-05-28 リリースで Opus 4.7 を置き換える現行の **Opus 階層フラッグシップ**。Opus 4.7 と同じ $5 / $25 価格・1M context・128K 最大出力で、tool / platform 機能セットも Opus 4.7 と同等。なお Anthropic 最高性能の widely released モデルは **Claude Fable 5**（`claude-fable-5`、$10 / $50）で、Opus 階層より上位だが API 挙動が異なる（thinking 常時 ON で `thinking` パラメータは省略、`temperature` 等のサンプリングパラメータ不可、30 日データ保持必須）。コーディング/エージェントのデフォルトは引き続き Opus 4.8、最高性能が必要なときのみ Fable 5 を選ぶ。Project Glasswing 限定の **Mythos 5**（`claude-mythos-5`）は Fable 5 と同等。**Sonnet 5**（`claude-sonnet-5`、$3 / $15・導入価格 $2 / $10 が 2026-08-31 まで）が Sonnet 階層の現行で Sonnet 4.6 を置き換える。adaptive thinking がデフォルト ON（`thinking` 省略時も adaptive で動作、`budget_tokens` は 400）、`effort` は `low`〜`max`（Sonnet 階層で初めて `xhigh` に対応）で、新トークナイザにより同一テキストのトークン数が Sonnet 4.6 比で約 +30%（1M / 128K・sticker 価格は据え置きだが実効コストは変動する）。Opus 4.7 / Opus 4.6 / Sonnet 4.6 は legacy 扱い（引き続き利用可だが移行推奨）。Opus 4.8 は **adaptive thinking が enabled 時のみ無駄な thinking トークンを削減**し、long-horizon agentic coding・compaction 回復・tool triggering が Opus 4.7 比で改善。1M context は **2026-03-13 に Opus 4.6 / Sonnet 4.6 で GA**（ヘッダ不要、標準価格）し、Opus 4.7 / 4.8 もデフォルトで 1M。旧モデル向け beta ヘッダ `context-1m-2025-08-07` は 2026-04-30 に Sonnet 4.5 / Sonnet 4 から廃止され効果なし。4.6 世代以降の dateless ID（`claude-opus-4-8` 等）も pinned snapshot で evergreen ポインタではない。**deprecation**: Opus 4.1（`claude-opus-4-1-20250805`）は 2026-08-05 retire 予定。Sonnet 4（`claude-sonnet-4-20250514`）/ Opus 4（`claude-opus-4-20250514`）は 2026-06-15 が当初の retire 予定日で本日（2026-07-05）時点で経過済み — 未移行なら `claude-opus-4-8` / `claude-sonnet-5` へ即時移行する。
+Opus 4.8, released 2026-05-28, replaces Opus 4.7 as the current **Opus-tier flagship**. It shares the same $5 / $25 price, 1M context, and 128K max output as Opus 4.7, with an equivalent tool/platform feature set. Anthropic's highest-performing widely released model, however, is **Claude Fable 5** (`claude-fable-5`, $10 / $50), which sits above the Opus tier but has different API behavior (thinking always ON so the `thinking` parameter is omitted, sampling parameters like `temperature` are not allowed, and 30-day data retention is required). Opus 4.8 remains the default for coding/agentic work; choose Fable 5 only when maximum capability is required. **Mythos 5** (`claude-mythos-5`), limited to Project Glasswing, is equivalent to Fable 5. **Sonnet 5** (`claude-sonnet-5`, $3 / $15, with an introductory price of $2 / $10 through 2026-08-31) is the current Sonnet tier, replacing Sonnet 4.6. Adaptive thinking is ON by default (it runs in adaptive mode even when `thinking` is omitted; `budget_tokens` returns 400), and `effort` ranges `low`–`max` (the first time `xhigh` is available at the Sonnet tier). Due to the new tokenizer, the same text consumes about 30% more tokens than under Sonnet 4.6 (1M / 128K; sticker pricing is unchanged but effective cost will vary). Opus 4.7 / Opus 4.6 / Sonnet 4.6 are now legacy (still usable, but migration is recommended). Opus 4.8 **reduces wasted thinking tokens only when adaptive thinking is enabled**, improving long-horizon agentic coding, compaction recovery, and tool triggering relative to Opus 4.7. The 1M context window **reached GA for Opus 4.6 / Sonnet 4.6 on 2026-03-13** (no header required, standard pricing), and Opus 4.7 / 4.8 default to 1M as well. The legacy beta header `context-1m-2025-08-07` was removed for Sonnet 4.5 / Sonnet 4 on 2026-04-30 and no longer has any effect. Dateless IDs from the 4.6 generation onward (e.g. `claude-opus-4-8`) are also pinned snapshots, not evergreen pointers. **Deprecation**: Opus 4.1 (`claude-opus-4-1-20250805`) is scheduled to retire on 2026-08-05. Sonnet 4 (`claude-sonnet-4-20250514`) / Opus 4 (`claude-opus-4-20250514`) had an original retirement date of 2026-06-15, which as of today (2026-07-05) has already passed — migrate immediately to `claude-opus-4-8` / `claude-sonnet-5` if you have not already.
 
-## プロンプトキャッシング — 最重要の最適化
+## Prompt caching — the single most important optimization
 
-静的なシステムプロンプト・ドキュメント・ツール定義にキャッシュブレークポイントを置くと、次以降のリクエストで**キャッシュヒット分は入力単価の 10%** になる。ITPM レートリミット消費も大幅減。
+Placing cache breakpoints on static system prompts, documents, and tool definitions brings the **cached portion down to 10% of the input token price** on subsequent requests. It also substantially reduces ITPM rate-limit consumption.
 
-**自動キャッシング（2026-02-19 launch）**: `cache_control` を 1 箇所付けるだけで、会話伸長に応じて自動でキャッシュポイントが前進する。手動 breakpoint 管理は不要。block-level cache control と併用可。
+**Automatic caching (launched 2026-02-19)**: adding a single `cache_control` marker lets the cache point advance automatically as the conversation grows. No manual breakpoint management needed. Can be combined with block-level cache control.
 
-### 配置
+### Placement
 
 ```python
 message = client.messages.create(
@@ -63,23 +63,23 @@ message = client.messages.create(
         {"type": "text", "text": "You are a helpful assistant."},
         {
             "type": "text",
-            "text": "<大きなドキュメント>",
+            "text": "<large document>",
             "cache_control": {"type": "ephemeral"},
         },
     ],
-    messages=[{"role": "user", "content": "このドキュメントに対する質問..."}],
+    messages=[{"role": "user", "content": "Question about this document..."}],
 )
 ```
 
-- **TTL**: デフォルト 5 分 / 拡張 1 時間（**2025-08-13 に GA、ヘッダ不要**。旧 beta ヘッダ `extended-cache-ttl-2025-04-11` は廃止）
-- **最小キャッシュ長**: Opus 4.8 / 4.7 / 4.6 / Haiku 4.5 は **4,096 トークン**、Fable 5 / Sonnet 4.6 は **2,048 トークン**、Sonnet 4.5 系は 1,024 トークン。これ未満のプレフィックスはブレークポイントを置いてもサイレントにキャッシュされない（`cache_creation_input_tokens: 0` のまま、エラーは出ない）
-- **ブレークポイント上限**: 1 リクエストあたり最大 4 個
-- **無効化**: ブレークポイントより前のコンテンツが変わるとそれ以降のキャッシュは失効する
-- **対象ブロック**: `system` / `messages.content` のテキスト・画像・PDF、ツール定義
+- **TTL**: default 5 minutes / extended 1 hour (**GA as of 2025-08-13, no header required**; the legacy beta header `extended-cache-ttl-2025-04-11` has been removed)
+- **Minimum cacheable length**: **4,096 tokens** for Opus 4.8 / 4.7 / 4.6 / Haiku 4.5; **2,048 tokens** for Fable 5 / Sonnet 4.6; 1,024 tokens for the Sonnet 4.5 series. Prefixes shorter than this are silently not cached even if a breakpoint is set (`cache_creation_input_tokens: 0` with no error)
+- **Breakpoint limit**: maximum 4 per request
+- **Invalidation**: any change to content before a breakpoint invalidates the cache from that point onward
+- **Eligible blocks**: text, images, and PDFs in `system` / `messages.content`, and tool definitions
 
-### 効果の目安
+### Expected impact
 
-キャッシュヒット率 80% で、実効スループット約 5x（2M ITPM → 10M ITPM 相当）。レイテンシも 15〜20% 改善。長いシステムプロンプトを採用するエージェント・RAG では必須の最適化。
+At an 80% cache hit rate, effective throughput increases roughly 5x (equivalent to going from 2M ITPM to 10M ITPM). Latency also improves by 15–20%. This is an essential optimization for agents and RAG systems that use long system prompts.
 
 ## Tool Use
 
@@ -97,58 +97,58 @@ tools = [
 ]
 ```
 
-### 呼び出しループ
+### Call loop
 
-1. ユーザーメッセージ → モデルが `stop_reason: "tool_use"` で `tool_use` ブロックを返す
-2. `tool_use.id` と `input` を読み、ツールを実行
-3. 次リクエストに `{"role": "user", "content": [{"type": "tool_result", "tool_use_id": "<id>", "content": "<result>"}]}` を追加
-4. `stop_reason` が `end_turn` になるまで反復
+1. User message → model returns a `tool_use` block with `stop_reason: "tool_use"`
+2. Read `tool_use.id` and `input`, and execute the tool
+3. Add `{"role": "user", "content": [{"type": "tool_result", "tool_use_id": "<id>", "content": "<result>"}]}` to the next request
+4. Repeat until `stop_reason` becomes `end_turn`
 
 ### `tool_choice`
 
-| 値 | 挙動 |
+| Value | Behavior |
 |---|---|
-| `"auto"`（デフォルト） | モデルが使うかどうか判断 |
-| `"any"` | 何らかのツールを必ず呼ぶ |
-| `{"type": "tool", "name": "<name>"}` | 特定ツールを強制 |
+| `"auto"` (default) | Model decides whether to use a tool |
+| `"any"` | Model must call some tool |
+| `{"type": "tool", "name": "<name>"}` | Forces a specific tool |
 
-### 落とし穴
+### Pitfalls
 
-- `tool_result` の `tool_use_id` が厳密に一致していないと 400 エラー
-- 旧モデルはキャッシュトークンも ITPM に計上されていた。料金表の注釈を確認
-- `stop_reason: "tool_use"` を無視して応答を切ると無限ループ・破綻の原因
+- If `tool_result`'s `tool_use_id` doesn't match exactly, a 400 error is returned
+- Older models counted cached tokens toward ITPM as well — check the pricing table footnotes
+- Ignoring `stop_reason: "tool_use"` and cutting off the response causes infinite loops and broken behavior
 
 ## Extended / Adaptive Thinking
 
-Opus 4.6 以降は **adaptive thinking** が推奨。Opus 4.7 / Opus 4.8 では `thinking: {type: "enabled", budget_tokens: N}` を渡すと **400 エラー** が返る（deprecated ではなくリジェクト）。Opus 4.7 / 4.8 は extended thinking 自体に非対応で adaptive のみサポート。**adaptive thinking はデフォルト OFF**。明示的に `thinking={"type": "adaptive"}` を指定しないと thinking なしで動作する。
+From Opus 4.6 onward, **adaptive thinking** is recommended. On Opus 4.7 / Opus 4.8, passing `thinking: {type: "enabled", budget_tokens: N}` returns a **400 error** (rejected, not merely deprecated). Opus 4.7 / 4.8 do not support extended thinking at all — only adaptive is supported. **Adaptive thinking is OFF by default.** Without explicitly setting `thinking={"type": "adaptive"}`, the model runs without thinking.
 
-Opus 4.7 / Opus 4.8 では `temperature` / `top_p` / `top_k` を**非デフォルト値**に設定すると 400 エラーが返る。これらは省略し、プロンプトで挙動を誘導する。
+On Opus 4.7 / Opus 4.8, setting `temperature` / `top_p` / `top_k` to a **non-default value** returns a 400 error. Omit these and steer behavior via the prompt instead.
 
 ```python
-# Opus 4.8: adaptive thinking + effort 指定
+# Opus 4.8: adaptive thinking + effort specification
 message = client.messages.create(
     model="claude-opus-4-8",
     max_tokens=16000,
     thinking={"type": "adaptive"},
-    output_config={"effort": "medium"},  # low / medium / high / xhigh / max（Opus 4.8 のデフォルトは high）
-    messages=[{"role": "user", "content": "複雑な問題..."}],
+    output_config={"effort": "medium"},  # low / medium / high / xhigh / max (Opus 4.8 defaults to high)
+    messages=[{"role": "user", "content": "Complex problem..."}],
 )
 ```
 
-`effort` パラメータは `budget_tokens` の代替で、**`output_config` 配下**に渡す（トップレベルではない）。値は `low` / `medium` / `high` / `xhigh` / `max`。`xhigh` は Opus 4.7 で追加（コーディング/エージェントの推奨）、`max` は Opus 4.6 以降と Sonnet 4.6 で利用可（Haiku 4.5 は不可）。デフォルトは `high`（省略時と同等）。
+The `effort` parameter replaces `budget_tokens` and is passed **under `output_config`** (not at the top level). Values are `low` / `medium` / `high` / `xhigh` / `max`. `xhigh` was added with Opus 4.7 (recommended for coding/agentic work), and `max` is available from Opus 4.6 onward and on Sonnet 4.6 (not available on Haiku 4.5). Default is `high` (equivalent to omitting it).
 
-**Task budgets（beta、Opus 4.7 / 4.8）**: agentic ループ全体（thinking + tool calls + tool results + final output）の合計トークン目安をモデルに伝える。`max_tokens` がハードキャップなのに対し、`task_budget` はモデルが認識する advisory な目安。beta ヘッダ `task-budgets-2026-03-13` を付与し、`output_config={"effort": "high", "task_budget": {"type": "tokens", "total": 128000}}` のように指定（最小 20k）。
+**Task budgets (beta, Opus 4.7 / 4.8)**: communicates an approximate total token target to the model for the entire agentic loop (thinking + tool calls + tool results + final output). While `max_tokens` is a hard cap, `task_budget` is an advisory target the model is aware of. Attach the beta header `task-budgets-2026-03-13` and specify e.g. `output_config={"effort": "high", "task_budget": {"type": "tokens", "total": 128000}}` (minimum 20k).
 
-Opus 4.7 では **`thinking.display` のデフォルトが `"omitted"`** に変更（Opus 4.6 はデフォルト `"summarized"`）。ストリーミング中に thinking 内容を表示したい場合は明示的に `"display": "summarized"` を指定すること。
+Opus 4.7 changes **the default for `thinking.display` to `"omitted"`** (Opus 4.6 defaulted to `"summarized"`). To display thinking content during streaming, explicitly set `"display": "summarized"`.
 
-- **用途**: 多段推論、数学、デバッグ、深い分析
-- **コスト**: thinking トークンは通常入力の約 3x 単価
-- **キャッシングと併用可**: thinking はキャッシュと独立。固定システムプロンプトをキャッシュしつつ新クエリで thinking を使える
-- **`thinking.display: "omitted"`** (2026-03-16): 応答から thinking 内容を省略しレスポンスを高速化（`signature` は保持）。**Opus 4.7 ではこれがデフォルト**。Opus 4.6 のデフォルトは `"summarized"` だった
+- **Use cases**: multi-step reasoning, math, debugging, deep analysis
+- **Cost**: thinking tokens are priced at roughly 3x the standard input rate
+- **Combinable with caching**: thinking is independent of caching. You can cache a fixed system prompt while still using thinking on new queries
+- **`thinking.display: "omitted"`** (2026-03-16): omits thinking content from the response to speed it up (the `signature` is retained). **This is the default on Opus 4.7.** Opus 4.6 defaulted to `"summarized"`
 
 ## Message Batches API
 
-非同期バッチ処理。**50% 割引** + 24 時間以内 SLA（公式説明では **1 時間未満で完了することが多い**）。1 バッチ 100,000 リクエスト上限。
+Asynchronous batch processing. **50% discount** plus a 24-hour SLA (official docs note it **often completes in under an hour**). Limit of 100,000 requests per batch.
 
 ```python
 batch = client.messages.batches.create(
@@ -165,26 +165,26 @@ batch = client.messages.batches.create(
 )
 ```
 
-結果取得は `client.messages.batches.retrieve(batch.id)` のポーリング、または webhook。結果順序は非保証なので `custom_id` で紐付ける。夜間評価・ログ要約・大量生成に最適。
+Retrieve results by polling `client.messages.batches.retrieve(batch.id)`, or via webhook. Result order is not guaranteed, so match results using `custom_id`. Ideal for overnight evaluations, log summarization, and bulk generation.
 
-## レートリミット
+## Rate limits
 
-### レスポンスヘッダ
+### Response headers
 
-| ヘッダ | 意味 |
+| Header | Meaning |
 |---|---|
-| `anthropic-ratelimit-requests-remaining` | 現ウィンドウの残リクエスト数 |
-| `anthropic-ratelimit-input-tokens-remaining` | 未キャッシュ入力トークン残（キャッシュヒットは消費しない） |
-| `anthropic-ratelimit-output-tokens-remaining` | 出力トークン残 |
-| `retry-after` | 429 時の待機秒数 |
+| `anthropic-ratelimit-requests-remaining` | Remaining requests in the current window |
+| `anthropic-ratelimit-input-tokens-remaining` | Remaining uncached input tokens (cache hits don't consume this) |
+| `anthropic-ratelimit-output-tokens-remaining` | Remaining output tokens |
+| `retry-after` | Seconds to wait on a 429 |
 
-### 対応
+### Handling
 
-- 429 → `retry-after` を尊重 + 指数バックオフ（1s, 2s, 4s, ...）
-- ITPM 逼迫 → キャッシュ率を上げる（Usage ページで hit rate を確認、目標 60%+）
-- Tier 1 デフォルト: 50 RPM、30K ITPM (Opus/Sonnet)、50K ITPM (Haiku)。利用実績で自動昇格
+- On 429 → honor `retry-after` plus exponential backoff (1s, 2s, 4s, ...)
+- Under ITPM pressure → increase your cache hit rate (check hit rate on the Usage page; target 60%+)
+- Tier 1 defaults: 50 RPM, 30K ITPM (Opus/Sonnet), 50K ITPM (Haiku). Auto-promotes with usage history
 
-## Files API（beta）
+## Files API (beta)
 
 ```python
 file = client.beta.files.upload(
@@ -198,37 +198,37 @@ message = client.beta.messages.create(
         "role": "user",
         "content": [
             {"type": "document", "source": {"type": "file", "file_id": file.id}},
-            {"type": "text", "text": "要約して"},
+            {"type": "text", "text": "Summarize this"},
         ],
     }],
 )
 ```
 
-beta ヘッダ `files-api-2025-04-14` が必要。レスポンスに `citation` ブロックが含まれ、回答中のスニペットをファイル内座標に紐付けできる（リサーチ・法務用途で有用）。
+Requires the beta header `files-api-2025-04-14`. Responses include `citation` blocks that map snippets in the answer to coordinates within the file (useful for research and legal use cases).
 
-## エラーコード
+## Error codes
 
-| コード | type | 運用対応 |
+| Code | type | Operational response |
 |---|---|---|
-| 400 | `invalid_request_error` | ペイロード修正（リトライ不可） |
-| 401 | `authentication_error` | API キー確認 |
-| 402 | `billing_error` | Console の課金タブで支払い確認 |
-| 403 | `permission_error` | API キーに対象リソースの権限がない |
-| 404 | `not_found_error` | リソースが存在しない |
-| 413 | `request_too_large` | リクエストサイズ上限超過（Messages 32MB / Batch 256MB / Files 500MB） |
-| 429 | `rate_limit_error` | `retry-after` + バックオフ。持続するならティア昇格 |
-| 500 | `api_error` | 一時障害。指数バックオフでリトライ |
-| 504 | `timeout_error` | 10 分超過。ストリーミングまたは Batch API に切り替え |
-| 529 | `overloaded_error` | 一時的な過負荷。バックオフ（稀） |
+| 400 | `invalid_request_error` | Fix the payload (not retryable) |
+| 401 | `authentication_error` | Check the API key |
+| 402 | `billing_error` | Check payment status in the Console billing tab |
+| 403 | `permission_error` | The API key lacks permission for the target resource |
+| 404 | `not_found_error` | Resource does not exist |
+| 413 | `request_too_large` | Request exceeds size limit (Messages 32MB / Batch 256MB / Files 500MB) |
+| 429 | `rate_limit_error` | `retry-after` plus backoff. If persistent, request a tier upgrade |
+| 500 | `api_error` | Transient failure. Retry with exponential backoff |
+| 504 | `timeout_error` | Exceeded 10 minutes. Switch to streaming or the Batch API |
+| 529 | `overloaded_error` | Temporary overload. Back off (rare) |
 
-すべて JSON で `error.type` / `error.message` / `request_id` を返す。`request_id` はサポート問い合わせに必須。
+All errors return JSON with `error.type` / `error.message` / `request_id`. `request_id` is required when contacting support.
 
-## コスト最適化チェックリスト
+## Cost optimization checklist
 
-1. **プロンプトキャッシング** — システムプロンプト・固定ドキュメント・ツール定義を必ずキャッシュ（90% 削減）
-2. **Message Batches API** — 非リアルタイム用途は batch へ（50% 割引）
-3. **モデル選定** — Haiku でよいタスクに Opus を使わない。Sonnet をデフォルトにして必要時のみ Opus
-4. **Thinking バジェット** — 必要なときだけ有効。1K〜5K を起点に調整
-5. **システムプロンプト短縮** — 毎リクエスト反復される。静的部分は cache に逃がしてインライン system から除去
+1. **Prompt caching** — always cache system prompts, fixed documents, and tool definitions (90% reduction)
+2. **Message Batches API** — route non-real-time workloads through batch (50% discount)
+3. **Model selection** — don't use Opus for tasks Haiku can handle. Default to Sonnet, reach for Opus only when needed
+4. **Thinking budget** — enable only when needed. Start around 1K–5K and tune
+5. **Trim system prompts** — they're repeated on every request. Move static portions into cache and remove them from the inline system prompt
 
-補助: Usage ページでキャッシュヒット率を監視。プロダクションでは 60%+ を目標に。
+Also: monitor cache hit rate on the Usage page. Target 60%+ in production.

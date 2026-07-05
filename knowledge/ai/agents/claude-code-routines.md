@@ -6,72 +6,72 @@ stability: research-preview
 
 # Claude Code Routines
 
-Anthropic 管理のクラウドインフラで Claude Code を非対話に動かす仕組み。`/model` セレクタで **Claude Opus 4.8**（前世代の Opus 4.7 も選択可）と **100 万トークンコンテキスト** を選択でき、トリガー駆動の自律実行プラットフォームとして使える。プロンプト + リポジトリ + コネクタを 1 つの設定として保存し、トリガーで自動起動する。Pro / Max / Team / Enterprise プランで **Claude Code on the web を有効化** している場合に利用可能（research preview）。
+A mechanism for running Claude Code non-interactively on Anthropic-managed cloud infrastructure. The `/model` selector lets you choose **Claude Opus 4.8** (the previous-generation Opus 4.7 is also selectable) and **1 million token context**, usable as a trigger-driven autonomous execution platform. A prompt + repository + connectors are saved as a single configuration and auto-launched by triggers. Available on Pro / Max / Team / Enterprise plans when **Claude Code on the web is enabled** (research preview).
 
-公式: [Automate work with routines](https://code.claude.com/docs/en/routines)
+Official: [Automate work with routines](https://code.claude.com/docs/en/routines)
 
-## 主要機能
+## Key features
 
-- **Opus 4.8 & 1M Context**: モデルセレクタで選択可能（前世代の Opus 4.7 も引き続き選べる）。大規模リポジトリ全体の依存関係を一度に解析できる。
-- **fresh clone モデル**: トリガー毎にリポジトリを default branch から clone し、変更は `claude/`-prefix ブランチに push。**Allow unrestricted branch pushes** を有効化すると既存ブランチへの push も可能。
+- **Opus 4.8 & 1M Context**: selectable via the model selector (the previous-generation Opus 4.7 remains selectable too). Can analyze dependencies across an entire large repository at once.
+- **fresh clone model**: each trigger clones the repository from the default branch, and changes are pushed to a `claude/`-prefixed branch. Enabling **Allow unrestricted branch pushes** also allows pushing to existing branches.
 
-### 関連機能（Routines 本体ではないが併用される）
+### Related features (not Routines itself, but used alongside it)
 
-- **Dreaming**（[Managed Agents](https://platform.claude.com/docs/en/managed-agents/dreams)）: 過去のセッションログを材料に memory store を再編成する研究プレビュー機能。Routines と同じ Claude Code エコシステムだが別レイヤー。研究プレビュー中は `claude-opus-4-7` / `claude-sonnet-4-6` をサポート。
-- **`/ultrareview`**（[Claude Code 本体のスラッシュコマンド](https://code.claude.com/docs/en/ultrareview)）: カレントブランチと default ブランチの diff をレビューする multi-lens パイプライン。Routines 経由でも呼び出せる。
+- **Dreaming** ([Managed Agents](https://platform.claude.com/docs/en/managed-agents/dreams)): a research-preview feature that reorganizes the memory store using past session logs as material. Same Claude Code ecosystem as Routines but a separate layer. During the research preview it supports `claude-opus-4-7` / `claude-sonnet-4-6`.
+- **`/ultrareview`** ([a Claude Code core slash command](https://code.claude.com/docs/en/ultrareview)): a multi-lens pipeline that reviews the diff between the current branch and the default branch. Can also be invoked via Routines.
 
-## 動作モデル
+## Execution model
 
-- **クラウド実行**: Anthropic 管理 VM 上で動作（ローカルがオフラインでも継続）。
-- **完全自律**: 承認プロンプトなし。permission-mode picker も無い。`AskUserQuestion` 系は機能しない前提で設計する。
-- **fresh clone**: トリガー毎にリポジトリを default branch から clone。
-- **個人アカウント所属**: ルーチンは個人 claude.ai アカウントに紐づき、チーム共有されない。commit / PR は自分の GitHub user、コネクタ操作も自分のリンク先アカウントとして記録される。
+- **Cloud execution**: runs on Anthropic-managed VMs (continues even if your local machine is offline).
+- **Fully autonomous**: no approval prompts. There is no permission-mode picker either. Design assuming `AskUserQuestion`-style tools will not function.
+- **fresh clone**: each trigger clones the repository from the default branch.
+- **Belongs to a personal account**: a routine is tied to a personal claude.ai account and is not shared across a team. Commits/PRs are recorded under your own GitHub user, and connector operations are recorded under your own linked account as well.
 
-## CLI / API での操作
+## Operating via CLI / API
 
-用語の区別: **routine** は「クラウドに保存される設定エンティティ」、**`/schedule`** は「その routine を CLI から操作するスラッシュコマンド」。両者は別物だが対立機能ではなく、`/schedule` が cloud routine の CLI 入口にあたる（同名の Desktop ローカル scheduled task や `/loop` とは別。`ai/practice/scheduled-tasks.md` 参照）。
+Terminology distinction: a **routine** is "a configuration entity saved in the cloud"; **`/schedule`** is "the slash command used to operate that routine from the CLI." The two are distinct but not competing — `/schedule` is the CLI entry point to a cloud routine (this is distinct from the same-named local scheduled task in Desktop, and from `/loop`; see `ai/practice/scheduled-tasks.md`).
 
-「作成・管理」と「起動」は別レイヤー。**管理は CLI（一部）と Web、外部からの起動は API** で行う。作成面は Web / Desktop / CLI の 3 つあり、すべて同じ claude.ai アカウントに書き込むため、どこで作っても即座に他面へ反映される。
+"Create/manage" and "fire" are separate layers. **Management is done via CLI (partially) and Web; firing from the outside is done via API.** There are three creation surfaces — Web, Desktop, and CLI — and since all of them write to the same claude.ai account, anything created on one surface is reflected on the others immediately.
 
-### CLI (`/schedule`) — 作成と管理（schedule trigger のみ）
+### CLI (`/schedule`) — creation and management (schedule trigger only)
 
-| コマンド | 操作 |
+| Command | Action |
 |---|---|
-| `/schedule <自然言語>` | scheduled routine を作成。例: `/schedule daily PR review at 9am`、one-off は `/schedule in 2 weeks, open a cleanup PR ...` |
-| `/schedule list` | 全ルーチンを一覧 |
-| `/schedule update` | 既存ルーチンを変更（cron 式の直接指定・コネクタ変更・`enabled` フラグの切替もここ） |
-| `/schedule run` | 即時起動 |
+| `/schedule <natural language>` | Create a scheduled routine. Example: `/schedule daily PR review at 9am`; for one-off: `/schedule in 2 weeks, open a cleanup PR ...` |
+| `/schedule list` | List all routines |
+| `/schedule update` | Modify an existing routine (directly specifying a cron expression, changing connectors, and toggling the `enabled` flag are all done here) |
+| `/schedule run` | Fire immediately |
 
-- **`/schedule` の正体**: Claude Code CLI の組み込みスラッシュコマンド。近年は bundled skill として実装され、内部で claude.ai の管理エンドポイント（`/v1/code/triggers` の list/get/create/update/run）を **in-process の OAuth トークン**で呼ぶ。**ルーチン管理用の公開 REST API は無い**（curl 想定でもない内部 API）。公開 API は後述 `/fire` の起動のみ。
-- **無効化 / 有効化**: `/schedule update` で `enabled` を切替（`false` で設定を残したまま発火を停止、`true` で再開）。Web / Desktop の **Repeats トグル**（pause / resume）でも可。
-- **削除は CLI 不可** — Web / Desktop の detail ページからのみ（削除しても過去の実行セッションは残る）。CLI / 公開 API は削除アクションを持たず、CLI でできるのは無効化（`enabled: false`）まで。
-- **CLI で作れるトリガーは schedule のみ**。API / GitHub trigger の追加・編集、および API トークンの生成・失効は Web（[claude.ai/code/routines](https://claude.ai/code/routines)）でのみ可能。
-- `/schedule` が **"Unknown command"** になる主因（CLI が要件未達だと非表示になる）:
-  1. Console API key / Bedrock / Vertex / Foundry 認証になっている。`ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` / `settings.json` の `apiKeyHelper` は claude.ai ログインより優先されるため外す（`/schedule` は claude.ai サブスクリプションログインが必須）。
-  2. `DISABLE_TELEMETRY` / `DO_NOT_TRACK` / `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` / `DISABLE_GROWTHBOOK` が feature flag 取得を止めている。
-  3. Claude Code on the web セッション内（Web UI で操作する）。
-  4. CLI が v2.1.81 未満（`claude update`）。
+- **What `/schedule` really is**: a built-in Claude Code CLI slash command. In recent versions it is implemented as a bundled skill that internally calls claude.ai's management endpoints (list/get/create/update/run on `/v1/code/triggers`) using an **in-process OAuth token**. **There is no public REST API for routine management** (not even one intended for curl use). The only public API is the `/fire` firing endpoint described below.
+- **Disable / enable**: toggle `enabled` via `/schedule update` (`false` stops firing while keeping the configuration, `true` resumes it). Also possible via the **Repeats toggle** (pause/resume) on Web / Desktop.
+- **Deletion is not possible from the CLI** — only from the Web / Desktop detail page (past execution sessions remain even after deletion). Neither the CLI nor the public API has a delete action; the most the CLI can do is disable (`enabled: false`).
+- **The only trigger type the CLI can create is schedule**. Adding/editing API or GitHub triggers, and generating/revoking API tokens, are all only possible on the Web ([claude.ai/code/routines](https://claude.ai/code/routines)).
+- Main causes of `/schedule` showing up as **"Unknown command"** (the CLI hides the command when requirements aren't met):
+  1. Authenticated via Console API key / Bedrock / Vertex / Foundry. `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` / `apiKeyHelper` in `settings.json` take precedence over claude.ai login, so remove them (`/schedule` requires claude.ai subscription login).
+  2. `DISABLE_TELEMETRY` / `DO_NOT_TRACK` / `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` / `DISABLE_GROWTHBOOK` blocking feature-flag retrieval.
+  3. Inside a Claude Code on the web session (operate via the Web UI instead).
+  4. CLI version below v2.1.81 (`claude update`).
 
-### create body のフィールド能力境界
+### Field capability boundaries in the create body
 
-`/schedule` の create が叩く `POST /v1/code/triggers` の body は **strict schema**（未知フィールドを reject）。CLI/API で設定できるフィールドと Web UI でしか設定できないフィールドが分かれる。
+The body of `POST /v1/code/triggers`, which `/schedule`'s create calls, is a **strict schema** (unknown fields are rejected). Fields configurable from CLI/API and fields configurable only from the Web UI are separate.
 
-**CLI / API で設定可能**（既存 routine で実証）:
+**Configurable from CLI / API** (verified on existing routines):
 
-| 項目 | create body 内のパス |
+| Item | Path within create body |
 |---|---|
-| model（例 `claude-opus-4-8[1m]`） | `job_config.ccr.session_context.model` |
-| カスタム instructions（prompt 全文） | `job_config.ccr.events[].data.message.content` |
-| 対象リポジトリ | `job_config.ccr.session_context.sources[].git_repository.url` |
+| model (e.g. `claude-opus-4-8[1m]`) | `job_config.ccr.session_context.model` |
+| Custom instructions (full prompt text) | `job_config.ccr.events[].data.message.content` |
+| Target repository | `job_config.ccr.session_context.sources[].git_repository.url` |
 | allowed_tools | `job_config.ccr.session_context.allowed_tools` |
-| 環境（environment） | `job_config.ccr.environment_id` |
-| cron（最小 1h・UTC） / `run_once_at` / `enabled` / `mcp_connections` | top-level |
+| Environment | `job_config.ccr.environment_id` |
+| cron (minimum 1h, UTC) / `run_once_at` / `enabled` / `mcp_connections` | top-level |
 
-→ **model も instructions も CLI/API で設定できる**。公開 docs の会話フロー記述だけを見て「instructions / model は Web UI 専用」と誤解しないこと。`/schedule`(CLI) は **`allow_unrestricted_git_push` 以外すべて**を登録できる。
+→ **Both model and instructions can be set via CLI/API.** Don't misread the public docs' conversational-flow description as implying "instructions/model are Web-UI-only." `/schedule` (CLI) can register **everything except `allow_unrestricted_git_push`**.
 
-**Web UI 専用**（create body に入れると reject）:
+**Web UI only** (rejected if included in the create body):
 
-- **`allow_unrestricted_git_push`**（Web UI の **Allow unrestricted branch pushes**）は create body に渡すと strict schema が弾く:
+- **`allow_unrestricted_git_push`** (the Web UI's **Allow unrestricted branch pushes**) is rejected by the strict schema if passed in the create body:
 
   ```text
   HTTP 400
@@ -79,11 +79,11 @@ Anthropic 管理のクラウドインフラで Claude Code を非対話に動か
    "message":"allow_unrestricted_git_push: Extra inputs are not permitted"}}
   ```
 
-  この権限は Web の Permissions でのみ設定可能。`claude/`-prefix 以外の既存ブランチ（`main` 等）への push を許可する設定なので、「routine が自分の PR を main に auto-merge する」設計は CLI 登録だけでは完結せず、Web で 1 度この権限を付与する必要がある。
+  This permission can only be configured in the Web's Permissions settings. Since it's the setting that allows pushing to existing branches other than `claude/`-prefixed ones (e.g. `main`), a design where "the routine auto-merges its own PR into main" cannot be completed via CLI registration alone — this permission must be granted once on the Web.
 
-### API — 起動（fire）専用、CRUD は不可
+### API — firing only, no CRUD
 
-HTTP API でできるのは **既存ルーチンの起動のみ**。list / create / update / delete の管理 API は存在しない（`/fire` は claude.ai ユーザー専用で、Claude Platform API の一部ではない）。
+The only thing the HTTP API can do is **fire an existing routine**. There is no management API for list/create/update/delete (`/fire` is for claude.ai users only and is not part of the Claude Platform API).
 
 ```bash
 curl -X POST https://api.anthropic.com/v1/claude_code/routines/trig_01ABCDEFGHJKLMNOPQRSTUVW/fire \
@@ -94,10 +94,10 @@ curl -X POST https://api.anthropic.com/v1/claude_code/routines/trig_01ABCDEFGHJK
   -d '{"text": "Sentry alert SEN-4521 fired in prod. Stack trace attached."}'
 ```
 
-- ベース URL は **`https://api.anthropic.com`**、パスは `/v1/claude_code/routines/{routine_id}/fire`。
-- 認証は **per-routine の bearer token**（Web の API トリガー設定で `Generate token`。一度だけ表示・再取得不可。`Regenerate` / `Revoke` で更新）。
-- body の `text` は任意のフリーテキストで **パースされない**（JSON を渡しても文字列として届く。アラート本文や失敗ログの受け渡しに使う）。
-- 成功レスポンスは **セッション作成時に即返る**（完了は待たない）:
+- The base URL is **`https://api.anthropic.com`**, with path `/v1/claude_code/routines/{routine_id}/fire`.
+- Auth uses a **per-routine bearer token** (generated via `Generate token` in the Web's API trigger settings — shown only once, cannot be retrieved again; use `Regenerate` / `Revoke` to update).
+- The `text` field in the body is arbitrary free text and **is not parsed** (even if you pass JSON, it arrives as a string — used to pass alert bodies or failure logs).
+- A successful response is returned **immediately at session creation** (it does not wait for completion):
 
   ```json
   { "type": "routine_fire",
@@ -105,44 +105,44 @@ curl -X POST https://api.anthropic.com/v1/claude_code/routines/trig_01ABCDEFGHJK
     "claude_code_session_url": "https://claude.ai/code/session_01..." }
   ```
 
-- beta header `experimental-cc-routine-2026-04-01` 必須。破壊的変更は新しい日付の beta header で出荷され、直近 2 つの旧バージョンは移行猶予として動き続ける。
-- フル API リファレンス: [Trigger a routine via API](https://platform.claude.com/docs/en/api/claude-code/routines-fire)（Claude Platform docs）。
+- The `experimental-cc-routine-2026-04-01` beta header is required. Breaking changes ship under a new-dated beta header, and the two most recent prior versions continue to work as a migration grace period.
+- Full API reference: [Trigger a routine via API](https://platform.claude.com/docs/en/api/claude-code/routines-fire) (Claude Platform docs).
 
-### Web / Desktop — フル管理
+### Web / Desktop — full management
 
-detail ページで **Run now**・**pause / resume**（Repeats トグル）・編集・削除が可能。Team / Enterprise admin は [claude.ai/admin-settings/claude-code](https://claude.ai/admin-settings/claude-code) の **Routines トグル** で組織全体を無効化でき、無効化すると既存ルーチンも停止する。
+On the detail page you can **Run now**, **pause/resume** (Repeats toggle), edit, and delete. Team / Enterprise admins can disable Routines organization-wide via the **Routines toggle** on [claude.ai/admin-settings/claude-code](https://claude.ai/admin-settings/claude-code); disabling it also stops existing routines.
 
-## トリガー
+## Triggers
 
-1 つのルーチンに複数トリガーを併用できる（例: 夜間スケジュール + deploy script からの API + 新規 PR への反応）。
+Multiple triggers can be combined on a single routine (e.g. a nightly schedule + an API call from a deploy script + reacting to new PRs).
 
-| トリガー | 用途 | 作成・編集面 |
+| Trigger | Purpose | Creation/edit surface |
 |---|---|---|
-| **Scheduled** | 周期実行 or 一回限り。最小間隔は **1 時間**（短いと reject）。one-off は発火後 auto-disable し UI 上 **Ran** 表示。 | CLI / Web / Desktop |
-| **API** | per-routine の HTTP POST (`/fire`) で外部から起動。bearer token 認証。 | **Web のみ** |
-| **GitHub** | Pull request / Release の 2 カテゴリのイベントに反応（フィルタ可）。research preview 中は per-routine / per-account の hourly cap あり。 | **Web のみ**（Claude GitHub App 必須） |
+| **Scheduled** | Recurring or one-off execution. Minimum interval is **1 hour** (shorter is rejected). One-off runs auto-disable after firing and show as **Ran** in the UI. | CLI / Web / Desktop |
+| **API** | Fired externally via a per-routine HTTP POST (`/fire`). Bearer token authentication. | **Web only** |
+| **GitHub** | Reacts to two categories of events, Pull request / Release (filterable). During the research preview there is a per-routine / per-account hourly cap. | **Web only** (requires the Claude GitHub App) |
 
-## 利用枠
+## Usage limits
 
-research preview 中の参考値（変動するため、最新は [claude.ai/code/routines](https://claude.ai/code/routines) や [claude.ai/settings/usage](https://claude.ai/settings/usage) で確認）:
+Reference values during the research preview (subject to change — check [claude.ai/code/routines](https://claude.ai/code/routines) or [claude.ai/settings/usage](https://claude.ai/settings/usage) for the latest):
 
-| プラン | 1 日あたりの目安 |
+| Plan | Approximate daily allowance |
 |---|---|
-| **Pro** | 5 回 |
-| **Max** | 15 回 |
-| **Team / Enterprise** | 25 回 |
+| **Pro** | 5 runs |
+| **Max** | 15 runs |
+| **Team / Enterprise** | 25 runs |
 
-- サブスク枠はインタラクティブセッションと同様に消費される（API 課金は発生しない）。usage credits を有効化していれば daily cap / サブスク枠超過後も従量で続行できる。
-- **one-off run は daily cap に含まれない**（ただしサブスク枠は通常通り消費）。
+- Subscription allowance is consumed the same way as interactive sessions (no API billing occurs). If usage credits are enabled, you can continue on a pay-as-you-go basis after exceeding the daily cap / subscription allowance.
+- **One-off runs do not count against the daily cap** (though they still consume the subscription allowance as usual).
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **`AskUserQuestion` を含むスキルをルーチン化** — ルーチンは承認 prompt を返さない。
-2. **Setup script でリポ依存処理を試みる** — Setup script はリポ clone 前に実行される。`uv sync` 等は手順 1 に記述する。
-3. **network access の制限を忘れる** — Default 環境は Trusted で、許可外ホストへの outbound は `403` + `x-deny-reason: host_not_allowed`。RSS フィード取得や自前サービスへの到達には Custom / Full が必要。
-4. **`routine_id` プレフィックスの誤認** — 正解は **`trig_`**。
-5. **`/fire` のレスポンスで完了を待つ** — エンドポイントはセッション作成時に即リターンする。
-6. **公開 API でルーチンを CRUD しようとする** — 公開 API は起動専用。作成・更新は CLI（schedule trigger のみ）か Web、トークンの生成・失効は Web のみ。
-7. **`/web-setup` で GitHub App が入ると誤解** — `/web-setup` は clone 用のリポアクセスを付与するだけ。GitHub trigger には別途 Claude GitHub App のインストールが必要（trigger 設定時に促される）。
-8. **CLI / API でルーチンを削除しようとする** — 削除アクションは存在しない。CLI（`/schedule`）でできるのは無効化（`/schedule update` の `enabled: false`）まで。削除は Web / Desktop の detail ページからのみ。
-9. **`allow_unrestricted_git_push` を create body に渡せると誤解** — create API は strict schema で未知フィールドを弾き、`400 Extra inputs are not permitted` を返す。この権限（既存ブランチへの push 許可）は Web UI の Permissions でのみ設定可能で、CLI/API では設定できない。
+1. **Turning a skill that includes `AskUserQuestion` into a routine** — a routine does not return approval prompts.
+2. **Attempting repo-dependent processing in the setup script** — the setup script runs before the repo is cloned. Things like `uv sync` belong in step 1's instructions instead.
+3. **Forgetting network access restrictions** — the default environment is Trusted, and outbound requests to non-allowed hosts get `403` + `x-deny-reason: host_not_allowed`. Fetching an RSS feed or reaching your own service requires Custom / Full.
+4. **Misidentifying the `routine_id` prefix** — the correct prefix is **`trig_`**.
+5. **Waiting on the `/fire` response for completion** — the endpoint returns immediately at session creation.
+6. **Trying to CRUD routines via the public API** — the public API is firing-only. Creation/updates go through the CLI (schedule trigger only) or the Web; token generation/revocation is Web-only.
+7. **Assuming `/web-setup` installs the GitHub App** — `/web-setup` only grants repo access for cloning. The GitHub trigger requires a separate installation of the Claude GitHub App (you're prompted for this when configuring the trigger).
+8. **Trying to delete a routine via CLI / API** — no delete action exists. The most the CLI (`/schedule`) can do is disable it (`enabled: false` via `/schedule update`). Deletion is only possible from the Web / Desktop detail page.
+9. **Assuming `allow_unrestricted_git_push` can be passed in the create body** — the create API's strict schema rejects unknown fields, returning `400 Extra inputs are not permitted`. This permission (allowing pushes to existing branches) can only be set in the Web UI's Permissions; it cannot be set via CLI/API.

@@ -3,100 +3,100 @@ reviewed: 2026-06-07
 tags: [methodology, ai-workflow, spec]
 ---
 
-# 仕様駆動開発（Spec-Driven Development, SDD）
+# Spec-Driven Development (SDD)
 
-実装の前に**意図（spec）と計画（plan）を文書として書き出し**、それを起点にコードを生成・検証するワークフロー。AI エージェントは曖昧な自然言語よりも構造化された spec の方が扱いやすいため、AI 駆動開発と組み合わせる用途で 2025 年以降急速に普及した。
+A workflow in which **intent (spec) and plan are written down as documents before implementation**, and code is generated/verified starting from those documents. AI agents handle structured specs more reliably than ambiguous natural language, so this approach spread rapidly from 2025 onward in combination with AI-driven development.
 
-AI 駆動開発との位置づけは `ai/practice/ai-driven-development.md` を参照。代表的なツールは `ai/workflow/` 配下に個別記事がある。
+For its relationship to AI-driven development, see `ai/practice/ai-driven-development.md`. Individual tool articles live under `ai/workflow/`.
 
-## 定義
+## Definition
 
-3 段階のフローを基本とする:
+The basic flow has three stages:
 
-1. **Spec**: 「何を作るか」を自然言語で記述（要件・受け入れ基準・非機能要件）
-2. **Plan**: 「どう作るか」を技術的に分解（アーキテクチャ・ファイル分割・タスク列）
-3. **Implement**: plan の各タスクを実装し、spec の受け入れ基準で検証
+1. **Spec**: Describe "what to build" in natural language (requirements, acceptance criteria, non-functional requirements)
+2. **Plan**: Break down "how to build it" technically (architecture, file split, task list)
+3. **Implement**: Implement each task in the plan and verify against the spec's acceptance criteria
 
-それぞれが**バージョン管理されるアーティファクト**として残るのが従来のアジャイル開発との違い。エージェントは plan の各タスクを順に拾い上げて自律実行できる。
+The difference from traditional agile development is that each stage remains as a **version-controlled artifact**. An agent can pick up each task in the plan in order and execute it autonomously.
 
-## 歴史的経緯
+## Historical background
 
-| 年代 | 形態 | 性格 |
+| Era | Form | Character |
 |---|---|---|
-| 1970s-80s | formal specification (Z, VDM, B-method) | 数学的厳密性、現場で重い |
-| 1990s | UML / use case | ドキュメンテーション中心、コードと乖離 |
-| 2000s | TDD（テスト駆動開発） | spec をテストで表現 |
-| 2010s | BDD（Cucumber 等） | spec を自然言語で書く（人間向け） |
-| 2024-2025 | AI-era SDD（GitHub Spec Kit, Kiro, cc-sdd） | spec をエージェント向け structured prompt として書く |
+| 1970s-80s | formal specification (Z, VDM, B-method) | Mathematical rigor, heavy in practice |
+| 1990s | UML / use case | Documentation-centric, diverges from code |
+| 2000s | TDD (Test-Driven Development) | Spec expressed as tests |
+| 2010s | BDD (Cucumber, etc.) | Spec written in natural language (for humans) |
+| 2024-2025 | AI-era SDD (GitHub Spec Kit, Kiro, cc-sdd) | Spec written as a structured prompt for agents |
 
-「spec を書く」発想自体は古いが、**書いた spec が実装作業に直結する**点が AI 時代の特徴。エージェントが spec を読んで実装まで完了させるため、spec が dead document にならない。
+The idea of "writing a spec" itself is old, but the AI era's distinguishing feature is that **the spec written directly drives implementation work**. Because agents read the spec and carry it through to implementation, the spec never becomes a dead document.
 
-## AI 時代の SDD 特有の利点
+## Advantages specific to AI-era SDD
 
-1. **意図の曖昧性を吸収**: 「いい感じに作って」より「この受け入れ基準を満たせ」の方がエージェントは確実に動く
-2. **タスク並列化**: plan のタスクが独立していれば複数エージェント並列で実行できる
-3. **回帰防止**: spec が受け入れ基準を兼ねるため、後の改修で spec を読み直せば壊れた箇所が分かる
-4. **オンボーディング**: 後から参加した人間 / エージェントが spec を読めばコンテキストを取り戻せる
-5. **コードレビュー基準の明確化**: 「spec に書いてないものは reject」という運用ルールが成立
+1. **Absorbs ambiguity of intent**: An agent works more reliably against "satisfy this acceptance criterion" than against "build something nice"
+2. **Task parallelization**: If plan tasks are independent, multiple agents can execute them in parallel
+3. **Regression prevention**: Because the spec doubles as acceptance criteria, re-reading the spec during later changes reveals what broke
+4. **Onboarding**: A human/agent joining later can regain context by reading the spec
+5. **Clarified code-review criteria**: An operational rule such as "reject anything not written in the spec" becomes viable
 
-## 主要 workflow ツール
+## Major workflow tools
 
-2026 年時点の代表的な SDD オーケストレータ:
+Representative SDD orchestrators as of 2026:
 
-| ツール | 提供元 | 特徴 | 詳細 |
+| Tool | Provider | Characteristics | Details |
 |---|---|---|---|
-| **GitHub Spec Kit** | GitHub | agent-agnostic（30+ エージェント対応、Claude Code / Codex / Copilot / Gemini 等）、`uv tool install specify-cli` で導入 | `ai/workflow/github-spec-kit.md` |
-| **Kiro** | AWS | 専用 IDE + CLI、Spec view、agent hooks、既定 Claude Sonnet 4.5 / Auto モード | `ai/workflow/kiro.md` |
-| **cc-sdd** | OSS（gotalab） | npm package、Kiro 互換 spec を 8 エージェント（Claude Code / Codex / Cursor / Copilot / Windsurf / OpenCode / Gemini / Antigravity）に install | `ai/workflow/cc-sdd.md` |
+| **GitHub Spec Kit** | GitHub | Agent-agnostic (supports 30+ agents including Claude Code / Codex / Copilot / Gemini), installed via `uv tool install specify-cli` | `ai/workflow/github-spec-kit.md` |
+| **Kiro** | AWS | Dedicated IDE + CLI, Spec view, agent hooks, defaults to Claude Sonnet 4.5 / Auto mode | `ai/workflow/kiro.md` |
+| **cc-sdd** | OSS (gotalab) | npm package, installs Kiro-compatible specs into 8 agents (Claude Code / Codex / Cursor / Copilot / Windsurf / OpenCode / Gemini / Antigravity) | `ai/workflow/cc-sdd.md` |
 
-各ツールは「spec をどこに置くか」「plan の粒度をどう刻むか」「どのエージェントに渡すか」で立ち位置が異なる。導入時は **どの CLI / IDE をすでに使っているか**で選ぶのが現実的。
+Each tool differs in "where to place the spec," "how finely to slice the plan," and "which agent to hand it to." A practical selection criterion is **which CLI/IDE you already use**.
 
-## SDD と AIDD の関係
+## Relationship between SDD and AIDD
 
-| | AIDD あり | AIDD なし |
+| | With AIDD | Without AIDD |
 |---|---|---|
-| **SDD あり** | エージェントに spec を読ませて実装させる（cc-sdd, Spec Kit, Kiro） | 人間が spec → 人間が実装（伝統的 V 字） |
-| **SDD なし** | 対話プロンプトでエージェントに直接実装させる（Cursor / Claude Code 単体） | コード直書き |
+| **With SDD** | Have an agent read the spec and implement it (cc-sdd, Spec Kit, Kiro) | Human writes spec → human implements (traditional V-model) |
+| **Without SDD** | Have an agent implement directly via conversational prompts (Cursor / Claude Code alone) | Write code directly |
 
-AI 駆動 + SDD の組み合わせが 2026 年時点の主流仮説で、3 つの workflow ツールはすべてこの掛け合わせを前提に設計されている。
+The combination of AI-driven development + SDD is the mainstream hypothesis as of 2026, and all three workflow tools listed above are designed on the premise of this combination.
 
-## 落とし穴
+## Pitfalls
 
-### 1. 過剰な spec 文書化
+### 1. Over-documenting the spec
 
-「全機能を完璧な spec で記述する」を目指すと、書く時間が実装時間を超えて pay off しない。**最小実用 spec**（受け入れ基準と plan の概要だけ）から始めて必要に応じて補足する。
+Aiming to "describe every feature in a perfect spec" makes the time spent writing exceed implementation time and stops paying off. Start from a **minimally viable spec** (just acceptance criteria and a plan outline) and supplement as needed.
 
-### 2. spec と実装の乖離
+### 2. Divergence between spec and implementation
 
-spec は書かれたが守られていない、というケース。CI で spec の受け入れ基準を **テスト化して回す**仕組みを併設しないとすぐ陳腐化する。
+A case where the spec was written but is not being followed. Without also setting up a mechanism to **turn the spec's acceptance criteria into tests run in CI**, it quickly goes stale.
 
-### 3. plan の粒度ミス
+### 3. Wrong plan granularity
 
-plan のタスクが「ログイン機能を実装」のように粗いとエージェントが推測で広範な変更を入れる。逆に細かすぎると orchestration overhead が膨らむ。**1 タスク = 1 PR で squash merge できる粒度**が経験的に扱いやすい。
+If plan tasks are as coarse as "implement login feature," the agent will guess and make sweeping changes. If too fine-grained, orchestration overhead balloons. Empirically, **granularity of 1 task = 1 PR that can be squash-merged** is the most manageable.
 
-### 4. spec を decision log と混同
+### 4. Confusing spec with a decision log
 
-spec は「何を作るか」、decision log は「なぜそう決めたか」。両者を混ぜると spec が肥大化して読まれなくなる。決定経緯は別ファイル（ADR / `decisions/` 等）に分離する。
+A spec describes "what to build"; a decision log describes "why it was decided that way." Mixing the two bloats the spec until it stops being read. Keep decision rationale in a separate file (ADR, `decisions/`, etc.).
 
-### 5. ツール特化の spec 形式に lock-in
+### 5. Lock-in to tool-specific spec formats
 
-Kiro 専用記法 / cc-sdd 専用記法 / Spec Kit テンプレートで書いた spec は他ツールに移植しづらい。**Markdown + 軽い構造化**で書いておけばツール切替に耐える。
+A spec written in Kiro-specific notation, cc-sdd-specific notation, or Spec Kit templates is hard to port to other tools. Writing in **Markdown + light structuring** withstands tool switches.
 
-### 6. レビュアーが消える
+### 6. The reviewer disappears
 
-「spec 通りなのでマージ」を機械的に行うと、spec 自体の妥当性をレビューする人間がいなくなる。**spec PR と implement PR を分けて二段階レビュー**する運用が現実解。
+Mechanically merging because "it matches the spec" removes the human who reviews the validity of the spec itself. A practical solution is to **split spec PRs and implementation PRs for two-stage review**.
 
-## AI エージェントがよくやるミス
+## Mistakes AI agents commonly make
 
-1. **spec を書かずに即実装に入る** — 「とりあえず書いて」と言われると spec を飛ばして implement 開始する。プロンプト時点で「まず spec.md を作って」と明示する設計が必要
-2. **plan のタスクを 1 セッションで全部消化しようとする** — コンテキスト窓が枯渇する。タスクごとに別セッション / 別 PR が安定
-3. **spec を更新せず実装だけ変える** — 「実装が真実、spec は古い」状態に陥る。**実装変更 PR には対応 spec の修正も含める**ルールを作る
-4. **spec の受け入れ基準を見ずに「完了」と報告** — `pnpm run test` ではなく「spec の各項目が満たされたか」を**自分でチェックリスト化して回す**設計
-5. **既存 spec を読まずに新 spec を書く** — 重複・矛盾する spec が並行して存在する状態になる。新規 spec 作成前に既存を grep
-6. **spec を Markdown 1 ファイルに詰め込む** — 1 機能 1 ファイル、または `specs/<feature>.md` のディレクトリ分割が後で参照しやすい
+1. **Jumping straight into implementation without writing a spec** — Told "just write it," agents skip the spec and start implementing. The prompt needs to explicitly say "first create spec.md"
+2. **Trying to consume all plan tasks in a single session** — The context window runs out. A separate session/PR per task is more stable
+3. **Changing the implementation without updating the spec** — Leads to a state where "the implementation is truth, the spec is stale." Establish a rule that **an implementation-change PR must include the corresponding spec fix**
+4. **Reporting "done" without checking the spec's acceptance criteria** — Design it so the agent **turns each spec item into a checklist and runs through it itself**, rather than just running `pnpm run test`
+5. **Writing a new spec without reading existing ones** — Leads to duplicate/contradictory specs existing in parallel. Grep existing specs before creating a new one
+6. **Cramming the spec into a single Markdown file** — One file per feature, or splitting into a `specs/<feature>.md` directory, is easier to reference later
 
-## 参考
+## References
 
-- 関連: `ai/practice/ai-driven-development.md` / `ai/practice/ai-context-management.md` / `ai/practice/multi-agent-repo.md`
-- workflow ツール: `ai/workflow/github-spec-kit.md` / `ai/workflow/kiro.md` / `ai/workflow/cc-sdd.md`
-- エージェント CLI: `ai/agents/claude-code.md` / `ai/agents/codex-cli.md` / `ai/agents/gemini-cli.md` / `ai/agents/github-copilot-cli.md`
+- Related: `ai/practice/ai-driven-development.md` / `ai/practice/ai-context-management.md` / `ai/practice/multi-agent-repo.md`
+- Workflow tools: `ai/workflow/github-spec-kit.md` / `ai/workflow/kiro.md` / `ai/workflow/cc-sdd.md`
+- Agent CLIs: `ai/agents/claude-code.md` / `ai/agents/codex-cli.md` / `ai/agents/gemini-cli.md` / `ai/agents/github-copilot-cli.md`

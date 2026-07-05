@@ -5,25 +5,25 @@ tags: [build, package, typescript]
 
 # tsdown
 
-Rolldown（Rust 製のバンドラ）+ Oxc をベースにした TypeScript ライブラリ向けビルドツール。`tsup` の事実上の後継として Rolldown チームが開発している。ESM ファースト、`.d.ts` 自動生成、コード分割を標準で備える。
+A TypeScript library build tool based on Rolldown (a Rust-based bundler) + Oxc. Developed by the Rolldown team as the de facto successor to `tsup`. ESM-first, with built-in automatic `.d.ts` generation and code splitting.
 
-公式: [tsdown.dev](https://tsdown.dev/)
+Official: [tsdown.dev](https://tsdown.dev/)
 
-## 位置付け
+## Positioning
 
-- ライブラリ／CLI パッケージの `dist/` 生成に特化
-- アプリケーション（Web / Node サーバー）の最終成果物バンドルには通常使わない（そちらは Vite / Rolldown / esbuild 直呼び）
-- 2026-06 時点で v0.22.3（最新、2026-06-16 リリース）。v0.22.0（2026-05-07）で Node サポート要件などに破壊的変更が入った。**1.0 未満で minor 更新に破壊的変更がある**ため、バージョンは厳密に固定する
+- Specialized for generating `dist/` output for libraries/CLI packages
+- Not typically used for the final bundle of applications (web / Node servers) — use Vite / Rolldown / esbuild directly for that
+- As of 2026-06, v0.22.3 (latest, released 2026-06-16). v0.22.0 (2026-05-07) introduced breaking changes such as Node support requirements. Since **minor updates below 1.0 can include breaking changes**, pin the version strictly.
 
-## インストール
+## Installation
 
 ```bash
 pnpm add -D tsdown
 ```
 
-Node 22.18.0 以上が必要（v0.22.0 で Node 20 / 23 サポートを削除。`engines.node` は `^22.18.0 || >=24.11.0`）。Bun / Deno は experimental サポート。なお出力の `target` は別途下げられるため、ビルド成果物の利用者側は Node 22 未満でも動く。
+Requires Node 22.18.0 or later (v0.22.0 dropped Node 20 / 23 support; `engines.node` is `^22.18.0 || >=24.11.0`). Bun / Deno have experimental support. Note that the output `target` can be lowered separately, so consumers of the build output can still run on Node below 22.
 
-## 最小設定
+## Minimal configuration
 
 ```ts
 // tsdown.config.ts
@@ -56,22 +56,22 @@ export default defineConfig({
 }
 ```
 
-`package.json` の `types` / `typings` フィールド、または `tsconfig.json` の `compilerOptions.declaration: true` が設定されていれば `--dts` は自動で有効になる（v0.22.0 で tsconfig 連動が追加）。
+If the `types` / `typings` field in `package.json`, or `compilerOptions.declaration: true` in `tsconfig.json`, is set, `--dts` is enabled automatically (tsconfig integration was added in v0.22.0).
 
-## 主要 CLI フラグ
+## Key CLI flags
 
-| フラグ | 用途 |
+| Flag | Purpose |
 |---|---|
-| `--watch` / `-w` | ファイル変更で再ビルド |
-| `--dts` | `.d.ts` を出力（`types` フィールドがあれば自動） |
-| `--format esm,cjs` | 出力形式。`esm` / `cjs` / `iife` / `umd`。デフォルト `esm` |
-| `--minify` | minify 出力 |
-| `--clean` | 出力先を削除してからビルド（デフォルト `true`） |
-| `--target` | JS ターゲット。`engines.node` から自動判定 |
-| `--sourcemap` | sourcemap 出力 |
-| `--tsconfig <path>` | 使用する tsconfig を明示 |
+| `--watch` / `-w` | Rebuild on file change |
+| `--dts` | Output `.d.ts` (automatic if the `types` field is present) |
+| `--format esm,cjs` | Output format(s). `esm` / `cjs` / `iife` / `umd`. Default `esm` |
+| `--minify` | Minify output |
+| `--clean` | Delete the output directory before building (default `true`) |
+| `--target` | JS target. Auto-detected from `engines.node` |
+| `--sourcemap` | Output sourcemaps |
+| `--tsconfig <path>` | Explicitly specify which tsconfig to use |
 
-## 設定オプション（代表）
+## Configuration options (representative)
 
 ```ts
 import { defineConfig } from 'tsdown';
@@ -88,75 +88,75 @@ export default defineConfig({
   platform: 'node',
   target: 'node20',
   sourcemap: true,
-  plugins: [],  // unplugin 互換プラグイン
+  plugins: [],  // unplugin-compatible plugins
 });
 ```
 
-`plugins` は unplugin / Rolldown プラグインを受け取る。esbuild プラグインをそのまま渡すとエラー。
+`plugins` accepts unplugin / Rolldown plugins. Passing an esbuild plugin as-is causes an error.
 
-## tsup からの移行
+## Migrating from tsup
 
-公式に移行ガイドがあり、多くの設定は互換。自動移行スクリプトもある:
+An official migration guide exists, and most settings are compatible. An automatic migration script is also available:
 
 ```bash
 npx tsdown-migrate
 npx tsdown-migrate 'packages/*'  # monorepo
 ```
 
-主要な差分:
+Key differences:
 
-| 項目 | tsup | tsdown |
+| Item | tsup | tsdown |
 |---|---|---|
-| エンジン | esbuild | Rolldown (Rust) + Oxc |
-| デフォルト `format` | `cjs` | `esm` |
-| デフォルト `clean` | `false` | `true` |
-| `dts` 既定 | `false` | `types` フィールドで自動 |
-| `cjsInterop` | ✓ | `cjsDefault` に改名 |
-| `esbuildPlugins` | ✓ | `plugins`（unplugin 前提） |
-| コード分割 | 任意 | 常時 ON（無効化不可） |
-| 開発体制 | メンテ停止（tsdown 推奨） | 活発 |
+| Engine | esbuild | Rolldown (Rust) + Oxc |
+| Default `format` | `cjs` | `esm` |
+| Default `clean` | `false` | `true` |
+| `dts` default | `false` | Automatic via `types` field |
+| `cjsInterop` | ✓ | Renamed to `cjsDefault` |
+| `esbuildPlugins` | ✓ | `plugins` (assumes unplugin) |
+| Code splitting | Optional | Always on (cannot be disabled) |
+| Development status | Maintenance stopped (tsdown recommended) | Active |
 
-`splitting: false` / `metafile` / `swc` / `experimentalDts` は tsdown に対応オプションがない。
+`splitting: false` / `metafile` / `swc` / `experimentalDts` have no corresponding option in tsdown.
 
-## 落とし穴
+## Pitfalls
 
-### v0.x のため minor 更新が破壊的
+### Minor updates are breaking because it's v0.x
 
 ```json
 { "devDependencies": { "tsdown": "0.22.3" } }
 ```
 
-のように**厳密固定**を推奨。`^` / `~` はリスクが高い。
+**Strict pinning** like this is recommended. `^` / `~` carry high risk.
 
-### esbuild プラグイン資産は使えない
+### esbuild plugin assets can't be used
 
-unplugin に書き換える必要がある。tsup 資産が多いプロジェクトは移行コストを見積もる。
+They must be rewritten as unplugin. Projects with a lot of tsup assets should estimate the migration cost.
 
-### 出力パスは `dist/` 固定ではない
+### Output path is not fixed to `dist/`
 
-`outDir` で変更できるが、`exports` フィールドと整合させることを忘れやすい。
+It can be changed via `outDir`, but it's easy to forget to keep it consistent with the `exports` field.
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **`format: 'cjs'` を付け忘れて CJS 利用者が壊れる** — 両対応したいなら `format: ['esm', 'cjs']` を明示する。
-2. **`clean: true` 既定を知らず不要ファイルが残ると錯覚** — tsup 感覚で `clean: false` を書くと古い出力が積もる。
-3. **unplugin を Rolldown 向けに import していない** — `unplugin-foo/esbuild` ではなく `unplugin-foo/rolldown` を使う。
-4. **`^0.22.0` で固定して CI が壊れる** — 0.x はマイナー間で破壊的変更を許容するため `^` を使わない（実際 v0.22.0 で Node 20 / 23 サポートが削除された）。
+1. **Forgetting `format: 'cjs'`, breaking CJS consumers** — if you want to support both, explicitly specify `format: ['esm', 'cjs']`.
+2. **Not knowing the `clean: true` default, mistakenly thinking stale files remain** — writing `clean: false` out of tsup habit lets old output pile up.
+3. **Not importing unplugin for Rolldown** — use `unplugin-foo/rolldown` instead of `unplugin-foo/esbuild`.
+4. **Pinning with `^0.22.0` and breaking CI** — since 0.x allows breaking changes between minor versions, don't use `^` (indeed, v0.22.0 dropped Node 20 / 23 support).
 
-## 他ツールとの比較
+## Comparison with other tools
 
-| ツール | 対象 | 備考 |
+| Tool | Target | Notes |
 |---|---|---|
-| tsdown | ライブラリ出力 | ESM ファースト、後発、活発 |
-| tsup | ライブラリ出力 | esbuild ベース、事実上メンテ停止 |
-| tshy | ライブラリ出力 | dual ESM/CJS 特化、設定ゼロ寄り |
-| unbuild | ライブラリ出力 | Rollup + esbuild、設定ファイル中心 |
-| Vite | アプリ | dev サーバ + HMR が主眼 |
-| esbuild 直呼び | どちらも | 高速だが dts は別途必要 |
+| tsdown | Library output | ESM-first, newer, active |
+| tsup | Library output | esbuild-based, effectively unmaintained |
+| tshy | Library output | Specialized for dual ESM/CJS, leans zero-config |
+| unbuild | Library output | Rollup + esbuild, config-file centric |
+| Vite | Applications | Focused on dev server + HMR |
+| esbuild directly | Either | Fast, but dts must be handled separately |
 
-## 参考
+## References
 
-- [tsdown 公式ドキュメント](https://tsdown.dev/)
+- [tsdown official documentation](https://tsdown.dev/)
 - [Getting Started](https://tsdown.dev/guide/getting-started)
-- [tsup からの移行](https://tsdown.dev/guide/migrate-from-tsup)
+- [Migrating from tsup](https://tsdown.dev/guide/migrate-from-tsup)
 - [GitHub: rolldown/tsdown](https://github.com/rolldown/tsdown)

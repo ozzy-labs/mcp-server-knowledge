@@ -3,48 +3,48 @@ reviewed: 2026-06-07
 tags: [ai-workflow, methodology, github]
 ---
 
-# CI から AI エージェント CLI を呼び出す（課金と利用規約）
+# Invoking AI agent CLIs from CI (billing and terms of service)
 
-GitHub Actions などの CI から Claude Code / Codex CLI / Gemini CLI / GitHub Copilot CLI をオンデマンド（PR レビュー・自動修正など）で起動するときの、認証方式・**追加課金の有無**・**利用規約上の可否**をまとめる。定期実行（cron / Routines / `/loop`）は `ai/practice/scheduled-tasks.md`、各 CLI の個別仕様は `ai/agents/` 配下を参照。
+Summarizes the authentication methods, **whether extra charges apply**, and **terms-of-service compliance** when invoking Claude Code / Codex CLI / Gemini CLI / GitHub Copilot CLI on demand from CI such as GitHub Actions (PR review, auto-fix, etc.). For scheduled execution (cron / Routines / `/loop`), see `ai/practice/scheduled-tasks.md`; for per-CLI specifics, see the `ai/agents/` directory.
 
-「契約済みサブスク料以外の追加課金（API 従量・premium request 超過・Vertex 従量）を出さずに使えるか」を主軸に整理する。結論を先に言うと、**サブスク枠で規約も含めてクリーンに CI 自動化できるのは Gemini と Copilot、Codex はベンダー管理クラウド経由なら可、Claude は自前 CI ではサブスク枠の経路が弱い**。
+The organizing question is "can this be used without incurring extra charges beyond the contracted subscription fee (API metered usage, exceeding the premium request quota, Vertex metered usage)?" The bottom line: **Gemini and Copilot can run CI automation cleanly within subscription quota including terms compliance; Codex is fine via the vendor-managed cloud; Claude has no strong path to using subscription quota from self-hosted CI.**
 
-## 3 つの実行パターン
+## Three execution patterns
 
-CI から呼ぶ手段は大きく 3 系統に分かれ、課金と規約の性質が異なる。
+Methods for invoking from CI fall broadly into three categories, differing in billing and terms characteristics.
 
-| パターン | 実行場所 | 課金 | 規約 |
+| Pattern | Execution location | Billing | Terms |
 |---|---|---|---|
-| A. ベンダー管理クラウド連携 | プロバイダ側 | **サブスク込み（追加なし）** | ○（公式機能） |
-| B. 自前 runner の公式 Action + API/利用キー | 自前 GHA runner | **従量課金** | ○ |
-| C. サブスク認証情報を自前 CI に持ち込み | 自前 GHA runner | サブスク枠 | ✗ コンシューマー規約に抵触しやすい |
+| A. Vendor-managed cloud integration | Provider side | **Included in subscription (no extra)** | OK (official feature) |
+| B. Official Action on self-hosted runner + API/usage key | Self-hosted GHA runner | **Metered billing** | OK |
+| C. Bringing subscription credentials into self-hosted CI | Self-hosted GHA runner | Subscription quota | Not OK, likely violates consumer terms |
 
-パターン C（Codex の `auth.json` 持ち込み、Claude のサブスク OAuth トークン CI 利用）は「技術的には動く」が、両社のコンシューマー規約の禁止条項に触れる（後述）。**追加課金を避けたいなら C ではなく A を狙う**のが基本方針。
+Pattern C (bringing in Codex's `auth.json`, using Claude's subscription OAuth token in CI) "technically works" but runs afoul of prohibition clauses in both vendors' consumer terms (details below). **If you want to avoid extra charges, aim for A, not C**, as the basic policy.
 
-## 課金・規約サマリー（4 CLI 比較）
+## Billing/terms summary (comparison of 4 CLIs)
 
-| CLI | 追加課金ゼロの正規ルート | 従量ルート | サブスク認証情報の CI 持ち込み |
+| CLI | Official zero-extra-charge route | Metered route | Bringing subscription credentials into CI |
 |---|---|---|---|
-| **Gemini** | AI Studio API キー無料枠 / Code Assist ライセンス | Vertex AI + WIF | （個人 OAuth は CI 非対応） |
-| **Copilot** | Copilot 権限付きトークン + premium request 月次枠内 | 枠超過分 | GitHub 正規認証＝規約クリーン |
-| **Codex** | Codex Cloud `@codex` 連携（ChatGPT プラン込み） | `openai/codex-action` + API キー | ✗ `auth.json` 持ち込みは規約抵触 |
-| **Claude** | （自前 CI に該当なし） | API キー / Bedrock / Vertex | ✗ OAuth トークン CI 利用は規約外 |
+| **Gemini** | AI Studio API key free tier / Code Assist license | Vertex AI + WIF | (personal OAuth is not supported in CI) |
+| **Copilot** | Token with Copilot permissions + within monthly premium request quota | Amount over quota | GitHub official auth = terms-compliant |
+| **Codex** | Codex Cloud `@codex` integration (included in ChatGPT plan) | `openai/codex-action` + API key | Not OK — bringing in `auth.json` violates terms |
+| **Claude** | (no applicable route for self-hosted CI) | API key / Bedrock / Vertex | Not OK — using OAuth token in CI is out of terms |
 
 ## Claude Code
 
-公式 Action `anthropics/claude-code-action@v1`。`@claude` メンションで起動、クイックスタートは Claude Code 内で `/install-github-app`（リポ管理者向け）。
+Official Action `anthropics/claude-code-action@v1`. Invoked via `@claude` mentions; the quickstart is `/install-github-app` inside Claude Code (for repo admins).
 
-### 認証と課金
+### Authentication and billing
 
-| 入力 | 認証 | 課金 |
+| Input | Authentication | Billing |
 |---|---|---|
-| `anthropic_api_key` | Anthropic 直 API キー | 従量 |
-| `claude_code_oauth_token` | サブスク OAuth トークン（入力としては実在） | サブスク枠だが**規約外**（下記） |
-| `anthropic_federation_rule_id` ほか | Anthropic Workload Identity Federation（鍵レス） | 従量 |
-| `use_bedrock: "true"` | AWS Bedrock（OIDC、`id-token: write`） | AWS 請求 |
-| `use_vertex: "true"` | Google Vertex AI（WIF） | GCP 請求 |
+| `anthropic_api_key` | Direct Anthropic API key | Metered |
+| `claude_code_oauth_token` | Subscription OAuth token (exists as an input) | Subscription quota, but **out of terms** (see below) |
+| `anthropic_federation_rule_id` etc. | Anthropic Workload Identity Federation (keyless) | Metered |
+| `use_bedrock: "true"` | AWS Bedrock (OIDC, `id-token: write`) | AWS billing |
+| `use_vertex: "true"` | Google Vertex AI (WIF) | GCP billing |
 
-最小構成（API キー）:
+Minimal configuration (API key):
 
 ```yaml
 name: Claude
@@ -67,24 +67,24 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
 
-Bedrock / Vertex は `aws-actions/configure-aws-credentials@v4` / `google-github-actions/auth@v2` で先に認証し、`use_bedrock` / `use_vertex` を立てて `claude_args: '--model <id>'` でモデル指定する。`<id>` には現行世代（Sonnet 4.6 / Opus 4.8 系）のモデル文字列を入れる。正確な文字列は Bedrock と Vertex で表記が異なるため、各プロバイダのモデルカタログと `docs/cloud-providers.md` を参照する（固定の例は陳腐化しやすいので転記しない）。
+For Bedrock / Vertex, authenticate first with `aws-actions/configure-aws-credentials@v4` / `google-github-actions/auth@v2`, set `use_bedrock` / `use_vertex`, and specify the model with `claude_args: '--model <id>'`. Put the current-generation model string (Sonnet 4.6 / Opus 4.8 family) in `<id>`. The exact string notation differs between Bedrock and Vertex, so check each provider's model catalog and `docs/cloud-providers.md` (a fixed example would go stale quickly, so none is reproduced here).
 
-**Claude には「サブスク込みで自前 CI を回す」正規ルートが無い。** サブスク枠で背景実行したい場合は Anthropic クラウドの Routines（`ai/practice/scheduled-tasks.md`）が該当し、自前 GitHub Actions は API キー / Bedrock / Vertex（従量）が正規。
+**Claude has no official route to run self-hosted CI on subscription quota.** If you want background execution on subscription quota, Anthropic Cloud's Routines (`ai/practice/scheduled-tasks.md`) is the applicable option; for self-hosted GitHub Actions, API key / Bedrock / Vertex (metered) is the official approach.
 
 ## Codex CLI
 
-サブスク込みで GitHub 自動化できる**唯一の追加課金ゼロ・規約準拠ルートが Codex Cloud**。自前 runner で回す場合は API キー（従量）。
+**Codex Cloud is the only route with zero extra charge and terms compliance** that lets you automate GitHub within subscription quota. For self-hosted runners, use an API key (metered).
 
-### A. Codex Cloud `@codex` 連携（サブスク込み・推奨）
+### A. Codex Cloud `@codex` integration (subscription-included, recommended)
 
-OpenAI 管理のクラウドが実行する GitHub ネイティブ連携。`chatgpt.com/codex` で GitHub アカウントを接続するだけで開始できる。
+A GitHub-native integration executed by OpenAI-managed cloud. Get started by simply connecting your GitHub account at `chatgpt.com/codex`.
 
-- **対応プラン**: ChatGPT Plus / Pro / Business / Edu / Enterprise（公式: "Access is included with ... not through OpenAI API keys."）→ **API 課金なし**
-- **起動**: PR コメントに `@codex review`（手動）、設定で自動レビューを有効化、`@codex fix the P1 issue` で修正
-- **レビュー方針**: 既定で P0/P1 のみ flag。`AGENTS.md` の `Review guidelines` セクションを尊重
-- **Environments**（`/codex/cloud/environments`）: リポ・setup script（pnpm 等の依存導入）・インターネットアクセス（setup フェーズのみ既定有効、agent フェーズは既定無効）・secrets（暗号化、setup script のみ参照可）を設定。コンテナ状態は最大 12h キャッシュ
+- **Supported plans**: ChatGPT Plus / Pro / Business / Edu / Enterprise (official: "Access is included with ... not through OpenAI API keys.") → **no API charges**
+- **Invocation**: `@codex review` in a PR comment (manual), enable auto-review in settings, or `@codex fix the P1 issue` to fix
+- **Review policy**: flags only P0/P1 by default. Respects the `Review guidelines` section of `AGENTS.md`
+- **Environments** (`/codex/cloud/environments`): configure the repo, setup script (installing dependencies such as pnpm), internet access (enabled by default only during the setup phase; disabled by default during the agent phase), and secrets (encrypted, accessible only from the setup script). Container state is cached for up to 12h
 
-### B. `openai/codex-action@v1`（自前 runner・従量）
+### B. `openai/codex-action@v1` (self-hosted runner, metered)
 
 ```yaml
 name: Codex pull request review
@@ -105,21 +105,21 @@ jobs:
           prompt-file: .github/codex/prompts/review.md
 ```
 
-認証は `openai-api-key`（`OPENAI_API_KEY`）＝**API 従量課金**。主要入力は `prompt` / `prompt-file`、`safety-strategy`（既定 `drop-sudo`、Windows は `unsafe`）、`sandbox`（`workspace-write` / `read-only` / `danger-full-access`）。Linux / macOS runner 推奨。
+Authentication is via `openai-api-key` (`OPENAI_API_KEY`) = **API metered billing**. Key inputs are `prompt` / `prompt-file`, `safety-strategy` (default `drop-sudo`, `unsafe` on Windows), and `sandbox` (`workspace-write` / `read-only` / `danger-full-access`). Linux / macOS runners recommended.
 
-### C. `auth.json` 持ち込み（非推奨）
+### C. Bringing in `auth.json` (not recommended)
 
-ChatGPT サインインで生成される `~/.codex/auth.json` を Secret 化して CI に書き戻せばサブスク枠で動くが、規約抵触（後述）に加え、アクセストークン失効（CI は揮発性で refresh が書き戻されない）で不安定。**A で代替できるので使う理由がない**。
+Turning the `~/.codex/auth.json` generated by ChatGPT sign-in into a Secret and writing it back into CI runs on subscription quota, but in addition to violating terms (see below), it is unstable because the access token expires (CI is volatile and the refreshed token isn't written back). **No reason to use this since A can replace it.**
 
 ## Gemini CLI
 
-公式 Action `google-github-actions/run-gemini-cli`（旧 `google-gemini/run-gemini-cli` から移管。旧 slug は 404）。認証方式で課金とバックエンドが切り替わる。
+Official Action `google-github-actions/run-gemini-cli` (migrated from the former `google-gemini/run-gemini-cli`; the old slug 404s). Billing and backend switch depending on the authentication method.
 
-| 入力 | 認証 | 課金 |
+| Input | Authentication | Billing |
 |---|---|---|
-| `gemini_api_key: ${{ secrets.GEMINI_API_KEY }}` | AI Studio API キー | **無料枠内なら追加なし**（超過で従量。無料枠＝AI Studio / unpaid quota は送信内容が Google の製品改善に利用される。有料 / Vertex は対象外。下記 Gemini API Terms 参照） |
-| `use_gemini_code_assist: true`（`GOOGLE_GENAI_USE_GCA`） | Gemini Code Assist ライセンス | 月額定額（トークン課金なし） |
-| `use_vertex_ai: true` + `gcp_workload_identity_provider` + `gcp_project_id` | Vertex AI + WIF | 従量 |
+| `gemini_api_key: ${{ secrets.GEMINI_API_KEY }}` | AI Studio API key | **No extra charge within the free tier** (metered beyond it. The free tier — AI Studio / unpaid quota — has its submitted content used for Google's product improvement. Paid / Vertex is exempt; see the Gemini API Terms below) |
+| `use_gemini_code_assist: true` (`GOOGLE_GENAI_USE_GCA`) | Gemini Code Assist license | Flat monthly fee (no token billing) |
+| `use_vertex_ai: true` + `gcp_workload_identity_provider` + `gcp_project_id` | Vertex AI + WIF | Metered |
 
 ```yaml
 - uses: google-github-actions/run-gemini-cli@v0
@@ -127,58 +127,58 @@ ChatGPT サインインで生成される `~/.codex/auth.json` を Secret 化し
     gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
 ```
 
-個人 Google アカウントの OAuth はヘッドレス非対応で CI 不可。**追加課金ゼロを狙うなら AI Studio 無料枠か Code Assist ライセンス。** API キーは規約上も自動アクセスが想定された認証なのでクリーン。
+Personal Google account OAuth is not headless-compatible and cannot be used in CI. **To aim for zero extra charge, use the AI Studio free tier or a Code Assist license.** API keys are also terms-compliant, being an authentication method designed for automated access.
 
 ## GitHub Copilot CLI
 
-`copilot` を GitHub Actions で非対話実行する。利用のたびに **premium request** を消費し、プランの月次枠内なら追加課金なし。
+Runs `copilot` non-interactively in GitHub Actions. Each invocation consumes a **premium request**; no extra charge as long as it's within the plan's monthly quota.
 
-- **課金**（公式）: "each time you use Copilot CLI programmatically, your monthly quota of Copilot premium requests is reduced by one"（モデルごとの乗数を掛ける）。プラン（Pro / Pro+ / Business / Enterprise）の premium request 月次枠を消費し、**枠内なら追加課金なし**、超過分は従量（Spending Limit 推奨）。GitHub Actions の実行時間（分）も別途消費
-- **非対話実行**: `--allow-all-tools`（ツール承認を自動化）等のフラグで対話を回避し、プロンプトを引数で渡す
-- **認証**: 自動発行の `GITHUB_TOKEN` は Copilot 権限を含まないため、Copilot を有効化したアカウントのトークン（PAT 等）が必要。CI に渡す環境変数名・必要権限は GitHub の最新ドキュメントで確認する
-- **規約**: GitHub アカウント／トークンによる正規認証なので、Codex / Claude のような「コンシューマー認証情報の流用」には当たらず比較的クリーン
+- **Billing** (official): "each time you use Copilot CLI programmatically, your monthly quota of Copilot premium requests is reduced by one" (multiplied by a per-model multiplier). Consumes the plan's (Pro / Pro+ / Business / Enterprise) monthly premium request quota — **no extra charge within quota**, metered beyond it (a Spending Limit is recommended). GitHub Actions runtime minutes are also consumed separately
+- **Non-interactive execution**: flags such as `--allow-all-tools` (automating tool approval) avoid interaction, passing the prompt as an argument
+- **Authentication**: the auto-issued `GITHUB_TOKEN` does not include Copilot permissions, so a token (e.g. a PAT) from an account with Copilot enabled is required. Check GitHub's latest documentation for the exact environment variable name and required permissions to pass to CI
+- **Terms**: because this is official authentication via a GitHub account/token, it does not amount to "diverting consumer credentials" the way Codex/Claude's approach does, and is comparatively clean
 
-## 利用規約（一次ソース）
+## Terms of service (primary sources)
 
-サブスク認証情報を自前 CI に持ち込む方式（Codex `auth.json` / Claude OAuth トークン）は、両社のコンシューマー規約の禁止条項に該当する。
+The pattern of bringing subscription credentials into self-hosted CI (Codex `auth.json` / Claude OAuth token) falls under prohibition clauses in both vendors' consumer terms.
 
-### OpenAI — Terms of Use（Effective: 2026-01-01）
+### OpenAI — Terms of Use (Effective: 2026-01-01)
 
 - **Registration and access**: "You may not share your account credentials or make your account available to anyone else"
-- **Using our Services**（禁止行為）: "Automatically or programmatically extract data or Output" / "sell or distribute any of our Services"
+- **Using our Services** (prohibited conduct): "Automatically or programmatically extract data or Output" / "sell or distribute any of our Services"
 
-→ `auth.json` を共有 CI に置く＝認証情報の共有、サブスク認証で CI から出力を取得＝プログラム的抽出、のいずれにも触れる。
+→ Placing `auth.json` in shared CI = sharing credentials, and obtaining output from CI via subscription auth = programmatic extraction — both apply.
 
-### Anthropic — Consumer Terms（Effective: 2025-10-08）
+### Anthropic — Consumer Terms (Effective: 2025-10-08)
 
 - §2: "You may not share your Account login information, Anthropic API key, or Account credentials with anyone else." / "You also may not make your Account available to anyone else."
-- §3（禁止）: "Except when you are accessing our Services via an Anthropic API Key or where we otherwise explicitly permit it, to access the Services through automated or non-human means, whether through a bot, script, or otherwise."
+- §3 (Prohibited): "Except when you are accessing our Services via an Anthropic API Key or where we otherwise explicitly permit it, to access the Services through automated or non-human means, whether through a bot, script, or otherwise."
 
-加えて Anthropic の Legal and compliance（[OAuth と API key の使い分け](https://code.claude.com/docs/en/legal-and-compliance)）は、OAuth 認証は「Claude Code その他ネイティブ Anthropic アプリの ordinary use」専用であり、**プロダクト/サービス構築（Agent SDK 含む）は API キー認証を使うべき**と明文化している。GitHub Actions / 自前 CI は前者の範囲外＝API キーが正規。
+In addition, Anthropic's Legal and compliance page ([OAuth vs. API key usage](https://code.claude.com/docs/en/legal-and-compliance)) explicitly states that OAuth authentication is intended solely for "ordinary use of Claude Code and other native Anthropic apps," and that **building products/services (including with the Agent SDK) should use API key authentication**. GitHub Actions / self-hosted CI fall outside the former scope — API key is the official approach.
 
-## 推奨
+## Recommendation
 
-追加課金ゼロ＋規約準拠を両立できる順:
+Order that best balances zero extra charge with terms compliance:
 
-1. **Gemini CLI** — AI Studio 無料枠 or Code Assist 定額。API キー認証で規約クリーン、最も手早い
-2. **Copilot CLI** — PAT + premium request 枠内。GitHub 正規認証でクリーン、GitHub 完結の運用と好相性
-3. **Codex Cloud `@codex`** — ChatGPT プラン込み・規約準拠。ただし自前 runner ではなく OpenAI クラウド実行
+1. **Gemini CLI** — AI Studio free tier or Code Assist flat rate. API key auth is terms-clean and the quickest to set up
+2. **Copilot CLI** — PAT + within premium request quota. Clean via official GitHub auth, and pairs well with GitHub-centric workflows
+3. **Codex Cloud `@codex`** — included in ChatGPT plan, terms-compliant. However this runs on OpenAI's cloud, not a self-hosted runner
 
-契約済み資産から選ぶなら: ChatGPT 課金済み → Codex Cloud、Copilot 契約済み → Copilot CLI + PAT、Google 寄り → Gemini、**Claude Max のみ → 自前 CI で追加課金ゼロ＋規約準拠の妙手は無い**（Routines で代替、または GitHub Actions は API 従量を許容）。
+Choosing based on contracted assets: already paying for ChatGPT → Codex Cloud; already contracted for Copilot → Copilot CLI + PAT; leaning Google → Gemini; **Claude Max only → there is no clever trick for zero-extra-charge, terms-compliant self-hosted CI** (substitute with Routines, or accept API metered billing for GitHub Actions).
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **サブスク認証情報を自前 CI に持ち込む** — Codex `auth.json` / Claude OAuth トークンは技術的に動くが規約抵触。Codex は Codex Cloud `@codex`、Claude は API/Bedrock/Vertex が正規
-2. **Copilot に自動発行の `GITHUB_TOKEN` を使う** — Copilot 権限を含まないため動かない。Copilot を有効化したアカウントのトークンを使う
-3. **Gemini を個人 OAuth で CI 実行しようとする** — ヘッドレス非対応。API キー or Code Assist or Vertex+WIF を使う
-4. **「サブスクで動く＝無料かつ合法」と混同する** — 課金（枠を食うか従量か）と規約（許容される用途か）は別軸。両方を確認する
+1. **Bringing subscription credentials into self-hosted CI** — Codex `auth.json` / Claude OAuth tokens technically work but violate terms. Codex should use Codex Cloud `@codex`; Claude should use API/Bedrock/Vertex
+2. **Using the auto-issued `GITHUB_TOKEN` for Copilot** — this doesn't work since it lacks Copilot permissions. Use a token from an account with Copilot enabled
+3. **Trying to run Gemini in CI with personal OAuth** — not headless-compatible. Use API key, Code Assist, or Vertex+WIF
+4. **Conflating "runs on subscription" with "free and compliant"** — billing (whether it consumes quota or is metered) and terms (whether the use is permitted) are separate axes. Check both
 
-## 参考
+## References
 
 - [OpenAI Codex Cloud](https://developers.openai.com/codex/cloud) / [Codex GitHub integration](https://developers.openai.com/codex/integrations/github) / [Codex GitHub Action](https://developers.openai.com/codex/github-action)
 - [OpenAI Terms of Use](https://openai.com/policies/terms-of-use/)
-- [anthropics/claude-code-action](https://github.com/anthropics/claude-code-action)（`docs/setup.md` / `docs/cloud-providers.md`）
+- [anthropics/claude-code-action](https://github.com/anthropics/claude-code-action) (`docs/setup.md` / `docs/cloud-providers.md`)
 - [Anthropic Consumer Terms](https://www.anthropic.com/legal/consumer-terms) / [Legal and compliance](https://code.claude.com/docs/en/legal-and-compliance)
-- [google-github-actions/run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli) / [Gemini Code Assist pricing](https://cloud.google.com/products/gemini/code-assist) / [Gemini API Terms（無料/有料のデータ利用差）](https://ai.google.dev/gemini-api/terms)
+- [google-github-actions/run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli) / [Gemini Code Assist pricing](https://cloud.google.com/products/gemini/code-assist) / [Gemini API Terms (data-use difference between free/paid)](https://ai.google.dev/gemini-api/terms)
 - [About GitHub Copilot CLI](https://docs.github.com/en/copilot/concepts/agents/about-copilot-cli) / [Requests in GitHub Copilot](https://docs.github.com/en/copilot/managing-copilot/monitoring-usage-and-entitlements/about-premium-requests)
-- 関連: `ai/practice/scheduled-tasks.md` / `ai/agents/claude-code.md` / `ai/agents/codex-cli.md` / `ai/agents/gemini-cli.md` / `ai/agents/github-copilot-cli.md`
+- Related: `ai/practice/scheduled-tasks.md` / `ai/agents/claude-code.md` / `ai/agents/codex-cli.md` / `ai/agents/gemini-cli.md` / `ai/agents/github-copilot-cli.md`

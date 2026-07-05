@@ -3,103 +3,103 @@ reviewed: 2026-06-28
 tags: [ai-workflow, methodology, security]
 ---
 
-# AI エージェントの信頼性とガードレール（Reliability & Guardrails）
+# AI Agent Reliability & Guardrails
 
-自律的に動く AI エージェントを**安全かつ堅牢に運用する**ための仕組み。[オブザーバビリティ](agentic-observability.md) が「検知」、[Human-in-the-Loop](human-in-the-loop.md) が「人間の判断」を担うのに対し、本記事は**「危険・失敗をどう防ぎ、起きたらどう回復するか」**の防御層を扱う。検出型ガードレールは確率的で破られるため、サンドボックス・最小権限・HITL といった**決定論的な封じ込めと多層防御（defense-in-depth）で組み合わせる**のが原則。
+Mechanisms for operating autonomous AI agents **safely and robustly**. Where [observability](agentic-observability.md) handles "detection" and [Human-in-the-Loop](human-in-the-loop.md) handles "human judgment," this article covers the defense layer that answers **"how do we prevent danger/failure, and how do we recover when it happens?"** Detection-based guardrails are probabilistic and can be bypassed, so the principle is to **combine them with deterministic containment — sandboxing, least privilege, HITL — in defense-in-depth**.
 
-## ガードレールの種類
+## Types of guardrails
 
-OpenAI Agents SDK は「**入力ガードレールが agent をユーザーから守り、出力ガードレールがユーザーを agent から守る**」と整理する。違反検出時は tripwire が発動して処理を中断する。
+The OpenAI Agents SDK frames it as "**input guardrails protect the agent from the user, and output guardrails protect the user from the agent**." When a violation is detected, a tripwire fires and halts processing.
 
-| | 入力ガードレール | 出力ガードレール |
+| | Input guardrails | Output guardrails |
 |---|---|---|
-| 目的 | 高コスト/副作用処理の**前**に弾く | 最終出力をユーザーに返す**前**に検証 |
-| 例 | PII 検出、jailbreak/[プロンプトインジェクション](prompt-injection.md)検出、トピック制限、toxicity | ハルシネーション検証（グラウンデッドネス）、機密漏洩防止、フォーマット検証 |
+| Purpose | Block **before** high-cost/side-effecting operations | Verify **before** returning final output to the user |
+| Examples | PII detection, jailbreak/[prompt injection](prompt-injection.md) detection, topic restriction, toxicity | Hallucination checking (groundedness), sensitive-data leak prevention, format validation |
 
-実装は **決定論的チェック**（regex・スキーマ検証）と **LLM ベースチェック**（毒性・jailbreak 判定）を併用する。NVIDIA NeMo Guardrails は input / retrieval / dialog / execution / output の 5 種のレールを持ち、各レールが入力/出力を **reject（停止）または alter（マスキング・言い換え）**できる。
+Implementations combine **deterministic checks** (regex, schema validation) with **LLM-based checks** (toxicity, jailbreak judgment). NVIDIA NeMo Guardrails has five rail types — input / retrieval / dialog / execution / output — and each rail can **reject (stop) or alter (mask/rephrase)** input/output.
 
-## エラー回復と耐障害性
+## Error recovery and fault tolerance
 
-Anthropic "Effective harnesses for long-running agents" の一次パターン:
+Primary patterns from Anthropic's "Effective harnesses for long-running agents":
 
-- **健全性チェック（health check）** — セッション開始時に進捗ノートと git ログを読み、basic test を走らせて未文書のバグを捕捉する
-- **チェックポイント / ロールバック** — モデルが **git で不良変更を revert** し動作状態へ復元できる。各セッションを git commit + 進捗更新で終え、コンテキスト窓をまたぐ atomic なチェックポイントを作る
-- **検証のガード** — E2E テスト + スクリーンショットで確認。「テストの削除・編集は機能欠落につながるため許容しない」という指示を入れる
+- **Health check** — at session start, read progress notes and the git log, and run basic tests to catch undocumented bugs
+- **Checkpoint / rollback** — the model can **revert bad changes with git** to restore a working state. End each session with a git commit plus a progress update, creating atomic checkpoints that span context windows
+- **Verification guards** — confirm via E2E tests + screenshots. Include an instruction that "deleting or editing tests is not acceptable, since it can lead to missing functionality"
 
-一般的な耐障害パターン（リトライ戦略・サーキットブレーカー等）:
+Common fault-tolerance patterns (retry strategies, circuit breakers, etc.):
 
-- **リトライ** — エラー種別で扱いを変える（rate limit → 指数バックオフ + jitter、timeout → 短いリトライ、auth error → リトライ不要）
-- **サーキットブレーカー** — CLOSED / OPEN / HALF-OPEN。連続失敗で OPEN にして fail-fast、timeout 後に HALF-OPEN でプローブ
-- **冪等性 / タイムアウト / グレースフルデグレード** — 冪等な副作用は安全にリトライ可。フォールバックチェーン（例: Opus → Sonnet → Haiku → キャッシュ応答）
+- **Retry** — handle differently by error type (rate limit → exponential backoff + jitter, timeout → short retry, auth error → no retry)
+- **Circuit breaker** — CLOSED / OPEN / HALF-OPEN. Consecutive failures trip it to OPEN for fail-fast; after a timeout, HALF-OPEN probes recovery
+- **Idempotency / timeouts / graceful degradation** — idempotent side effects can be safely retried. Fallback chains (e.g., Opus → Sonnet → Haiku → cached response)
 
-## 暴走（runaway）の防止
+## Preventing runaway behavior
 
-無限ループとコスト暴走は最もコストの高い silent failure。多層の停止条件を張る（[ループエンジニアリング](loop-engineering.md) の停止条件と対になる）:
+Infinite loops and cost runaway are the most expensive silent failures. Layer multiple stop conditions (paired with the stop conditions in [loop engineering](loop-engineering.md)):
 
-1. **最大イテレーション上限**（目安: 期待回数の 3〜5 倍）
-2. **トークン / コスト予算**（run あたりのハード上限）
-3. **タイムアウト**（タスク / API 呼び出しレベル）
-4. **no-progress 検知**（反復しても新情報が出ないと exit）
-5. **goal-achievement チェック**（別の高速モデルが毎ターン完了判定する generator/evaluator ループ等）
+1. **Maximum iteration cap** (rule of thumb: 3–5x the expected count)
+2. **Token / cost budget** (hard cap per run)
+3. **Timeouts** (at the task / API call level)
+4. **No-progress detection** (exit if repetition produces no new information)
+5. **Goal-achievement check** (e.g., a generator/evaluator loop where a separate fast model judges completion each turn)
 
-これらの発火は[オブザーバビリティ](agentic-observability.md)で監視・アラート化する。
+Monitor and alert on these triggers via [observability](agentic-observability.md).
 
-## サンドボックス / 隔離
+## Sandboxing / isolation
 
-コード実行やファイル操作を伴うエージェントは**隔離が決定論的封じ込めの中核**。Anthropic Claude Code のサンドボキシング（一次情報）は 2 本柱を OS レベルで強制する:
+For agents that execute code or manipulate files, **isolation is the core of deterministic containment**. Anthropic Claude Code's sandboxing (primary source) enforces two pillars at the OS level:
 
-- **ファイルシステム隔離** — 特定ディレクトリのみアクセス/変更可（Linux: bubblewrap、macOS: Seatbelt）
-- **ネットワーク隔離** — proxy 経由で**ドメイン allowlist** を強制、新規ドメインはユーザー確認
+- **Filesystem isolation** — access/modification limited to specific directories (Linux: bubblewrap, macOS: Seatbelt)
+- **Network isolation** — enforces a **domain allowlist** via proxy; new domains require user confirmation
 
-> 「効果的なサンドボキシングは FS 隔離と**ネットワーク隔離の両方**を要する。ネットワーク隔離がなければ機密ファイルを exfiltrate でき、FS 隔離がなければ sandbox を脱出できる」。これにより「prompt injection が成功しても完全に隔離され、SSH キーを盗めず攻撃者サーバへ phone home できない」。
+> "Effective sandboxing requires both FS isolation and **network isolation**. Without network isolation, sensitive files can be exfiltrated; without FS isolation, the sandbox can be escaped." As a result, "even if a prompt injection succeeds, it's fully contained — it can't steal SSH keys or phone home to an attacker's server."
 
-コード実行サンドボックスの技術階層: **microVM（Firecracker / Kata）**が最強隔離（専用カーネル）、**gVisor**がユーザー空間で syscall を傍受する中間的隔離。本番エージェント実行は microVM が最低ライン。
+Technical tiers of code-execution sandboxes: **microVM (Firecracker / Kata)** provides the strongest isolation (dedicated kernel); **gVisor** offers intermediate isolation by intercepting syscalls in user space. For production agent execution, microVM is the minimum baseline.
 
-### lethal trifecta と YOLO mode
+### The lethal trifecta and YOLO mode
 
-Simon Willison の **lethal trifecta**: ①プライベートデータへのアクセス ②untrusted content への露出 ③外部送信能力 — **この 3 つが揃うと危険**。LLM はソースを区別せず届いた指示に従うため、untrusted content に埋め込まれた指示でデータを窃取・送信される。
+Simon Willison's **lethal trifecta**: (1) access to private data, (2) exposure to untrusted content, (3) the ability to exfiltrate externally — **combining all three is dangerous**. Because LLMs don't distinguish the source of instructions and follow whatever arrives, instructions embedded in untrusted content can steal and exfiltrate data.
 
-- **「ガードレールだけでは不十分」**（95% の有効性はセキュリティでは落第点）。第一の防御は**3 要素を組み合わせないこと**
-- 全自動（YOLO）モードは最小権限の認証情報（tightly scoped credentials）とサンドボックス隔離が前提。実害例として gemini-cli `--yolo` で公開 issue の悪意指示により認証情報を窃取された事例がある
+- **"Guardrails alone are insufficient"** (95% effectiveness is a failing grade in security). The primary defense is **not combining the three elements**
+- Fully autonomous (YOLO) mode presupposes tightly scoped credentials and sandbox isolation. As a real-world example of harm, gemini-cli's `--yolo` mode had credentials stolen via malicious instructions in a public issue
 
-## ガードレール実装フレームワーク
+## Guardrail implementation frameworks
 
-| フレームワーク | OSS | 何を防ぐ / 提供 |
+| Framework | OSS | What it prevents / provides |
 |---|---|---|
-| **NVIDIA NeMo Guardrails** | OSS | input/retrieval/dialog/execution/output レール。PII マスキング・ファクト検証・ハルシネーション検出 |
-| **Guardrails AI** | OSS | LLM 出力の検証・構造化（PII / toxicity / grounding / SQL injection 等の validator）|
-| **Meta LlamaFirewall** | OSS | agent 最終防御層。PromptGuard 2（jailbreak/injection）+ Agent Alignment Checks（goal hijacking）+ CodeShield（生成コード静的解析）|
-| **Meta Llama Guard 3** | オープンウェイト | 入出力の安全分類（MLCommons 22 カテゴリ、多言語、ツール呼び出し対応）|
-| **OpenAI Agents SDK guardrails** | OSS（SDK）| input/output guardrail + tripwire。ルール / LLM ベース |
-| **OpenAI Moderation API** | API（無料）| GPT-4o ベース、テキスト + 画像の有害カテゴリ分類 |
-| **Azure AI Content Safety** | マネージド | Prompt Shields（直接 + 間接 injection）、Groundedness detection（+自動 correction）|
+| **NVIDIA NeMo Guardrails** | OSS | input/retrieval/dialog/execution/output rails. PII masking, fact checking, hallucination detection |
+| **Guardrails AI** | OSS | Validation and structuring of LLM output (validators for PII / toxicity / grounding / SQL injection, etc.) |
+| **Meta LlamaFirewall** | OSS | Final defense layer for agents. PromptGuard 2 (jailbreak/injection) + Agent Alignment Checks (goal hijacking) + CodeShield (static analysis of generated code) |
+| **Meta Llama Guard 3** | Open-weight | Input/output safety classification (MLCommons 22 categories, multilingual, tool-call support) |
+| **OpenAI Agents SDK guardrails** | OSS (SDK) | input/output guardrail + tripwire. Rule-based / LLM-based |
+| **OpenAI Moderation API** | API (free) | GPT-4o based, harmful-category classification for text + images |
+| **Azure AI Content Safety** | Managed | Prompt Shields (direct + indirect injection), groundedness detection (+ automatic correction) |
 
-## Human-in-the-Loop との接続
+## Connection to Human-in-the-Loop
 
-- **不可逆アクション前のチェックポイント** — 金融取引の承認・データ削除など不可逆操作の前にエージェントを一時停止して人間レビューを挟む
-- **確信度ベースのエスカレーション** — 確信度が閾値を下回る・能力限界を認識したら人間にエスカレーションする
+- **Checkpoint before irreversible actions** — pause the agent and insert human review before irreversible operations such as approving a financial transaction or deleting data
+- **Confidence-based escalation** — escalate to a human when confidence falls below a threshold or the agent recognizes it has reached the limits of its capability
 
-詳細な設計は [Human-in-the-Loop パターン](human-in-the-loop.md) を参照。
+See [Human-in-the-Loop patterns](human-in-the-loop.md) for detailed design.
 
-## ベストプラクティス
+## Best practices
 
-- **多層防御（defense-in-depth）** — reasoning / tool / memory / communication の各層に防御を置き、1 層が破られても全体が崩れないようにする（OWASP）
-- **最小権限（least privilege）** — エージェントに必要最小限の権限のみ付与し、各ツールは最も狭い権限を持つ
-- **ガードレール単独に頼らない** — 検出型は確率的で破られる。サンドボックス・最小権限・HITL の**決定論的封じ込め**と併用する
-- **監査ログと異常検知** — 全ツール呼び出し・エージェント決定をログ化し、baseline + 異常検知を組む
+- **Defense-in-depth** — place defenses at each layer (reasoning / tool / memory / communication) so a breach of one layer doesn't collapse the whole system (OWASP)
+- **Least privilege** — grant agents only the minimum necessary permissions; each tool should hold the narrowest possible scope
+- **Don't rely on guardrails alone** — detection-based methods are probabilistic and can be bypassed. Combine with **deterministic containment**: sandboxing, least privilege, HITL
+- **Audit logging and anomaly detection** — log every tool call and agent decision, and build baseline + anomaly detection on top
 
-## アンチパターン
+## Anti-patterns
 
-- **ガードレールだけで安全と見なす** — 検出は破られる。決定論的封じ込めを併用する
-- **lethal trifecta を放置** — 3 要素を同一エージェントに揃えたまま自動実行する
-- **停止条件なしで自律実行** — runaway loop でコストが暴走する
-- **隔離なしでコード実行** — prompt injection で sandbox 脱出・データ exfiltration を許す
-- **過剰な権限を付与** — 最小権限を無視し、侵害時の被害を広げる
+- **Treating guardrails alone as sufficient for safety** — detection can be bypassed; combine with deterministic containment
+- **Leaving the lethal trifecta unaddressed** — running an agent autonomously with all three elements present at once
+- **Autonomous execution with no stop conditions** — runaway loops drive costs out of control
+- **Executing code without isolation** — allows prompt injection to escape the sandbox and exfiltrate data
+- **Granting excessive permissions** — ignoring least privilege widens the blast radius of a compromise
 
-## 参考
+## References
 
 - Anthropic: [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) / [Claude Code sandboxing](https://www.anthropic.com/engineering/claude-code-sandboxing) / [sandbox-runtime](https://github.com/anthropic-experimental/sandbox-runtime)
 - OpenAI: [Agents SDK guardrails](https://openai.github.io/openai-agents-python/guardrails/) / [Moderation API](https://developers.openai.com/api/docs/guides/moderation)
 - NVIDIA: [NeMo Guardrails](https://docs.nvidia.com/nemo/guardrails/) / Meta: [LlamaFirewall](https://ai.meta.com/research/publications/llamafirewall-an-open-source-guardrail-system-for-building-secure-ai-agents/) / Microsoft: [Azure AI Content Safety](https://learn.microsoft.com/en-us/azure/ai-services/content-safety/overview)
 - Simon Willison: [The lethal trifecta](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/)
-- 関連: [プロンプトインジェクション対策](prompt-injection.md), [Human-in-the-Loop](human-in-the-loop.md), [ループエンジニアリング](loop-engineering.md), [オブザーバビリティ](agentic-observability.md), [ツール設計（ACI）](agent-tool-design.md)
+- Related: [Prompt injection defenses](prompt-injection.md), [Human-in-the-Loop](human-in-the-loop.md), [Loop engineering](loop-engineering.md), [Observability](agentic-observability.md), [Tool design (ACI)](agent-tool-design.md)

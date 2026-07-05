@@ -6,18 +6,18 @@ aliases: [copilot]
 
 # GitHub Copilot CLI
 
-GitHub が提供する AI コーディングエージェント CLI。GitHub アカウントと深く統合され、計画・実行・テスト・レビューを自律的に行う。2026-02-25 に GA。
+An AI coding agent CLI provided by GitHub. Deeply integrated with GitHub accounts, it autonomously handles planning, execution, testing, and review. GA on 2026-02-25.
 
-## インストール
+## Installation
 
 ```bash
-# シェルスクリプト（推奨）
+# Shell script (recommended)
 curl -fsSL https://gh.io/copilot-install | bash
-# VERSION / PREFIX 環境変数で固定版・インストール先を指定可能
+# VERSION / PREFIX env vars let you pin a version / install location
 
 # Homebrew
 brew install copilot-cli
-brew install copilot-cli@prerelease     # prerelease チャネル
+brew install copilot-cli@prerelease     # prerelease channel
 
 # npm
 npm install -g @github/copilot
@@ -28,117 +28,117 @@ winget install GitHub.Copilot
 winget install GitHub.Copilot.Prerelease
 ```
 
-初回起動時に bash / zsh / fish のシェル補完が自動インストールされる（v1.0.41 以降）。`copilot completion <bash|zsh|fish>` サブコマンドで手動取得も可能（v1.0.37）。
+Shell completion for bash / zsh / fish is auto-installed on first launch (v1.0.41+). It can also be fetched manually via the `copilot completion <bash|zsh|fish>` subcommand (v1.0.37).
 
-## 認証
+## Authentication
 
-OAuth デバイスフローまたは GitHub Personal Access Token (PAT) で認証。
+Authenticate via OAuth device flow or a GitHub Personal Access Token (PAT).
 
-## 基本コマンド
+## Basic commands
 
 ```bash
-copilot                                  # インタラクティブセッション開始
-copilot --experimental                   # experimental 機能を有効化
-copilot -C <dir>                         # 起動前に作業ディレクトリを変更（v1.0.42）
-copilot --attachment <file>              # prompt mode でファイルを添付（v1.0.41）
-copilot --max-autopilot-continues <n>    # autopilot の連続継続上限（既定 5、v1.0.40）
-copilot --resume                         # 過去セッションをピッカーから再開（-r ショートハンド、v1.0.60）
-copilot completion <bash|zsh|fish>       # シェル補完スクリプト出力
+copilot                                  # start an interactive session
+copilot --experimental                   # enable experimental features
+copilot -C <dir>                         # change working directory before launch (v1.0.42)
+copilot --attachment <file>              # attach a file in prompt mode (v1.0.41)
+copilot --max-autopilot-continues <n>    # cap on autopilot's consecutive continuations (default 5, v1.0.40)
+copilot --resume                         # resume a past session from a picker (-r shorthand, v1.0.60)
+copilot completion <bash|zsh|fish>       # print shell completion script
 ```
 
-## セッション内コマンド
+## In-session commands
 
-| コマンド | 説明 |
+| Command | Description |
 |---|---|
-| `/help` | ヘルプ表示（スラッシュコマンドはタブ補完に対応） |
-| `/model` | モデル切り替え（Auto mode はサーバー側で最適モデルを選択）。`opus` / `sonnet` / `haiku` / `gpt` / `gemini` のモデルファミリーエイリアスに対応（v1.0.64） |
-| `/experimental` | 実験的機能（ラバーダック・エージェント等）を有効化 |
-| `/remote on/off` | GitHub.com やモバイルアプリからのリモート制御を切り替え |
-| `/statusline` | ステータスラインの表示（ユーザー名等）をカスタマイズ |
-| `/usage` | クォータ使用状況表示 |
-| `/env` | 環境変数一覧表示 |
-| `/compact` | コンテキストを手動圧縮（focus 指示を渡して要約方針を制御可能）。送信中のメッセージは自動キュー |
-| `/context` | コンテキストウィンドウ使用状況・カスタム指示・MCP サーバー別トークンコストの内訳を表示 |
-| `/model` | 使用モデルの切り替え |
-| `/mcp` | 設定済み MCP サーバー一覧 |
-| `/agent <name>` | カスタムエージェントを起動 |
-| `/skills` | skill 一覧・管理（`list` / `info` / `reload` / `remove`）。`/skill` エイリアス追加（v1.0.65） |
-| `/lsp` | LSP サーバーの状態表示 |
-| `/diff` | 変更差分のレビュー |
-| `/undo` | 直前の操作を取り消し |
-| `/remote` | リモートセッション情報表示（`on` / `off` トグル） |
-| `/keep-alive` | セッションをバックグラウンドで維持（v1.0.36 で experimental flag 不要に） |
-| `/fleet` | 複雑な要求を細分化し subagent で並列実行（v1.0.32 追加） |
-| `/chronicle` | セッション履歴レビュー・standup（v1.0.31 追加、experimental） |
-| `/research` | リサーチアシスタント（v1.0.41 追加。orchestrator/subagent モデルを利用） |
-| `/pr` | PR の作成・参照（v1.0.40 追加） |
-| `/autopilot` | interactive ↔ autopilot モードのトグル（v1.0.45 追加）。`/autopilot <objective>`（`/goal` エイリアス）で目標を固定（v1.0.55） |
-| `/security-review` | コード変更のセキュリティ脆弱性レビュー（v1.0.51 追加。v1.0.64 で `--experimental` 不要の一般提供化） |
-| `/memory` | Copilot Memory の有効化・無効化・状態表示（`on` / `off` / `show`、v1.0.49 追加。永続） |
-| `/rubber-duck` | ラバーダックエージェントで作業に独立した批評を得る（v1.0.49 追加。v1.0.58 で既定有効化） |
-| `/every` / `/after` | スケジュール実行プロンプト（v1.0.58 追加、experimental）。`/loop` エイリアスあり |
-| `/fork [name]` | 現セッションを独立した新セッションに fork（v1.0.45 追加。v1.0.47 で optional name と origin 表示）。`/branch` エイリアス追加（v1.0.64、Claude Code に整合） |
-| `/session` | セッション管理（`delete` / `delete-all`、`--name` で命名） |
-| `/plugin` | プラグイン管理（`install` / `list` / `remove`） |
-| `/subagents` / `/agents` | subagent の一覧・設定（model / reasoning effort / context tier、v1.0.62 追加） |
-| `/cd` | 作業ディレクトリ変更（v1.0.65 で resume 時に永続化。新ディレクトリの custom agent も探索） |
-| `/diagnose` | セッションログを解析（v1.0.64 追加） |
-| `/app` | GitHub アプリ／ブラウザを開く（v1.0.62 追加） |
-| `/theme` | テーマ選択（default / dim / high-contrast / colorblind） |
-| `/settings` | 設定をインラインで参照・変更 |
-| `/clear` / `/new` | 会話リセット（アクティブエージェント選択もリセット） |
-| `/bug` / `/feedback` | フィードバック・バグ報告 |
-| `/release-notes` | リリースノート表示 |
-| `/export` | セッションをエクスポート |
-| `/reset` | 設定リセット |
-| `/version` | バージョン表示 |
-| `/update` | CLI アップデート（v1.0.43 でダウンロード進捗表示、v1.0.44 で optional `prerelease` 引数追加） |
-| `/exit` | セッション終了 |
+| `/help` | Show help (slash commands support tab completion) |
+| `/model` | Switch model (Auto mode selects the optimal model server-side). Supports model-family aliases `opus` / `sonnet` / `haiku` / `gpt` / `gemini` (v1.0.64) |
+| `/experimental` | Enable experimental features (rubber duck, agents, etc.) |
+| `/remote on/off` | Toggle remote control from GitHub.com or the mobile app |
+| `/statusline` | Customize the status line display (username, etc.) |
+| `/usage` | Show quota usage |
+| `/env` | List environment variables |
+| `/compact` | Manually compact context (can pass a focus instruction to steer the summarization policy). In-flight messages are auto-queued |
+| `/context` | Show context window usage, custom instructions, and per-MCP-server token cost breakdown |
+| `/model` | Switch the active model |
+| `/mcp` | List configured MCP servers |
+| `/agent <name>` | Launch a custom agent |
+| `/skills` | List/manage skills (`list` / `info` / `reload` / `remove`). `/skill` alias added (v1.0.65) |
+| `/lsp` | Show LSP server status |
+| `/diff` | Review a change diff |
+| `/undo` | Undo the last operation |
+| `/remote` | Show remote session info (`on` / `off` toggle) |
+| `/keep-alive` | Keep the session running in the background (no experimental flag needed as of v1.0.36) |
+| `/fleet` | Break a complex request into subtasks and run them in parallel via subagents (added v1.0.32) |
+| `/chronicle` | Session history review / standup (added v1.0.31, experimental) |
+| `/research` | Research assistant (added v1.0.41; uses orchestrator/subagent models) |
+| `/pr` | Create/reference a PR (added v1.0.40) |
+| `/autopilot` | Toggle between interactive and autopilot modes (added v1.0.45). `/autopilot <objective>` (alias `/goal`) pins an objective (v1.0.55) |
+| `/security-review` | Security vulnerability review of code changes (added v1.0.51; GA without `--experimental` as of v1.0.64) |
+| `/memory` | Enable/disable/show status of Copilot Memory (`on` / `off` / `show`, added v1.0.49; persistent) |
+| `/rubber-duck` | Get an independent critique of your work from the rubber-duck agent (added v1.0.49; enabled by default as of v1.0.58) |
+| `/every` / `/after` | Scheduled prompt execution (added v1.0.58, experimental). Has a `/loop` alias |
+| `/fork [name]` | Fork the current session into an independent new session (added v1.0.45; optional name and origin display added v1.0.47). `/branch` alias added (v1.0.64, aligned with Claude Code) |
+| `/session` | Session management (`delete` / `delete-all`, name via `--name`) |
+| `/plugin` | Plugin management (`install` / `list` / `remove`) |
+| `/subagents` / `/agents` | List/configure subagents (model / reasoning effort / context tier, added v1.0.62) |
+| `/cd` | Change working directory (persisted across resume as of v1.0.65; also discovers custom agents in the new directory) |
+| `/diagnose` | Analyze session logs (added v1.0.64) |
+| `/app` | Open the GitHub app / browser (added v1.0.62) |
+| `/theme` | Theme selection (default / dim / high-contrast / colorblind) |
+| `/settings` | View/change settings inline |
+| `/clear` / `/new` | Reset the conversation (also resets the active agent selection) |
+| `/bug` / `/feedback` | Feedback / bug report |
+| `/release-notes` | Show release notes |
+| `/export` | Export the session |
+| `/reset` | Reset settings |
+| `/version` | Show version |
+| `/update` | Update the CLI (download progress shown as of v1.0.43; optional `prerelease` argument added v1.0.44) |
+| `/exit` | End the session |
 
-## 設定ファイル
+## Configuration files
 
-| パス | 用途 | Git 管理 |
+| Path | Purpose | Git-tracked |
 |---|---|---|
-| `~/.copilot/settings.json` | ユーザー設定（v1.0.35 で `config.json` から分離） | - |
-| `~/.copilot/config.json` | CLI 内部ステート（自動管理） | - |
-| `~/.copilot/mcp-config.json` | グローバル MCP サーバー設定 | - |
-| `~/.copilot/lsp-config.json` | グローバル LSP 設定 | - |
-| `~/.copilot/copilot-instructions.md` | 個人グローバル指示（全プロジェクト共通） | - |
-| `~/.copilot/instructions/*.instructions.md` | 個人グローバル追加指示（v1.0.12 以降、自動読み込み） | - |
-| `~/.copilot/agents/<name>.agent.md` | ユーザー custom agent | - |
-| `~/.copilot/skills/<name>/SKILL.md` | ユーザー skill | - |
-| `AGENTS.md` | プロジェクト固有の指示（repo root / CWD / `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` で指定したディレクトリで読まれる） | Yes |
-| `.github/instructions/**/*.instructions.md` | プロジェクト追加指示（自動読み込み） | Yes |
-| `.github/agents/<name>.agent.md` | プロジェクト custom agent | Yes |
-| `.github/skills/<name>/SKILL.md` | プロジェクト skill（`.claude/skills/` / `.agents/skills/` も読む） | Yes |
-| `.github/hooks/hooks.json` | プロジェクト hooks | Yes |
-| `.github/lsp.json` | プロジェクト LSP 設定 | Yes |
-| `.mcp.json` | プロジェクト MCP（v1.0.22 で `.vscode/mcp.json` / `.devcontainer/devcontainer.json` のサポートを廃止し `.mcp.json` に標準化。検出時は移行ヒントを表示） | Yes |
-| `.github-private/.github/copilot/settings.json` | エンタープライズ管理プラグイン定義（2026-05-06 public preview） | Yes |
-| `.github/copilot-instructions.md` | カスタム指示（レガシー） | Yes |
+| `~/.copilot/settings.json` | User settings (split out from `config.json` in v1.0.35) | - |
+| `~/.copilot/config.json` | CLI internal state (auto-managed) | - |
+| `~/.copilot/mcp-config.json` | Global MCP server config | - |
+| `~/.copilot/lsp-config.json` | Global LSP config | - |
+| `~/.copilot/copilot-instructions.md` | Personal global instructions (applies to all projects) | - |
+| `~/.copilot/instructions/*.instructions.md` | Personal global additional instructions (v1.0.12+, auto-loaded) | - |
+| `~/.copilot/agents/<name>.agent.md` | User custom agent | - |
+| `~/.copilot/skills/<name>/SKILL.md` | User skill | - |
+| `AGENTS.md` | Project-specific instructions (read from repo root / CWD / directories specified via `COPILOT_CUSTOM_INSTRUCTIONS_DIRS`) | Yes |
+| `.github/instructions/**/*.instructions.md` | Project additional instructions (auto-loaded) | Yes |
+| `.github/agents/<name>.agent.md` | Project custom agent | Yes |
+| `.github/skills/<name>/SKILL.md` | Project skill (also reads `.claude/skills/` / `.agents/skills/`) | Yes |
+| `.github/hooks/hooks.json` | Project hooks | Yes |
+| `.github/lsp.json` | Project LSP config | Yes |
+| `.mcp.json` | Project MCP (v1.0.22 dropped support for `.vscode/mcp.json` / `.devcontainer/devcontainer.json` and standardized on `.mcp.json`; shows a migration hint when those are detected) | Yes |
+| `.github-private/.github/copilot/settings.json` | Enterprise-managed plugin definitions (public preview 2026-05-06) | Yes |
+| `.github/copilot-instructions.md` | Custom instructions (legacy) | Yes |
 
-`COPILOT_HOME` 環境変数で設定ディレクトリを変更可能。
+The `COPILOT_HOME` environment variable can change the config directory.
 
-## 主要機能
+## Key features
 
-- **Autopilot モード**: 計画・実行・テスト・修正の自律ループ。`/autopilot` でトグル（v1.0.45）
-- **サーバーサイド・モデルルーティング**: Auto mode においてリアルタイムで最適なモデルを自動選択
-- **read-only `gh` の自動承認**: v1.0.46 以降、`gh list` / `view` / `status` / `diff` 等の read-only サブコマンドはプロンプトなしで実行
-- **OpenTelemetry**: v1.0.45 で GenAI semantic conventions に整合化、MCP tool 呼び出しは標準 `tool_call` span、`gen_ai.client.operation.duration` メトリックで tool 実行時間を計測
-- **リモート制御**: ブラウザやモバイルから CLI セッションを監視・操作可能
-- **タブ型ターミナル UI**: 2026-06-23 に新ターミナルインターフェースが GA。画面上部に Session / Gists タブ、リポジトリ内では Issues / Pull requests タブを表示。`/theme`（default / dim / high-contrast / colorblind）でテーマ切替。GitHub テーマと home タブは v1.0.64 で全ユーザー既定有効
-- **LSP 統合**: TypeScript Language Server 等と連携した型情報の活用
-- **MCP 統合**: Model Context Protocol サーバーとの連携
-- **Rubber Duck エージェント**: 作業への独立した批評。v1.0.58 で既定有効化（`builtInAgents.rubberDuck` / `builtInAgents.rubberDuckAutoInvoke` で制御）。Remote JSON RPC も v1.0.58 で既定有効化
+- **Autopilot mode**: An autonomous plan/execute/test/fix loop. Toggle with `/autopilot` (v1.0.45)
+- **Server-side model routing**: In Auto mode, the optimal model is chosen in real time server-side
+- **Auto-approval of read-only `gh`**: As of v1.0.46, read-only `gh` subcommands like `list` / `view` / `status` / `diff` run without a prompt
+- **OpenTelemetry**: Aligned with GenAI semantic conventions in v1.0.45; MCP tool calls use the standard `tool_call` span, and the `gen_ai.client.operation.duration` metric measures tool execution time
+- **Remote control**: Monitor and operate CLI sessions from a browser or mobile app
+- **Tabbed terminal UI**: A new terminal interface went GA on 2026-06-23. Shows Session / Gists tabs at the top, and Issues / Pull requests tabs inside a repository. Theme switching via `/theme` (default / dim / high-contrast / colorblind). GitHub theme and the home tab are enabled by default for all users as of v1.0.64
+- **LSP integration**: Leverages type information via integration with servers such as TypeScript Language Server
+- **MCP integration**: Integration with Model Context Protocol servers
+- **Rubber Duck agent**: Independent critique of your work. Enabled by default as of v1.0.58 (controlled via `builtInAgents.rubberDuck` / `builtInAgents.rubberDuckAutoInvoke`). Remote JSON RPC also enabled by default as of v1.0.58
 
-## カスタムエージェント
+## Custom agents
 
-`.github/agents/<name>.agent.md`（project）または `~/.copilot/agents/<name>.agent.md`（user）に定義。**拡張子は `.agent.md` 固定**。スコープ優先は repository > organization > enterprise。
+Define at `.github/agents/<name>.agent.md` (project) or `~/.copilot/agents/<name>.agent.md` (user). **The extension must be `.agent.md`.** Scope priority is repository > organization > enterprise.
 
 ```markdown
 ---
 name: db-specialist
-description: データベース操作の専門エージェント
+description: Specialist agent for database operations
 tools:
   - shell
   - view
@@ -146,73 +146,73 @@ tools:
 model: gpt-5
 ---
 
-SQL クエリの最適化とスキーマ設計を支援します。
+Assists with SQL query optimization and schema design.
 ```
 
-**frontmatter**:
+**Frontmatter**:
 
-| フィールド | 説明 |
+| Field | Description |
 |---|---|
-| `name` | 識別子（省略時ファイル名） |
-| `description` | 用途（必須） |
-| `prompt` | システムプロンプト（または Markdown 本文で記述、最大 30,000 字） |
-| `tools` | 許可ツール。`["*"]` で全許可、`[]` で全拒否 |
-| `model` | 使用モデル |
-| `disable-model-invocation` | `true` なら自動呼び出し禁止 |
-| `user-invocable` | `false` ならユーザー呼び出し禁止 |
-| `mcp-servers` | 利用可能な MCP |
-| `target` | `vscode` / `github-copilot` / 両環境 |
+| `name` | Identifier (defaults to filename) |
+| `description` | Purpose (required) |
+| `prompt` | System prompt (or write it as the Markdown body, max 30,000 characters) |
+| `tools` | Allowed tools. `["*"]` allows all, `[]` denies all |
+| `model` | Model to use |
+| `disable-model-invocation` | If `true`, disables automatic invocation |
+| `user-invocable` | If `false`, disables user invocation |
+| `mcp-servers` | Available MCP servers |
+| `target` | `vscode` / `github-copilot` / both |
 
-**呼び出し**:
+**Invocation**:
 
 ```bash
-copilot --agent db-specialist --prompt "..."      # CLI フラグ
-/agent db-specialist                               # セッション内
+copilot --agent db-specialist --prompt "..."      # CLI flag
+/agent db-specialist                               # in-session
 ```
 
-推論ベースで自動呼び出しされるほか、プロンプト内で名前を明示しても発火する。
+Triggered automatically based on reasoning, or by naming the agent explicitly in a prompt.
 
 ## Skills
 
-`Agent Skills` オープン標準準拠。**複数のディレクトリを同時にサポートし、他 CLI の skills を相互運用できる**。
+Complies with the open `Agent Skills` standard. **Supports multiple directories simultaneously, allowing interoperability with skills from other CLIs.**
 
-| スコープ | 配置ディレクトリ（いずれも読まれる） |
+| Scope | Directories (all are read) |
 |---|---|
 | Project | `.github/skills/` / `.claude/skills/` / `.agents/skills/` |
 | Personal | `~/.copilot/skills/` / `~/.agents/skills/` |
 
 **SKILL.md frontmatter**:
 
-| フィールド | 必須 | 説明 |
+| Field | Required | Description |
 |---|---|---|
-| `name` | Yes | lowercase+hyphens。**ディレクトリ名と一致必須**、不一致だと読み込まれない |
-| `description` | Yes | 発見の鍵 |
-| `allowed-tools` | - | 許可確認スキップ |
-| `license` | - | ライセンス表記 |
+| `name` | Yes | lowercase+hyphens. **Must match the directory name**; a mismatch means it won't be loaded |
+| `description` | Yes | Key for discovery |
+| `allowed-tools` | - | Skip permission confirmation |
+| `license` | - | License notice |
 
-**管理コマンド**: `/skills list | info | reload | remove`（`/skill` エイリアス、v1.0.65）。`copilot skill` サブコマンドでファイル / URL / ディレクトリから skill を list / add / remove 可能（v1.0.65）。2026-04 以降は `gh skill` サブコマンドで GitHub CLI 経由でも管理可能。
+**Management commands**: `/skills list | info | reload | remove` (`/skill` alias, v1.0.65). The `copilot skill` subcommand can list/add/remove skills from a file / URL / directory (v1.0.65). As of 2026-04, they can also be managed via GitHub CLI using the `gh skill` subcommand.
 
 ## Hooks
 
-`.github/hooks/*.json`（repo）または CWD の `hooks.json`。
+`.github/hooks/*.json` (repo) or a `hooks.json` in the CWD.
 
-**対応イベント**（PascalCase / camelCase 両対応）:
+**Supported events** (both PascalCase and camelCase):
 
-| イベント | 説明 |
+| Event | Description |
 |---|---|
-| `sessionStart` | セッション開始 |
-| `sessionEnd` | セッション終了 |
-| `userPromptSubmitted` | ユーザー発話直前。v1.0.44 以降は LLM 呼び出しをバイパスして直接レスポンスを返却可能 |
-| `preToolUse` | ツール実行前。`permissionDecision: allow\|deny\|ask` を返せる |
-| `postToolUse` | ツール実行後 |
-| `postToolUseFailure` | ツールエラー発生時（v1.0.15 追加） |
-| `permissionRequest` | スクリプトから programmatic に承認可能（v1.0.16 追加） |
-| `preMcpToolCall` | 送信する MCP リクエストの metadata を制御（v1.0.51 追加） |
-| `subagentStart` | subagent spawn 時（v1.0.7 追加） |
-| `agentStop` / `subagentStop` | エージェント終了制御（v1.0.22 追加） |
-| `preCompact` | コンテキスト圧縮直前（v1.0.5 追加） |
-| `notification` | 非同期通知（v1.0.18 追加） |
-| `errorOccurred` | エラー発生時（汎用） |
+| `sessionStart` | Session start |
+| `sessionEnd` | Session end |
+| `userPromptSubmitted` | Right before a user utterance. As of v1.0.44 can bypass the LLM call and return a response directly |
+| `preToolUse` | Before tool execution. Can return `permissionDecision: allow\|deny\|ask` |
+| `postToolUse` | After tool execution |
+| `postToolUseFailure` | When a tool error occurs (added v1.0.15) |
+| `permissionRequest` | Allows programmatic approval from a script (added v1.0.16) |
+| `preMcpToolCall` | Controls metadata of the outgoing MCP request (added v1.0.51) |
+| `subagentStart` | On subagent spawn (added v1.0.7) |
+| `agentStop` / `subagentStop` | Controls agent termination (added v1.0.22) |
+| `preCompact` | Right before context compaction (added v1.0.5) |
+| `notification` | Async notification (added v1.0.18) |
+| `errorOccurred` | On error (generic) |
 
 ```json
 {
@@ -225,11 +225,11 @@ copilot --agent db-specialist --prompt "..."      # CLI フラグ
 }
 ```
 
-`bash` / `powershell` キー両方対応。`timeoutSec` デフォルト 30 秒。
+Both `bash` / `powershell` keys are supported. `timeoutSec` defaults to 30 seconds.
 
-## プラグイン
+## Plugins
 
-`plugin.json` を root に置いてエージェント・スキル・フック・MCP・LSP を束ねて配布。
+Place a `plugin.json` at the root to bundle and distribute agents, skills, hooks, MCP, and LSP together.
 
 ```text
 my-plugin/
@@ -241,28 +241,28 @@ my-plugin/
 └── lsp.json
 ```
 
-**インストール**:
+**Installation**:
 
 ```bash
-/plugin install owner/repo        # GitHub リポジトリ
-copilot plugin install ./path     # ローカル
+/plugin install owner/repo        # GitHub repository
+copilot plugin install ./path     # local
 ```
 
-## エージェント統合
+## Agent integration
 
-### 指示ファイル
+### Instruction files
 
-読み込み対象:
+Files that are loaded:
 
-- **個人グローバル**: `~/.copilot/copilot-instructions.md` — 全プロジェクトに適用
-- **プロジェクト**: `AGENTS.md` — リポジトリルート / CWD / `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` 環境変数（カンマ区切り）で指定したディレクトリ
-- **追加**: `.github/instructions/**/*.instructions.md` — `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` 配下も含めて自動読み込み
+- **Personal global**: `~/.copilot/copilot-instructions.md` — applies to all projects
+- **Project**: `AGENTS.md` — repository root / CWD / directories specified via the `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` env var (comma-separated)
+- **Additional**: `.github/instructions/**/*.instructions.md` — auto-loaded, including under `COPILOT_CUSTOM_INSTRUCTIONS_DIRS`
 
-これらは Copilot CLI が自動で読み込む。
+These are automatically loaded by Copilot CLI.
 
-### MCP サーバー登録
+### Registering MCP servers
 
-`~/.copilot/mcp-config.json`（グローバル）に追加:
+Add to `~/.copilot/mcp-config.json` (global):
 
 ```json
 {
@@ -275,26 +275,26 @@ copilot plugin install ./path     # ローカル
 }
 ```
 
-CLI フラグで一時的に追加することも可能:
+It can also be added temporarily via a CLI flag:
 
 ```bash
 copilot --additional-mcp-config @/path/to/config.json
 ```
 
-## 料金プラン
+## Pricing plans
 
-すべての GitHub Copilot プランで利用可能:
+Available on all GitHub Copilot plans:
 
-- Free（基本機能）
+- Free (basic features)
 - Pro / Pro+
 - Business / Enterprise
 
-## 制限事項
+## Limitations
 
-- GitHub アカウントが必須
-- GHES（GitHub Enterprise Server）利用時は `GH_HOST` の設定が必要
+- A GitHub account is required
+- When using GHES (GitHub Enterprise Server), `GH_HOST` must be configured
 
-## システム要件
+## System requirements
 
 - macOS, Linux, Windows
-- GitHub アカウント + Copilot プラン
+- GitHub account + Copilot plan

@@ -5,19 +5,19 @@ tags: [test, javascript, typescript]
 
 # Vitest
 
-Vite ネイティブの高速テストランナー。Jest 互換の API で ESM・TypeScript・JSX をネイティブに扱える。HMR ベースの watch モードが特徴。
+A Vite-native, fast test runner. Handles ESM, TypeScript, and JSX natively with a Jest-compatible API. Notable for its HMR-based watch mode.
 
-公式: [vitest.dev](https://vitest.dev/)
+Official: [vitest.dev](https://vitest.dev/)
 
-## インストール
+## Installation
 
 ```bash
 pnpm add -D vitest
 ```
 
-Vite を使っていないプロジェクトでも単独で動く（内部で esbuild 経由）。
+Works standalone even in projects that don't use Vite (via esbuild internally).
 
-## 最小セットアップ
+## Minimal setup
 
 `package.json`:
 
@@ -34,11 +34,11 @@ Vite を使っていないプロジェクトでも単独で動く（内部で es
 }
 ```
 
-- `vitest` のみ（引数なし）は watch モード
-- `vitest run` で 1 回実行（CI 用）
-- `vitest --coverage` でカバレッジ（別途 `@vitest/coverage-v8` または `@vitest/coverage-istanbul` が必要）
+- `vitest` alone (no arguments) runs watch mode
+- `vitest run` runs once (for CI)
+- `vitest --coverage` enables coverage (requires `@vitest/coverage-v8` or `@vitest/coverage-istanbul` separately)
 
-## 最小テスト
+## Minimal test
 
 ```ts
 import { describe, it, expect } from "vitest";
@@ -50,26 +50,26 @@ describe("add", () => {
 });
 ```
 
-`import ... from "vitest"` で必要な API を取る（Jest と違いグローバル注入はデフォルト無効）。
+Get the APIs you need via `import ... from "vitest"` (unlike Jest, global injection is disabled by default).
 
-## 主要 API
+## Key APIs
 
-| API | 用途 |
+| API | Purpose |
 |---|---|
-| `describe(name, fn)` | テストグループ |
-| `it` / `test` | 個別ケース |
-| `expect(actual).toBe(x)` | 厳密等価 |
-| `expect(actual).toEqual(x)` | 構造等価 |
-| `expect.soft(...)` | 失敗しても後続テスト継続 |
-| `beforeAll` / `afterAll` / `beforeEach` / `afterEach` | フック |
-| `vi.mock(module, factory?)` | モジュールモック |
-| `vi.fn()` / `vi.spyOn()` | 関数モック |
-| `vi.useFakeTimers()` | タイマー制御 |
-| `it.skip` / `it.only` / `it.todo` | 選択的実行 |
-| `it.concurrent` | ファイル内並列 |
-| `it.each` | パラメータ化 |
+| `describe(name, fn)` | Test group |
+| `it` / `test` | Individual case |
+| `expect(actual).toBe(x)` | Strict equality |
+| `expect(actual).toEqual(x)` | Structural equality |
+| `expect.soft(...)` | Continue subsequent tests even on failure |
+| `beforeAll` / `afterAll` / `beforeEach` / `afterEach` | Hooks |
+| `vi.mock(module, factory?)` | Module mocking |
+| `vi.fn()` / `vi.spyOn()` | Function mocking |
+| `vi.useFakeTimers()` | Timer control |
+| `it.skip` / `it.only` / `it.todo` | Selective execution |
+| `it.concurrent` | Parallel within a file |
+| `it.each` | Parameterization |
 
-## 設定 `vitest.config.ts`
+## Configuration: `vitest.config.ts`
 
 ```ts
 import { defineConfig } from "vitest/config";
@@ -78,7 +78,7 @@ export default defineConfig({
   test: {
     environment: "node",          // "jsdom" | "happy-dom" | "edge-runtime"
     include: ["tests/**/*.test.ts"],
-    globals: false,                // true なら describe/it をグローバルに
+    globals: false,                // if true, exposes describe/it globally
     setupFiles: ["./tests/setup.ts"],
     coverage: {
       provider: "v8",
@@ -95,7 +95,7 @@ export default defineConfig({
 });
 ```
 
-Vite 設定と共存する場合は `vite.config.ts` に `test` フィールドを追加してもよい（triple-slash reference を入れる）:
+If coexisting with a Vite config, you can also add a `test` field to `vite.config.ts` (add a triple-slash reference):
 
 ```ts
 /// <reference types="vitest" />
@@ -106,9 +106,9 @@ export default defineConfig({
 });
 ```
 
-## モック
+## Mocking
 
-### モジュールモック
+### Module mocking
 
 ```ts
 import { vi } from "vitest";
@@ -117,14 +117,14 @@ vi.mock("./fs", () => ({
   readFile: vi.fn(() => Promise.resolve("mocked")),
 }));
 
-// 部分モック
+// Partial mock
 vi.mock("./fs", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./fs")>()),
   readFile: vi.fn(),
 }));
 ```
 
-### 関数モック
+### Function mocking
 
 ```ts
 const fn = vi.fn((x: number) => x * 2);
@@ -133,7 +133,7 @@ expect(fn).toHaveBeenCalledWith(3);
 expect(fn).toHaveReturnedWith(6);
 ```
 
-### タイマー
+### Timers
 
 ```ts
 vi.useFakeTimers();
@@ -143,16 +143,16 @@ expect(cb).toHaveBeenCalled();
 vi.useRealTimers();
 ```
 
-## スナップショット
+## Snapshots
 
 ```ts
 expect(obj).toMatchSnapshot();
 expect(obj).toMatchInlineSnapshot(`{ "foo": "bar" }`);
 ```
 
-更新: `vitest -u` または `vitest --update`。
+To update: `vitest -u` or `vitest --update`.
 
-## Jest からの移行
+## Migrating from Jest
 
 | Jest | Vitest |
 |---|---|
@@ -160,12 +160,12 @@ expect(obj).toMatchInlineSnapshot(`{ "foo": "bar" }`);
 | `jest.mock()` | `vi.mock()` |
 | `jest.spyOn()` | `vi.spyOn()` |
 | `jest.useFakeTimers()` | `vi.useFakeTimers()` |
-| `--watch` | デフォルトで watch |
-| `--runInBand` | `--max-workers=1`（`maxWorkers: 1, isolate: false`） |
+| `--watch` | Watch mode by default |
+| `--runInBand` | `--max-workers=1` (`maxWorkers: 1, isolate: false`) |
 
-`globals: true` を設定すれば `describe` / `it` をインポートなしで使える（Jest の挙動に近い）。
+Setting `globals: true` lets you use `describe` / `it` without importing them (closer to Jest's behavior).
 
-## ベンチマーク
+## Benchmarking
 
 ```ts
 import { bench, describe } from "vitest";
@@ -177,49 +177,49 @@ describe("sort", () => {
 });
 ```
 
-`vitest bench` で実行。
+Run with `vitest bench`.
 
-## コマンドラインフラグ
+## Command-line flags
 
-| フラグ | 用途 |
+| Flag | Purpose |
 |---|---|
-| `--run` | watch なしで 1 回実行 |
-| `--reporter=verbose` | 詳細レポート |
-| `-t "<pattern>"` | テスト名フィルタ |
-| `--coverage` | カバレッジ有効化 |
-| `--pool=threads` / `--pool=forks` | 並列実行モード |
-| `--bail=1` | 最初の失敗で停止 |
-| `--browser` | ブラウザ環境でテスト |
+| `--run` | Run once without watch |
+| `--reporter=verbose` | Verbose report |
+| `-t "<pattern>"` | Filter by test name |
+| `--coverage` | Enable coverage |
+| `--pool=threads` / `--pool=forks` | Parallel execution mode |
+| `--bail=1` | Stop on first failure |
+| `--browser` | Test in a browser environment |
 
-## トラブルシュート
+## Troubleshooting
 
-### ESM / CJS の混在
+### Mixed ESM / CJS
 
-Vitest は ESM がデフォルト。CJS のみのライブラリは `deps.optimizer.web.include` 等で変換対象に入れる。`package.json` に `"type": "module"` がない場合は `.mts` / `.cts` で明示。
+Vitest defaults to ESM. Include CJS-only libraries in the transform target via `deps.optimizer.web.include` etc. If `package.json` lacks `"type": "module"`, be explicit with `.mts` / `.cts`.
 
 ### `ReferenceError: describe is not defined`
 
-`globals: false` がデフォルト（v3/v4）。`import { describe } from "vitest"` を書くか、`test.globals = true` を設定。
+`globals: false` is the default (v3/v4). Either write `import { describe } from "vitest"` or set `test.globals = true`.
 
-### `vi.mock` が効かない
+### `vi.mock` has no effect
 
-`vi.mock` は**ファイル先頭にホイスト**される。動的に mock する場合は `vi.hoisted(() => ...)` を使う:
+`vi.mock` is **hoisted to the top of the file**. For dynamic mocking, use `vi.hoisted(() => ...)`:
 
 ```ts
 const { mockFn } = vi.hoisted(() => ({ mockFn: vi.fn() }));
 vi.mock("./m", () => ({ f: mockFn }));
 ```
 
-### MCP サーバーのテスト
+### Testing MCP servers
 
-`InMemoryTransport` で in-process 結合テストが書ける（`ai/platform/mcp-typescript-sdk.md` 参照）。Vitest + `@modelcontextprotocol/sdk` の組み合わせが標準。
+`InMemoryTransport` allows writing in-process integration tests (see `ai/platform/mcp-typescript-sdk.md`). Vitest + `@modelcontextprotocol/sdk` is the standard combination.
 
-## Jest / Mocha との比較
+## Comparison with Jest / Mocha
 
-| 観点 | Vitest | Jest | Mocha |
+| Aspect | Vitest | Jest | Mocha |
 |---|---|---|---|
-| ESM 対応 | ネイティブ | 実験的 | 要ツール |
-| TypeScript | ネイティブ | `ts-jest` 必要 | `ts-node` 必要 |
-| watch 速度 | 速い（HMR） | 普通 | 要 nodemon |
-| 並列 | デフォルト | デフォルト | 要設定 |
-| API 互換性 | Jest 互換 | — | 独自 |
+| ESM support | Native | Experimental | Requires tooling |
+| TypeScript | Native | Requires `ts-jest` | Requires `ts-node` |
+| Watch speed | Fast (HMR) | Normal | Requires nodemon |
+| Parallelism | Default | Default | Requires configuration |
+| API compatibility | Jest-compatible | — | Own API |

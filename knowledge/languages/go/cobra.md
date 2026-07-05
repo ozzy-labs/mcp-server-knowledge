@@ -5,37 +5,37 @@ tags: [go, cli, framework]
 
 # Cobra
 
-Go で本格的な CLI を構築するためのデファクト・スタンダードなライブラリ。`APPNAME VERB NOUN --ADJECTIVE`（例: `kubectl get pods --namespace=default`）パターンに従い、サブコマンド階層・POSIX 準拠フラグ・自動 help 生成・シェル補完を備える。
+The de facto standard library for building full-featured CLIs in Go. Follows the `APPNAME VERB NOUN --ADJECTIVE` pattern (e.g. `kubectl get pods --namespace=default`), with subcommand hierarchies, POSIX-compliant flags, automatic help generation, and shell completion.
 
-公式: [GitHub](https://github.com/spf13/cobra) / [User Guide](https://github.com/spf13/cobra/blob/main/site/content/user_guide.md)
+Official: [GitHub](https://github.com/spf13/cobra) / [User Guide](https://github.com/spf13/cobra/blob/main/site/content/user_guide.md)
 
-採用プロジェクト: kubectl / Kubernetes、GitHub CLI（`gh`）、Hugo、Helm、Istio、etcd、GoReleaser、Moby/Docker（distribution）等。
+Projects using it: kubectl / Kubernetes, GitHub CLI (`gh`), Hugo, Helm, Istio, etcd, GoReleaser, Moby/Docker (distribution), etc.
 
-最新は **cobra v1.10.2**（2024-12）/ **cobra-cli v1.3.0**。cobra-cli は更新ペースが緩いが、生成されるコードは最新 cobra と互換。
+Latest: **cobra v1.10.2** (2024-12) / **cobra-cli v1.3.0**. cobra-cli releases less frequently, but generated code stays compatible with the latest cobra.
 
-## インストール
+## Installation
 
 ```bash
-# ライブラリ
+# Library
 go get -u github.com/spf13/cobra@latest
 
-# scaffolding ジェネレータ
+# Scaffolding generator
 go install github.com/spf13/cobra-cli@latest
 ```
 
-`cobra-cli` は `$GOPATH/bin` に入る。
+`cobra-cli` is installed under `$GOPATH/bin`.
 
-## スキャフォールド
+## Scaffolding
 
 ```bash
 mkdir myapp && cd myapp
 go mod init github.com/me/myapp
-cobra-cli init                           # root + main.go 生成
-cobra-cli add serve                      # サブコマンド追加
-cobra-cli add config -p serveCmd         # 親コマンド指定でネスト
+cobra-cli init                           # generate root + main.go
+cobra-cli add serve                      # add subcommand
+cobra-cli add config -p serveCmd         # nest under a specified parent command
 ```
 
-生成構造:
+Generated structure:
 
 ```text
 myapp/
@@ -47,11 +47,11 @@ myapp/
 └── go.mod
 ```
 
-主要オプション: `--author`, `--license`（apache / MIT 等）, `--viper`（Viper 自動セットアップ）, `-p <parentCmd>`。
+Key options: `--author`, `--license` (apache / MIT, etc.), `--viper` (auto Viper setup), `-p <parentCmd>`.
 
-`~/.cobra.yaml` で `author` / `license` / `useViper` のデフォルトを設定可能。
+`~/.cobra.yaml` lets you set defaults for `author` / `license` / `useViper`.
 
-## `cobra.Command` の主要フィールド
+## Key `cobra.Command` fields
 
 ```go
 &cobra.Command{
@@ -73,26 +73,26 @@ myapp/
 }
 ```
 
-実行順: `PersistentPreRun` → `PreRun` → `Run` → `PostRun` → `PersistentPostRun`。`*E` 版は `error` を返す。
+Execution order: `PersistentPreRun` → `PreRun` → `Run` → `PostRun` → `PersistentPostRun`. The `*E` variants return an `error`.
 
-## フラグ
+## Flags
 
 ```go
-// ローカル（このコマンドのみ）
+// Local (this command only)
 cmd.Flags().StringVarP(&source, "source", "s", "", "source path")
 cmd.Flags().BoolP("verbose", "v", false, "verbose output")
 cmd.Flags().IntP("port", "p", 8080, "port number")
 cmd.Flags().StringSliceP("tags", "t", nil, "tags")
 
-// Persistent（子コマンドへ伝播）
+// Persistent (propagates to child commands)
 rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file path")
 
-// 繰り返しフラグ
+// Repeatable flags
 cmd.Flags().CountVarP(&verbosity, "verbose", "v", "verbosity (-v, -vv, -vvv)")
 cmd.Flags().StringArrayVarP(&headers, "header", "H", nil, "headers (repeatable)")
 ```
 
-### フラグ制約
+### Flag constraints
 
 ```go
 cmd.MarkFlagRequired("output")
@@ -101,25 +101,25 @@ cmd.MarkFlagsMutuallyExclusive("json", "yaml", "xml")
 cmd.MarkFlagsOneRequired("json", "yaml")
 ```
 
-## 引数バリデーション
+## Argument validation
 
-| バリデータ | 意味 |
+| Validator | Meaning |
 |---|---|
-| `cobra.NoArgs` | 引数禁止 |
-| `cobra.ArbitraryArgs` | 任意（既定） |
-| `cobra.MinimumNArgs(n)` / `MaximumNArgs(n)` | 最小/最大 |
-| `cobra.ExactArgs(n)` | 完全一致 |
-| `cobra.RangeArgs(min, max)` | 範囲 |
-| `cobra.OnlyValidArgs` | `ValidArgs` の値のみ許可 |
-| `cobra.MatchAll(...)` | 複数バリデータの合成 |
+| `cobra.NoArgs` | No arguments allowed |
+| `cobra.ArbitraryArgs` | Any (default) |
+| `cobra.MinimumNArgs(n)` / `MaximumNArgs(n)` | Minimum/maximum |
+| `cobra.ExactArgs(n)` | Exact match |
+| `cobra.RangeArgs(min, max)` | Range |
+| `cobra.OnlyValidArgs` | Only values in `ValidArgs` allowed |
+| `cobra.MatchAll(...)` | Compose multiple validators |
 
 ```go
 Args: cobra.MatchAll(cobra.MinimumNArgs(1), cobra.OnlyValidArgs),
 ```
 
-## シェル補完
+## Shell completion
 
-`completion` サブコマンドが**自動で生やされる**:
+A `completion` subcommand is **automatically generated**:
 
 ```bash
 myapp completion bash > /etc/bash_completion.d/myapp
@@ -128,7 +128,7 @@ myapp completion fish > ~/.config/fish/completions/myapp.fish
 myapp completion powershell > myapp.ps1
 ```
 
-### 動的補完
+### Dynamic completion
 
 ```go
 cmd.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
@@ -142,20 +142,20 @@ cmd.RegisterFlagCompletionFunc("namespace", func(cmd *cobra.Command, args []stri
 
 ### `ShellCompDirective`
 
-| 定数 | 意味 |
+| Constant | Meaning |
 |---|---|
-| `ShellCompDirectiveDefault` | シェル既定（ファイル補完含む） |
-| `ShellCompDirectiveNoFileComp` | ファイル補完無効 |
-| `ShellCompDirectiveNoSpace` | 補完後にスペース付加しない |
-| `ShellCompDirectiveFilterFileExt` | 拡張子フィルタ |
-| `ShellCompDirectiveFilterDirs` | ディレクトリのみ |
-| `ShellCompDirectiveKeepOrder` | 順序保持 |
+| `ShellCompDirectiveDefault` | Shell default (includes file completion) |
+| `ShellCompDirectiveNoFileComp` | Disable file completion |
+| `ShellCompDirectiveNoSpace` | Don't append a space after completion |
+| `ShellCompDirectiveFilterFileExt` | Filter by file extension |
+| `ShellCompDirectiveFilterDirs` | Directories only |
+| `ShellCompDirectiveKeepOrder` | Preserve order |
 
-ビット OR で組み合わせ可。デバッグは `cobra.CompDebug()` / `cobra.CompError()`（stdout は補完スクリプトに解釈されるため使用不可）。
+Can be combined with bitwise OR. For debugging use `cobra.CompDebug()` / `cobra.CompError()` (stdout cannot be used since it's interpreted by the completion script).
 
-v1.9+ で `CompletionFunc` 型 / `CompletionWithDesc` ヘルパーが追加され、補完候補に説明文を付加できる。
+v1.9+ adds the `CompletionFunc` type / `CompletionWithDesc` helper, letting completion candidates include descriptions.
 
-## ヘルプ・バージョン
+## Help / version
 
 ```go
 rootCmd.Version = "1.2.3"
@@ -164,11 +164,11 @@ rootCmd.SetHelpTemplate(...)
 rootCmd.SetUsageTemplate(...)
 ```
 
-`Version` を設定すると `--version` フラグが自動追加される。`--help` / `-h` は常に自動。
+Setting `Version` automatically adds a `--version` flag. `--help` / `-h` is always automatic.
 
-## Viper 統合
+## Viper integration
 
-設定ファイル + 環境変数 + フラグの優先順位を統合する。優先順位（高 → 低）: 明示フラグ > 環境変数 > 設定ファイル > Viper デフォルト。
+Unifies precedence across config file + environment variables + flags. Precedence (high → low): explicit flag > environment variable > config file > Viper default.
 
 ```go
 func init() {
@@ -195,13 +195,13 @@ func initConfig() {
 }
 ```
 
-## エラーハンドリング
+## Error handling
 
 ```go
 var rootCmd = &cobra.Command{
     Use:           "myapp",
-    SilenceUsage:  true,   // error 時に Usage を出さない
-    SilenceErrors: true,   // error の自動出力を抑制（自分で扱う）
+    SilenceUsage:  true,   // don't print Usage on error
+    SilenceErrors: true,   // suppress automatic error output (handle it yourself)
     RunE: func(cmd *cobra.Command, args []string) error {
         if err := doWork(); err != nil {
             return fmt.Errorf("work failed: %w", err)
@@ -213,25 +213,25 @@ var rootCmd = &cobra.Command{
 func main() { cobra.CheckErr(rootCmd.Execute()) }
 ```
 
-`cobra.CheckErr(err)` は err が nil 以外なら `"Error: ..."` を stderr に出して `os.Exit(1)`。
+If `err` is non-nil, `cobra.CheckErr(err)` prints `"Error: ..."` to stderr and calls `os.Exit(1)`.
 
-## アーキテクチャパターン
+## Architecture patterns
 
-### 推奨レイアウト
+### Recommended layout
 
 ```text
 myapp/
-├── cmd/                # Cobra コマンド定義
+├── cmd/                # Cobra command definitions
 │   ├── root.go
 │   └── serve.go
-├── internal/           # ドメインロジック（Cobra に依存しない）
+├── internal/           # Domain logic (no Cobra dependency)
 │   ├── server/
 │   └── config/
-├── main.go             # cmd.Execute() を呼ぶだけ
+├── main.go             # Just calls cmd.Execute()
 └── go.mod
 ```
 
-### DI パターン
+### DI pattern
 
 ```go
 func NewRootCmd(deps Deps) *cobra.Command {
@@ -241,7 +241,7 @@ func NewRootCmd(deps Deps) *cobra.Command {
 }
 ```
 
-### テストパターン
+### Testing pattern
 
 ```go
 func TestServeCmd(t *testing.T) {
@@ -257,19 +257,19 @@ func TestServeCmd(t *testing.T) {
 }
 ```
 
-> **重要**: `SetOut` / `SetErr` は **Cobra の `cmd.Print*` 系**にのみ反映される。`fmt.Println` は直接 stdout に流れて捕捉できないため、ハンドラ内では `cmd.OutOrStdout()` / `cmd.ErrOrStderr()` または `fmt.Fprintln(cmd.OutOrStdout(), ...)` を使う。
+> **Important**: `SetOut` / `SetErr` only apply to **Cobra's `cmd.Print*` family**. `fmt.Println` writes directly to stdout and cannot be captured, so within handlers use `cmd.OutOrStdout()` / `cmd.ErrOrStderr()` or `fmt.Fprintln(cmd.OutOrStdout(), ...)`.
 
-## AI エージェントがよくやるミス
+## Common mistakes made by AI agents
 
-1. **`Run` の中で `fmt.Println` を直書き** — テスト時に `SetOut` で捕捉できない。`cmd.Println(...)` または `fmt.Fprintln(cmd.OutOrStdout(), ...)` を使う
-2. **エラーを `Run` 内で `os.Exit` する** — テスト不能。`RunE` で error を返し、`main` 側で `cobra.CheckErr` する
-3. **`SilenceUsage` / `SilenceErrors` 未設定** — エラー時にやたら長い Usage が出る。CLI ツールでは両方 `true` が定石
-4. **Persistent と Local フラグの混同** — 子に伝えたいフラグは `PersistentFlags()`、当該コマンドのみなら `Flags()`
-5. **Viper を使うなら `BindPFlag` が必要** — `viper.GetString(...)` だけでは PFlag の値を読めない
-6. **`MarkFlagRequired` の呼び忘れ** — `Flag` を定義してから `MarkFlagRequired` を呼ぶ順序。`init()` 内で実行
-7. **シェル補完を `ValidArgs` 静的指定で済ませる** — 動的（リソース一覧等）は `ValidArgsFunction`、フラグ値は `RegisterFlagCompletionFunc` を使う
+1. **Writing `fmt.Println` directly inside `Run`** — cannot be captured by `SetOut` during tests. Use `cmd.Println(...)` or `fmt.Fprintln(cmd.OutOrStdout(), ...)`
+2. **Calling `os.Exit` inside `Run` on error** — makes it untestable. Return the error from `RunE` and call `cobra.CheckErr` in `main`
+3. **Not setting `SilenceUsage` / `SilenceErrors`** — produces an overly long Usage dump on error. For CLI tools, setting both to `true` is the standard practice
+4. **Confusing Persistent and Local flags** — use `PersistentFlags()` for flags that should propagate to children, `Flags()` for flags scoped to the current command only
+5. **Using Viper without `BindPFlag`** — `viper.GetString(...)` alone won't read the PFlag's value
+6. **Forgetting to call `MarkFlagRequired`** — the flag must be defined before calling `MarkFlagRequired`. Do this inside `init()`
+7. **Relying on a static `ValidArgs` list for shell completion** — use `ValidArgsFunction` for dynamic values (e.g. a resource list) and `RegisterFlagCompletionFunc` for flag values
 
-## 参考
+## References
 
 - [User Guide](https://github.com/spf13/cobra/blob/main/site/content/user_guide.md)
 - [Shell Completions](https://github.com/spf13/cobra/blob/main/site/content/completions/_index.md)

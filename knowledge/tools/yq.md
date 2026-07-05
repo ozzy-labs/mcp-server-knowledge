@@ -5,20 +5,20 @@ tags: [data-cli, yaml, go]
 
 # yq
 
-YAML / JSON / TOML / HCL / XML / INI / CSV / TSV / properties を扱うコマンドライン処理ツール。`jq` の YAML 版的な位置付けだが、**実装が 2 つあり挙動が大きく違う**。本記事では事実上の標準である **Mike Farah 版（Go 製、`mikefarah/yq`）** を扱う。`tools/jq.md` の知識を YAML に拡張する。
+A command-line tool for processing YAML / JSON / TOML / HCL / XML / INI / CSV / TSV / properties. It occupies a "`jq` for YAML" niche, but **there are two implementations with substantially different behavior**. This article covers the de facto standard **Mike Farah version (written in Go, `mikefarah/yq`)**. It extends the knowledge in `tools/jq.md` to YAML.
 
-公式: [mikefarah.gitbook.io/yq](https://mikefarah.gitbook.io/yq) / [mikefarah/yq](https://github.com/mikefarah/yq)
+Official: [mikefarah.gitbook.io/yq](https://mikefarah.gitbook.io/yq) / [mikefarah/yq](https://github.com/mikefarah/yq)
 
-## 2 種類の yq に注意
+## Beware of the two yq implementations
 
-| 実装 | 言語 | 特徴 |
+| Implementation | Language | Characteristics |
 |---|---|---|
-| **Mike Farah 版** | Go | バイナリ単体配布。複数フォーマット対応。**現代の標準** |
-| kislyuk 版 | Python | jq のラッパー。`pip install yq` で入る。構文・挙動が異なる |
+| **Mike Farah version** | Go | Distributed as a single binary. Supports multiple formats. **The modern standard** |
+| kislyuk version | Python | A wrapper around jq. Installed via `pip install yq`. Different syntax and behavior |
 
-`yq --version` で `mikefarah/yq` と出るかを確認する。kislyuk 版を期待して書かれた古い資料・スクリプトは Mike Farah 版で動かない。
+Check whether `yq --version` reports `mikefarah/yq`. Old material or scripts written against the kislyuk version won't work with the Mike Farah version.
 
-## インストール
+## Installation
 
 ```bash
 brew install yq
@@ -26,168 +26,168 @@ mise use yq
 sudo snap install yq
 go install github.com/mikefarah/yq/v4@latest
 
-# 公式バイナリ直接
+# Official binary directly
 curl -L https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq
 chmod +x /usr/local/bin/yq
 ```
 
-## 基本構文
+## Basic syntax
 
 ```bash
-# 読み取り
+# Read
 yq '.spec.replicas' deployment.yaml
 yq '.containers[0].image' deployment.yaml
 yq '.metadata.labels.app' deployment.yaml
 
-# パイプで連鎖
+# Chain with pipes
 yq '.spec.template.spec | .containers[].name' deployment.yaml
 
-# 配列の splat
+# Array splat
 yq '.[]' list.yaml
 
-# 条件抽出
+# Conditional extraction
 yq '.[] | select(.status == "active") | .name' list.yaml
 ```
 
-`jq` と同じ dot 記法・パイプ・`select()` が使える。
+The same dot notation, pipes, and `select()` as `jq` work here.
 
-## 書き換え (in-place)
+## Rewriting (in-place)
 
 ```bash
-# 値を代入（リテラル文字列）
+# Assign a value (literal string)
 yq -i '.image = "nginx:1.27"' deployment.yaml
 
-# パイプで更新（既存値を加工）
+# Update via pipe (transform existing value)
 yq -i '.replicas |= . + 1' deployment.yaml
 
-# キー追加
+# Add a key
 yq -i '.metadata.labels.env = "prod"' deployment.yaml
 
-# キー削除
+# Delete a key
 yq -i 'del(.metadata.annotations)' deployment.yaml
 ```
 
-`-i` を**忘れると stdout に出るだけ**でファイルは変わらない。`jq` には in-place 機能がない（一時ファイル経由が必要）ので、yq の強み。
+**Forgetting `-i` just prints to stdout** without changing the file. `jq` has no in-place feature (it requires going through a temp file), so this is a strength of yq.
 
-## eval と eval-all
+## eval and eval-all
 
-| サブコマンド | 用途 |
+| Subcommand | Purpose |
 |---|---|
-| `eval` / `e`（既定） | ファイルを 1 つずつ独立処理 |
-| `eval-all` / `ea` | 全入力を **同時に**読み込み、ドキュメント横断で処理 |
+| `eval` / `e` (default) | Processes files one at a time, independently |
+| `eval-all` / `ea` | Loads all inputs **simultaneously** and processes them across documents |
 
 ```bash
-# 複数ファイルをマージ（後勝ち）
+# Merge multiple files (last wins)
 yq ea '. as $item ireduce ({}; . * $item)' base.yaml override.yaml
 
-# 簡略形（最も使う）
+# Shorthand form (most commonly used)
 yq ea '.[0] * .[1]' base.yaml override.yaml
 
-# 複数ドキュメント YAML（--- 区切り）の全件処理
+# Process all entries in a multi-document YAML (--- separated)
 yq ea '.[].name' multi-doc.yaml
 ```
 
-**複数ドキュメント YAML** で `yq '.'` のように `eval` を使うと **最初のドキュメントしか処理されない**。`ea` を使うか、`-s` で全部出すか、`yq '... | ...' all-docs.yaml` のように工夫する。
+Using `eval` like `yq '.'` on **multi-document YAML** processes **only the first document**. Use `ea` instead, or output everything with `-s`, or work around it with something like `yq '... | ...' all-docs.yaml`.
 
-## 出力フォーマット変換
+## Output format conversion
 
 ```bash
 yq -o=json '.' config.yaml         # YAML → JSON
-yq -o=yaml '.' config.json         # JSON → YAML（jq 代替）
-yq -o=toml '.' config.yaml         # TOML（v4.52+ で双方向対応）
+yq -o=yaml '.' config.json         # JSON → YAML (jq alternative)
+yq -o=toml '.' config.yaml         # TOML (bidirectional support from v4.52+)
 yq -o=props '.' config.yaml        # Java properties
 yq -o=xml '.' config.yaml          # XML
-yq -o=csv '.[]' list.yaml          # CSV（配列のみ）
+yq -o=csv '.[]' list.yaml          # CSV (arrays only)
 yq -o=tsv '.[]' list.yaml          # TSV
 yq -p=toml -o=yaml '.' config.toml # TOML → YAML
-yq -p=xml -o=yaml '.' config.xml   # XML → YAML（-p で入力指定）
+yq -p=xml -o=yaml '.' config.xml   # XML → YAML (specify input with -p)
 ```
 
-`-p` で入力フォーマット、`-o` で出力フォーマットを切替。bash スクリプト内で `--output-format json | jq` の連鎖が定石。
+`-p` switches the input format, `-o` the output format. Chaining `--output-format json | jq` inside bash scripts is a standard pattern.
 
-## 環境変数の注入
+## Injecting environment variables
 
 ```bash
 export IMAGE=nginx:1.27
 yq -i '.image = strenv(IMAGE)' deployment.yaml
 
-# 数値や bool を保持したい場合
+# When you want to preserve numbers or booleans
 export REPLICAS=3
 yq -i '.replicas = env(REPLICAS)' deployment.yaml
 ```
 
-| 関数 | 戻り値 |
+| Function | Return value |
 |---|---|
-| `strenv(VAR)` | 文字列として |
-| `env(VAR)` | 型推論あり（数値 / bool は変換） |
+| `strenv(VAR)` | As a string |
+| `env(VAR)` | With type inference (numbers / bools are converted) |
 
-シークレットを引数に直接書くのは履歴に残るので、必ず env 経由にする。
+Writing secrets directly as arguments leaves them in shell history, so always go through env variables.
 
-## マージ操作
+## Merge operations
 
 ```bash
-# シャローマージ（後勝ち）
+# Shallow merge (last wins)
 yq ea '.[0] * .[1]' base.yaml override.yaml
 
-# 深いマージ
+# Deep merge
 yq ea '.[0] *d .[1]' base.yaml override.yaml
 
-# 配列を結合（既定は上書き）
+# Concatenate arrays (default is to overwrite)
 yq ea '.[0] *+ .[1]' base.yaml override.yaml
 ```
 
-`*` の修飾子:
+`*` modifiers:
 
-| 記号 | 効果 |
+| Symbol | Effect |
 |---|---|
-| `*` | シャローマージ |
-| `*d` | 再帰的（deep）マージ |
-| `*+` | 配列を append |
-| `*?` | 衝突時は何もしない |
-| `*n` | null を上書き対象外に |
+| `*` | Shallow merge |
+| `*d` | Recursive (deep) merge |
+| `*+` | Append arrays |
+| `*?` | Do nothing on conflict |
+| `*n` | Exclude nulls from being overwritten |
 
-## 複数ドキュメント YAML の扱い
+## Handling multi-document YAML
 
 ```bash
-# k8s manifest をひとつずつ処理
+# Process k8s manifests one at a time
 yq ea '.[] | select(.kind == "Deployment")' all.yaml
 
-# 別ファイルとして取り出す
+# Extract into separate files
 yq -s '.kind + "-" + .metadata.name' all.yaml
-# → Deployment-web.yml / Service-api.yml ... が生成される
+# → generates Deployment-web.yml / Service-api.yml ...
 ```
 
-`-s` の引数は出力ファイル名のテンプレート（拡張子は自動付与）。
+The argument to `-s` is a template for the output filename (the extension is added automatically).
 
-## CI 連携の典型例
+## Typical CI usage
 
 ```bash
-# kustomize 不要の軽い書き換え
+# Lightweight rewrite without needing kustomize
 yq -i '.image.tag = strenv(IMAGE_TAG)' values.yaml
 helm upgrade --install api ./chart -f values.yaml
 
-# k8s manifest の image を全部書き換え
+# Rewrite the image across all k8s manifests
 yq -i 'select(.kind == "Deployment") | .spec.template.spec.containers[].image |= sub("^old-registry/"; "new-registry/")' all.yaml
 ```
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **kislyuk 版の構文を期待する** — `jq` ラッパー前提の `yq -y .` のような構文は Mike Farah 版では動かない。`yq --version` で実装を確認
-2. **`-i` を忘れて stdout に出るだけ** — ファイル書き換えと思ったら何も変わっていない
-3. **複数ドキュメントを `eval` で処理** — `---` 区切りの全件は `eval-all` (`ea`)
-4. **boolean / null の表現差** — `true` / `yes` / `y` / `on` はすべて bool true として扱われる旧 YAML 1.1 の罠。`!!str` で文字列強制
-5. **コメントが消える** — yq はコメント位置の保存を試みるが、構造変更で外れることがある。重要なコメントは別ファイルで管理
-6. **`strenv` と `env` の混同** — 数値や bool に変換したいなら `env()`、文字列で入れたいなら `strenv()`
-7. **PowerShell でのクオート** — `'.foo.bar'` のシングルクォートが効かないので `--quote='..'` パターンを使う、または bash 経由
-8. **配列の `[]` を範囲外アクセス** — `yq '.list[10]'` は null を返す（エラーにならない）。条件付きアクセスには `select` を併用
+1. **Expecting kislyuk-version syntax** — syntax like `yq -y .` that assumes a jq wrapper doesn't work with the Mike Farah version. Check the implementation with `yq --version`
+2. **Forgetting `-i` and only getting stdout output** — you think you rewrote the file, but nothing changed
+3. **Processing multi-document files with `eval`** — for all entries separated by `---`, use `eval-all` (`ea`)
+4. **Differences in boolean / null representation** — the old YAML 1.1 trap where `true` / `yes` / `y` / `on` are all treated as boolean true. Use `!!str` to force a string
+5. **Comments disappearing** — yq tries to preserve comment positions, but they can get detached when the structure changes. Manage important comments in a separate file
+6. **Confusing `strenv` and `env`** — use `env()` when you want conversion to a number or boolean, and `strenv()` when you want it inserted as a string
+7. **Quoting in PowerShell** — single quotes like `'.foo.bar'` don't work, so use a `--quote='..'` pattern, or go through bash
+8. **Out-of-range access on array `[]`** — `yq '.list[10]'` returns null (it does not error). Combine with `select` for conditional access
 
-## 関連
+## Related
 
-- [`tools/jq.md`](jq.md) — JSON 用の同思想ツール。yq の出力を jq に流すパターン頻出
-- [`tools/yamlfmt.md`](yamlfmt.md) — フォーマット
-- [`tools/yamllint.md`](yamllint.md) — 静的検証
+- [`tools/jq.md`](jq.md) — a similarly-minded tool for JSON; piping yq output into jq is a common pattern
+- [`tools/yamlfmt.md`](yamlfmt.md) — formatting
+- [`tools/yamllint.md`](yamllint.md) — static validation
 
-## 参考
+## References
 
 - [yq Documentation (Mike Farah)](https://mikefarah.gitbook.io/yq)
 - [mikefarah/yq (GitHub)](https://github.com/mikefarah/yq)

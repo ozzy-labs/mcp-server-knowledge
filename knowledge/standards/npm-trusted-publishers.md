@@ -5,51 +5,51 @@ tags: [release, security, npm, github]
 
 # npm Trusted Publishers (OIDC publishing)
 
-CI から npm レジストリへ **長寿命 secret (`NPM_TOKEN`) を持たずに publish する** 仕組み。CI 側で発行された OIDC token を npm が信頼することで、トークン管理コストとローテーション運用を消す。2024 年に GA。2026-05 時点で対応している CI は **GitHub Actions / GitLab CI/CD / CircleCI**（いずれもクラウドホスト ランナー）。**self-hosted runner は未対応**（将来対応予定）。
+A mechanism to **publish to the npm registry from CI without holding a long-lived secret (`NPM_TOKEN`)**. npm trusts an OIDC token issued on the CI side, eliminating the cost of managing and rotating tokens. GA in 2024. As of 2026-05, supported CI platforms are **GitHub Actions / GitLab CI/CD / CircleCI** (all cloud-hosted runners). **Self-hosted runners are not supported** (planned for the future).
 
-要件 (publisher 別):
+Requirements (by publisher):
 
-| Publisher | 最低バージョン | provenance support |
+| Publisher | Minimum version | Provenance support |
 |---|---|---|
-| `npm publish` | npm CLI **v11.5.1+** / Node.js **v22.14.0+** | v11.5.1+ で `--provenance` |
-| `pnpm publish` (推奨) | pnpm **v9.5+** / Node.js v22.14.0+ | v9.5+ で `--provenance` 正式サポート (v9.0-v9.4 は silent fail のリスクあり、必ず v9.5 以上に固定すること) |
-| `yarn npm publish` | yarn berry **v4.0+** / Node.js v22.14.0+ | v4.0+ で `--provenance` |
+| `npm publish` | npm CLI **v11.5.1+** / Node.js **v22.14.0+** | `--provenance` from v11.5.1+ |
+| `pnpm publish` (recommended) | pnpm **v9.5+** / Node.js v22.14.0+ | `--provenance` officially supported from v9.5+ (v9.0-v9.4 carries a silent-fail risk, so always pin to v9.5 or later) |
+| `yarn npm publish` | yarn berry **v4.0+** / Node.js v22.14.0+ | `--provenance` from v4.0+ |
 
-公式: [docs.npmjs.com — Trusted Publishers](https://docs.npmjs.com/trusted-publishers)
+Official: [docs.npmjs.com — Trusted Publishers](https://docs.npmjs.com/trusted-publishers)
 
-## なぜ `NPM_TOKEN` を避けるか
+## Why avoid `NPM_TOKEN`
 
-| 項目 | `NPM_TOKEN` (legacy) | Trusted Publishers (OIDC) |
+| Item | `NPM_TOKEN` (legacy) | Trusted Publishers (OIDC) |
 | --- | --- | --- |
-| 認証方式 | repo secret に長寿命トークン | OIDC token を都度発行 |
-| 漏洩リスク | secret 抽出されると 90 日 ~ 無期限で publish 可 | token は数分で失効 |
-| ローテーション | 定期更新が運用負担 | 不要 |
-| provenance attestation | 別途 OIDC 必要 | 同一フローで自動付与 |
-| 推奨度 | 既存 repo の互換維持のみ | **新規・既存とも推奨** |
+| Auth method | Long-lived token in a repo secret | OIDC token issued per run |
+| Leak risk | If the secret is extracted, publish is possible for 90 days to indefinitely | Token expires within minutes |
+| Rotation | Periodic renewal is an operational burden | Not needed |
+| Provenance attestation | Requires separate OIDC setup | Attached automatically in the same flow |
+| Recommendation level | Only for maintaining compatibility on existing repos | **Recommended for both new and existing projects** |
 
-`NPM_TOKEN` 自体は廃止されていないが、新規プロジェクトで導入する積極的理由は無い。
+`NPM_TOKEN` itself is not deprecated, but there is no strong reason to adopt it for new projects.
 
-## 設定手順 (GitHub Actions)
+## Setup steps (GitHub Actions)
 
-### 1. npmjs.com 側で Trusted Publisher を登録
+### 1. Register a Trusted Publisher on npmjs.com
 
-1. パッケージページ → Settings → Publishing
-2. Add Trusted Publisher → GitHub Actions を選択
-3. 以下を入力:
+1. Package page → Settings → Publishing
+2. Add Trusted Publisher → select GitHub Actions
+3. Enter the following:
    - Organization or User: `your-org`
    - Repository: `my-repo`
    - Workflow filename: `release.yaml`
-   - Environment name (任意): `npm-publish`
+   - Environment name (optional): `npm-publish`
 
-組織 (`@scope/`) の各パッケージごとに設定が必要。scoped package が複数あるなら全部に紐付ける。**1 パッケージにつき設定できる Trusted Publisher は 1 つ**（複数の workflow / repo を同時登録は不可）。
+This must be configured per package for each package in an org (`@scope/`). If there are multiple scoped packages, link all of them. **Only one Trusted Publisher can be configured per package** (you cannot register multiple workflows/repos simultaneously).
 
-### 2. trigger パターンの選び方
+### 2. Choosing a trigger pattern
 
-publish workflow の trigger には大別して 2 パターンある。どちらも妥当で、リポの運用粒度で選ぶ。
+There are broadly two patterns for the publish workflow trigger. Both are valid; choose based on the repo's operational granularity.
 
-#### パターン A: `on: push: tags: ['v*']` (publish 単独 workflow)
+#### Pattern A: `on: push: tags: ['v*']` (standalone publish workflow)
 
-publish job を独立 workflow (`publish.yaml`) に置き、tag push で発火させる。release-please / changesets 等の release ツールは別 workflow (`release-please.yaml`) に分離。
+Place the publish job in its own workflow (`publish.yaml`), triggered by a tag push. Release tools such as release-please / changesets are kept in a separate workflow (`release-please.yaml`).
 
 ```yaml
 # .github/workflows/publish.yaml
@@ -78,12 +78,12 @@ jobs:
       - run: pnpm -r publish --access public --provenance --no-git-checks
 ```
 
-**利点**: publish 単独でリトライ可能 (release-please ジョブを空回りさせない)、手動 `workflow_dispatch` で再 publish しやすい。
-**欠点**: 手動 tag push (`git push origin v1.2.3` 等) でも publish が走るため、release ツール経由でない tag 発行に対する事故余地。
+**Pros**: publish can be retried independently (doesn't re-run the release-please job), easy to re-publish manually via `workflow_dispatch`.
+**Cons**: a manual tag push (e.g. `git push origin v1.2.3`) also triggers publish, leaving room for accidents from tags created outside the release tool.
 
-#### パターン B: `on: push: branches: [main]` + `needs: release-please` (統合 workflow)
+#### Pattern B: `on: push: branches: [main]` + `needs: release-please` (unified workflow)
 
-`release-please` ジョブと `publish` ジョブを同一 workflow (`release.yaml`) に置き、`needs: release-please` + `if: needs.release-please.outputs.release_created` で release-please がリリースを作成したときのみ publish を発火させる。
+Place the `release-please` job and the `publish` job in the same workflow (`release.yaml`), and trigger publish only when release-please has created a release, using `needs: release-please` + `if: needs.release-please.outputs.release_created`.
 
 ```yaml
 # .github/workflows/release.yaml
@@ -96,7 +96,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  id-token: write   # OIDC token を取得するために必須
+  id-token: write   # required to obtain the OIDC token
 
 jobs:
   release-please:
@@ -122,120 +122,120 @@ jobs:
       - run: pnpm -r publish --access public --provenance --no-git-checks
 ```
 
-**利点**: release-please がアトミックにゲートする (手動 tag push では publish しない)、single workflow ファイルで保守容易。
-**欠点**: publish だけのリトライ不可 (再実行すると release-please ジョブも再実行される)。
+**Pros**: release-please atomically gates the flow (a manual tag push will not publish), single workflow file is easier to maintain.
+**Cons**: publish cannot be retried alone (re-running also re-runs the release-please job).
 
-#### どちらを選ぶか
+#### Which to choose
 
-| 重視する観点 | 推奨 |
+| Priority | Recommendation |
 |---|---|
-| publish 単独リトライ (npm 側 transient 失敗の救出) | **A** (tags trigger) |
-| 手動 tag push 事故の防止 / single workflow 保守 | **B** (branches + needs) |
+| Independent publish retry (recovering from transient npm-side failures) | **A** (tags trigger) |
+| Preventing accidental manual tag pushes / single-workflow maintainability | **B** (branches + needs) |
 
-ozzy-labs では **パターン B (統合)** が多数派 (例: `skills` / `create-agentic-app` / `create-agentic-aws` / `starlight-theme`)。リトライ重視のリポは **パターン A (分離)** を選ぶ (例: `feedradar`)。
+Within ozzy-labs, **Pattern B (unified)** is the majority approach (e.g. `skills` / `create-agentic-app` / `create-agentic-aws` / `starlight-theme`). Repos that prioritize retry-ability choose **Pattern A (separated)** (e.g. `feedradar`).
 
-### 3. 必須: `permissions: id-token: write`
+### 3. Required: `permissions: id-token: write`
 
-これが無いと OIDC token が取れず Trusted Publisher が動かない。`actions/checkout` 等で書き込みが必要なら `contents: write` も別途付ける。
+Without this, the OIDC token cannot be obtained and the Trusted Publisher will not work. If write access is also needed for `actions/checkout` etc., add `contents: write` separately.
 
-### 4. `environment:` は **オプション** (条件付き推奨)
+### 4. `environment:` is **optional** (conditionally recommended)
 
-旧版の本 standard は `environment: npm-publish` を無条件で例示していたが、空のまま auto-create された environment で実際に得られるのは限定的:
+An earlier version of this standard unconditionally demonstrated `environment: npm-publish`, but leaving it as an empty auto-created environment provides only limited benefit in practice:
 
-- ✅ OIDC token に `"environment": "npm-publish"` claim が乗る (npm 側 TP 設定で environment を必須化した場合のみ defense-in-depth として機能)
-- ✅ GitHub Deployments タブにエントリ追加 (可視性のみ)
+- ✅ The OIDC token carries an `"environment": "npm-publish"` claim (functions as defense-in-depth only if the npm-side TP config requires an environment)
+- ✅ Adds an entry to the GitHub Deployments tab (visibility only)
 
-つまり **保護ルールを設定しない `environment:` は "OIDC ラベル + UI 装飾" 止まり**。npm 公式も Environment 欄は **optional** と明記している。
+In other words, an `environment:` declared **without protection rules** amounts to nothing more than an "OIDC label + UI decoration." npm's own documentation also states the Environment field is **optional**.
 
-`environment:` を宣言する **正当な理由** は次の 4 つ:
+There are 4 **legitimate reasons** to declare `environment:`:
 
-- (a) **Required reviewers**: publish 前に approval ゲートを挟む (`security-team` チームが approve しないと publish させない、等)
-- (b) **Wait timer**: publish を一定時間遅延させる (緊急 rollback の余地)
-- (c) **Deployment branches/tags 制限**: `main` ブランチや `v*` タグからしか publish できないように strict 制限
-- (d) **Environment-scoped secrets**: publish 専用の secret を environment scope で分離 (TP 経路では secret 不要なので通常使わない)
+- (a) **Required reviewers**: insert an approval gate before publish (e.g. publish is blocked unless the `security-team` team approves)
+- (b) **Wait timer**: delay publish by a fixed amount of time (allowing room for emergency rollback)
+- (c) **Deployment branches/tags restriction**: strictly restrict publish to only run from `main` branch or `v*` tags
+- (d) **Environment-scoped secrets**: isolate secrets dedicated to publish at the environment scope (usually unnecessary since the TP flow needs no secret)
 
-これらのうち 1 つ以上を設定する **意図がある場合のみ** `environment:` を宣言し、対応する保護ルールを npmjs.com 側 TP 設定とセットで構成すること。
+Declare `environment:` **only when you intend** to configure one or more of the above, and pair it with the corresponding protection rule set up on the npmjs.com TP configuration.
 
-**設定しないなら宣言不要**。空 environment の cargo cult 宣言は混乱の元なので避ける。
+**If you're not configuring any of these, don't declare it**. A cargo-culted empty environment declaration only causes confusion, so avoid it.
 
 ```yaml
-# environment を宣言する例 (Required reviewers + tag 制限を併用)
+# Example declaring an environment (combining Required reviewers + tag restriction)
 jobs:
   publish:
     runs-on: ubuntu-latest
-    environment: npm-publish   # GitHub 側で Required reviewers + Tags='v*' を別途設定
-    # npmjs.com 側 TP 設定でも environment='npm-publish' を Required にする
+    environment: npm-publish   # Required reviewers + Tags='v*' configured separately on the GitHub side
+    # Also set environment='npm-publish' as Required in the npmjs.com TP configuration
     steps: ...
 ```
 
-## provenance attestation
+## Provenance attestation
 
-`--provenance` を付けると、npm は publish 時に以下を**改ざん不可な形で記録**:
+Adding `--provenance` causes npm to **immutably record** the following at publish time:
 
-- どの commit から build されたか (`source.commit`)
-- どの workflow run が publish したか (`buildConfig.runId`)
-- build 環境 (runner OS / commit hash)
+- Which commit the build was made from (`source.commit`)
+- Which workflow run performed the publish (`buildConfig.runId`)
+- The build environment (runner OS / commit hash)
 
-ユーザーは `npm view <pkg> dist.attestations` で確認可能。Sigstore + GitHub OIDC の組み合わせで supply chain attack 検知の標準になっている。
+Users can verify this with `npm view <pkg> dist.attestations`. The combination of Sigstore + GitHub OIDC has become the standard for detecting supply chain attacks.
 
-注意点:
+Notes:
 
-- **private repository から publish する場合、パッケージが public でも provenance は付かない**（source link を露出させないため）
-- **CircleCI は provenance 未対応**（OIDC 認証は通るが attestation は発行されない）
-- OIDC 認証が効くのは `npm publish` のみ。`npm token` 等の他コマンドは従来どおりトークン認証が必要
+- **When publishing from a private repository, provenance is not attached even if the package is public** (to avoid exposing the source link)
+- **CircleCI does not support provenance** (OIDC authentication succeeds, but no attestation is issued)
+- OIDC authentication only applies to `npm publish`. Other commands such as `npm token` still require traditional token authentication
 
-## pnpm / yarn での publish
+## Publishing with pnpm / yarn
 
-冒頭の「要件」表を参照。バージョン pin が重要 (pnpm v9.0-v9.4 では `--provenance` が silent fail するリスクあり)。`actions/setup-node@v5` で Node を指定し、`actions/setup-node` の `pnpm-version` input または事前 `corepack enable && corepack prepare pnpm@9.5.0 --activate` で pnpm バージョンも明示する。
+See the "Requirements" table at the top. Version pinning matters (pnpm v9.0-v9.4 carries a risk of `--provenance` silently failing). Specify the Node version with `actions/setup-node@v5`, and also pin the pnpm version explicitly via the `pnpm-version` input of `actions/setup-node` or with `corepack enable && corepack prepare pnpm@9.5.0 --activate` beforehand.
 
-## monorepo / org 運用
+## Monorepo / org operations
 
-### 1 monorepo / 複数 scoped package
+### One monorepo / multiple scoped packages
 
-`pnpm -r publish` は monorepo 内の全 publishable workspaces を一斉に publish するが、Trusted Publishers の設定は **パッケージ単位** で必要。例えば `@scope/foo` と `@scope/bar` を同一 repo で publish するなら、npmjs.com の Settings → Publishing で **両パッケージそれぞれに同じ TP 設定 (org/repo/workflow filename)** を登録する。
+`pnpm -r publish` publishes all publishable workspaces in a monorepo at once, but the Trusted Publishers configuration is required **per package**. For example, to publish `@scope/foo` and `@scope/bar` from the same repo, register **the same TP configuration (org/repo/workflow filename) for both packages** under Settings → Publishing on npmjs.com.
 
-新規 package を monorepo に追加するときは:
+When adding a new package to the monorepo:
 
-1. npmjs.com で対象 package の Settings → Publishing → Add Trusted Publisher
-2. Organization / Repository / Workflow filename を既存 package と同じ値で登録
-3. (任意) `environment:` を運用する場合は同じ environment 名で登録
-4. 初回 publish 前に `pnpm -r publish --dry-run --access public --provenance` で動作確認
+1. On npmjs.com, go to Settings → Publishing → Add Trusted Publisher for the target package
+2. Register the same values for Organization / Repository / Workflow filename as the existing package
+3. (Optional) if using `environment:`, register with the same environment name
+4. Before the first publish, verify with `pnpm -r publish --dry-run --access public --provenance`
 
-### ozzy-labs 運用 (新規 scoped package 追加チェックリスト)
+### ozzy-labs operations (checklist for adding a new scoped package)
 
-ozzy-labs 配下の新規 `@ozzylabs/*` package を立ち上げるときの順序:
+Order of operations when launching a new `@ozzylabs/*` package under ozzy-labs:
 
-- [ ] **ADR / handbook で公開判断**: そもそも npm publish する必要があるか (内部運用なら publish 不要、`pnpm` workspace 内のみで参照する手もある)
-- [ ] **npmjs.com で package を予約 / scope 登録**: `@ozzylabs/<name>` が既に存在しないか確認 (org 全体 settings → Members に publish 権限を確認)
-- [ ] **npmjs.com で Trusted Publisher 登録**:
+- [ ] **Decide publication in the ADR / handbook**: does it actually need to be published to npm in the first place (if it's for internal use only, publishing may be unnecessary; referencing it only within the `pnpm` workspace is an alternative)
+- [ ] **Reserve the package / register the scope on npmjs.com**: confirm `@ozzylabs/<name>` doesn't already exist (check publish permissions under org-wide settings → Members)
+- [ ] **Register the Trusted Publisher on npmjs.com**:
   - Organization: `ozzy-labs`
   - Repository: `ozzy-labs/<repo-name>`
-  - Workflow filename: 既存パッケージと同じ (`release.yaml` または `publish.yaml`)
-  - Environment: 既存パッケージと同じ運用 (なし、または `npm-publish`)
-- [ ] **workflow 配置**: 既存パッケージの release/publish workflow をテンプレートとして配置 (パターン A か B を選ぶ)
-- [ ] **dry-run 確認**: 初回 publish 前に `--dry-run` で動作確認
-- [ ] **release-please 連携**: `release-please-config.json` / `.release-please-manifest.json` に新 package を登録 (monorepo の場合)
-- [ ] **package.json `publishConfig`**: `{ "access": "public", "provenance": true, "registry": "https://registry.npmjs.org/" }` を設定
-- [ ] **handbook / README へ追記**: 新 package の存在を ozzy-labs index に反映
+  - Workflow filename: same as existing packages (`release.yaml` or `publish.yaml`)
+  - Environment: same operational choice as existing packages (none, or `npm-publish`)
+- [ ] **Place the workflow**: use an existing package's release/publish workflow as a template (choose Pattern A or B)
+- [ ] **Verify with a dry-run**: confirm it works with `--dry-run` before the first publish
+- [ ] **release-please integration**: register the new package in `release-please-config.json` / `.release-please-manifest.json` (for monorepos)
+- [ ] **`package.json` `publishConfig`**: set `{ "access": "public", "provenance": true, "registry": "https://registry.npmjs.org/" }`
+- [ ] **Update handbook / README**: reflect the new package's existence in the ozzy-labs index
 
-### org 全体での publisher 経路統一
+### Standardizing the publisher path org-wide
 
-ozzy-labs は **pnpm 採用が多数派** (`feedradar` / `create-agentic-app` / `create-agentic-aws` / `skills` / `starlight-theme` 等)。新規パッケージは原則 `pnpm publish --provenance --access public` を使う。`npm publish` は legacy 経路で、新規導入は避ける (npm CLI 経路は `npm install -g npm@latest` の前段が必要で workflow が複雑化する)。
+Within ozzy-labs, **pnpm adoption is the majority** (`feedradar` / `create-agentic-app` / `create-agentic-aws` / `skills` / `starlight-theme`, etc.). New packages should use `pnpm publish --provenance --access public` as the default. `npm publish` is the legacy path and should be avoided for new adoption (the npm CLI path requires an `npm install -g npm@latest` step beforehand, complicating the workflow).
 
-## 既存 `NPM_TOKEN` プロジェクトの移行
+## Migrating an existing `NPM_TOKEN` project
 
-1. npmjs.com で Trusted Publisher を登録 (上記手順 1)
-2. workflow YAML を更新 — `permissions: id-token: write` を追加
-3. `npm publish` の `--//registry.npmjs.org/:_authToken=${NPM_TOKEN}` 系の認証行を削除 (setup-node が registry-url で URL を設定すれば不要)
-4. 1 回 dry-run で動作確認 (`--dry-run`)
-5. `NPM_TOKEN` を repo secret から削除
-6. organization 全体 secret から外す場合は監査時間を取って慎重に
+1. Register a Trusted Publisher on npmjs.com (step 1 above)
+2. Update the workflow YAML — add `permissions: id-token: write`
+3. Remove auth lines such as `npm publish`'s `--//registry.npmjs.org/:_authToken=${NPM_TOKEN}` (unnecessary once setup-node sets the URL via registry-url)
+4. Verify with a single dry-run (`--dry-run`)
+5. Remove `NPM_TOKEN` from the repo secret
+6. If removing it from an org-wide secret, take time for a careful audit
 
-最初の publish 時に「Trusted Publisher の設定が見つからない」エラーが出たら、npmjs.com の設定とワークフローパスが一致していない (workflow filename / environment name のタイポが多い)。
+If the first publish produces a "Trusted Publisher configuration not found" error, the npmjs.com configuration and the workflow path don't match (a typo in workflow filename / environment name is the usual cause).
 
-## release-please / changesets との組合せ
+## Combining with release-please / changesets
 
-両ツールとも publish 自体は触らないので、Release PR がマージされた後 `release-please --publish` / `changesets/action` の `publish` step に上記 YAML を組み込めば共存できる。例:
+Neither tool touches publishing itself, so once the Release PR is merged, the above YAML can be incorporated into the `release-please --publish` / `changesets/action`'s `publish` step to coexist. Example:
 
 ```yaml
 - uses: changesets/action@v1
@@ -243,23 +243,23 @@ ozzy-labs は **pnpm 採用が多数派** (`feedradar` / `create-agentic-app` / 
     publish: pnpm -r publish --access public --provenance --no-git-checks
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    # NPM_TOKEN は不要 — OIDC で認証される
+    # NPM_TOKEN is not needed — authenticated via OIDC
 ```
 
-## トラブルシューティング
+## Troubleshooting
 
-| 症状 | 原因 | 対処 |
+| Symptom | Cause | Fix |
 | --- | --- | --- |
-| `403 Forbidden — you don't have permission` | Trusted Publisher 未登録 | npmjs.com 側で repository / workflow filename を確認 |
-| `OIDC token not available` | `permissions: id-token: write` 不足 | workflow / job スコープに追加 |
-| `cannot find environment 'X'` | environment 名が npm 側と不一致 | npmjs.com 設定とジョブ env 名を一致させる |
-| self-hosted runner で `403` | self-hosted runner は Trusted Publisher 未対応 | GitHub-hosted runner で publish job だけ実行する |
-| npm CLI が古くて OIDC 認証されない | npm CLI v11.5.1 未満 / Node 22.14.0 未満 | `actions/setup-node@v5` で Node 22.14 以上を指定し `npm i -g npm@latest` |
-| 1 つの monorepo で複数 scoped package | 全パッケージ別々に Trusted Publisher 登録 | `pnpm -r publish` は通る、登録漏れだけ要注意 |
+| `403 Forbidden — you don't have permission` | Trusted Publisher not registered | Verify repository / workflow filename on npmjs.com |
+| `OIDC token not available` | Missing `permissions: id-token: write` | Add it at the workflow/job scope |
+| `cannot find environment 'X'` | Environment name mismatch with npm side | Match the npmjs.com config and the job's env name |
+| `403` on a self-hosted runner | Self-hosted runners are unsupported for Trusted Publisher | Run the publish job only on a GitHub-hosted runner |
+| OIDC auth fails due to an outdated npm CLI | npm CLI below v11.5.1 / Node below 22.14.0 | Specify Node 22.14+ with `actions/setup-node@v5` and run `npm i -g npm@latest` |
+| Multiple scoped packages in one monorepo | Each package needs its own Trusted Publisher registration | `pnpm -r publish` will run, but watch out for missed registrations |
 
-## 関連
+## Related
 
-- [`tools/release-please.md`](../tools/release-please.md) — Conventional Commits 駆動のリリース PR 自動化
-- [`standards/semver.md`](./semver.md) — バージョン番号の決定ルール
-- [`standards/conventional-commits.md`](./conventional-commits.md) — コミットメッセージから version bump を導出
-- [`platforms/github/github-actions.md`](../platforms/github/github-actions.md) — workflow / OIDC の基盤
+- [`tools/release-please.md`](../tools/release-please.md) — Automating release PRs driven by Conventional Commits
+- [`standards/semver.md`](./semver.md) — Rules for determining version numbers
+- [`standards/conventional-commits.md`](./conventional-commits.md) — Deriving the version bump from commit messages
+- [`platforms/github/github-actions.md`](../platforms/github/github-actions.md) — Workflow / OIDC foundations

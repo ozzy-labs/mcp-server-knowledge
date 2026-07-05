@@ -5,47 +5,47 @@ tags: [github, release]
 
 # GitHub Releases
 
-Git タグに紐付くリリースアーティファクトと release notes を提供する GitHub の機能。タグを切るだけでなく、ZIP / tarball の自動生成、バイナリ asset の添付、自動生成 release notes、draft / pre-release 管理ができる。
+A GitHub feature that provides release artifacts and release notes tied to Git tags. Beyond cutting tags, it supports automatic ZIP / tarball generation, binary asset attachment, auto-generated release notes, and draft / pre-release management.
 
-公式: [About releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases)
+Official: [About releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases)
 
-関連記事:
+Related articles:
 
-- [`tools/release-please.md`](../../tools/release-please.md)（release notes と PR 駆動の自動化）
+- [`tools/release-please.md`](../../tools/release-please.md) (release notes and PR-driven automation)
 - [`standards/semver.md`](../../standards/semver.md)
-- [`standards/npm-trusted-publishers.md`](../../standards/npm-trusted-publishers.md)（npm publish と組み合わせるパターン）
+- [`standards/npm-trusted-publishers.md`](../../standards/npm-trusted-publishers.md) (pattern combined with npm publish)
 - [`platforms/github/gh-cli.md`](gh-cli.md#release)
 
-## モデル
+## Model
 
 ```text
-Git tag (v1.2.3)  ──紐付け──▶  GitHub Release
-                                 ├─ Title / body（release notes）
-                                 ├─ Source archive (zip / tarball, 自動生成)
-                                 ├─ Assets (binary 等を手動 / CI で添付)
+Git tag (v1.2.3)  ──linked to──▶  GitHub Release
+                                 ├─ Title / body (release notes)
+                                 ├─ Source archive (zip / tarball, auto-generated)
+                                 ├─ Assets (binaries etc. attached manually / via CI)
                                  ├─ State: draft / pre-release / latest
-                                 └─ Discussion（任意）
+                                 └─ Discussion (optional)
 ```
 
-- 1 タグ = 1 release
-- タグが存在しない名前を指定すると、release 公開時にタグが新規作成される
-- アーカイブ（`v1.2.3.zip` / `v1.2.3.tar.gz`）はタグから自動生成（手動添付不要）
+- 1 tag = 1 release
+- Specifying a name for a tag that doesn't exist creates the tag on release publish
+- Archives (`v1.2.3.zip` / `v1.2.3.tar.gz`) are auto-generated from the tag (no manual attachment needed)
 
-## 状態（State）
+## State
 
-| 状態 | 用途 | 挙動 |
+| State | Purpose | Behavior |
 |---|---|---|
-| **Draft** | 内部レビュー中 | 公開前。書き込み権限者のみ閲覧可 |
-| **Pre-release** | RC / beta | 公開されるが `latest` 扱いにならない |
-| **Latest** | 通常リリース | デフォルトで最新表示。1 つのみ |
+| **Draft** | Under internal review | Not yet published. Visible only to users with write access |
+| **Pre-release** | RC / beta | Published, but not treated as `latest` |
+| **Latest** | Regular release | Shown as latest by default. Only one at a time |
 
-`/releases/latest` URL は `Latest` フラグが立った release を返す。pre-release は `latest` にならないため、安定版リンクを壊さずに RC を公開できる。
+The `/releases/latest` URL returns the release flagged `Latest`. Since pre-releases don't become `latest`, you can publish an RC without breaking stable-version links.
 
-## 自動生成 release notes
+## Auto-generated release notes
 
-`Generate release notes` ボタン、または `gh release create --generate-notes` で、前回タグ以降の merged PR を集約した release notes が生成される。
+The `Generate release notes` button, or `gh release create --generate-notes`, generates release notes aggregating merged PRs since the previous tag.
 
-### `.github/release.yaml` で分類カスタマイズ
+### Customizing categorization via `.github/release.yaml`
 
 ```yaml
 # .github/release.yaml
@@ -63,19 +63,19 @@ changelog:
     - title: Documentation
       labels: [docs]
     - title: Other Changes
-      labels: ["*"]                  # 残り全部のキャッチオール
+      labels: ["*"]                  # catch-all for everything else
 ```
 
-- ラベルは PR に付いている前提（Conventional Commits の type をラベルに mirror する CI を組むのが定石）
-- `*` を含むカテゴリは最後に置く（先に書くと他カテゴリにマッチした PR まで吸収する）
+- Assumes PRs are labeled (a common pattern is CI that mirrors Conventional Commits types onto labels)
+- Place the category containing `*` last (if placed earlier, it absorbs PRs that would otherwise match other categories)
 
-## CLI から作成
+## Creating from the CLI
 
 ```bash
-# 自動生成 notes 付き
+# With auto-generated notes
 gh release create v1.2.3 --generate-notes
 
-# notes ファイル + asset 添付
+# Notes file + asset attachment
 gh release create v1.2.3 \
   --title "v1.2.3" \
   --notes-file CHANGELOG.md \
@@ -85,19 +85,19 @@ gh release create v1.2.3 \
 gh release create v1.2.3-rc.1 --prerelease
 gh release create v1.2.3 --draft
 
-# draft の公開
+# Publish a draft
 gh release edit v1.2.3 --draft=false
 
-# asset の追加
+# Add an asset
 gh release upload v1.2.3 dist/extra.tar.gz
 
-# ダウンロード
+# Download
 gh release download v1.2.3 --pattern "*.tar.gz"
 ```
 
-## GitHub Actions での自動化
+## Automation with GitHub Actions
 
-タグ push をトリガーに release を作成:
+Create a release triggered by a tag push:
 
 ```yaml
 # .github/workflows/release.yaml
@@ -107,7 +107,7 @@ on:
     tags: ["v*"]
 
 permissions:
-  contents: write       # release 作成に必須
+  contents: write       # required to create releases
 
 jobs:
   release:
@@ -115,7 +115,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 0      # 自動 release notes に履歴必須
+          fetch-depth: 0      # full history required for auto release notes
       - run: |
           gh release create "${GITHUB_REF_NAME}" \
             --generate-notes \
@@ -124,58 +124,58 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-`softprops/action-gh-release@v2` を使う形式もあるが、`gh release create` で十分なケースが多い。
+There's also a form using `softprops/action-gh-release@v2`, but `gh release create` is sufficient in many cases.
 
-## release-please との関係
+## Relationship with release-please
 
-[`tools/release-please.md`](../../tools/release-please.md) は **Conventional Commits → release PR → タグ + GitHub Release** を自動化する。
+[`tools/release-please.md`](../../tools/release-please.md) automates **Conventional Commits → release PR → tag + GitHub Release**.
 
-- release-please: 「次に出すべき version の PR」を自動メンテし、merge 時にタグと release を作成
-- 手動 / GitHub Actions のみ: 開発者がタグを切るタイミングを完全制御
+- release-please: automatically maintains a "PR for the next version to ship," creating the tag and release on merge
+- Manual / GitHub Actions only: developers have full control over when tags are cut
 
-OSS の継続リリースは release-please、不定期リリースは手動 / Actions のみが向く。
+release-please suits continuous OSS releases; manual / Actions-only suits irregular releases.
 
-## アセット制限
+## Asset limits
 
-| 項目 | 制限 |
+| Item | Limit |
 |---|---|
-| 1 release あたりの asset 数 | 最大 1,000 |
-| 1 asset のサイズ | 最大 2 GiB |
-| 帯域幅制限 | なし |
+| Assets per release | Max 1,000 |
+| Size per asset | Max 2 GiB |
+| Bandwidth limit | None |
 
-大型アーティファクトは Container Registry や外部ストレージ（S3 等）への push を併用する。
+For large artifacts, also push to a Container Registry or external storage (e.g. S3).
 
-## ディスカッションリンク
+## Discussion link
 
 ```bash
 gh release create v1.2.3 --discussion-category "Announcements"
 ```
 
-`Settings > General > Features > Discussions` で有効化済みのリポジトリで、release ごとに自動でディスカッションを開ける。
+For repositories with Discussions enabled under `Settings > General > Features > Discussions`, a discussion can be auto-opened for each release.
 
-## API（GraphQL / REST）
+## API (GraphQL / REST)
 
 ```bash
-# 最新 release 取得
+# Get the latest release
 gh api repos/:owner/:repo/releases/latest
 
-# tag 名から取得
+# Get by tag name
 gh api repos/:owner/:repo/releases/tags/v1.2.3
 
-# asset ダウンロード URL
+# Asset download URLs
 gh api repos/:owner/:repo/releases/latest --jq '.assets[].browser_download_url'
 ```
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **`fetch-depth: 0` 抜きで release notes 自動生成 → 履歴不足で空になる** — checkout step に `fetch-depth: 0`
-2. **`permissions.contents: write` を付け忘れて 403** — release 作成は write 必須
-3. **`*` カテゴリを `categories:` の先頭に書いて他カテゴリが死ぬ** — `*` は必ず最後
-4. **同じタグ名で 2 度 release を作って失敗** — `gh release edit` で更新するか、削除後に作り直す
-5. **pre-release を `latest` URL で配布する** — `--prerelease` を付けないと latest URL が RC を指してしまう
-6. **`v1.2.3` と `1.2.3` を混ぜる** — リポジトリで一貫したプレフィックス（推奨は `v` 付き）を選ぶ
+1. **Omitting `fetch-depth: 0`, resulting in empty auto-generated release notes due to insufficient history** — add `fetch-depth: 0` to the checkout step
+2. **Forgetting `permissions.contents: write`, causing a 403** — write permission is required to create releases
+3. **Placing the `*` category first in `categories:`, killing the other categories** — `*` must always be last
+4. **Creating a release with the same tag name twice, causing failure** — update with `gh release edit`, or delete and recreate
+5. **Distributing a pre-release via the `latest` URL** — without `--prerelease`, the latest URL ends up pointing at the RC
+6. **Mixing `v1.2.3` and `1.2.3`** — pick a consistent prefix convention for the repository (a `v` prefix is recommended)
 
-## 参考
+## References
 
 - [About releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases)
 - [Automatically generated release notes](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes)

@@ -4,26 +4,26 @@ tags: [ai-workflow, commercial]
 aliases: [codex-model, model_reasoning_effort, gpt-5.5, codex-usage, codex-model-fallback]
 ---
 
-# Codex CLI のモデル選択・reasoning effort・フォールバック・使用量管理
+# Codex CLI Model Selection, Reasoning Effort, Fallback, and Usage Management
 
-Codex CLI で「どのモデルを・どの単位で・どう切り替えるか」、reasoning effort（推論の深さ）の指定、モデルが使えないときの**フォールバックの有無**、そして**使用量（ChatGPT プラン枠 / API 従量）の観測**をまとめる。CLI 本体の一般仕様は [`codex-cli.md`](codex-cli.md)、Claude Code の対応する仕組み（対比）は [`claude-code-model-selection.md`](claude-code-model-selection.md) を参照。
+This article covers Codex CLI's model selection ("which model, at which scope, how to switch"), reasoning effort (depth of reasoning) settings, whether a **fallback** exists when a model is unavailable, and observing **usage** (ChatGPT plan quota / API metered billing). For the CLI's general specification, see [`codex-cli.md`](codex-cli.md); for Claude Code's equivalent mechanism (for comparison), see [`claude-code-model-selection.md`](claude-code-model-selection.md).
 
-> 本記事のモデルラインアップは **rust-v0.142.5（2026-07-01）** 時点。最新は `/model` ピッカーおよび公式 [Models](https://developers.openai.com/codex/models) で確認する。
+> The model lineup in this article reflects **rust-v0.142.5 (2026-07-01)**. Check the `/model` picker or the official [Models](https://developers.openai.com/codex/models) page for the latest.
 
-## モデル選択の「単位」
+## Scopes for Model Selection
 
-モデルと reasoning effort は以下の**単位**で指定でき、**Claude Code と同様にタスク内容に応じた自動選択は無い**（すべて手動 or 事前設定）。下位（起動時・実行時に近い）ほど優先される。
+Model and reasoning effort can be specified at the following **scopes**, and **unlike Claude Code there is no automatic selection based on task content** (everything is manual or pre-configured). Lower entries (closer to launch/runtime) take precedence.
 
-| 単位 | 指定方法 | 種別 |
+| Scope | How to specify | Type |
 |---|---|---|
-| **CLI フラグ（単発）** | `codex -m <model>` / `--model`、`-c model_reasoning_effort="high"`（`--config`） | 手動・その起動限り・**最優先** |
-| **`/model`（セッション内）** | TUI の `/model` コマンドでモデル切替 + reasoning level 調整 | 手動・そのセッション限り |
-| **profile** | `[profiles.<name>]`（または `$CODEX_HOME/<name>.config.toml`）を `--profile` / `-p` で選択 | 事前設定・プロファイル単位で上書き |
-| **project config** | リポジトリの `.codex/config.toml` の `model` / `model_reasoning_effort` | 事前設定・プロジェクト単位 |
-| **user config** | `~/.codex/config.toml`（`$CODEX_HOME`）の `model` / `model_reasoning_effort` | 事前設定・グローバル既定 |
-| **subagent** | `~/.codex/agents/`（personal）/ `.codex/agents/`（project）の agent file frontmatter の `model` / `model_reasoning_effort` | 事前設定・**省略時は親セッションを継承** |
+| **CLI flag (one-off)** | `codex -m <model>` / `--model`, `-c model_reasoning_effort="high"` (`--config`) | Manual, applies only to that invocation, **highest priority** |
+| **`/model` (in-session)** | Switch model + adjust reasoning level via the TUI `/model` command | Manual, applies only to that session |
+| **profile** | Select `[profiles.<name>]` (or `$CODEX_HOME/<name>.config.toml`) via `--profile` / `-p` | Pre-configured, overrides per profile |
+| **project config** | `model` / `model_reasoning_effort` in the repo's `.codex/config.toml` | Pre-configured, per project |
+| **user config** | `model` / `model_reasoning_effort` in `~/.codex/config.toml` (`$CODEX_HOME`) | Pre-configured, global default |
+| **subagent** | `model` / `model_reasoning_effort` in the agent file frontmatter under `~/.codex/agents/` (personal) / `.codex/agents/` (project) | Pre-configured; **inherits the parent session if omitted** |
 
-**優先順位（高い → 低い）**: CLI `-c` / `--model` → profile（`--profile`）→ project `.codex/config.toml` → user `~/.codex/config.toml` → 組み込み既定。subagent は自分の frontmatter に値があればそれを使い、無ければ親セッションのモデル / effort を継承する。
+**Priority (highest → lowest)**: CLI `-c` / `--model` → profile (`--profile`) → project `.codex/config.toml` → user `~/.codex/config.toml` → built-in default. A subagent uses the value in its own frontmatter if present; otherwise it inherits the parent session's model / effort.
 
 ```toml
 # ~/.codex/config.toml
@@ -36,71 +36,71 @@ model_reasoning_effort = "low"
 ```
 
 ```bash
-codex -m gpt-5.4 -c model_reasoning_effort="high" "..."   # 単発上書き
-codex --profile fast                                        # profile 選択
+codex -m gpt-5.4 -c model_reasoning_effort="high" "..."   # one-off override
+codex --profile fast                                        # select a profile
 ```
 
-## 現行モデル
+## Current Models
 
-`/model` ピッカーで選択できる推奨モデル（`gpt-5.3-codex-spark` を除き ChatGPT サインイン / OpenAI API キーの双方で利用可）:
+Recommended models selectable via the `/model` picker (all available via both ChatGPT sign-in and OpenAI API key, except `gpt-5.3-codex-spark`):
 
-| モデル | 位置付け | 備考 |
+| Model | Positioning | Notes |
 |---|---|---|
-| `gpt-5.5` | **現行の推奨デフォルト** | 複雑コーディング・Computer Use・知識作業・リサーチ向けの最新フロンティア。2026-04-23 に Codex で提供開始。公式は「まず `gpt-5.5`」を推奨 |
-| `gpt-5.4` | Flagship | プロ用途向けフロンティア。`gpt-5.5` を使わない / アカウントに未ロールアウトのときの**手動の代替** |
-| `gpt-5.4-mini` | 軽量・高速 | 応答性重視のコーディング・**subagent 向けの推奨** |
-| `gpt-5.3-codex-spark` | research preview | ほぼリアルタイムな反復コーディング向け・text-only。**ChatGPT Pro 限定** |
+| `gpt-5.5` | **Current recommended default** | Latest frontier model for complex coding, Computer Use, knowledge work, and research. Released for Codex on 2026-04-23. Official guidance recommends "start with `gpt-5.5`" |
+| `gpt-5.4` | Flagship | Frontier model for professional use. **Manual alternative** when not using `gpt-5.5` / not yet rolled out to the account |
+| `gpt-5.4-mini` | Lightweight, fast | Coding focused on responsiveness; **recommended for subagents** |
+| `gpt-5.3-codex-spark` | Research preview | For near-real-time iterative coding, text-only. **ChatGPT Pro only** |
 
-- **デフォルト**: モデル未指定時は各サーフェス（CLI / IDE / Cloud）が推奨モデルを選ぶ（＝静的なデフォルト。後述のとおり実行時の自動 failover ではない）。
-- **deprecated**: `gpt-5.3-codex` と `gpt-5.2` は 2026-05-26 に **ChatGPT サインイン時の Codex で user-selectable モデルとして deprecated**（API キー経由の旧モデル ID 利用とは別）。`gpt-5.5` / `gpt-5.4` / `gpt-5.4-mini` へ移行する。
+- **Default**: When no model is specified, each surface (CLI / IDE / Cloud) picks its recommended model (i.e., a static default — not runtime automatic failover, as described below).
+- **Deprecated**: `gpt-5.3-codex` and `gpt-5.2` were **deprecated as user-selectable models in Codex under ChatGPT sign-in on 2026-05-26** (separate from using legacy model IDs via API key). Migrate to `gpt-5.5` / `gpt-5.4` / `gpt-5.4-mini`.
 
-## reasoning effort（`model_reasoning_effort`）
+## Reasoning Effort (`model_reasoning_effort`)
 
-推論の深さは config / CLI / subagent frontmatter で `model_reasoning_effort` として指定する。
+Reasoning depth is specified as `model_reasoning_effort` via config, CLI, or subagent frontmatter.
 
-- **値**: `minimal` / `low` / `medium` / `high` / `xhigh`。公式サンプル config は `medium` を例示する（公式リファレンスは明示的な「既定値」を宣言していない）。
-- **`xhigh` はモデル依存**（Responses API のみ・サポートするモデルでのみ有効）。
-- 併せて `model_reasoning_summary`（`auto` / `concise` / `detailed` / `none`）で推論サマリの出力を制御できる。
-- `/model` ではモデル切替と同時に reasoning level も調整できる。
+- **Values**: `minimal` / `low` / `medium` / `high` / `xhigh`. The official sample config uses `medium` as an example (the official reference does not explicitly declare a "default value").
+- **`xhigh` is model-dependent** (Responses API only, and only on models that support it).
+- `model_reasoning_summary` (`auto` / `concise` / `detailed` / `none`) can also be used to control reasoning summary output.
+- `/model` allows adjusting the reasoning level at the same time as switching models.
 
-## フォールバック — Codex に自動フォールバックは無い
+## Fallback — Codex Has No Automatic Fallback
 
-**重要**: Codex には「指定モデルが使えないとき自動で別モデルに切り替える」機構が公式ドキュメント上**存在しない**。Claude Code の `fallbackModel`（可用性ベースの自動切替）に相当するものは無い。
+**Important**: Codex has **no** documented mechanism to "automatically switch to a different model when the specified model is unavailable." There is no equivalent of Claude Code's `fallbackModel` (automatic availability-based switching).
 
-- 「モデル未指定時は推奨モデルにフォールバック」という記述は**静的なデフォルト選択**の意味で、overload / rate-limit / unavailable での per-request 自動 failover ではない。
-- **`gpt-5.4` が "fallback"** と語られるのは、`gpt-5.5` を選ばない / アカウントに未ロールアウトのときに `/model` で**手動で選ぶ代替**という意味。`gpt-5.5` は段階ロールアウトのため「使えない場合の代替」はアカウント可用性の話であり、自動切替ではない。
-- したがってモデルが overload / rate-limit のときの退避は、**手動で `/model` を切り替える**か profile を使い分けるしかない。→ Claude Code との最大の違い（[`claude-code-model-selection.md`](claude-code-model-selection.md) の 2 系統フォールバックと対照）。
+- The statement "falls back to the recommended model when unspecified" refers to **static default selection**, not per-request automatic failover on overload / rate-limit / unavailability.
+- When `gpt-5.4` is described as a "fallback," it means a **manual alternative selected via `/model`** when not choosing `gpt-5.5` / when it hasn't rolled out to the account yet. Since `gpt-5.5` rolls out in stages, "an alternative for when it's unavailable" is a matter of account availability, not automatic switching.
+- Therefore, the only way to work around overload / rate-limit on a model is to **manually switch via `/model`** or use different profiles. This is the **biggest difference from Claude Code** (contrast with the two-tier fallback described in [`claude-code-model-selection.md`](claude-code-model-selection.md)).
 
-## 使用量・レート制限
+## Usage and Rate Limits
 
-課金経路によってレート制限のモデルが異なる。
+Rate-limited models differ depending on the billing path.
 
-| 経路 | レート制限モデル |
+| Path | Rate-limited model |
 |---|---|
-| **ChatGPT プラン**（Free / Go / Plus / Pro / Business / Enterprise / Edu） | ローリング **5 時間**窓（ローカル CLI メッセージと Cloud タスクで共有）＋ **週次**上限 |
-| **OpenAI API キー** | **従量課金**（使用トークン分のみ。固定のプラン枠は無い） |
+| **ChatGPT plan** (Free / Go / Plus / Pro / Business / Enterprise / Edu) | Rolling **5-hour** window (shared between local CLI messages and Cloud tasks) + **weekly** cap |
+| **OpenAI API key** | **Metered billing** (pay only for tokens used, no fixed plan quota) |
 
-- **`/usage`**（v0.140+）: CLI 内でアカウントのトークン使用量・rate-limit 状況を表示する。`/status` でもセッション内で残り枠を確認できる。
-- **rate-limit reset banking**（Plus / Pro 対象）: 未使用のリセットを banking し 30 日間利用できる。
-- **モデル選択は残枠の持ちに影響する**: `gpt-5.4` / `gpt-5.4-mini` に切り替えると（切替元によっては）ローカルメッセージの usage 上限を延ばせる。小さいモデルは共有枠の消費が遅い（＝総上限が上がるわけではない）。
+- **`/usage`** (v0.140+): Shows the account's token usage and rate-limit status within the CLI. `/status` also shows remaining quota within a session.
+- **Rate-limit reset banking** (Plus / Pro only): Unused resets are banked and usable for 30 days.
+- **Model choice affects how far quota stretches**: Switching to `gpt-5.4` / `gpt-5.4-mini` can extend the local-message usage cap (depending on the model switched from). Smaller models consume the shared quota more slowly (this does not raise the total cap).
 
-## 実務パターン
+## Practical Patterns
 
-- **既定は `gpt-5.5`**。subagent や機械的・応答性重視の作業は `gpt-5.4-mini` に落として共有枠を温存する。
-- **`xhigh` は難タスク限定**（対応モデルのみ）。ルーチンは `low` / `medium` で十分。
-- **モデル切替を profile 化**しておくと（例: `[profiles.fast]` = `gpt-5.4-mini` + `low`）`--profile` / `/model` で素早く退避できる。自動フォールバックが無いぶん、profile による手動退避が実質的な代替になる。
-- credential / セキュリティ隣接作業でもモデル降格は自動では起きない（Claude Fable の safety 由来の自動降格のような挙動は Codex には無い）。
+- **Default to `gpt-5.5`**. For subagents or mechanical, responsiveness-focused work, drop to `gpt-5.4-mini` to conserve the shared quota.
+- **Reserve `xhigh` for hard tasks only** (supported models only). `low` / `medium` suffice for routine work.
+- **Turn model switches into profiles** (e.g., `[profiles.fast]` = `gpt-5.4-mini` + `low`) so `--profile` / `/model` can be used to quickly fall back. Since there's no automatic fallback, manual fallback via profiles is effectively the substitute.
+- Model downgrades never happen automatically even for credential / security-adjacent work (Codex has no behavior like Claude Fable's safety-driven automatic downgrade).
 
-## 関連
+## Related
 
-- Codex CLI 本体（インストール・承認ポリシー・subagent・hooks 等）: [`codex-cli.md`](codex-cli.md)
-- Claude Code のモデル選択・フォールバック・使用量（対比）: [`claude-code-model-selection.md`](claude-code-model-selection.md)
+- Codex CLI core (installation, approval policy, subagents, hooks, etc.): [`codex-cli.md`](codex-cli.md)
+- Claude Code's model selection, fallback, and usage (comparison): [`claude-code-model-selection.md`](claude-code-model-selection.md)
 
-公式:
+Official:
 
-- [Models](https://developers.openai.com/codex/models)（現行ラインアップ・deprecation）
-- [Config reference](https://developers.openai.com/codex/config-reference) / [Config sample](https://developers.openai.com/codex/config-sample)（`model` / `model_reasoning_effort` / profiles）
-- [CLI reference](https://developers.openai.com/codex/cli)（`--model` / `-c` / `/model`）
-- [Subagents](https://developers.openai.com/codex/subagents)（agent file の `model` / `model_reasoning_effort`）
-- [Pricing](https://developers.openai.com/codex/pricing)（ChatGPT プラン枠 / API 従量 / `/usage` / banking）
+- [Models](https://developers.openai.com/codex/models) (current lineup, deprecations)
+- [Config reference](https://developers.openai.com/codex/config-reference) / [Config sample](https://developers.openai.com/codex/config-sample) (`model` / `model_reasoning_effort` / profiles)
+- [CLI reference](https://developers.openai.com/codex/cli) (`--model` / `-c` / `/model`)
+- [Subagents](https://developers.openai.com/codex/subagents) (agent file `model` / `model_reasoning_effort`)
+- [Pricing](https://developers.openai.com/codex/pricing) (ChatGPT plan quota / API metered billing / `/usage` / banking)
 - [Changelog](https://developers.openai.com/codex/changelog)

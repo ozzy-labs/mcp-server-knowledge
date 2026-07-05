@@ -5,58 +5,58 @@ tags: [javascript]
 
 # Node.js
 
-JavaScript のサーバーサイドランタイム。本記事は**ランタイム本体・内蔵モジュール・実行フラグ**を対象にする。TypeScript を ESM で動かすための tsconfig / 依存解決の細部は `languages/typescript-esm.md` を参照。
+JavaScript's server-side runtime. This article covers **the runtime itself, built-in modules, and execution flags**. For tsconfig / dependency resolution details for running TypeScript as ESM, see `languages/typescript-esm.md`.
 
-公式: [nodejs.org/api](https://nodejs.org/api/) / [release schedule](https://github.com/nodejs/Release)
+Official: [nodejs.org/api](https://nodejs.org/api/) / [release schedule](https://github.com/nodejs/Release)
 
-## バージョンと LTS ポリシー
+## Versions and LTS policy
 
-| 系列 | コード名 | 2026-05 時点のフェーズ | EOL |
+| Line | Codename | Phase as of 2026-05 | EOL |
 |---|---|---|---|
-| 25.x | - | Current（偶数まで中継） | 2026-06 |
+| 25.x | - | Current (bridge to next even) | 2026-06 |
 | 24.x | Krypton | **Active LTS** | 2028-04 |
 | 22.x | Jod | Maintenance LTS | 2027-04 |
-| 20.x | Iron | **EOL**（2026-04-30 到達） | 2026-04-30 |
+| 20.x | Iron | **EOL** (reached 2026-04-30) | 2026-04-30 |
 | 18.x | Hydrogen | EOL | 2025-04 |
 
-- **偶数メジャーのみ LTS 対象**、奇数は Current として 6 ヶ月のみ。
-- LTS は Active 12 ヶ月 + Maintenance 18 ヶ月 = 合計 30 ヶ月。
-- 本番は Active LTS (v24) か Maintenance LTS (v22)。v20 は 2026-04-30 で EOL を迎えたため、まだ残っていれば即時移行する。
-- `engines.node` は**サポート対象の最小バージョン**を書く: `"node": ">=22"`。
+- **Only even majors get LTS**; odd majors are Current for 6 months only.
+- LTS is Active for 12 months + Maintenance for 18 months = 30 months total.
+- For production, use Active LTS (v24) or Maintenance LTS (v22). v20 reached EOL on 2026-04-30 — migrate immediately if still on it.
+- `engines.node` should state the **minimum supported version**: `"node": ">=22"`.
 
-## インストール / バージョン管理
+## Installation / version management
 
-| 方法 | 用途 |
+| Method | Use case |
 |---|---|
-| 公式バイナリ / Docker Hub `node:24-alpine` | 本番・CI の固定インストール |
-| `mise` | 多言語対応。`.mise.toml` でプロジェクト固定 |
-| `fnm` | Rust 製、クロスプラットフォーム |
-| `nvm` | macOS/Linux のデファクト（Windows は非対応） |
-| Volta | `package.json` の `volta` キーにピン留め |
+| Official binaries / Docker Hub `node:24-alpine` | Pinned installs for production/CI |
+| `mise` | Multi-language. Project pinning via `.mise.toml` |
+| `fnm` | Rust-based, cross-platform |
+| `nvm` | De facto standard on macOS/Linux (no Windows support) |
+| Volta | Pin via the `volta` key in `package.json` |
 
-`corepack` は Node 同梱で `pnpm` / `yarn` のバージョン固定に使う（`package.json` の `packageManager` フィールド）。
+`corepack` ships with Node and is used to pin `pnpm` / `yarn` versions (the `packageManager` field in `package.json`).
 
-## `node:` プロトコル
+## The `node:` protocol
 
-組み込みモジュールは**必ず `node:` プレフィックス**で import する。
+Built-in modules **must** be imported with the `node:` prefix.
 
 ```ts
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 ```
 
-理由:
+Reasons:
 
-- ユーザーランドの同名パッケージ（`path`, `url`, `events`, `stream` など npm に存在）との衝突防止
-- Permission Model / Loader hooks で builtin を明示的に区別
-- ブラウザ互換の import map との整合
+- Avoids collisions with userland packages of the same name (e.g. `path`, `url`, `events`, `stream` exist on npm)
+- Lets the Permission Model / loader hooks explicitly distinguish builtins
+- Aligns with browser-compatible import maps
 
-## CJS / ESM 相互運用（ランタイム観点）
+## CJS / ESM interop (runtime perspective)
 
-- `package.json` の `"type": "module"` で `.js` が ESM 解釈になる。`.mjs` は常に ESM、`.cjs` は常に CJS。
-- **`require(ESM)`**: v22.12 と v20.19 で `--experimental-require-module` がデフォルト ON 化し、**2026-05 時点で stable**。CJS から `require('./foo.mjs')` が可能。
-- **制約**: `require(ESM)` は同期ゆえ **top-level `await` を含む ESM には不可**（`ERR_REQUIRE_ASYNC_MODULE`）。その場合は `await import()` を使う。
-- **`createRequire`**: ESM から CJS を読むとき。
+- `"type": "module"` in `package.json` makes `.js` resolve as ESM. `.mjs` is always ESM, `.cjs` is always CJS.
+- **`require(ESM)`**: `--experimental-require-module` became the default ON in v22.12 and v20.19, and is **stable as of 2026-05**. CJS can now `require('./foo.mjs')`.
+- **Constraint**: `require(ESM)` is synchronous, so it **cannot load ESM containing top-level `await`** (`ERR_REQUIRE_ASYNC_MODULE`). Use `await import()` in that case.
+- **`createRequire`**: for reading CJS from ESM.
 
   ```ts
   import { createRequire } from "node:module";
@@ -64,23 +64,23 @@ import { fileURLToPath } from "node:url";
   const pkg = require("./legacy.cjs");
   ```
 
-- **`--experimental-detect-module`** (v22.7+、デフォルト ON): 拡張子なしファイルを構文から CJS/ESM 自動判定。無効化は `--no-experimental-detect-module`。
+- **`--experimental-detect-module`** (v22.7+, default ON): auto-detects CJS/ESM from syntax for extensionless files. Disable with `--no-experimental-detect-module`.
 
-## 主要内蔵モジュール
+## Key built-in modules
 
-| モジュール | 用途 |
+| Module | Use |
 |---|---|
-| `node:fs/promises` | Promise ベース FS。同期版 (`node:fs`) は起動時以外避ける |
-| `node:path` | OS 依存パス。`join` / `resolve` / `sep` / `posix` |
-| `node:url` | `fileURLToPath(import.meta.url)` で ESM から実パスへ |
-| `node:crypto` | `createHash` / HMAC / `randomUUID()` / `subtle`（WebCrypto） |
-| `node:stream` | Readable/Writable/Duplex、`pipeline` は promises 版が主流 |
-| `node:events` | `EventEmitter` / `once` / `on` 非同期イテレータ / `AbortSignal` |
-| `node:child_process` | `spawn`（ストリーミング）／`exec`（一括）／`fork` |
-| `node:worker_threads` | CPU バウンド並列、`MessageChannel`、`workerData` |
-| `node:http` / `node:https` | 低レベル HTTP。汎用クライアントはグローバル `fetch` |
+| `node:fs/promises` | Promise-based FS. Avoid the sync version (`node:fs`) except at startup |
+| `node:path` | OS-dependent paths. `join` / `resolve` / `sep` / `posix` |
+| `node:url` | `fileURLToPath(import.meta.url)` to get a real path from ESM |
+| `node:crypto` | `createHash` / HMAC / `randomUUID()` / `subtle` (WebCrypto) |
+| `node:stream` | Readable/Writable/Duplex; the promises version of `pipeline` is preferred |
+| `node:events` | `EventEmitter` / `once` / `on` async iterator / `AbortSignal` |
+| `node:child_process` | `spawn` (streaming) / `exec` (batch) / `fork` |
+| `node:worker_threads` | CPU-bound parallelism, `MessageChannel`, `workerData` |
+| `node:http` / `node:https` | Low-level HTTP. Use the global `fetch` for general-purpose clients |
 | `node:os` | `platform` / `arch` / `cpus` / `homedir` / `tmpdir` / `EOL` |
-| `node:util` | `parseArgs`（CLI 引数）/ `promisify` / `styleText` |
+| `node:util` | `parseArgs` (CLI args) / `promisify` / `styleText` |
 
 ## Built-in test runner: `node:test`
 
@@ -100,29 +100,29 @@ describe("adder", () => {
 });
 ```
 
-- v20 で Stable、v22.3 で snapshot、v23 以降で mocking 拡充。
-- 実行: `node --test` / `node --test --watch` / `node --test-name-pattern="adder"` / `--test-concurrency=N`。
-- Coverage: `--experimental-test-coverage` + `--test-reporter=lcov`。
-- `.ts` ファイルは Node 23.6+ の strip-types で直接走らせられる。
-- vitest との使い分け: **小〜中規模 / CI 軽量 / zero-dep** なら `node:test`、UI / jsdom / Vite 連携 / リッチ mock なら `vitest`（`tools/vitest.md`）。
+- Stable since v20, snapshot support since v22.3, expanded mocking from v23 onward.
+- Run with: `node --test` / `node --test --watch` / `node --test-name-pattern="adder"` / `--test-concurrency=N`.
+- Coverage: `--experimental-test-coverage` + `--test-reporter=lcov`.
+- `.ts` files can be run directly via strip-types support since Node 23.6+.
+- Choosing between this and vitest: use `node:test` for **small-to-medium scale, lightweight CI, zero-dep** needs; use `vitest` (`tools/vitest.md`) for UI, jsdom, Vite integration, or rich mocking.
 
-## 実行フラグ
+## Execution flags
 
-| フラグ | 効果 / 状態 |
+| Flag | Effect / status |
 |---|---|
-| `--watch` / `--watch-path=<p>` | ファイル変更で再起動（Stable） |
-| `--env-file=<p>` / `--env-file-if-exists` | `.env` をロード。エスケープや multiline の扱いは dotenv と微妙に異なる |
-| `--experimental-strip-types` | 型注釈を剥がして `.ts` を直接実行。v23.6 でデフォルト ON、v25.2 で Stable。型チェックなし |
-| `--experimental-transform-types` | enum / parameter properties など**非消去構文**を変換（RC） |
-| `--import <spec>` | 起動前に ESM をプリロード。`--experimental-loader` の後継 |
-| `--conditions=<name>` | `package.json` の `exports` に独自条件を追加（Stable v22.9+） |
-| `--cpu-prof` / `--heap-prof` | 起動時プロファイリング |
-| `--inspect` / `--inspect-brk` | Chrome DevTools で接続 |
-| `--no-warnings` | プロセス warning を抑制 |
+| `--watch` / `--watch-path=<p>` | Restart on file change (Stable) |
+| `--env-file=<p>` / `--env-file-if-exists` | Load `.env`. Escaping/multiline handling differs subtly from dotenv |
+| `--experimental-strip-types` | Strips type annotations to run `.ts` directly. Default ON since v23.6, Stable since v25.2. No type checking |
+| `--experimental-transform-types` | Transforms **non-erasable syntax** such as enums / parameter properties (RC) |
+| `--import <spec>` | Preload ESM before startup. Successor to `--experimental-loader` |
+| `--conditions=<name>` | Add custom conditions to `package.json`'s `exports` (Stable since v22.9+) |
+| `--cpu-prof` / `--heap-prof` | Profiling at startup |
+| `--inspect` / `--inspect-brk` | Connect via Chrome DevTools |
+| `--no-warnings` | Suppress process warnings |
 
 ## Permission Model
 
-v22.13 / v23.5 で **Stable** 化した実験的サンドボックス。
+An experimental sandbox that became **Stable** in v22.13 / v23.5.
 
 ```bash
 node --permission \
@@ -132,30 +132,30 @@ node --permission \
   server.js
 ```
 
-- `--allow-fs-read` / `--allow-fs-write`: ワイルドカード可、`*` で全許可。
-- `--allow-child-process` / `--allow-worker` / `--allow-addons` / `--allow-wasi`: それぞれ個別許可。
-- ランタイム確認: `process.permission.has("fs.write", "/path")`。
-- **制約**: Worker Thread に**継承されない**、既存 fd 経由はバイパス、symlink 追従でポリシーを迂回される可能性、native addons / SQLite はロード不可。サンドボックスに期待しすぎない。
+- `--allow-fs-read` / `--allow-fs-write`: support wildcards; `*` allows everything.
+- `--allow-child-process` / `--allow-worker` / `--allow-addons` / `--allow-wasi`: grant each individually.
+- Check at runtime: `process.permission.has("fs.write", "/path")`.
+- **Constraints**: permissions are **not inherited** by Worker Threads, can be bypassed via existing fds, may be circumvented by following symlinks, and native addons / SQLite cannot be loaded. Don't over-rely on this as a sandbox.
 
-## Web 標準 API（グローバル）
+## Web standard APIs (global)
 
-| API | 導入 | 備考 |
+| API | Introduced | Notes |
 |---|---|---|
-| `fetch` | v18（Stable v21） | `undici` ベース |
-| `AbortController` / `AbortSignal` | v15 / グローバル v18 | `fetch` / `fs/promises` / `timers/promises` に `signal` 渡し |
-| `AbortSignal.timeout(ms)` | v17.3 | タイムアウト用の定番 |
+| `fetch` | v18 (Stable v21) | Built on `undici` |
+| `AbortController` / `AbortSignal` | v15 / global v18 | Pass `signal` to `fetch` / `fs/promises` / `timers/promises` |
+| `AbortSignal.timeout(ms)` | v17.3 | Standard pattern for timeouts |
 | `globalThis.crypto` / `crypto.subtle` | v19 | WebCrypto API |
-| `randomUUID()` | v19 グローバル | `crypto.randomUUID()` |
-| `Blob` / `File` / `FormData` | v18 | グローバル利用可 |
-| `structuredClone` | v17 | deep clone |
+| `randomUUID()` | v19 global | `crypto.randomUUID()` |
+| `Blob` / `File` / `FormData` | v18 | Available globally |
+| `structuredClone` | v17 | Deep clone |
 
-## Streams と Web Streams
+## Streams and Web Streams
 
-- Node Streams と WHATWG Streams の相互変換:
+- Converting between Node Streams and WHATWG Streams:
   - `Readable.toWeb(nodeReadable)` / `Readable.fromWeb(webStream)`
   - `Writable.toWeb/fromWeb`, `Duplex.toWeb/fromWeb`
-- `fetch` レスポンスの body は Web `ReadableStream`。`Readable.fromWeb(response.body)` で Node ストリームに変換可能。
-- **推奨パターン**: `node:stream/promises` の `pipeline()`。`AbortSignal` 対応、async generator を中間段に挟める。
+- A `fetch` response's body is a Web `ReadableStream`. Convert it to a Node stream with `Readable.fromWeb(response.body)`.
+- **Recommended pattern**: `pipeline()` from `node:stream/promises`. Supports `AbortSignal` and lets you insert an async generator as an intermediate stage.
 
 ```ts
 import { pipeline } from "node:stream/promises";
@@ -181,62 +181,62 @@ for await (const _ of setInterval(500, null, { signal })) {
 }
 ```
 
-AbortSignal 対応で、コールバックが不要になる。`setImmediate` / `scheduler.wait(ms)` も同様。
+Supports `AbortSignal`, eliminating the need for callbacks. `setImmediate` / `scheduler.wait(ms)` work the same way.
 
 ## Error handling
 
-- **`unhandledRejection` は v15 以降デフォルト `throw`** に変更。未ハンドル Promise rejection はプロセスを落とす。変更は `--unhandled-rejections=strict|throw|warn|warn-with-error-code|none`。
-- `process.on('uncaughtException', ...)` は同期例外。ハンドラを付けても exit 1 が既定。
-- `Error.cause`（v16.9+）: `throw new Error("wrap", { cause: original });`。スタックトレースに `Caused by:` が出る。
-- `AggregateError` (`Promise.any` の失敗集約): `.errors` に原因を保持。
+- **`unhandledRejection` defaults to `throw` since v15**. An unhandled Promise rejection now crashes the process. Configure via `--unhandled-rejections=strict|throw|warn|warn-with-error-code|none`.
+- `process.on('uncaughtException', ...)` handles synchronous exceptions. Even with a handler attached, exit code 1 is the default.
+- `Error.cause` (v16.9+): `throw new Error("wrap", { cause: original });`. The stack trace shows `Caused by:`.
+- `AggregateError` (aggregates failures from `Promise.any`): holds causes in `.errors`.
 
-## AI エージェントがよくやるミス
+## Common mistakes made by AI agents
 
-1. **ESM で `__dirname` / `__filename` を使う** — 未定義。`import.meta.dirname` / `import.meta.filename`（v20.11+）か `fileURLToPath(import.meta.url)`。
-2. **ESM 内で直接 `require()`** — `createRequire(import.meta.url)` を経由するか `await import()`。
-3. **builtin を `node:` なしで import** — 衝突リスク。常に `node:fs` 形式。
-4. **同期 FS API をリクエストハンドラで多用** — イベントループ停止。`readFileSync` などは起動時の config 読みに限定。
-5. **Windows パスを文字列結合** — `path.join` / `path.resolve` 必須。ファイル URL は `new URL("./data.json", import.meta.url)` か `fileURLToPath`。
-6. **`process.env.FOO` を `string` と仮定** — 型は `string | undefined`。`Number(process.env.PORT)` は NaN の可能性、存在チェックと変換エラーを両方見る。
-7. **Stream の backpressure を無視** — `pipeline()` を使えば自動吸収。`for await (const chunk)` ループに書き込み先 `await` を挟まないとメモリ爆発。
-8. **`child_process.exec` で大量出力** — デフォルト maxBuffer 1MB で切れる。`spawn` + streaming に。
-9. **`JSON.parse` に try/catch なし** — 外部入力は必ず囲む。`util.parseArgs` など安全な代替を優先。
-10. **`unhandledRejection` が warn で済むと思う** — v15+ は throw。意図的に無視するなら `--unhandled-rejections=warn` を明示。
-11. **長時間 `fetch` に signal を渡さない** — キャンセル不能。`AbortSignal.timeout(ms)` を使う。
-12. **`process.argv[0]` をスクリプトだと思う** — `argv[0]` は node 自身、`argv[1]` がスクリプト。ユーザ引数は `argv.slice(2)` か `util.parseArgs`。
-13. **Permission Model 下で Worker を起動** — 権限は継承されない。Worker 用に別途設計する。
-14. **`require(ESM)` で top-level await 付きを同期読み** — `ERR_REQUIRE_ASYNC_MODULE`。`await import()` に変える。
+1. **Using `__dirname` / `__filename` in ESM** — undefined. Use `import.meta.dirname` / `import.meta.filename` (v20.11+) or `fileURLToPath(import.meta.url)`.
+2. **Calling `require()` directly inside ESM** — go through `createRequire(import.meta.url)` or use `await import()`.
+3. **Importing a builtin without the `node:` prefix** — collision risk. Always use the `node:fs` form.
+4. **Overusing sync FS APIs in a request handler** — blocks the event loop. Limit `readFileSync` etc. to startup config reads.
+5. **String-concatenating Windows paths** — use `path.join` / `path.resolve`. For file URLs, use `new URL("./data.json", import.meta.url)` or `fileURLToPath`.
+6. **Assuming `process.env.FOO` is a `string`** — its type is `string | undefined`. `Number(process.env.PORT)` may yield NaN; check for both existence and conversion errors.
+7. **Ignoring stream backpressure** — `pipeline()` absorbs this automatically. Without an `await` on the write side inside a `for await (const chunk)` loop, memory can blow up.
+8. **Large output with `child_process.exec`** — truncated by the default 1MB maxBuffer. Use `spawn` with streaming instead.
+9. **`JSON.parse` without try/catch** — always wrap parsing of external input. Prefer safer alternatives like `util.parseArgs` where applicable.
+10. **Assuming `unhandledRejection` only warns** — it throws since v15+. If you intend to ignore it, set `--unhandled-rejections=warn` explicitly.
+11. **Not passing a signal to a long-running `fetch`** — it becomes uncancellable. Use `AbortSignal.timeout(ms)`.
+12. **Assuming `process.argv[0]` is the script** — `argv[0]` is node itself, `argv[1]` is the script. User arguments are `argv.slice(2)` or via `util.parseArgs`.
+13. **Launching a Worker under the Permission Model** — permissions are not inherited. Design permissions separately for Workers.
+14. **Synchronously `require`-ing ESM with top-level await** — `ERR_REQUIRE_ASYNC_MODULE`. Switch to `await import()`.
 
-## トラブルシュート
+## Troubleshooting
 
 ### `ERR_MODULE_NOT_FOUND` / `ERR_UNSUPPORTED_DIR_IMPORT`
 
-ESM では拡張子必須、ディレクトリ import 不可。`./util` → `./util.js` に、`./dir` → `./dir/index.js` に明記。
+ESM requires explicit extensions and does not support directory imports. Change `./util` to `./util.js`, and `./dir` to `./dir/index.js`.
 
 ### `ERR_REQUIRE_ESM` / `ERR_REQUIRE_ASYNC_MODULE`
 
-CJS から ESM を同期 require している。v22.12+ なら普通の ESM は `require()` 可だが、top-level await 付きは不可。`await import()` に置き換える。
+CJS is synchronously requiring ESM. On v22.12+, normal ESM can be `require()`d, but modules with top-level await cannot. Replace with `await import()`.
 
-### `.env` の値が期待通り展開されない
+### `.env` values don't expand as expected
 
-`--env-file` の expansion は dotenv と完全互換ではない。複雑な `${VAR}` 補間や multiline が必要なら dotenv を残す。
+`--env-file` expansion isn't fully compatible with dotenv. Keep dotenv if you need complex `${VAR}` interpolation or multiline values.
 
-### Permission Model でファイルが読めない
+### Permission Model prevents a file from being read
 
-`--allow-fs-read=<path>` が不足。`process.permission.has("fs.read", path)` でランタイム判定、ログに不足パスを出すと絞り込みやすい。
+`--allow-fs-read=<path>` is missing the path. Check at runtime with `process.permission.has("fs.read", path)`; logging the missing path helps narrow it down.
 
-### `node --watch` で無限リロード
+### Infinite reload loop with `node --watch`
 
-監視対象のファイルを自身が書き換えているケース（ログファイル等）。`--watch-path` で絞るか、書き込み先を監視外ディレクトリに。
+Typically caused by the process itself writing to a watched file (e.g. a log file). Narrow scope with `--watch-path`, or write output to a directory outside the watch scope.
 
-## 関連記事
+## Related articles
 
-- `languages/typescript-esm.md` — Node.js で TS を ESM として動かす設定・import type・デュアルパッケージ
-- `tools/pnpm.md` — パッケージマネージャ（corepack 経由）
-- `tools/vitest.md` — node:test との使い分け
-- `tools/mise.md` — Node.js バージョン管理の現行デファクト
+- `languages/typescript-esm.md` — Configuration for running TS as ESM on Node.js, import type, dual packages
+- `tools/pnpm.md` — Package manager (via corepack)
+- `tools/vitest.md` — Choosing between this and node:test
+- `tools/mise.md` — Current de facto standard for Node.js version management
 
-## 参考
+## References
 
 - [Node.js API Reference](https://nodejs.org/api/)
 - [Node.js Release Schedule](https://github.com/nodejs/Release)

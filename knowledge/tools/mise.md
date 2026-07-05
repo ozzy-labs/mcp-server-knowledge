@@ -5,11 +5,11 @@ tags: [version-manager, task-runner, rust]
 
 # mise
 
-開発ツールのバージョン管理 + タスクランナー + 環境変数管理を統合した CLI。asdf の後継として設計され、Go バイナリで起動が高速。Node / Python / Go / Rust / バイナリ単体まで単一設定で管理できる。
+A CLI that unifies dev-tool version management, a task runner, and environment variable management. Designed as a successor to asdf, and starts fast as a Go binary. Manages Node / Python / Go / Rust / standalone binaries all from a single config.
 
-公式: [mise.jdx.dev](https://mise.jdx.dev/)
+Official: [mise.jdx.dev](https://mise.jdx.dev/)
 
-## インストール
+## Installation
 
 ```bash
 # Homebrew
@@ -22,7 +22,7 @@ curl https://mise.run | sh
 cargo install mise
 ```
 
-シェルへの統合を有効化（activate モード）:
+Enable shell integration (activate mode):
 
 ```bash
 # bash
@@ -35,9 +35,9 @@ echo 'eval "$(mise activate zsh)"' >> ~/.zshrc
 echo 'mise activate fish | source' >> ~/.config/fish/config.fish
 ```
 
-`cd` するたびに `mise.toml` を読み、PATH を動的に切り替える。
+On every `cd`, it reads `mise.toml` and dynamically switches PATH.
 
-## 設定ファイル `mise.toml`
+## Config file `mise.toml`
 
 ```toml
 [tools]
@@ -70,41 +70,41 @@ description = "Build the project"
 run = "pnpm run build"
 ```
 
-`mise install` で全ツールを解決・インストール。`mise use <tool>@<version>` で追加も可能。
+`mise install` resolves and installs all tools. `mise use <tool>@<version>` can also add tools.
 
-## バージョン指定の書式
+## Version specification syntax
 
-| 指定 | 意味 |
+| Spec | Meaning |
 |---|---|
-| `"24"` | メジャー 24 の最新 |
-| `"24.5"` | マイナー 24.5 の最新パッチ |
-| `"24.5.1"` | 固定 |
-| `"lts"` | LTS 最新 |
-| `"latest"` | 最新安定 |
-| `"ref:<commit>"` | Git ref 指定（プラグイン対応時） |
+| `"24"` | Latest of major version 24 |
+| `"24.5"` | Latest patch of minor version 24.5 |
+| `"24.5.1"` | Pinned |
+| `"lts"` | Latest LTS |
+| `"latest"` | Latest stable |
+| `"ref:<commit>"` | Git ref (when plugin supports it) |
 
-複数バージョン共存:
+Multiple versions coexisting:
 
 ```toml
 [tools]
-node = ["24", "22"]  # 両方インストール、先頭が優先
+node = ["24", "22"]  # installs both, first one takes priority
 ```
 
-## バックエンドの選択
+## Choosing a backend
 
-mise は複数のインストーラバックエンドを使い分ける:
+mise uses several installer backends depending on the tool:
 
-| バックエンド | 書式 | 用途 |
+| Backend | Syntax | Use case |
 |---|---|---|
-| core | `node = "24"` | ビルトインサポートのツール |
-| aqua | 多くのバイナリ | GitHub Releases のバイナリ配布 |
-| ubi | `ubi:<owner>/<repo>` | ubi 互換バイナリ |
-| npm | `"npm:<pkg>" = "..."` | npm パッケージを mise shim 経由で提供 |
-| pipx | `"pipx:<pkg>" = "..."` | Python ツール |
-| cargo | `"cargo:<crate>" = "..."` | Rust クレート |
-| asdf | `"asdf:<plugin>" = "..."` | asdf プラグインフォールバック |
+| core | `node = "24"` | Tools with built-in support |
+| aqua | Most binaries | Binary distribution via GitHub Releases |
+| ubi | `ubi:<owner>/<repo>` | ubi-compatible binaries |
+| npm | `"npm:<pkg>" = "..."` | npm packages served via mise shim |
+| pipx | `"pipx:<pkg>" = "..."` | Python tools |
+| cargo | `"cargo:<crate>" = "..."` | Rust crates |
+| asdf | `"asdf:<plugin>" = "..."` | asdf plugin fallback |
 
-## タスクランナー
+## Task runner
 
 ```toml
 [tasks.test]
@@ -119,12 +119,12 @@ sources = ["src/**/*.ts"]
 outputs = ["dist/**/*.js"]
 ```
 
-- `mise run test` で実行
-- `depends` で前提タスクを解決
-- `sources` / `outputs` を書くと差分ベースでスキップされる（incremental build）
-- `.mise/tasks/<name>` にスクリプトファイルとしても書ける（シェルスクリプト形式、引数を取れる）
+- Run with `mise run test`
+- `depends` resolves prerequisite tasks
+- Writing `sources` / `outputs` enables diff-based skipping (incremental build)
+- Can also be written as script files under `.mise/tasks/<name>` (shell-script format, can take arguments)
 
-## 環境変数
+## Environment variables
 
 ```toml
 [env]
@@ -134,15 +134,15 @@ API_URL = "http://localhost:3000"
 _ = ".env"
 ```
 
-- `[env]` にキー直書き
-- `[env._.file]` で `.env` を読み込み
-- `[env.redact]` でログマスク対象を指定
+- Write keys directly under `[env]`
+- `[env._.file]` loads a `.env` file
+- `[env.redact]` specifies which values to mask in logs
 
-プロジェクトごとの環境変数を `.env` なしで mise 一元管理できる。
+Lets you manage per-project environment variables centrally in mise without a `.env` file.
 
 ## `mise.local.toml`
 
-ローカル上書き用（`.gitignore` 推奨）:
+For local overrides (recommended to `.gitignore`):
 
 ```toml
 [env]
@@ -150,24 +150,24 @@ DATABASE_URL = "postgresql://localhost/myapp_dev"
 DEBUG = "1"
 ```
 
-## 主要コマンド
+## Key commands
 
-| コマンド | 用途 |
+| Command | Purpose |
 |---|---|
-| `mise install` | `.mise.toml` のツールをすべてインストール |
-| `mise use <tool>@<ver>` | 追加・バージョン変更 |
-| `mise ls` | インストール済み一覧 |
-| `mise current` | 現ディレクトリで有効なバージョン |
-| `mise outdated` | 新バージョンがあるか確認 |
-| `mise upgrade` | 上限内で更新 |
-| `mise which <tool>` | 解決されているパスを表示 |
-| `mise run <task>` | タスク実行 |
-| `mise exec -- <cmd>` | mise の env で実行（activate なしで） |
-| `mise trust` | 新しいディレクトリの `.mise.toml` を信頼 |
+| `mise install` | Install all tools listed in `.mise.toml` |
+| `mise use <tool>@<ver>` | Add or change a version |
+| `mise ls` | List installed tools |
+| `mise current` | Show versions active in the current directory |
+| `mise outdated` | Check for newer versions |
+| `mise upgrade` | Upgrade within constraints |
+| `mise which <tool>` | Show the resolved path |
+| `mise run <task>` | Run a task |
+| `mise exec -- <cmd>` | Run with mise's env (without activate) |
+| `mise trust` | Trust the `.mise.toml` of a new directory |
 
-## 信頼モデル
+## Trust model
 
-`mise.toml` はシェルに影響するため、**信頼されていないディレクトリ**では読み込まれない:
+Because `mise.toml` affects the shell, it is **not loaded in untrusted directories**:
 
 ```bash
 cd new-repo
@@ -175,9 +175,9 @@ cd new-repo
 mise trust
 ```
 
-`[env]` による環境変数設定や `[tasks]` が自動実行されるのを防ぐセキュリティ機構。
+This is a security mechanism that prevents environment variables set via `[env]` or `[tasks]` from being auto-executed.
 
-## CI での使い方
+## Usage in CI
 
 ```yaml
 - uses: jdx/mise-action@v4
@@ -188,43 +188,43 @@ mise trust
 - run: pnpm run test
 ```
 
-mise-action が `mise.toml` を読んで全ツールをインストール。キャッシュも自動。
+mise-action reads `mise.toml` and installs all tools. Caching is also automatic.
 
-## asdf からの移行
+## Migrating from asdf
 
-- `.tool-versions` は mise がそのまま読める
-- プラグインは多くが自動で解決（asdf プラグイン互換）
-- mise 固有機能（tasks / env）は `.mise.toml` に書き足す
+- `.tool-versions` can be read by mise as-is
+- Most plugins resolve automatically (asdf plugin compatible)
+- Add mise-specific features (tasks / env) to `.mise.toml`
 
-## トラブルシュート
+## Troubleshooting
 
 ### `mise: command not found`
 
-シェル統合されていない。`eval "$(mise activate <shell>)"` を rc に追加。
+Shell integration is missing. Add `eval "$(mise activate <shell>)"` to your rc file.
 
-### `cd` してもツールが切り替わらない
+### Tools don't switch on `cd`
 
-`mise trust` されていない可能性。`mise trust .` で許可。
+The directory may not be trusted. Allow it with `mise trust .`.
 
-### CI で遅い
+### Slow in CI
 
-初回ビルドはインストール時間が長い。`mise-action` のキャッシュを使う、または OCI イメージに mise と tool を焼き込む。
+The first build has a long install time. Use `mise-action`'s cache, or bake mise and the tools into an OCI image.
 
-### `shims` モードとの違い
+### Difference from `shims` mode
 
-mise には 2 モードある:
+mise has 2 modes:
 
-- **activate モード**（推奨）: PATH を書き換える。速い
-- **shims モード**: `~/.local/share/mise/shims/` に薄いラッパースクリプトを配置。IDE が直接 `node` を叩くときに便利
+- **activate mode** (recommended): rewrites PATH. Fast
+- **shims mode**: places thin wrapper scripts under `~/.local/share/mise/shims/`. Useful when an IDE invokes `node` directly
 
-使い分け: 対話シェルは activate、IDE は shims。
+Guideline: use activate for interactive shells, shims for IDEs.
 
-## 他ツールとの比較
+## Comparison with other tools
 
-| 観点 | mise | asdf | Volta | nvm + pyenv + ... |
+| Aspect | mise | asdf | Volta | nvm + pyenv + ... |
 |---|---|---|---|---|
-| 対応言語 | 多数 | 多数 | Node 特化 | 個別ツール |
-| 速度 | 速い（Go） | 普通（Bash） | 速い（Rust） | 個別 |
-| tasks | あり | なし | なし | なし |
-| env 管理 | あり | なし | なし | なし |
-| プラグイン | asdf 互換 | 豊富 | なし | — |
+| Supported languages | Many | Many | Node-specific | Per-tool |
+| Speed | Fast (Go) | Moderate (Bash) | Fast (Rust) | Per-tool |
+| tasks | Yes | No | No | No |
+| env management | Yes | No | No | No |
+| Plugins | asdf-compatible | Extensive | None | — |

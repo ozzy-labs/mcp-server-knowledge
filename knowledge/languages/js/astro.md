@@ -5,38 +5,38 @@ tags: [framework, javascript, typescript]
 
 # Astro
 
-コンテンツ中心のサーバーファースト Web フレームワーク。ページ単位で静的生成（SSG）を既定とし、必要な部分だけをクライアントに水和する **Islands Architecture** を採用。React / Vue / Svelte / Solid など複数の UI ライブラリを同一プロジェクトで混在できる UI 非依存性が特徴。ドキュメントサイト用テーマ **Starlight** と併用されることが多い。
+A content-focused, server-first web framework. Static generation (SSG) is the default per page, adopting an **Islands Architecture** that hydrates only the parts of the client that need it. It is UI-agnostic, letting multiple UI libraries such as React / Vue / Svelte / Solid coexist in the same project. Often paired with **Starlight**, the documentation-site theme.
 
-公式: [docs.astro.build](https://docs.astro.build/) ・ [starlight.astro.build](https://starlight.astro.build/)
+Official: [docs.astro.build](https://docs.astro.build/) / [starlight.astro.build](https://starlight.astro.build/)
 
-## 位置付け
+## Positioning
 
-- ブログ・ドキュメント・マーケティングサイト向け（データ駆動 SPA は非対象）
-- デフォルト出力は静的ファイル。SSR・ハイブリッドも adapter で可能
-- クライアント JS はデフォルト 0 バイト。必要な箇所だけ `client:*` ディレクティブで hydrate する
+- Aimed at blogs, documentation, and marketing sites (not data-driven SPAs)
+- The default output is static files. SSR and hybrid modes are available via adapters
+- Client JS is 0 bytes by default. Only the parts that need it are hydrated with `client:*` directives
 
-## バージョン
+## Versions
 
-2026-05 時点の現行 stable は **Astro 6.2**（6.0: 2026-03-10、6.1: 2026-03-26、6.2: 2026-04-30）。**Astro 7 は alpha** が 2026-04-30 に公開済み（`astro@7.0.0-alpha.x`）。Starlight は **0.38 系**で 1.0 未満、minor 間で破壊的変更があるため **minor 固定** を推奨。
+As of 2026-05, the current stable is **Astro 6.2** (6.0: 2026-03-10, 6.1: 2026-03-26, 6.2: 2026-04-30). **Astro 7 alpha** was published on 2026-04-30 (`astro@7.0.0-alpha.x`). Starlight is on the **0.38.x** series, still below 1.0, with breaking changes between minors, so **pinning the minor version** is recommended.
 
-## セットアップ
+## Setup
 
 ```bash
 pnpm create astro@latest
-# Starlight テンプレートを直接使う場合
+# When using the Starlight template directly
 pnpm create astro@latest -- --template starlight
 ```
 
-## 主要コマンド
+## Key commands
 
-| コマンド | 用途 |
+| Command | Purpose |
 |---|---|
-| `astro dev` | 開発サーバ（HMR 付き） |
-| `astro build` | `dist/` へ本番ビルド |
-| `astro preview` | ビルド結果をローカル配信 |
-| `astro check` | TypeScript / 型診断（**build は型検査を含まない**） |
-| `astro add <integration>` | integration を依存追加 + 設定追記 |
-| `astro sync` | content collection / env の型を再生成 |
+| `astro dev` | Dev server (with HMR) |
+| `astro build` | Production build into `dist/` |
+| `astro preview` | Serve the build output locally |
+| `astro check` | TypeScript / type diagnostics (**build does not include type checking**) |
+| `astro add <integration>` | Add an integration dependency and its config |
+| `astro sync` | Regenerate types for content collections / env |
 
 ## `astro.config.mjs`
 
@@ -50,11 +50,11 @@ export default defineConfig({
 });
 ```
 
-`integrations` に追加したものが Astro 起動時に登録される。`astro add <name>` で依存と設定の両方が自動投入される。
+Anything added to `integrations` is registered when Astro starts. `astro add <name>` automatically inserts both the dependency and the config.
 
-## Islands Architecture の基本
+## Islands Architecture basics
 
-`.astro` ファイル内で他フレームワークのコンポーネントを import し、必要な所だけ `client:*` で hydrate する:
+Import components from other frameworks inside a `.astro` file, and hydrate only what needs it with `client:*`:
 
 ```astro
 ---
@@ -63,19 +63,19 @@ import ReactCounter from '../components/ReactCounter.tsx';
 <ReactCounter client:visible />
 ```
 
-| ディレクティブ | タイミング |
+| Directive | Timing |
 |---|---|
-| `client:load` | ページロード直後 |
-| `client:idle` | requestIdleCallback |
-| `client:visible` | 要素が viewport に入ったとき |
-| `client:media="(max-width: 600px)"` | メディアクエリ一致時 |
-| `client:only="react"` | SSR せずクライアント限定で描画 |
+| `client:load` | Immediately after page load |
+| `client:idle` | On requestIdleCallback |
+| `client:visible` | When the element enters the viewport |
+| `client:media="(max-width: 600px)"` | When the media query matches |
+| `client:only="react"` | Rendered client-only, without SSR |
 
-何も付けなければ **SSG 時に HTML 化され、JS は出荷されない**。
+If none is given, the component **is rendered to HTML at SSG time and no JS is shipped**.
 
 ## Content Collections
 
-`src/content/<collection>/` 配下の Markdown/MDX を型付きで扱う:
+Markdown/MDX under `src/content/<collection>/` is handled with types:
 
 ```ts
 // src/content/config.ts
@@ -93,19 +93,19 @@ const blog = defineCollection({
 export const collections = { blog };
 ```
 
-Astro 6 で **Live Content Collections**（外部データソースの動的取り込み）が追加。6.1 で codec 別 Sharp 画像デフォルトと i18n fallback ルート、6.2 で SVG optimizer API・font ファイル URL ヘルパ・JSON 出力 logger（実験）が追加されている。
+Astro 6 added **Live Content Collections** (dynamic ingestion of external data sources). 6.1 added per-codec Sharp image defaults and i18n fallback routes; 6.2 added an SVG optimizer API, a font file URL helper, and a JSON-output logger (experimental).
 
-## Starlight（ドキュメントテーマ）
+## Starlight (documentation theme)
 
-Astro 上に構築された「ドキュメントサイト用のオールインワンテーマ」integration。
+An "all-in-one theme for documentation sites" integration built on top of Astro.
 
-- 自動サイドバー生成（ファイルベース or 明示設定）
-- i18n（ロケール別ルーティング、RTL 対応）
-- [Pagefind](https://pagefind.app/) による全文検索が標準搭載
-- Cards / Tabs / Steps / Asides 等の内蔵コンポーネント
-- MDX / Markdoc 対応、frontmatter スキーマ検証
+- Automatic sidebar generation (file-based or explicit config)
+- i18n (per-locale routing, RTL support)
+- Full-text search via [Pagefind](https://pagefind.app/) built in by default
+- Built-in components such as Cards / Tabs / Steps / Asides
+- MDX / Markdoc support, frontmatter schema validation
 
-### 最小設定
+### Minimal configuration
 
 ```js
 import { defineConfig } from 'astro/config';
@@ -127,56 +127,56 @@ export default defineConfig({
 });
 ```
 
-記事は `src/content/docs/` 配下に Markdown で置く。
+Place articles as Markdown under `src/content/docs/`.
 
-> **注意**: Starlight の `social` は以前のオブジェクトマップ形式から配列形式（`{ icon, label, href }[]`）に変更済み。古い例を貼り付けると型エラー。
+> **Note**: Starlight's `social` option has changed from the previous object-map form to an array form (`{ icon, label, href }[]`). Pasting an old example will cause a type error.
 
-## プロジェクト構造（既定）
+## Project structure (default)
 
 ```text
 src/
-├── components/      再利用コンポーネント
+├── components/      Reusable components
 ├── content/
-│   └── docs/        Starlight のコンテンツ（Content Collections）
-├── layouts/         レイアウト
-├── pages/           ファイルベースルーティング
-└── styles/          グローバルスタイル
-public/              そのまま配信される静的ファイル
+│   └── docs/        Starlight content (Content Collections)
+├── layouts/         Layouts
+├── pages/           File-based routing
+└── styles/          Global styles
+public/              Static files served as-is
 astro.config.mjs
 ```
 
-## 型検査と CI
+## Type checking and CI
 
-`astro build` は型検査しない。CI 側で別途実行する:
+`astro build` does not perform type checking. Run it separately in CI:
 
 ```bash
 pnpm astro check
 pnpm astro build
 ```
 
-## AI エージェントがよくやるミス
+## Common mistakes made by AI agents
 
-1. **`client:*` なしで React 等を書き、hydrate されず動かない** — 静的 HTML として出力されるのが既定。対話要素は必ず `client:*` を付ける。
-2. **`astro build` だけで型安全と思い込む** — 型エラーは `astro check` でないと出ない。
-3. **Starlight を `^0.38.0` で入れて minor 破壊変更を踏む** — Starlight は 1.0 未満。`"0.38.3"` のように minor まで固定する。
-4. **`src/content/docs/` の直下にロケール混在** — i18n は `src/content/docs/<locale>/` 構造が必須（root locale は `root` キーで設定）。
-5. **全ページで `client:load` を付け、Islands の利点を消す** — まず `client:visible` / `client:idle` を検討する。
+1. **Writing React etc. without `client:*`, so it never hydrates and doesn't work** — output as static HTML is the default. Always add `client:*` to interactive elements.
+2. **Assuming `astro build` alone guarantees type safety** — type errors only surface via `astro check`.
+3. **Installing Starlight with `^0.38.0` and hitting minor breaking changes** — Starlight is below 1.0. Pin down to the minor, e.g. `"0.38.3"`.
+4. **Mixing locales directly under `src/content/docs/`** — i18n requires the `src/content/docs/<locale>/` structure (the root locale is configured via the `root` key).
+5. **Adding `client:load` to every page, negating the benefits of Islands** — consider `client:visible` / `client:idle` first.
 
-## 他ツールとの比較
+## Comparison with other tools
 
-| フレームワーク | 位置付け |
+| Framework | Positioning |
 |---|---|
-| Astro | コンテンツサイト。SSG 既定、UI 非依存 |
-| Next.js | SSR/SSG 両対応。React 専用。アプリ寄り |
-| Nuxt | Vue 専用の Next.js 相当 |
-| Hugo / Jekyll | 純静的サイトジェネレータ。UI フレームワーク非対応 |
-| Docusaurus | React ベースのドキュメントサイト専用（Starlight の比較対象） |
-| VitePress | Vue ベースのドキュメント特化 |
+| Astro | Content sites. SSG by default, UI-agnostic |
+| Next.js | Supports both SSR/SSG. React only. App-oriented |
+| Nuxt | The Vue-only equivalent of Next.js |
+| Hugo / Jekyll | Pure static site generators. No UI framework support |
+| Docusaurus | React-based, documentation-site only (comparable to Starlight) |
+| VitePress | Vue-based, documentation-focused |
 
-## 参考
+## References
 
-- [Astro 公式ドキュメント](https://docs.astro.build/)
-- [Astro CLI リファレンス](https://docs.astro.build/en/reference/cli-reference/)
+- [Astro official documentation](https://docs.astro.build/)
+- [Astro CLI reference](https://docs.astro.build/en/reference/cli-reference/)
 - [Islands Architecture](https://docs.astro.build/en/concepts/islands/)
-- [Starlight 公式ドキュメント](https://starlight.astro.build/)
+- [Starlight official documentation](https://starlight.astro.build/)
 - [Starlight: Getting Started](https://starlight.astro.build/getting-started/)

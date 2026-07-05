@@ -5,14 +5,14 @@ tags: [package, version-manager, python, rust, fast]
 
 # uv
 
-Astral 製の Python パッケージ・プロジェクトマネージャ。Rust で書かれており、`pip` / `pip-tools` / `pipx` / `poetry` / `pyenv` / `twine` / `virtualenv` を 1 つに統合する。`pip` 比 10-100 倍速をうたう。Python 自体のインストールから依存解決、CLI ツール管理、ビルド・publish まで担う。`languages/python.md` の依存・バージョン管理項を実務レベルで補完する。
+A Python package and project manager by Astral. Written in Rust, it unifies `pip` / `pip-tools` / `pipx` / `poetry` / `pyenv` / `twine` / `virtualenv` into one tool. Claims 10-100x the speed of `pip`. It handles everything from installing Python itself to dependency resolution, CLI tool management, and build/publish. Complements the dependency and version management sections of `languages/python.md` at the practical level.
 
-公式: [docs.astral.sh/uv](https://docs.astral.sh/uv/)
+Official: [docs.astral.sh/uv](https://docs.astral.sh/uv/)
 
-## インストール
+## Installation
 
 ```bash
-# 公式スクリプト（推奨。Python 不要、Rust 不要）
+# Official script (recommended. No Python or Rust required)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Homebrew
@@ -21,7 +21,7 @@ brew install uv
 # mise
 mise use uv
 
-# pipx（隔離）
+# pipx (isolated)
 pipx install uv
 
 # WinGet
@@ -31,37 +31,37 @@ winget install --id=astral-sh.uv -e
 docker run ghcr.io/astral-sh/uv
 ```
 
-アップデートはスタンドアロン版なら `uv self update`、Homebrew なら `brew upgrade uv`。
+To update: `uv self update` for the standalone build, or `brew upgrade uv` for Homebrew.
 
-## 何を置き換えるか
+## What it replaces
 
-| 旧ツール | 役割 | uv での代替 |
+| Old tool | Role | uv replacement |
 |---|---|---|
-| `pip` | パッケージインストール | `uv pip install` または `uv add` |
-| `pip-tools` | requirements ロック | `uv lock` / `uv sync` |
-| `virtualenv` / `venv` | 仮想環境作成 | `uv venv` |
-| `pyenv` | Python バージョン管理 | `uv python install` |
-| `pipx` | CLI ツールインストール | `uv tool install` / `uvx` |
-| `poetry` | プロジェクト + lock + publish | `uv init` / `uv add` / `uv build` / `uv publish` |
+| `pip` | Package install | `uv pip install` or `uv add` |
+| `pip-tools` | requirements lock | `uv lock` / `uv sync` |
+| `virtualenv` / `venv` | Virtual env creation | `uv venv` |
+| `pyenv` | Python version management | `uv python install` |
+| `pipx` | CLI tool install | `uv tool install` / `uvx` |
+| `poetry` | Project + lock + publish | `uv init` / `uv add` / `uv build` / `uv publish` |
 | `twine` | publish | `uv publish` |
 
-## プロジェクト管理（推奨フロー）
+## Project management (recommended flow)
 
 ```bash
-uv init my-app          # pyproject.toml + .python-version + src/ を生成
+uv init my-app          # generates pyproject.toml + .python-version + src/
 cd my-app
-uv add httpx            # 依存追加 → uv.lock 更新 → .venv 同期
-uv add --dev pytest     # 開発依存
+uv add httpx            # add dependency → updates uv.lock → syncs .venv
+uv add --dev pytest     # dev dependency
 uv remove httpx
-uv sync                 # uv.lock を読んで .venv を一致させる（CI / 別マシンで）
-uv lock                 # 依存解決して uv.lock を更新（インストールはしない）
-uv run pytest           # プロジェクト環境でコマンド実行（自動同期付き）
-uv tree                 # 依存ツリー表示
+uv sync                 # read uv.lock and match .venv (for CI / another machine)
+uv lock                 # resolve dependencies and update uv.lock (no install)
+uv run pytest           # run command in project env (with auto-sync)
+uv tree                 # show dependency tree
 ```
 
-`uv add` は `pyproject.toml` の `[project]` を更新し、`uv.lock` を再生成し、`.venv` を同期する 3 段を一気にこなす。`pyproject.toml` を手で編集した場合は `uv sync` で追従する。
+`uv add` performs three steps in one go: updating `[project]` in `pyproject.toml`, regenerating `uv.lock`, and syncing `.venv`. If you edit `pyproject.toml` by hand, run `uv sync` to catch up.
 
-### `pyproject.toml` の uv 関連セクション
+### uv-related sections of `pyproject.toml`
 
 ```toml
 [project]
@@ -74,42 +74,42 @@ dependencies = ["httpx>=0.27"]
 dev = ["pytest>=8", "ruff"]
 
 [tool.uv]
-dev-dependencies = []   # legacy。dependency-groups.dev に移行推奨
+dev-dependencies = []   # legacy. Migration to dependency-groups.dev recommended
 
 [tool.uv.workspace]
 members = ["packages/*"]
 ```
 
-`[dependency-groups]` は PEP 735 の標準。`uv add --group test pytest` のように増やせる。
+`[dependency-groups]` is the PEP 735 standard. You can add groups like `uv add --group test pytest`.
 
-## CLI ツール（pipx 代替）
+## CLI tools (pipx replacement)
 
 ```bash
-uv tool install ruff          # 永続インストール（PATH に登録）
+uv tool install ruff          # persistent install (registered on PATH)
 uv tool list
 uv tool upgrade ruff
 uv tool uninstall ruff
 
-uvx ruff check .              # 一時実行（uv tool run の alias）
-uvx --from "rich[jupyter]" python    # extras 指定
+uvx ruff check .              # one-off run (alias for uv tool run)
+uvx --from "rich[jupyter]" python    # specify extras
 ```
 
-`uvx` は引数解決が速いので、CI で「lint だけ走らせる」「フォーマッタを 1 回だけ動かす」用途に最適。グローバル汚染を避けながら、`pip install` のキャッシュも共有する。
+`uvx` resolves arguments fast, making it ideal for "just run lint" or "run the formatter once" use cases in CI. It avoids global pollution while still sharing the `pip install` cache.
 
-## Python バージョン管理（pyenv 代替）
+## Python version management (pyenv replacement)
 
 ```bash
-uv python install 3.12 3.13     # 複数バージョン一括
-uv python list                  # インストール済み + 利用可能
-uv python pin 3.13              # .python-version に書き込む
-uv python dir                   # インストール先（uninstall 時に使う）
+uv python install 3.12 3.13     # install multiple versions at once
+uv python list                  # installed + available
+uv python pin 3.13              # write to .python-version
+uv python dir                   # install location (used for uninstall)
 ```
 
-プロジェクトに `.python-version` があれば `uv run` / `uv sync` が自動でそれに合わせる。`requires-python` と整合しないと弾かれる。
+If a project has a `.python-version`, `uv run` / `uv sync` automatically match it. It is rejected if it does not align with `requires-python`.
 
-## スクリプト実行（PEP 723）
+## Script execution (PEP 723)
 
-ファイル先頭にメタデータを書けば、依存付きスクリプトが**ワンファイル**で動く:
+Writing metadata at the top of a file lets a script with dependencies run as a **single file**:
 
 ```python
 # /// script
@@ -123,21 +123,21 @@ print(httpx.get("https://example.com"))
 ```
 
 ```bash
-uv run script.py        # 依存を解決して隔離環境で実行
+uv run script.py        # resolve dependencies and run in an isolated environment
 ```
 
-`uv add --script script.py httpx` でメタデータを更新できる。`requirements.txt` を作らずに 1 ファイルで完結する用途に強い。
+`uv add --script script.py httpx` updates the metadata. Strong fit for use cases that need to be self-contained in one file without a `requirements.txt`.
 
-## ワークスペース（monorepo）
+## Workspaces (monorepo)
 
 ```toml
-# ルート pyproject.toml
+# root pyproject.toml
 [tool.uv.workspace]
 members = ["packages/*"]
 exclude = ["packages/legacy"]
 ```
 
-各 member は独立した `pyproject.toml` を持ち、ルートで `uv sync` / `uv run` するとすべての member の依存が解決される。member 間の依存は `workspace = true` で表現:
+Each member has its own independent `pyproject.toml`; running `uv sync` / `uv run` at the root resolves dependencies for all members. Inter-member dependencies are expressed with `workspace = true`:
 
 ```toml
 [project]
@@ -147,52 +147,52 @@ dependencies = ["my-core"]
 my-core = { workspace = true }
 ```
 
-## キャッシュとロックファイル
+## Cache and lockfile
 
-- グローバルキャッシュ: `~/.cache/uv/`（macOS/Linux）/ `%LocalAppData%\uv\cache`（Windows）
-- `uv cache clean` で削除可
-- `uv.lock` は **必ずコミットする**。OS / アーキ横断の universal lockfile（`requirements.txt` と違い、複数プラットフォームを 1 ファイルでカバー）
+- Global cache: `~/.cache/uv/` (macOS/Linux) / `%LocalAppData%\uv\cache` (Windows)
+- Removable with `uv cache clean`
+- `uv.lock` **must always be committed**. It is a universal lockfile across OS/architecture (unlike `requirements.txt`, it covers multiple platforms in a single file)
 
-## CI でのパターン
+## CI pattern
 
 ```yaml
 - uses: actions/checkout@v7
 - uses: astral-sh/setup-uv@v8
   with:
     enable-cache: true
-- run: uv sync --locked        # uv.lock が最新でなければ失敗（CI 推奨）
+- run: uv sync --locked        # fails if uv.lock is not up to date (recommended for CI)
 - run: uv run pytest
 ```
 
-CI では `--locked`（lockfile が最新であることを検証して失敗させる）が推奨。`--frozen` は lockfile を更新せず既存内容で進める弱い保証。`--no-sync` はインストールスキップ。
+For CI, `--locked` (verifies the lockfile is up to date and fails otherwise) is recommended. `--frozen` is a weaker guarantee that proceeds with the existing content without updating the lockfile. `--no-sync` skips install.
 
-## ビルドと publish
+## Build and publish
 
 ```bash
-uv build                         # sdist + wheel を dist/ に生成
-uv publish --token $PYPI_TOKEN   # PyPI へ
+uv build                         # generate sdist + wheel into dist/
+uv publish --token $PYPI_TOKEN   # to PyPI
 uv publish --trusted-publishing automatic   # Trusted Publishers (OIDC)
 ```
 
-PyPI も Trusted Publishers (OIDC) に対応しており、`UV_PUBLISH_TOKEN` を持たずに GitHub Actions から publish できる。
+PyPI also supports Trusted Publishers (OIDC), enabling publish from GitHub Actions without holding a `UV_PUBLISH_TOKEN`.
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **`pip install` を実行してしまう** — uv プロジェクトでは `uv add` を使う。`pip` を直接呼ぶと `pyproject.toml` / `uv.lock` から外れる
-2. **`uv sync --frozen` を CI で忘れる** — lockfile を更新する `uv sync`（既定）と区別する。CI で `uv.lock` が書き換わると差分検出 / レビューが乱れる
-3. **`requirements.txt` を併用してしまう** — `uv export` で生成は可能だが、ソース・オブ・トゥルースは `pyproject.toml` + `uv.lock`
-4. **`activate` を呼んでから `python` を直接実行** — `.venv` を activate せずに `uv run` を使うのが uv 流。複数 Python バージョンが混在しても安全
-5. **`uv tool install` と `uvx` を混同** — install は永続、`uvx` は一時。CI の lint / format は `uvx` で十分
-6. **`requires-python` と `.python-version` の不一致** — `uv run` 時にエラーになる。`uv python pin` で揃える
-7. **monorepo で member ごとに `uv sync` を回す** — ルートで 1 回でよい。重複インストールが起きる
+1. **Running `pip install`** — use `uv add` in uv projects. Calling `pip` directly bypasses `pyproject.toml` / `uv.lock`
+2. **Forgetting `uv sync --frozen` in CI** — distinguish it from `uv sync` (default), which updates the lockfile. If `uv.lock` gets rewritten in CI, it disrupts diff detection / review
+3. **Also using `requirements.txt`** — it can be generated via `uv export`, but the source of truth is `pyproject.toml` + `uv.lock`
+4. **Calling `activate` then running `python` directly** — the uv way is to use `uv run` without activating `.venv`. This is safe even when multiple Python versions coexist
+5. **Confusing `uv tool install` with `uvx`** — install is persistent, `uvx` is one-off. `uvx` is sufficient for lint / format in CI
+6. **Mismatch between `requires-python` and `.python-version`** — causes an error at `uv run` time. Align them with `uv python pin`
+7. **Running `uv sync` per member in a monorepo** — running it once at the root is enough. Doing it per member causes duplicate installs
 
-## 関連
+## Related
 
-- [`languages/python/python.md`](python.md) — 言語側の前提
-- [`tools/mise.md`](../../tools/mise.md) — mise から `mise use uv` で導入する場合
-- [`languages/js/pnpm.md`](../js/pnpm.md) — Node.js 側の対応物（思想が似ている）
+- [`languages/python/python.md`](python.md) — language-level prerequisites
+- [`tools/mise.md`](../../tools/mise.md) — when introducing via `mise use uv` from mise
+- [`languages/js/pnpm.md`](../js/pnpm.md) — the Node.js counterpart (similar philosophy)
 
-## 参考
+## References
 
 - [uv Documentation](https://docs.astral.sh/uv/)
 - [uv on GitHub](https://github.com/astral-sh/uv)

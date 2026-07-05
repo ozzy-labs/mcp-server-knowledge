@@ -5,11 +5,11 @@ tags: [lint, yaml, github, go]
 
 # actionlint
 
-GitHub Actions ワークフローファイル（`.github/workflows/*.yaml`）の静的解析ツール。構文エラー・式の型・shellcheck 連携・未知の runner やアクションを検出する。Go 製の単一バイナリ。
+A static analysis tool for GitHub Actions workflow files (`.github/workflows/*.yaml`). Detects syntax errors, expression type mismatches, shellcheck integration issues, and unknown runners or actions. A single Go binary.
 
-公式: [github.com/rhysd/actionlint](https://github.com/rhysd/actionlint)
+Official: [github.com/rhysd/actionlint](https://github.com/rhysd/actionlint)
 
-## インストール
+## Installation
 
 ```bash
 # mise
@@ -21,58 +21,58 @@ brew install actionlint
 # Go
 go install github.com/rhysd/actionlint/cmd/actionlint@latest
 
-# ワンライナー
+# One-liner
 bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
 ```
 
-## 基本的な使い方
+## Basic usage
 
 ```bash
-# リポジトリ内の全ワークフロー
+# All workflows in the repository
 actionlint
 
-# 特定ファイル
+# Specific file
 actionlint .github/workflows/ci.yaml
 
-# 色付き・詳細
+# Colored, verbose
 actionlint -color
 
-# 設定ファイル指定
+# Specify config file
 actionlint -config-file .github/actionlint.yaml
 ```
 
-## 検出対象
+## What it detects
 
-| カテゴリ | 例 |
+| Category | Example |
 |---|---|
-| YAML / Workflow 構文 | `jobs.*` に `run-on:`（typo、`runs-on` が正） |
-| 式の型 | `${{ github.event.number }}` が number 型なのに文字列結合 |
-| 式の参照 | 存在しない output / secret / variable の参照 |
-| `runs-on` | 未知の runner ラベル（`ubuntu-late` 等） |
-| `uses` | 存在しない action、タグ未指定 |
-| shell 記述 | `run:` 内のシェルスクリプト（shellcheck 経由） |
-| needs グラフ | 循環依存、存在しない job |
-| if 条件 | 型不整合、未使用ブランチ |
-| matrix | 存在しないキー参照 |
+| YAML / Workflow syntax | `run-on:` in `jobs.*` (typo; correct is `runs-on`) |
+| Expression types | String concatenation with `${{ github.event.number }}`, which is a number type |
+| Expression references | References to nonexistent output / secret / variable |
+| `runs-on` | Unknown runner label (e.g. `ubuntu-late`) |
+| `uses` | Nonexistent action, missing tag |
+| Shell scripts | Shell scripts inside `run:` (via shellcheck) |
+| needs graph | Circular dependencies, nonexistent job |
+| if conditions | Type mismatches, unused branches |
+| matrix | References to nonexistent keys |
 
-## shellcheck 連携
+## shellcheck integration
 
-`run:` ブロックを shellcheck に流して shell スクリプトを検証する。shellcheck がインストールされていれば自動的に連携する:
+Runs `run:` blocks through shellcheck to validate shell scripts. Integrates automatically if shellcheck is installed:
 
 ```yaml
 - run: |
-    if [ $BAR = "foo" ]; then  # shellcheck が「$BAR は空で展開されうる」警告
+    if [ $BAR = "foo" ]; then  # shellcheck warns "$BAR may expand to empty"
       echo matched
     fi
 ```
 
-無効化: `actionlint -shellcheck=`（空指定）。
+Disable: `actionlint -shellcheck=` (empty value).
 
-## pyflakes 連携
+## pyflakes integration
 
-`shell: python` や `with: actions/github-script` の `script` 内 Python を pyflakes で検証できる（環境にインストールされていれば自動）。
+Python inside `shell: python` or the `script` field of `with: actions/github-script` can be validated with pyflakes (automatic if installed in the environment).
 
-## 設定 `.github/actionlint.yaml`
+## Configuration: `.github/actionlint.yaml`
 
 ```yaml
 self-hosted-runner:
@@ -87,26 +87,26 @@ config-variables:
 paths:
   .github/workflows/deploy.yaml:
     ignore:
-      - 'job "build" needs.*'  # 一時的に抑止
+      - 'job "build" needs.*'  # temporarily suppressed
 ```
 
-## 個別抑制
+## Individual suppression
 
-### ファイル単位
+### File level
 
 ```yaml
 # actionlint: shellcheck-disable=SC2086
 ```
 
-### ワークフロー冒頭
+### Top of workflow
 
 ```yaml
 # actionlint-disable
 ```
 
-行末インラインのサポートは限定的なので、`.github/actionlint.yaml` の `paths` で範囲指定するのが実務的。
+Inline end-of-line support is limited, so scoping via `paths` in `.github/actionlint.yaml` is the practical approach.
 
-## pre-commit 連携（lefthook）
+## pre-commit integration (lefthook)
 
 ```yaml
 pre-commit:
@@ -116,9 +116,9 @@ pre-commit:
       run: actionlint
 ```
 
-ワークフローファイルに変更がない限りは走らないので高速。
+Fast, since it only runs when workflow files change.
 
-## CI での使い方
+## Usage in CI
 
 ```yaml
 jobs:
@@ -131,7 +131,7 @@ jobs:
           reporter: github-pr-review
 ```
 
-`reviewdog/action-actionlint` は PR コメントに直接指摘を付ける。生コマンド呼び出しも可能:
+`reviewdog/action-actionlint` attaches findings directly as PR comments. Calling the raw command is also possible:
 
 ```yaml
 - run: |
@@ -139,40 +139,40 @@ jobs:
     ./actionlint -color
 ```
 
-## よく捕まえるミス
+## Commonly caught mistakes
 
-1. **`on:` を文字列で書いてしまう** — `on: push` は OK だが、イベントに条件を付ける場合は object 形式が必要
-2. **secrets / vars のタイポ** — `${{ secrets.NMP_TOKEN }}` → `NPM_TOKEN`
-3. **`needs: [a]` で a が存在しない** — job id の typo
-4. **fork PR で `secrets` を参照** — `pull_request` では secrets が空
-5. **未知の runner** — `ubuntu-latest-large` 等の organization-custom runner は設定ファイルで宣言
-6. **action の version pinning 漏れ** — `uses: actions/checkout`（タグなし）で警告
+1. **Writing `on:` as a string** — `on: push` is fine, but attaching conditions to an event requires object form
+2. **Typos in secrets / vars** — `${{ secrets.NMP_TOKEN }}` → `NPM_TOKEN`
+3. **`needs: [a]` where `a` doesn't exist** — job id typo
+4. **Referencing `secrets` in a fork PR** — secrets are empty under `pull_request`
+5. **Unknown runner** — organization-custom runners like `ubuntu-latest-large` must be declared in the config file
+6. **Missing action version pinning** — `uses: actions/checkout` (no tag) triggers a warning
 
-## トラブルシュート
+## Troubleshooting
 
-### 既存ワークフローで大量エラーが出る
+### Existing workflows produce a flood of errors
 
-`paths.<workflow>.ignore` で既知のパターンを一時除外し、段階的に潰す。
+Temporarily exclude known patterns with `paths.<workflow>.ignore` and fix them incrementally.
 
-### self-hosted runner ラベルが「未知」と出る
+### Self-hosted runner label reported as "unknown"
 
-`.github/actionlint.yaml` の `self-hosted-runner.labels` に追加。
+Add it to `self-hosted-runner.labels` in `.github/actionlint.yaml`.
 
-### organization の custom variable が未定義扱い
+### Organization custom variable treated as undefined
 
-`config-variables` に列挙。
+List it in `config-variables`.
 
-### shellcheck が走らない
+### shellcheck doesn't run
 
-shellcheck が PATH にない。`mise use shellcheck@0.11` でインストール。
+shellcheck is not on PATH. Install it with `mise use shellcheck@0.11`.
 
-## 他ツールとの比較
+## Comparison with other tools
 
-| 観点 | actionlint | reviewdog/action-actionlint | GitHub UI |
+| Aspect | actionlint | reviewdog/action-actionlint | GitHub UI |
 |---|---|---|---|
-| 検出精度 | 高 | actionlint と同じ | 基本的な構文のみ |
-| 実行環境 | ローカル + CI | CI（PR コメント付き） | 保存時 |
-| shellcheck 連携 | あり | あり | なし |
-| 式の型チェック | あり | あり | なし |
+| Detection accuracy | High | Same as actionlint | Basic syntax only |
+| Execution environment | Local + CI | CI (with PR comments) | On save |
+| shellcheck integration | Yes | Yes | No |
+| Expression type checking | Yes | Yes | No |
 
-実質、ワークフロー品質を担保するなら actionlint 一択。本リポジトリも lefthook pre-commit で運用。
+In practice, actionlint is the clear choice for ensuring workflow quality. This repository also runs it via lefthook pre-commit.

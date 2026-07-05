@@ -3,103 +3,103 @@ reviewed: 2026-07-05
 tags: [style, markdown]
 ---
 
-# Markdown 執筆スタイル（本リポジトリ向け）
+# Markdown Writing Style (for This Repository)
 
-この knowledge base の記事を書くときの執筆規約。AI エージェントが新規記事を追加する・既存記事を更新する際の一貫性を保つため。
+Writing conventions for articles in this knowledge base. Ensures consistency when AI agents add new articles or update existing ones.
 
-## 基本方針
+## Basic Policy
 
-- **情報密度重視**: 前置きや繰り返しを削り、事実と決定事項のみ残す
-- **英語で書く（識別子もそのまま英語）**: 記事本文・見出しは英語。詳細は下記「[記述言語](#記述言語英語主体)」。コマンド・フィールド名・エラーメッセージは原文のまま
-- **構造が意味を持つ**: 見出し → 概要 → 具体 → 例 の順を崩さない
-- **表で整理できるなら表で**: 比較・一覧・カタログは散文より表
-- **他記事と重複させない**: 重複したら片方に集約し相互参照リンクを貼る
+- **Prioritize information density**: cut preambles and repetition, keep only facts and decisions
+- **Write in English (identifiers stay in English too)**: article body and headings are in English. See "[Description Language](#description-language-english-first)" below for details. Commands, field names, and error messages stay verbatim
+- **Structure carries meaning**: keep the order heading → overview → specifics → example
+- **Use tables where they organize better**: comparisons, lists, and catalogs favor tables over prose
+- **Don't duplicate other articles**: if duplicated, consolidate into one and cross-link
 
-## 記述言語（英語主体）
+## Description Language (English-First)
 
-記事本文・見出し・箇条書きは**英語で書く**。識別子（コマンド・フィールド名・API ID・エラーメッセージ）は原文の英語のまま。この KB は主に AI エージェントが MCP 経由で読み込む資産であり、記述言語は「読ませる側の最適化」で選ぶ。
+Article body, headings, and bullet lists are **written in English**. Identifiers (commands, field names, API IDs, error messages) stay in their original English form. This KB is an asset primarily read by AI agents via MCP, so the description language is chosen to optimize for the reading side.
 
-- **理由**: retrieve 時のトークン効率、出典（英語の公式 docs）への忠実性と再検証の容易さ、指示追従の安定、マルチエージェント（Claude / Codex / Gemini / Copilot）整合。`~/.agents/AGENTS.md`「Agent Skills オーサリング」の英語規約と同方針
-- **応答言語とは独立**: エージェントの応答言語は AGENTS.md 冒頭「日本語で応答する」が支配する。記事本文に応答言語を書かない（記述言語 ≠ 応答言語）
-- **検索**: discovery は英語の filename / alias / frontmatter が担う。日本語で引きたい高頻度トピックは frontmatter `aliases` に日本語語を任意で足してよい
-- **移行**: 既存の日本語記事は `/update` での再検証時に順次英語化する。二言語混在を長期化させないため、着手する際はカテゴリ単位でまとめて変換するのが望ましい
+- **Rationale**: token efficiency at retrieval time, fidelity to sources (official English docs) and ease of re-verification, stable instruction-following, and consistency across multi-agent setups (Claude / Codex / Gemini / Copilot). Same policy as the English convention in "Agent Skills Authoring" in `~/.agents/AGENTS.md`
+- **Independent of response language**: the agent's response language is governed by "respond in Japanese" at the top of AGENTS.md. Do not write about response language inside an article (description language ≠ response language)
+- **Search**: discovery is handled by English filenames / aliases / frontmatter. For high-frequency topics you want to look up in Japanese, you may optionally add Japanese terms to the frontmatter `aliases`
+- **Migration**: existing Japanese articles are progressively translated to English during re-verification via `/update`. To avoid a prolonged bilingual mix, it's preferable to convert a whole category at once when starting
 
-## ファイル配置
+## File Layout
 
 ```text
 knowledge/
-├── tools/          CLI・SDK・ライブラリ単位の記事
-├── standards/      規約・設計原則・プロトコル
-├── languages/      プログラミング言語別
-└── platforms/      プラットフォーム・サービス
+├── tools/          Articles per CLI / SDK / library
+├── standards/      Conventions, design principles, protocols
+├── languages/      By programming language
+└── platforms/      Platforms and services
 ```
 
-ファイル名はケバブケース: `mcp-typescript-sdk.md` / `conventional-commits.md`。
+File names are kebab-case: `mcp-typescript-sdk.md` / `conventional-commits.md`.
 
 ## Frontmatter
 
-各記事の先頭に YAML frontmatter を付ける:
+Every article starts with YAML frontmatter:
 
 ```markdown
 ---
 reviewed: 2026-05-10
 ---
 
-# 記事タイトル
+# Article Title
 
 ...
 ```
 
-| フィールド | 意味 | 必須 |
+| Field | Meaning | Required |
 |---|---|---|
-| `reviewed` | 事実が検証された最終日（`YYYY-MM-DD`） | Yes |
+| `reviewed` | Last date the facts were verified (`YYYY-MM-DD`) | Yes |
 
-- `reviewed` は `/create`（作成時）と `/update`（再検証時）が書き込む。作成日＝最終検証日として扱う
-- `generate-index.mjs` が INDEX.md に `reviewed` 列を出力し、古い記事を視覚化できる
-- パースは簡易的な `key: value` 形式のみサポート（ネストや配列は未対応）
-- 将来的に `tags` / `source_verified_at` / `deprecated` などを追加する余地あり
+- `reviewed` is written by `/create` (on creation) and `/update` (on re-verification). Creation date is treated as the last-verified date
+- `generate-index.mjs` renders the `reviewed` column in INDEX.md so stale articles can be spotted visually
+- Parsing only supports simple `key: value` form (no nesting or arrays)
+- Room to add `tags` / `source_verified_at` / `deprecated` etc. in the future
 
-記事を書き換える際は `reviewed` を**必ず更新する**。事実検証なしの軽微な修正（typo など）の場合は据え置きでよい。
+When rewriting an article, **always update `reviewed`**. Minor edits without fact verification (e.g., typo fixes) may leave it unchanged.
 
-## 記事の骨格
+## Article Skeleton
 
-推奨セクション順序（全部必須ではない）:
+Recommended section order (not all are mandatory):
 
 ```markdown
-# タイトル
+# Title
 
-1〜2 行の要約。何か・なぜ重要かを 1 センテンスで。
+1-2 line summary. What it is and why it matters, in one sentence.
 
-公式: [リンク](URL)
+Official: [Link](URL)
 
-## インストール / セットアップ
-## 基本コマンド / 最小例
-## 主要概念（表）
-## 設定 / API リファレンス
-## 落とし穴 / アンチパターン
-## トラブルシュート
-## 他ツールとの比較
-## 参考
+## Installation / Setup
+## Basic Commands / Minimal Example
+## Key Concepts (table)
+## Configuration / API Reference
+## Pitfalls / Anti-patterns
+## Troubleshooting
+## Comparison with Other Tools
+## References
 ```
 
-「AI エージェントがよくやるミス」節は特に価値が高い（この KB の存在意義）。
+The "Common AI Agent Mistakes" section is especially valuable (it's the reason this KB exists).
 
-## 見出し
+## Headings
 
-- `#` はタイトル 1 つのみ
-- `##` で主要セクション
-- `###` は必要なときだけ。`####` はほぼ使わない
-- 見出しに番号を付けない（自動番号の方が編集時に安定）
+- `#` for exactly one title
+- `##` for major sections
+- `###` only when necessary. `####` is almost never used
+- Don't number headings (auto-numbering is more stable when editing)
 
-## 強調
+## Emphasis
 
-- `**太字**`: 重要語・警告
-- `*斜体*`: 術語の初出
-- 連続使用は控える（全体が太字だと何も強調されない）
+- `**bold**`: key terms, warnings
+- `*italic*`: first occurrence of a term
+- Avoid overuse (if everything is bold, nothing stands out)
 
-## コードブロック
+## Code Blocks
 
-言語指定を必ず付ける:
+Always specify a language tag:
 
 ````markdown
 ```ts
@@ -107,68 +107,68 @@ const x = 1;
 ```
 ````
 
-| 用途 | 言語タグ |
+| Use case | Language tag |
 |---|---|
-| シェルコマンド | `bash` |
-| 設定ファイル（JSON） | `json` |
-| 設定ファイル（YAML） | `yaml` |
-| 設定ファイル（TOML） | `toml` |
+| Shell commands | `bash` |
+| Config file (JSON) | `json` |
+| Config file (YAML) | `yaml` |
+| Config file (TOML) | `toml` |
 | TypeScript | `ts` |
 | JavaScript | `js` |
 | Python | `python` |
-| 疑似コード / 図 | `text` |
+| Pseudocode / diagrams | `text` |
 
-### コード中のコメント
+### Comments in Code
 
-例で意味を示すコメントは**英語で簡潔に**。日本語コメントは人間向けに有効だが、コード片は国際的に読まれることを想定。
+Comments that clarify meaning in examples should be **concise English**. Japanese comments are fine for human-facing code, but snippets here are expected to be read internationally.
 
-## 表
+## Tables
 
-- 3 列以下にする。4 列以上は見づらい → 分割検討
-- 右端に意味の薄い列を置かない
-- セル内の改行は `<br>` より文を短くで対処
-- コードは `` `backtick` `` で囲む
+- Keep to 3 columns or fewer. 4+ columns are hard to read — consider splitting
+- Don't put a low-information column at the far right
+- Handle line breaks within a cell by shortening the sentence rather than using `<br>`
+- Wrap code in `` `backticks` ``
 
 ### OK
 
 ```markdown
-| フィールド | 説明 |
+| Field | Description |
 |---|---|
-| `name` | サーバー識別名 |
-| `version` | サーバーの semver |
+| `name` | Server identifier name |
+| `version` | Server semver |
 ```
 
-### NG（要素が多すぎる）
+### NG (too many elements)
 
 ```markdown
-| フィールド | 型 | 必須 | デフォルト | 説明 | 注意事項 |
+| Field | Type | Required | Default | Description | Notes |
 ```
 
-## リンク
+## Links
 
-- インライン `[text](URL)` 形式
-- 公式ドキュメント以外のリンクは最小限に
-- 同リポジトリ内の他記事は相対パス: `` `standards/semver.md` `` か `[semver](semver.md)`
+- Use inline `[text](URL)` form
+- Keep links to anything other than official documentation to a minimum
+- Other articles in the same repository use relative paths: `` `standards/semver.md` `` or `[semver](semver.md)`
 
-## 引用・警告
+## Quotes and Warnings
 
 ```markdown
-> **注意**: ここに警告文。
+> **Note**: warning text here.
 ```
 
-- `> **注意**:` / `> **Tip**:` / `> **重要**:` を統一用語に
-- 乱発しない（本文に書いた方が読みやすいことが多い）
+- Standardize on `> **Note**:` / `> **Tip**:` / `> **Important**:`
+- Don't overuse (writing it in the body text is often more readable)
 
-## リスト
+## Lists
 
-- 順序に意味があれば `1.` / `2.` / `3.`（自動採番でも `1.` 連番でも可）
-- 順序に意味がなければ `-`
-- `*` は使わない（本 KB は `-` 統一）
-- ネストは 2 レベルまで
+- Use `1.` / `2.` / `3.` when order matters (auto-numbering or sequential `1.` both work)
+- Use `-` when order doesn't matter
+- Don't use `*` (this KB standardizes on `-`)
+- Nest no more than 2 levels
 
-## 日本語と英数字の間のスペース
+## Spacing Between Japanese and Alphanumeric Text
 
-CLAUDE.md の共通ルールに倣い **半角スペースを入れる**:
+Following the common rule in CLAUDE.md, **insert a half-width space**:
 
 ```markdown
 OK: pnpm install で依存関係を取得する
@@ -176,72 +176,72 @@ NG: pnpminstallで依存関係を取得する
 NG: pnpm installで依存関係を取得する
 ```
 
-markdownlint では検出できないが、可読性のため一貫して入れる。
+markdownlint can't detect this, but apply it consistently for readability.
 
-## バージョン記述
+## Describing Versions
 
-- **時点を明示**: 「2026-04 時点で `gpt-5.4`」
-- **ピン留めしない情報**は曖昧化: 「現行の latest」「最新安定」
-- モデル名・API ID は**コードブロック化**: `` `claude-opus-4-8` ``
+- **State the point in time explicitly**: "As of 2026-04, `gpt-5.4`"
+- **Soften information you don't want to pin down**: "current latest", "latest stable"
+- Wrap model names and API IDs in **code formatting**: `` `claude-opus-4-8` ``
 
-時点付きの記述は陳腐化のマーカーになる。レビュー時に古い日付が並んでいたら更新する。
+Dated statements act as staleness markers. If old dates pile up, update them at review time.
 
-## AI エージェントがよくやるミス
+## Common AI Agent Mistakes
 
-この節は主要記事で積極的に書く。フォーマット:
+Write this section actively for major articles. Format:
 
 ```markdown
-## AI エージェントがよくやるミス
+## Common AI Agent Mistakes
 
-1. **短い正解ラベル** — 具体的な誤用とその理由を 1〜2 文で
+1. **Short correct-answer label** — the specific misuse and why, in 1-2 sentences
 2. **...**
 ```
 
-箇条書きで 3〜6 項目が読みやすい。1 項目 1 文で収めると密度が出る。
+3-6 bullet items read best. One sentence per item keeps density high.
 
-## 禁止
+## Prohibited
 
-- **絵文字**: 見出し・本文とも原則使わない（検索性と堅さを優先）。装飾目的で付けない
-- **「〜と思います」**: 規範文書なので断定する
-- **「詳しくは公式ドキュメント参照」だけで終わる**: 最低限の要約を書いてから出典を貼る
-- **TODO コメントを残す**: 記事として未完成なら merge しない
-- **無意味な区切り線 `---`**: セクション見出しがあれば十分
+- **Emojis**: generally not used in headings or body text (prioritize searchability and formality). Don't add them for decoration
+- **"I think..." hedging**: this is a normative document, so state things definitively
+- **Ending with just "see the official docs for details"**: write at least a minimal summary before linking the source
+- **Leaving TODO comments**: don't merge an article that's incomplete
+- **Meaningless separator lines `---`**: section headings are sufficient
 
-## lint と検証
+## Lint and Verification
 
 ```bash
-# 単一ファイル
+# Single file
 markdownlint-cli2 --fix knowledge/tools/foo.md
 
-# プロジェクト全体
+# Whole project
 markdownlint-cli2 "knowledge/**/*.md"
 ```
 
-lefthook の pre-commit が自動修正する（`stage_fixed: true`）。
+lefthook's pre-commit auto-fixes (`stage_fixed: true`).
 
-### 本プロジェクトの markdownlint 設定
+### markdownlint Configuration for This Project
 
-ベース設定を継承。主要ルール:
+Inherits a base configuration. Key rules:
 
-- `MD013` 行長: 無効（日本語で意味を持つ制限を付けづらい）
-- `MD033` インライン HTML: 表内の `<br>` 等を想定して許容
-- `MD041` ファイル先頭は H1: 有効
-- `MD024` 重複見出し: 無効（`トラブルシュート` 配下のサブ見出しが被るため）
+- `MD013` line length: disabled (hard to set a meaningful limit for Japanese text)
+- `MD033` inline HTML: allowed (for `<br>` etc. in tables)
+- `MD041` first line must be H1: enabled
+- `MD024` duplicate headings: disabled (because sub-headings under "Troubleshooting" tend to collide)
 
-## 他のツールとの関係
+## Relationship to Other Tools
 
-- [`markdownlint`](../tools/markdownlint.md) — 構文ルール検査（Linter）
-- [`yamlfmt`](../tools/yamlfmt.md) — Frontmatter のフォーマット
-- [`MarkItDown`](../tools/markitdown.md) — 各種ドキュメント（Word, PDF 等）の Markdown 変換ツール
+- [`markdownlint`](../tools/markdownlint.md) — syntax rule checker (linter)
+- [`yamlfmt`](../tools/yamlfmt.md) — frontmatter formatting
+- [`MarkItDown`](../tools/markitdown.md) — tool for converting various documents (Word, PDF, etc.) to Markdown
 
-## チェックリスト（記事を書いたら）
+## Checklist (After Writing an Article)
 
-- [ ] タイトル直後の要約が 1〜2 行で「何か・なぜ重要か」を伝えるか
-- [ ] 公式ドキュメントへのリンクが先頭付近にあるか
-- [ ] 表と箇条書きが適切に使い分けられているか
-- [ ] コードブロックに言語タグが付いているか
-- [ ] 「AI エージェントがよくやるミス」節（またはトラブルシュート）があるか
-- [ ] 他記事と重複する内容をリンクで参照しているか
-- [ ] 陳腐化しやすい情報に日付が付いているか
-- [ ] markdownlint を通したか
-- [ ] `knowledge list <category>` で見えるか確認したか
+- [ ] Does the summary right after the title convey "what it is / why it matters" in 1-2 lines?
+- [ ] Is a link to the official documentation near the top?
+- [ ] Are tables and bullet lists used appropriately?
+- [ ] Do code blocks have language tags?
+- [ ] Is there a "Common AI Agent Mistakes" section (or troubleshooting)?
+- [ ] Is content that duplicates other articles referenced via a link instead?
+- [ ] Is information prone to becoming stale marked with a date?
+- [ ] Has it been run through markdownlint?
+- [ ] Verified it's visible via `knowledge list <category>`?

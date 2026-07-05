@@ -3,66 +3,66 @@ reviewed: 2026-05-10
 tags: [standards, infrastructure]
 ---
 
-# ソフトウェア配信・配布方法
+# Software Distribution Methods
 
-ツールやアプリケーションをユーザーの環境へ届けるための主要な手法。OS レベル、言語ランタイムレベル、直接配布の 3 階層に大別される。
+Key approaches for delivering tools and applications to users' environments. Broadly divided into three tiers: OS level, language runtime level, and direct distribution.
 
-公式ドキュメントやリポジトリの README では、これらが複数併記されることが多い（例: `brew`, `npm`, `curl | sh` のすべてを提供）。
+Official documentation and repository READMEs often list several of these together (e.g., providing `brew`, `npm`, and `curl | sh` all at once).
 
-## OS パッケージマネージャー (System level)
+## OS Package Managers (System level)
 
-OS のファイルシステム全体を管理し、依存関係を解決しながらインストールする。システム全体の安定性を重視する場合に最適。
+Manage the entire OS filesystem, installing while resolving dependencies. Best suited when system-wide stability is the priority.
 
-### 代表的な OS 向けツール
+### Representative OS-level tools
 
-| ツール | 対象 OS | 特徴 |
+| Tool | Target OS | Characteristics |
 |---|---|---|
-| `apt` | Debian / Ubuntu | Linux の標準。`/usr/bin` 等に配置。原則 root 権限が必要。 |
-| `Homebrew` | macOS / Linux | ユーザーディレクトリ配下（`/opt/homebrew` 等）に配置。Mac 開発のデファクト。 |
-| `WinGet` | Windows | Microsoft 公式。GitHub やストアからバイナリを取得・管理する。 |
-| `apk` / `dnf` | Alpine / Fedora | 各ディストリビューション固有。コンテナ内では `apk` が多用される。 |
+| `apt` | Debian / Ubuntu | The Linux standard. Installs to `/usr/bin` etc. Generally requires root privileges. |
+| `Homebrew` | macOS / Linux | Installs under the user directory (`/opt/homebrew` etc.). The de facto standard for Mac development. |
+| `WinGet` | Windows | Official Microsoft tool. Fetches and manages binaries from GitHub or the Store. |
+| `apk` / `dnf` | Alpine / Fedora | Distribution-specific. `apk` is heavily used inside containers. |
 
-## 言語別パッケージマネージャー (Runtime level)
+## Language-specific Package Managers (Runtime level)
 
-特定のプログラミング言語のエコシステムに特化した配布方法。開発ツール（CLI）の配布に多用され、その言語のランタイムが必要。
+Distribution methods specialized for a particular programming language ecosystem. Widely used for distributing development tools (CLIs); requires that language's runtime.
 
-### 言語別の主要ツール
+### Major tools by language
 
-| ツール | 言語 | 特徴 |
+| Tool | Language | Characteristics |
 |---|---|---|
-| `npm` / `pnpm` | JavaScript | `npm install -g` でグローバル配置。`npx` で一時実行が可能。 |
-| `uv` | Python | `uv tool install`（pipx 互換）でツールごとに孤立した環境を作成する。 |
-| `go install` | Go | ソースを取得し、ローカルでビルドして `GOBIN` に配置する。高速。 |
-| `cargo install` | Rust | ソースからビルドするためインストールに時間がかかるが、最適化される。 |
+| `npm` / `pnpm` | JavaScript | `npm install -g` installs globally. `npx` allows ephemeral execution. |
+| `uv` | Python | `uv tool install` (pipx-compatible) creates an isolated environment per tool. |
+| `go install` | Go | Fetches source and builds locally, placing the binary in `GOBIN`. Fast. |
+| `cargo install` | Rust | Builds from source, so installation takes longer, but the result is optimized. |
 
-## 直接配布 (Direct distribution)
+## Direct Distribution
 
-パッケージマネージャーを介さず、ビルド済みバイナリやスクリプトを直接提供する。
+Provides prebuilt binaries or scripts directly, bypassing a package manager.
 
-### 手法
+### Methods
 
-- **GitHub Releases**: 特定 OS / アーキテクチャ向けにビルド済みバイナリ（`.deb`, `.rpm`, `.zip`, `.tar.gz`）を配布。CI での利用に適している。
-- **Installer Scripts**: `curl -fsSL https://... | sh` 形式。依存関係が少なく即座に導入できるが、パイプライン実行のセキュリティリスクに注意。
-- **Mise (aqua)**: バイナリ配布を抽象化して管理するツール。`mise use aqua:cli/cli` のように宣言的にバージョンを固定できる。
+- **GitHub Releases**: Distributes prebuilt binaries (`.deb`, `.rpm`, `.zip`, `.tar.gz`) for specific OS/architecture combinations. Well suited to CI usage.
+- **Installer Scripts**: The `curl -fsSL https://... | sh` style. Few dependencies and instant setup, but be mindful of the security risks of piping to a shell.
+- **Mise (aqua)**: A tool that abstracts and manages binary distribution. Lets you pin versions declaratively, e.g., `mise use aqua:cli/cli`.
 
-## 選定基準
+## Selection Criteria
 
-| 観点 | 推奨手法 | 理由 |
+| Perspective | Recommended method | Rationale |
 |---|---|---|
-| **一般ユーザー (Non-dev)** | OS パッケージマネージャー | OS の更新サイクルに乗れ、管理が容易なため。 |
-| **Node.js 開発者** | `npm` / `pnpm` | 既に環境があり、導入障壁が低いため。 |
-| **Rust ツール** | `cargo install` / 直接バイナリ | [`ripgrep`](../tools/ripgrep.md) や `fd` など。単一バイナリで配布されることが多い。 |
-| **Python ツール** | `uv` / `pipx` | グローバルな Python 環境の汚染（競合）を避けるため。 |
-| **CI / 自動化環境** | 直接バイナリ / `mise` | インストール速度、再現性、権限管理のしやすさが重要。 |
+| **General users (non-dev)** | OS package manager | Rides the OS update cycle and is easy to manage. |
+| **Node.js developers** | `npm` / `pnpm` | The environment is already in place, so the adoption barrier is low. |
+| **Rust tools** | `cargo install` / direct binary | e.g. [`ripgrep`](../tools/ripgrep.md), `fd`. Often distributed as a single binary. |
+| **Python tools** | `uv` / `pipx` | Avoids polluting (conflicting with) the global Python environment. |
+| **CI / automation environments** | Direct binary / `mise` | Install speed, reproducibility, and ease of permission management matter. |
 
-## AI エージェントがよくやるミス
+## Common Mistakes AI Agents Make
 
-1. **`sudo` の不適切な使用** — `npm install -g` や `brew install` で不要な `sudo` を付けて権限エラーを誘発する。
-2. **システム環境の破壊** — Python ツールを `pip install` でシステム Python に直接入れ、OS 管理のパッケージと衝突させる。
-3. **アーキテクチャの誤認** — バイナリを `curl` で落とす際、`x86_64` と `arm64`（Apple Silicon 等）を判別せずに固定 URL を使う。
-4. **環境変数の反映漏れ** — インストール後に `~/.local/bin` や `~/go/bin` にパスを通す必要があるが、それを考慮せずに実行を試みる。
+1. **Inappropriate use of `sudo`** — Adding unnecessary `sudo` to `npm install -g` or `brew install`, triggering permission errors.
+2. **Breaking the system environment** — Installing Python tools directly into the system Python via `pip install`, causing conflicts with OS-managed packages.
+3. **Misidentifying architecture** — When downloading a binary with `curl`, using a fixed URL without distinguishing `x86_64` from `arm64` (e.g., Apple Silicon).
+4. **Forgetting to update environment variables** — After installation, `~/.local/bin` or `~/go/bin` needs to be added to the PATH, but attempting to run the tool without accounting for this.
 
-## 参考
+## References
 
 - [Homebrew Documentation](https://docs.brew.sh/)
 - [npm Docs: Downloading and installing packages globally](https://docs.npmjs.com/downloading-and-installing-packages-globally)

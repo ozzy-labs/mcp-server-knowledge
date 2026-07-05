@@ -5,23 +5,23 @@ tags: [library, typescript, ai-workflow]
 
 # MCP TypeScript SDK
 
-`@modelcontextprotocol/sdk` — Model Context Protocol のサーバー・クライアント両方を実装する公式 TypeScript SDK。本リポジトリもこれを利用している。
+`@modelcontextprotocol/sdk` — the official TypeScript SDK implementing both server and client sides of the Model Context Protocol. This repository also uses it.
 
-公式: [github.com/modelcontextprotocol/typescript-sdk](https://github.com/modelcontextprotocol/typescript-sdk) / [npm](https://www.npmjs.com/package/@modelcontextprotocol/sdk)
+Official: [github.com/modelcontextprotocol/typescript-sdk](https://github.com/modelcontextprotocol/typescript-sdk) / [npm](https://www.npmjs.com/package/@modelcontextprotocol/sdk)
 
-## インストールとプロジェクト構成
+## Installation and project setup
 
 ```bash
 pnpm add @modelcontextprotocol/sdk zod
 ```
 
-- **パッケージ**: `@modelcontextprotocol/sdk`（単一パッケージ。用途別にサブパスインポート）
-- **Peer deps**: `zod ^3.25 || ^4.0`（必須）。加えて `@cfworker/json-schema ^4.1.1` が optional peer（Cloudflare Workers 等で `validation/cfworker` プロバイダを使う場合のみ必要）
-- **Node.js**: `>= 18`（20 LTS 推奨）
-- **ESM 専用**: `package.json` に `"type": "module"`、`tsconfig.json` は `"module": "Node16"`（または `NodeNext`）+ `"moduleResolution": "Node16"`
-- **サブパスインポートは `.js` 拡張子**: TS ソースからでも `from "@modelcontextprotocol/sdk/server/mcp.js"` と書く。v1.29.0 ではトップレベル `./validation`（`/validation/ajv`, `/validation/cfworker`）と `./experimental` / `./experimental/tasks`（streaming elicitation/sampling）も公開
+- **Package**: `@modelcontextprotocol/sdk` (a single package with subpath imports per use case)
+- **Peer deps**: `zod ^3.25 || ^4.0` (required). Additionally `@cfworker/json-schema ^4.1.1` is an optional peer (needed only when using the `validation/cfworker` provider, e.g. on Cloudflare Workers)
+- **Node.js**: `>= 18` (20 LTS recommended)
+- **ESM only**: `"type": "module"` in `package.json`; `tsconfig.json` needs `"module": "Node16"` (or `NodeNext`) + `"moduleResolution": "Node16"`
+- **Subpath imports use the `.js` extension**: even from TS source, write `from "@modelcontextprotocol/sdk/server/mcp.js"`. As of v1.29.0, the top-level `./validation` (`/validation/ajv`, `/validation/cfworker`) and `./experimental` / `./experimental/tasks` (streaming elicitation/sampling) are also exposed
 
-## サーバーのセットアップ
+## Server setup
 
 ```ts
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -32,52 +32,52 @@ const server = new McpServer(
 );
 ```
 
-| 第1引数 `Implementation` | 説明 |
+| 1st arg `Implementation` | Description |
 |---|---|
-| `name` | サーバー識別名 |
-| `version` | サーバーの semver（SDK やプロトコルのバージョンではない）。`initialize` 時にクライアントに渡る |
+| `name` | Server identifier |
+| `version` | The server's semver (not the SDK or protocol version). Passed to the client during `initialize` |
 
-| 第2引数 `ServerOptions`（任意） | 説明 |
+| 2nd arg `ServerOptions` (optional) | Description |
 |---|---|
-| `capabilities` | 登録だけでは伝わらない追加ケイパビリティを宣言 |
-| `instructions` | クライアントがシステムプロンプトに差し込める自由記述。ツール横断の指針（「A を呼ぶ前に B を呼ぶ」等）に使う。個別ツール説明の複製には使わない |
+| `capabilities` | Declares extra capabilities that registration alone doesn't convey |
+| `instructions` | Free-form text the client can inject into its system prompt. Use for cross-tool guidance (e.g. "call B before A"); don't duplicate individual tool descriptions here |
 
-**ライフサイクル**: コンストラクタ → ツール/リソース/プロンプト登録 → `await server.connect(transport)`。`connect` 後はケイパビリティ確定。終了は `server.close()`。
+**Lifecycle**: constructor → register tools/resources/prompts → `await server.connect(transport)`. Capabilities are locked in after `connect`. Shut down with `server.close()`.
 
-## トランスポート
+## Transports
 
-| トランスポート | サブパス | 用途 |
+| Transport | Subpath | Use case |
 |---|---|---|
-| `StdioServerTransport` | `server/stdio.js` | ローカル子プロセス（Claude Desktop、Claude Code、Codex CLI が起動） |
-| `StreamableHTTPServerTransport` | `server/streamableHttp.js` | リモート/ホスト型（HTTP 経由） |
-| `SSEServerTransport`（非推奨） | `server/sse.js` | 旧来の SSE。Streamable HTTP に置き換え |
+| `StdioServerTransport` | `server/stdio.js` | Local child process (launched by Claude Desktop, Claude Code, Codex CLI) |
+| `StreamableHTTPServerTransport` | `server/streamableHttp.js` | Remote/hosted (over HTTP) |
+| `SSEServerTransport` (deprecated) | `server/sse.js` | Legacy SSE, superseded by Streamable HTTP |
 
-### stdio の注意
+### Stdio caveat
 
-stdout には **JSON-RPC フレーム以外を書き込まない**。`console.log()` や debug 出力は必ず `console.error()`（stderr）へ。stdout を汚すとプロトコルが破綻してクライアントが切断する。
+**Do not write anything other than JSON-RPC frames to stdout**. Always send `console.log()` and debug output to `console.error()` (stderr). Polluting stdout breaks the protocol and causes the client to disconnect.
 
 ### Streamable HTTP
 
 ```ts
 const transport = new StreamableHTTPServerTransport({
   sessionIdGenerator: () => crypto.randomUUID(),
-  enableJsonResponse: true,   // SSE ではなく通常 JSON レスポンス
+  enableJsonResponse: true,   // regular JSON response instead of SSE
 });
 ```
 
-主なオプション:
+Key options:
 
-| オプション | 説明 |
+| Option | Description |
 |---|---|
-| `sessionIdGenerator` | ステートフルセッション ID 生成器。`undefined` でステートレス |
-| `onsessioninitialized` | セッション初期化時のフック |
-| `enableJsonResponse` | `true` で SSE ではなく同期 JSON レスポンス |
-| `enableDnsRebindingProtection` | DNS rebinding 対策 |
-| `allowedHosts` / `allowedOrigins` | 許可する Host/Origin |
+| `sessionIdGenerator` | Generator for stateful session IDs. `undefined` for stateless |
+| `onsessioninitialized` | Hook fired on session initialization |
+| `enableJsonResponse` | `true` for synchronous JSON responses instead of SSE |
+| `enableDnsRebindingProtection` | DNS rebinding protection |
+| `allowedHosts` / `allowedOrigins` | Allowed Host/Origin values |
 
-Express/Node HTTP ルート内では `await transport.handleRequest(req, res, req.body)` を呼ぶ。セッションは `mcp-session-id` ヘッダ単位で `Map` 管理し、`initialize` リクエスト（`isInitializeRequest(req.body)`）のときだけ新規 transport を作る。
+Inside an Express/Node HTTP route, call `await transport.handleRequest(req, res, req.body)`. Manage sessions in a `Map` keyed by the `mcp-session-id` header, and create a new transport only for `initialize` requests (`isInitializeRequest(req.body)`).
 
-## ツール登録
+## Registering tools
 
 ```ts
 server.registerTool(
@@ -94,31 +94,31 @@ server.registerTool(
 );
 ```
 
-### `inputSchema` は **Zod raw shape**
+### `inputSchema` is a **Zod raw shape**
 
-v1 系では `z.object({...})` でラップせず、`{ x: z.number() }` のような**シェイプオブジェクト**を渡す。SDK が内部で `z.object` 相当にラップし、`zod-to-json-schema` で JSON Schema に変換する。
+In the v1 series, pass a **shape object** like `{ x: z.number() }` rather than wrapping it in `z.object({...})`. The SDK internally wraps it as the equivalent of `z.object` and converts it to JSON Schema via `zod-to-json-schema`.
 
-> `z.object(...)` を渡すと二重ラップで JSON Schema が壊れる。v2 では逆に object を期待する API 変更が計画されている点に注意。
+> Passing `z.object(...)` causes double wrapping and breaks the JSON Schema. Note that v2 plans to flip this and expect an object instead.
 
 ### `outputSchema`
 
-宣言した場合、ハンドラは `structuredContent` も併せて返す必要がある。
+If declared, the handler must also return `structuredContent`.
 
 ### `annotations`
 
-**クライアントへのヒント**。サーバーの挙動は変わらず、自動承認の判断やウォーニング表示に使われる。**認可には絶対に使わない**。
+**Hints for the client**. They don't change server behavior; they're used for auto-approve decisions and warning display. **Never use them for authorization**.
 
-| フィールド | 意味 |
+| Field | Meaning |
 |---|---|
-| `readOnlyHint` | 状態を変更しない。クライアントは auto-approve 可能 |
-| `destructiveHint` | 不可逆な破壊操作（削除・DROP）。ユーザー確認が期待される。`readOnlyHint=false` のときのみ意味を持つ |
-| `idempotentHint` | 同じ引数で同じ効果（再試行安全） |
-| `openWorldHint` | 外部世界（Web、サードパーティ API）にアクセス。非決定性・副作用の示唆 |
+| `readOnlyHint` | Doesn't change state. Client may auto-approve |
+| `destructiveHint` | Irreversible destructive operation (delete, DROP). User confirmation is expected. Only meaningful when `readOnlyHint=false` |
+| `idempotentHint` | Same arguments produce the same effect (safe to retry) |
+| `openWorldHint` | Accesses the outside world (web, third-party APIs). Implies non-determinism/side effects |
 
-## リソース登録
+## Registering resources
 
 ```ts
-// 静的
+// static
 server.registerResource(
   "config",
   "config://app",
@@ -126,7 +126,7 @@ server.registerResource(
   async (uri) => ({ contents: [{ uri: uri.href, text: await readConfig() }] }),
 );
 
-// テンプレート（URI パラメータ）
+// template (URI parameters)
 import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 server.registerResource(
@@ -139,9 +139,9 @@ server.registerResource(
 );
 ```
 
-`ResourceTemplate` に `list` を渡すと `resources/list` で具体インスタンスを露出。`complete` で引数補完を提供できる。
+Passing `list` to `ResourceTemplate` exposes concrete instances via `resources/list`. `complete` can provide argument completion.
 
-## プロンプト登録
+## Registering prompts
 
 ```ts
 server.registerPrompt(
@@ -158,9 +158,9 @@ server.registerPrompt(
 );
 ```
 
-`argsSchema` もツールと同じく Zod raw shape。補完サポートは `@modelcontextprotocol/sdk/server/completable.js` の `completable(z.string(), (value) => [...])` でラップする。
+`argsSchema` is also a Zod raw shape, same as tools. Wrap completion support with `completable(z.string(), (value) => [...])` from `@modelcontextprotocol/sdk/server/completable.js`.
 
-## 返り値（CallToolResult）
+## Return value (CallToolResult)
 
 ```ts
 {
@@ -171,39 +171,39 @@ server.registerPrompt(
     | { type: "resource", resource: { uri, text?, blob?, mimeType? } }
     | { type: "resource_link", uri, name?, description?, mimeType? }
   ],
-  structuredContent?: {},  // outputSchema 宣言時は必須
+  structuredContent?: {},  // required when outputSchema is declared
   isError?: boolean,
   _meta?: Record<string, unknown>,
 }
 ```
 
-`content` は順序付き配列。LLM は全要素を読む。**大きな blob は inline せず `resource_link` で参照させる**のがベストプラクティス。
+`content` is an ordered array; the LLM reads all elements. **Best practice: don't inline large blobs — reference them via `resource_link`.**
 
-## エラーハンドリング
+## Error handling
 
-2 つの表現を使い分ける:
+Two distinct representations, used for different cases:
 
-| ケース | 方法 | クライアント/LLM の体験 |
+| Case | Method | Client/LLM experience |
 |---|---|---|
-| **ツール実行失敗**（想定内エラー: 不正入力、上流 4xx/5xx、ファイル不在） | `{ content: [{ type: "text", text: "error message" }], isError: true }` を返す | 成功応答 + `isError: true`。LLM はメッセージを読んでリトライ/リカバリ判断できる |
-| **プロトコル/プログラマエラー**（バリデーション、不変条件違反、致命） | ハンドラ内で `throw` | SDK が JSON-RPC エラー応答に変換。LLM には自然言語が渡らない |
+| **Tool execution failure** (expected error: invalid input, upstream 4xx/5xx, missing file) | Return `{ content: [{ type: "text", text: "error message" }], isError: true }` | A success response with `isError: true`. The LLM can read the message and decide to retry/recover |
+| **Protocol/programmer error** (validation, invariant violation, fatal) | `throw` inside the handler | The SDK converts it into a JSON-RPC error response. The LLM never sees natural-language text |
 
-**原則**: モデルに反応させたい → `isError: true`。クライアントに hard fail として扱わせたい → `throw`。Zod による入力バリデーション失敗は SDK がハンドラ実行前に自動で throw する。
+**Principle**: want the model to react → `isError: true`. Want the client to treat it as a hard failure → `throw`. Zod input-validation failures are automatically thrown by the SDK before the handler runs.
 
-## LLM がよくやる 3 大ミス
+## The 3 most common LLM mistakes
 
-1. **`z.object({...})` を `inputSchema` に渡す**
-   - v1 系は raw shape（`{ x: z.number() }`）を期待。ラップすると JSON Schema が壊れる
-2. **stdio サーバーで stdout に書き込む**（`console.log`、print 等）
-   - JSON-RPC フレーミングを破壊してクライアントが切断。ログは必ず `console.error`
-3. **ESM 構成ミス**（`.js` 拡張子忘れ、CJS のまま）
-   - SDK は ESM 専用。`"type": "module"`、サブパスは `.js` 付きで書く
+1. **Passing `z.object({...})` to `inputSchema`**
+   - The v1 series expects a raw shape (`{ x: z.number() }`). Wrapping it breaks the JSON Schema
+2. **Writing to stdout in a stdio server** (`console.log`, `print`, etc.)
+   - Breaks JSON-RPC framing and disconnects the client. Always log via `console.error`
+3. **ESM misconfiguration** (forgetting the `.js` extension, staying on CJS)
+   - The SDK is ESM-only. Use `"type": "module"` and always include `.js` on subpaths
 
-その他: ユーザー向けエラーで throw して LLM がコンテキストを失う、リクエスト毎に新 transport を作ってしまい Streamable HTTP のセッション継続が切れる、安全なツールに `readOnlyHint` を付け忘れて auto-approve が効かない。
+Others: throwing on user-facing errors and losing context for the LLM; creating a new transport per request and breaking Streamable HTTP session continuity; forgetting `readOnlyHint` on safe tools, disabling auto-approve.
 
-## テスト
+## Testing
 
-### InMemoryTransport による in-process 結合テスト（推奨デフォルト）
+### In-process integration tests with InMemoryTransport (recommended default)
 
 ```ts
 import { describe, it, expect } from "vitest";
@@ -229,12 +229,12 @@ it("calls greet", async () => {
 });
 ```
 
-ソケットやサブプロセスを使わず、スキーマ検証・ケイパビリティネゴシエーション・シリアライズをすべて通す。vitest のデフォルトとして妥当。
+No sockets or subprocesses — schema validation, capability negotiation, and serialization all run end-to-end. A reasonable default for vitest.
 
-### ハンドラ単体テスト
+### Unit-testing handlers
 
-純粋なロジックは、ハンドラを名前付き関数として切り出してテストできる。高速だが SDK のバリデーションを迂回するため、**サーバー単位で最低 1 本は in-process 結合テスト**を併用すること。
+Pure logic can be tested by extracting the handler as a named function. It's fast but bypasses SDK validation, so **pair it with at least one in-process integration test per server**.
 
-## v1 / v2 の注意
+## v1 / v2 notes
 
-v2 系（2026-05 時点で alpha 公開、最新 2.0.0-alpha.2）ではパッケージが分割されている: `@modelcontextprotocol/server` / `/client` / `/node`（共有ランタイム / `InMemoryTransport` 等）に加え、フレームワーク統合 `/express` / `/hono` / `/fastify`。Node.js は v2 系で **>= 20** が要求される。`inputSchema` は Zod に限らず Valibot・ArkType など **Standard Schema** 互換ライブラリを受け取る形に変わる（v1 の raw shape とは異なる）。v2 stable は Q1 2026 目標を未達のまま alpha 段階が続いている。stable は当面 v1 系（本記事は v1.29.0 基準、現行 npm latest = 1.29.0）。
+The v2 series (alpha as of 2026-05, latest 2.0.0-alpha.2) splits the package: `@modelcontextprotocol/server` / `/client` / `/node` (shared runtime / `InMemoryTransport` etc.), plus framework integrations `/express` / `/hono` / `/fastify`. Node.js **>= 20** is required for the v2 series. `inputSchema` changes from the v1 raw shape to accepting any **Standard Schema**-compatible library, not just Zod (e.g. Valibot, ArkType). v2 stable missed its Q1 2026 target and remains in alpha. Stable stays on the v1 series for now (this article is based on v1.29.0, current npm latest = 1.29.0).

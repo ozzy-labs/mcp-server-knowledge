@@ -5,57 +5,57 @@ tags: [ai-workflow, methodology, markdown]
 
 # AGENTS.md
 
-AI コーディングエージェント向けのプロジェクトガイダンスを記述する共通ファイル。単一の `AGENTS.md` で OpenAI Codex / Gemini CLI / Jules / GitHub Copilot Coding Agent / Cursor / Windsurf / Devin / JetBrains Junie / Aider / goose / opencode / Zed / Warp / VS Code / Amp / RooCode / Augment Code / Factory / Ona / Kilo Code / Phoenix / Semgrep / UiPath Autopilot & Coded Agents など 20 を超えるエージェントにまたがって方針を共有する（公式サイト掲載分。2026-06 時点で 60k+ の OSS プロジェクトが採用）。
+A common file format for writing project guidance for AI coding agents. A single `AGENTS.md` shares policy across more than 20 agents, including OpenAI Codex / Gemini CLI / Jules / GitHub Copilot Coding Agent / Cursor / Windsurf / Devin / JetBrains Junie / Aider / goose / opencode / Zed / Warp / VS Code / Amp / RooCode / Augment Code / Factory / Ona / Kilo Code / Phoenix / Semgrep / UiPath Autopilot & Coded Agents (as listed on the official site; adopted by 60k+ OSS projects as of 2026-06).
 
-## 背景
+## Background
 
-従来は各エージェントが固有のファイル名（`CLAUDE.md`, `.github/copilot-instructions.md`, `GEMINI.md`, `.cursorrules` 等）を要求していた。`AGENTS.md` は 2025 年 8 月にオープンな共通規約として提案され（`openai/agents.md` リポジトリ作成日: 2025-08-19）、主要 CLI / IDE エージェントが順次採用した（2026-06 時点で 60k+ の OSS プロジェクトが採用）。現在は Linux Foundation 傘下の Agentic AI Foundation がフォーマットを steward している。
+Previously, each agent required its own file name (`CLAUDE.md`, `.github/copilot-instructions.md`, `GEMINI.md`, `.cursorrules`, etc.). `AGENTS.md` was proposed in August 2025 as an open common convention (the `openai/agents.md` repository was created on 2025-08-19), and major CLI/IDE agents adopted it in turn (adopted by 60k+ OSS projects as of 2026-06). The format is now stewarded by the Agentic AI Foundation, under the Linux Foundation.
 
-## 配置と読み込み
+## Placement and loading
 
-- 配置: リポジトリのルート
-- 読み込み: 起動時に自動。明示設定不要
-- サブディレクトリの `AGENTS.md`: モノレポで配下固有の指示を与える場合に使用可能（エージェント依存）
+- Placement: repository root
+- Loading: automatic at startup. No explicit configuration needed
+- Subdirectory `AGENTS.md`: usable in monorepos to give directory-specific instructions (agent-dependent)
 
-## 推奨セクション
+## Recommended sections
 
-エージェントは構造を解釈できるので、自然な見出しで書けばよい。代表的な節:
+Agents can interpret structure, so writing with natural headings works well. Representative sections:
 
-| 節 | 内容 |
+| Section | Content |
 |---|---|
-| プロジェクト概要 | このリポジトリが何を作っているか |
-| Tech Stack | 言語・ランタイム・パッケージマネージャ・主要ライブラリ |
-| 主要コマンド | `install`, `build`, `test`, `lint` など |
-| 検証（必須） | 報告前に必ず通すべきチェック（例: `pnpm run build && pnpm run typecheck`） |
-| コーディング規約 | インデント・改行・命名規則 |
-| 禁止事項 | `main` 直接 push、`.env` のステージングなど |
-| 規約へのリンク | Conventional Commits / GitHub Flow 等の外部ルール参照 |
+| Project overview | What this repository builds |
+| Tech Stack | Languages, runtime, package manager, key libraries |
+| Key commands | `install`, `build`, `test`, `lint`, etc. |
+| Verification (required) | Checks that must pass before reporting (e.g., `pnpm run build && pnpm run typecheck`) |
+| Coding conventions | Indentation, line breaks, naming conventions |
+| Prohibited actions | Direct push to `main`, staging `.env`, etc. |
+| Links to conventions | References to external rules such as Conventional Commits / GitHub Flow |
 
-## エージェントごとのアダプタ
+## Per-agent adapters
 
-`AGENTS.md` だけで多くのエージェントはカバーできるが、エージェント固有の機能（スキル、サブエージェント、カスタムコマンド等）は別ファイルで補う。
+`AGENTS.md` alone covers most agents, but agent-specific features (skills, subagents, custom commands, etc.) are supplemented with separate files.
 
-| エージェント | 追加ファイル |
+| Agent | Additional file |
 |---|---|
-| Claude Code | `CLAUDE.md`, `.claude/` 配下 |
+| Claude Code | `CLAUDE.md`, files under `.claude/` |
 | Codex CLI | `AGENTS.md` + `.agents/skills/` |
 | Gemini CLI | `AGENTS.md` + `GEMINI.md` / `CONTEXT.md` |
 | GitHub Copilot CLI | `AGENTS.md` + `.agents/` |
-| Cursor | `AGENTS.md` + `.cursor/rules/`（`AGENTS.md` も公式サポート済み） |
+| Cursor | `AGENTS.md` + `.cursor/rules/` (`AGENTS.md` is also officially supported) |
 
-**Tip**: `CLAUDE.md` の先頭で `共通方針は AGENTS.md を参照` と書き、Claude 固有の部分だけ `CLAUDE.md` に残すと DRY になる。
+**Tip**: Writing "Common policy: see AGENTS.md" at the top of `CLAUDE.md`, and keeping only Claude-specific parts in `CLAUDE.md`, keeps things DRY.
 
-## 執筆原則
+## Writing principles
 
-- **命令形で短く**: 「〜する」「〜しない」で書く。敬語・冗長表現は避ける
-- **トリガーを明示**: 「変更後に」「PR 作成前に」など実行タイミングを書く
-- **禁止は理由付き**: 「`--force` push しない（本番運用の安全のため）」のように
-- **サンプルコマンドを具体化**: `pnpm run build` のように実行可能な形で
-- **外部ドキュメントへは相対リンク**: `.claude/rules/git-workflow.md` 等
+- **Short, imperative sentences**: write in the imperative ("do X", "don't do Y"). Avoid formal or verbose phrasing
+- **State triggers explicitly**: write execution timing, such as "after changes" or "before creating a PR"
+- **Give reasons for prohibitions**: e.g., "Don't `--force` push (for production safety)"
+- **Make example commands concrete**: in an executable form, e.g. `pnpm run build`
+- **Use relative links to external documents**: e.g. `.claude/rules/git-workflow.md`
 
-## アンチパターン
+## Anti-patterns
 
-- ツール固有の CLI フラグを深掘りする（エージェント横断で陳腐化する）
-- `README.md` や `CONTRIBUTING.md` の内容を重複させる → リンクで参照
-- 長文のポエム的な背景説明 → 決定事項と規則のみ
-- 「AI エージェントなら〜を理解してください」といった曖昧な指示
+- Diving deep into tool-specific CLI flags (goes stale across agents)
+- Duplicating the content of `README.md` or `CONTRIBUTING.md` → reference via a link instead
+- Long, essay-like background explanations → keep only decisions and rules
+- Vague instructions like "please understand X as an AI agent"

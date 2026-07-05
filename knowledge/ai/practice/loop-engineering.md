@@ -3,128 +3,128 @@ reviewed: 2026-06-28
 tags: [ai-workflow, methodology, practice]
 ---
 
-# ループエンジニアリング（Loop Engineering）
+# Loop Engineering
 
-AI エージェントを「自分が毎回プロンプトを打って動かす対象」ではなく、「**自律的に回り続けるループとして設計する対象**」へと捉え直す実践。コーディングエージェントが十分賢くなった結果、開発者の付加価値は「良いプロンプトを書くこと」から「**エージェントが回るループ（停止条件・検証・回復・状態）を設計すること**」へ移った、という認識を出発点とする。
+A practice of reframing AI agents not as "something you drive by typing a prompt each time" but as "**something you design as an autonomous loop that keeps running**." The starting premise: now that coding agents have gotten smart enough, the developer's added value has shifted from "writing good prompts" to "**designing the loop the agent runs in (stop conditions, verification, recovery, state)**."
 
-2026 年に Addy Osmani が "Loop Engineering" として体系化・命名した比較的新しい用語で、Anthropic の Boris Cherny（「もう Claude にプロンプトしない。Claude にプロンプトするループを回している」）や Peter Steinberger（「コーディングエージェントにプロンプトするのをやめ、ループを設計すべき」）の発言を引いて整理されたコミュニティ／実務発の概念。学術的に確立した定義ではない。エージェント設計パターン全般は [Agentic Workflow Patterns](agentic-workflow-patterns.md)、コンテキスト窓の使い方は [AI エージェントのコンテキスト管理](ai-context-management.md) を参照。
+A relatively new term, systematized and named "Loop Engineering" by Addy Osmani in 2026, organized around quotes from Anthropic's Boris Cherny ("I no longer prompt Claude. I run a loop that prompts Claude.") and Peter Steinberger ("Stop prompting coding agents — design loops instead"). It is a community/practitioner-driven concept, not an academically established definition. For agent design patterns in general, see [Agentic Workflow Patterns](agentic-workflow-patterns.md); for context-window usage, see [AI Agent Context Management](ai-context-management.md).
 
-## prompt / context engineering との位置づけ
+## Positioning relative to prompt / context engineering
 
-| 関心の中心 | 何を設計するか |
+| Focus of concern | What is being designed |
 |---|---|
-| **Prompt engineering** | 1 回の入力。指示の言い回し・例示・出力形式 |
-| **Context engineering** | 推論時にコンテキスト窓へ載せるトークンの取捨選択（curation） |
-| **Loop engineering** | エージェントが回る**反復サイクルそのもの**。起動・ツール・検証・停止・回復・状態 |
+| **Prompt engineering** | A single input. Instruction phrasing, examples, output format |
+| **Context engineering** | Curation of which tokens go into the context window at inference time |
+| **Loop engineering** | The **iterative cycle the agent runs in itself**. Invocation, tools, verification, stopping, recovery, state |
 
-3 者は排他ではなく層をなす。ループの各イテレーション内側で context engineering が効き、各ステップの指示で prompt engineering が効く。なお「prompt → context → loop」という段階進化フレームは二次解説で広く使われるが、一次情報で明示された段階論ではない点に注意。
+The three are not mutually exclusive but layered. Context engineering operates within each iteration of the loop, and prompt engineering operates within the instructions of each step. Note that the "prompt → context → loop" staged-evolution framing is widely used in secondary commentary, but it is not an explicit staged theory found in primary sources.
 
-## エージェントループとは何か
+## What is an agent loop
 
-Anthropic は agent を最小限の言葉でこう定義する：
+Anthropic defines an agent in minimal terms as:
 
-> LLMs autonomously using tools in a loop.（LLM が自律的にツールをループで使うこと）
+> LLMs autonomously using tools in a loop.
 
-ここで重要なのが **agent と workflow の区別**（Anthropic "Building Effective Agents"）：
+What matters here is the **distinction between agent and workflow** (Anthropic, "Building Effective Agents"):
 
-- **Workflow** — LLM とツールが**事前定義されたコードパス**でオーケストレーションされる（制御は人間が書いたコード側）
-- **Agent** — LLM が**自身のプロセスとツール使用を動的に指示**し、達成方法の制御を保持する
+- **Workflow** — LLMs and tools are orchestrated through **predefined code paths** (control resides on the human-written code side)
+- **Agent** — the LLM **dynamically directs its own process and tool use**, retaining control over how the goal is achieved
 
-エージェントは「環境からのフィードバックに基づきツールを使う LLM がループで動く」だけのものであり、各ステップで環境から **ground truth**（ツール結果・コード実行結果）を得て進捗を評価することが要になる。ReAct（Yao et al., 2022）の thought → action → observation の反復が、このループの学術的な原型。
+An agent is nothing more than "an LLM running in a loop, using tools based on feedback from the environment," and the key is that at each step it obtains **ground truth** from the environment (tool results, code execution results) to evaluate progress. The thought → action → observation iteration of ReAct (Yao et al., 2022) is the academic prototype for this loop.
 
-## 典型的なループサイクル
+## The typical loop cycle
 
-Claude Code 公式ドキュメントは、エージェントが 3 つのフェーズを混ぜ合わせながら反復すると説明する：
+The official Claude Code documentation explains that an agent iterates by blending three phases:
 
 ```text
 ┌─────────────────────────────────────────┐
 │  gather context  →  take action  →  verify  │
 └──────────────△──────────────────────┬───┘
-               └──── 前ステップの学びで軌道修正 ◀┘
+               └──── course-correct using what was learned in the previous step ◀┘
 ```
 
-- **gather context（文脈収集）** — ファイル検索・読込・ツール呼び出しで現状を把握
-- **take action（行動）** — 編集・コマンド実行。各ツール結果が次の判断にフィードバックされる
-- **verify（検証）** — テスト・型チェック・期待出力との突合で自分の成果を確認
-- これを完了まで反復し、前ステップで学んだことを次に活かして course-correct する
+- **gather context** — grasp the current state via file search, reading, tool calls
+- **take action** — edits, command execution. Each tool result feeds back into the next decision
+- **verify** — confirm one's own output via tests, type checks, cross-checking against expected output
+- Repeat this until completion, applying what was learned in the previous step to course-correct the next
 
-エージェント本体（CLI 側）はこのループを回す**ハーネス（agentic harness）**と位置づけられる。ループの良し悪しは「ツールとループをいかに丁寧に設計するか」で決まる（Simon Willison "Designing agentic loops"）。
+The agent itself (the CLI side) is positioned as the **agentic harness** that runs this loop. The quality of the loop is determined by "how carefully you design the tools and the loop" (Simon Willison, "Designing agentic loops").
 
-## ループ設計の構成要素
+## Components of loop design
 
-### 1. 停止条件（termination / stop conditions）
+### 1. Termination / stop conditions
 
-無限ループとトークン浪費を防ぐ要。「goal を達成する」という定義自体が停止条件の存在を含意する。
+The key to preventing infinite loops and token waste. The very definition of "achieving a goal" implies the existence of a stop condition.
 
-- タスク完了で自然終了するのが基本だが、**最大反復回数**などの停止条件を明示的に入れて制御を保つ（Anthropic）
-- コストのかかるツールには**予算上限（budget limit）**を設定する（Willison）
-- 達成判定を別の小型モデル／チェックに委ねる構成（例: 条件が真になるまで継続）も使われる
+- The basic pattern is natural termination on task completion, but explicit stop conditions such as a **maximum iteration count** should be added to retain control (Anthropic)
+- Set a **budget limit** for costly tools (Willison)
+- Configurations that delegate the completion judgment to a separate small model/check (e.g., continue until a condition becomes true) are also used
 
-### 2. 検証フィードバックループ（verification / self-correction）
+### 2. Verification / self-correction feedback loop
 
-エージェントは**自分の成果を検証できると性能が上がる**。ループに「正解と突き合わせる手段」を組み込むことが投資対効果が最も高い。
+An agent performs better when it **can verify its own output**. Building "a means to cross-check against the correct answer" into the loop is the single highest-ROI investment.
 
-- テストスイート・スクリーンショット・期待出力など、**検証対象（verify against）**を与える
-- 「機能実装の前にまず end-to-end テストを通す」など、検証を先に据える（Anthropic "Effective harnesses for long-running agents"）
-- Reflection（生成物を自己／別エージェントが批評して直す）は検証ループの一形態。詳細は [Agentic Workflow Patterns](agentic-workflow-patterns.md)
+- Give the agent a **verification target** — a test suite, screenshots, expected output, etc.
+- Put verification first, e.g. "get an end-to-end test passing before implementing the feature" (Anthropic, "Effective harnesses for long-running agents")
+- Reflection (where the generated output is critiqued and fixed by itself or another agent) is one form of a verification loop. See [Agentic Workflow Patterns](agentic-workflow-patterns.md) for details
 
-### 3. エラー回復（error recovery）
+### 3. Error recovery
 
-長く回るループでは失敗からの復帰経路を最初から用意する。
+In long-running loops, prepare a recovery path from failure from the outset.
 
-- **git で不良変更を revert** し動作状態へ戻せるようにする（Anthropic）
-- 「壊れた状態のまま放置されていないか」を素早く検知できる仕組み（ヘルスチェック・チェックポイント）
-- Claude Code の編集はチェックポイントで可逆
+- **Revert bad changes with git** so you can return to a working state (Anthropic)
+- A mechanism to quickly detect "has this been left in a broken state" (health checks, checkpoints)
+- Claude Code edits are reversible via checkpoints
 
-### 4. 状態・メモリ（state / memory）
+### 4. State / memory
 
-会話の外で進捗を持続させる。コンテキスト窓を超えてループを継続させる土台。
+Persist progress outside the conversation. The foundation for continuing a loop beyond the context window.
 
-- **進捗ログファイル**（例: `claude-progress.txt`）に「何をしたか」を残し、セッション終了時に commit + 進捗更新（Anthropic）
-- コンテキスト管理（compaction・サブエージェント・just-in-time ロード）は [AI エージェントのコンテキスト管理](ai-context-management.md) を参照
+- Leave a record of "what was done" in a **progress log file** (e.g., `claude-progress.txt`), committing and updating progress at the end of a session (Anthropic)
+- For context management (compaction, sub-agents, just-in-time loading), see [AI Agent Context Management](ai-context-management.md)
 
-### 5. 観測可能性（observability）
+### 5. Observability
 
-ループが暴走・空回りしていないかを見える化する。思考・ツール呼び出し・トークン消費の追跡。一次資料では「進捗ログ」という実装として現れることが多く、OpenTelemetry 等の本格的なエージェント可観測性は発展途上。
+Making it visible whether the loop is running away or spinning idle. Tracking of thoughts, tool calls, and token consumption. In primary sources this often appears as the implementation of a "progress log"; full-fledged agent observability such as OpenTelemetry is still developing.
 
-### 6. ヒューマン・イン・ザ・ループ（HITL）
+### 6. Human-in-the-loop (HITL)
 
-完全自律と人間の制御のバランス。
+Balancing full autonomy against human control.
 
-- チェックポイントやブロッカー遭遇時に**人間のフィードバックのため停止**する（Anthropic）
-- 承認デフォルト運用 ↔ 全自動（"YOLO mode"）はトレードオフ。全自動は生産的だが危険なので **Docker / リモート環境でのサンドボックス化**と**限定権限の認証情報（tightly scoped credentials）**で隔離する（Willison）
-- 設計の詳細は [Human-in-the-Loop パターン](human-in-the-loop.md)
+- **Stop for human feedback** at checkpoints or when a blocker is encountered (Anthropic)
+- Approval-by-default operation vs. fully automatic ("YOLO mode") is a tradeoff. Fully automatic is productive but dangerous, so isolate it with **sandboxing in Docker / remote environments** and **tightly scoped credentials** (Willison)
+- For design details, see [Human-in-the-Loop Patterns](human-in-the-loop.md)
 
-## ループを組み立てる実装要素
+## Implementation elements for assembling a loop
 
-Osmani は「プロンプトを打つ自分」を置き換える具体的な部品として以下を挙げる。多くは既存記事に対応する。
+Osmani lists the concrete parts that replace "yourself typing prompts." Most correspond to existing articles.
 
-| 要素 | 役割 | 関連記事 |
+| Element | Role | Related article |
 |---|---|---|
-| **Automations / スケジュール起動** | ループを定期・トリガー駆動で回す | [AI エージェントの定期実行](scheduled-tasks.md) |
-| **Worktrees** | 並列エージェントを git worktree で分離 | — |
-| **Skills** | プロジェクト知識をコード化して常時参照 | [Agent Skills 仕様](../platform/agent-skills-spec.md) |
-| **Plugins / connectors** | MCP ベースでツールを統合 | [MCP プロトコル](../platform/mcp-protocol.md) |
-| **Sub-agents** | 着想と検証を別コンテキストに分離 | [マルチエージェント協調](multi-agent-coordination.md) |
-| **State / Memory** | 会話外で進捗を永続トラッキング | [コンテキスト管理](ai-context-management.md) |
+| **Automations / scheduled invocation** | Run the loop on a schedule or trigger | [Scheduled Execution of AI Agents](scheduled-tasks.md) |
+| **Worktrees** | Isolate parallel agents via git worktree | — |
+| **Skills** | Encode project knowledge for constant reference | [Agent Skills Spec](../platform/agent-skills-spec.md) |
+| **Plugins / connectors** | Integrate tools via MCP | [MCP Protocol](../platform/mcp-protocol.md) |
+| **Sub-agents** | Separate ideation and verification into different contexts | [Multi-Agent Coordination](multi-agent-coordination.md) |
+| **State / Memory** | Persistently track progress outside the conversation | [Context Management](ai-context-management.md) |
 
-「LLM + ループ + 十分なトークン」だけで実用エージェントが組める（Thorsten Ball "How to Build an Agent" は 400 行未満で実証、Geoffrey Huntley の "Ralph Loop" は同一プロンプトを `while :; do … done` で反復投入する単純なシェルループ）という観察も、ループそのものが価値の中心だという主張を裏づける。
+The observation that a practical agent can be built from just "an LLM + a loop + enough tokens" — Thorsten Ball's "How to Build an Agent" demonstrated this in under 400 lines, and Geoffrey Huntley's "Ralph Loop" is a simple shell loop that repeatedly feeds the same prompt via `while :; do … done` — supports the claim that the loop itself is the central source of value.
 
-## アンチパターン
+## Anti-patterns
 
-- **停止条件のないループ** — 改善が出ないまま同じ修正を繰り返しトークンを浪費する（[Agentic Workflow Patterns](agentic-workflow-patterns.md) の「無限ループ」）
-- **検証手段のないループ** — verify 対象（テスト・期待出力）が無いと、エージェントは自分の誤りに気づけない
-- **回復経路の欠如** — revert / チェックポイントが無いと、一度壊れた状態から戻れず破壊が累積する
-- **観測なしの全自動** — ログも承認も無い YOLO 運用を、限定権限・サンドボックス無しの本番環境で回す
-- **ループ化の過剰適用** — 単発で済むタスクまでループ／自動化で包む。[Building Effective Agents](https://www.anthropic.com/research/building-effective-agents) の「最も単純な解から始め、必要なときだけ複雑性を上げる」原則に反する
+- **A loop with no stop condition** — repeats the same fix without improvement, wasting tokens (the "infinite loop" in [Agentic Workflow Patterns](agentic-workflow-patterns.md))
+- **A loop with no means of verification** — without a verify target (tests, expected output), the agent cannot notice its own mistakes
+- **Lack of a recovery path** — without revert/checkpoints, you cannot return from a broken state once it occurs, and the damage accumulates
+- **Full automation without observation** — running YOLO operation with no logging or approval in a production environment with no scoped permissions or sandbox
+- **Over-application of "loopify"** — wrapping even one-off tasks in a loop/automation. This violates the principle in [Building Effective Agents](https://www.anthropic.com/research/building-effective-agents) of "start with the simplest solution and only add complexity when needed"
 
-## 参考
+## References
 
-- Anthropic: [Building Effective Agents](https://www.anthropic.com/research/building-effective-agents)（2024-12、agent / workflow の区別、stopping conditions、ACI）
-- Anthropic: [Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)（2025-09-29、"LLMs autonomously using tools in a loop"、compaction / sub-agent / just-in-time）
-- Anthropic: [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)（2025-11-26、検証ツール・git revert・進捗ログ）
-- Claude Code Docs: [How Claude Code works](https://code.claude.com/docs/en/how-claude-code-works)（gather context → take action → verify、agentic harness）
-- Addy Osmani: [Loop Engineering](https://addyosmani.com/blog/loop-engineering/)（2026-06-07、用語の体系化）
-- Simon Willison: [Designing agentic loops](https://simonwillison.net/2025/Sep/30/designing-agentic-loops/)（2025-09-30、ループ設計・予算上限・サンドボックス）
+- Anthropic: [Building Effective Agents](https://www.anthropic.com/research/building-effective-agents) (2024-12, the agent/workflow distinction, stopping conditions, ACI)
+- Anthropic: [Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) (2025-09-29, "LLMs autonomously using tools in a loop", compaction / sub-agent / just-in-time)
+- Anthropic: [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) (2025-11-26, verification tools, git revert, progress logs)
+- Claude Code Docs: [How Claude Code works](https://code.claude.com/docs/en/how-claude-code-works) (gather context → take action → verify, agentic harness)
+- Addy Osmani: [Loop Engineering](https://addyosmani.com/blog/loop-engineering/) (2026-06-07, systematization of the term)
+- Simon Willison: [Designing agentic loops](https://simonwillison.net/2025/Sep/30/designing-agentic-loops/) (2025-09-30, loop design, budget limits, sandboxing)
 - Thorsten Ball: [How to Build an Agent](https://ampcode.com/notes/how-to-build-an-agent)
-- Yao et al.: [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629)（thought / action / observation ループの原典）
+- Yao et al.: [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) (the original source of the thought/action/observation loop)

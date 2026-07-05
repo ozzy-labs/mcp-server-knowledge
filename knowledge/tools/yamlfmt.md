@@ -5,11 +5,11 @@ tags: [format, yaml, go]
 
 # yamlfmt
 
-Google 製の YAML フォーマッタ。Go で書かれた単一バイナリ。インデント・行末・キー順などを一貫した形に整形する。yamllint（検証）と対になる。
+A YAML formatter made by Google. A single binary written in Go. Formats indentation, line endings, key order, etc. into a consistent style. Pairs with yamllint (validation).
 
-公式: [github.com/google/yamlfmt](https://github.com/google/yamlfmt)
+Official: [github.com/google/yamlfmt](https://github.com/google/yamlfmt)
 
-## インストール
+## Installation
 
 ```bash
 # mise
@@ -25,28 +25,28 @@ go install github.com/google/yamlfmt/cmd/yamlfmt@latest
 docker run --rm -v "$PWD:/workdir" ghcr.io/google/yamlfmt:latest -lint
 ```
 
-## 基本的な使い方
+## Basic usage
 
 ```bash
-# 書き戻し（デフォルト）
+# Write back (default)
 yamlfmt file.yaml
 
-# 再帰
+# Recursive
 yamlfmt .
 
-# フォーマット済みかチェック（書き戻さない）
+# Check whether formatted (no write-back)
 yamlfmt -lint file.yaml
 
-# 差分表示
+# Show diff
 yamlfmt -dry -output_format=diff file.yaml
 
-# 設定指定
+# Specify config
 yamlfmt -conf .yamlfmt
 ```
 
-## 設定 `.yamlfmt`
+## Config `.yamlfmt`
 
-YAML / JSON 両対応:
+Supports both YAML and JSON:
 
 ```yaml
 # .yamlfmt
@@ -72,26 +72,26 @@ exclude:
 gitignore_excludes: true
 ```
 
-## 主要フォーマッタオプション
+## Key formatter options
 
-| オプション | 効果 |
+| Option | Effect |
 |---|---|
-| `indent` | インデント幅（デフォルト 2） |
+| `indent` | Indent width (default 2) |
 | `line_ending` | `lf` / `crlf` |
-| `max_line_length` | 長い行の折り返し（0 = 無制限） |
-| `include_document_start` | 先頭 `---` を強制 |
-| `trim_trailing_whitespace` | 行末スペース削除 |
-| `eof_newline` | 末尾改行を保証 |
-| `retain_line_breaks` | 連続空行を保持 |
-| `retain_line_breaks_single` | 連続空行を 1 行に圧縮 |
-| `scan_folded_as_literal` | `>` を `\|` として扱う |
-| `disallow_anchors` | アンカー禁止（共有設定で混乱を避ける） |
+| `max_line_length` | Wrap long lines (0 = unlimited) |
+| `include_document_start` | Force leading `---` |
+| `trim_trailing_whitespace` | Remove trailing whitespace |
+| `eof_newline` | Ensure trailing newline |
+| `retain_line_breaks` | Preserve consecutive blank lines |
+| `retain_line_breaks_single` | Collapse consecutive blank lines into one |
+| `scan_folded_as_literal` | Treat `>` as `\|` |
+| `disallow_anchors` | Disallow anchors (avoid confusion in shared configs) |
 
-## ディレクティブ
+## Directives
 
-行単位・ブロック単位の整形抑制はサポートされない。整形を避けたい箇所は `.yamlfmt` の `exclude` でファイル単位で除外する。
+Line- or block-level suppression of formatting is not supported. To exclude a location from formatting, exclude the whole file via `exclude` in `.yamlfmt`.
 
-## pre-commit 連携（lefthook）
+## pre-commit integration (lefthook)
 
 ```yaml
 pre-commit:
@@ -102,16 +102,16 @@ pre-commit:
       stage_fixed: true
 ```
 
-フォーマット → lint の順で実行。`stage_fixed: true` で整形後の差分を再ステージ。
+Runs format, then lint, in that order. `stage_fixed: true` re-stages the diff after formatting.
 
-## CI での使い方
+## Usage in CI
 
 ```bash
-# CI モード（差分があれば非 0 終了）
+# CI mode (exits non-zero if there is a diff)
 yamlfmt -lint .
 ```
 
-GitHub Actions（公式 Action はないため、バイナリを実行する）:
+GitHub Actions (there is no official Action, so run the binary directly):
 
 ```yaml
 - name: Run yamlfmt
@@ -119,64 +119,64 @@ GitHub Actions（公式 Action はないため、バイナリを実行する）:
     docker run --rm -v "$PWD:/workdir" ghcr.io/google/yamlfmt:latest -lint .
 ```
 
-または `mise` でバージョンを揃える:
+Or pin the version with `mise`:
 
 ```yaml
 - uses: jdx/mise-action@v2
 - run: yamlfmt -lint .
 ```
 
-## 再現性のある運用
+## Reproducible operation
 
-整形結果を安定させるために:
+To keep formatting results stable:
 
-- `.yamlfmt` をリポジトリにコミット
-- `mise use yamlfmt@<version>` でバージョン固定
-- 初回適用は別コミットに（`style: apply yamlfmt` 等）、`.git-blame-ignore-revs` で blame から除外
+- Commit `.yamlfmt` to the repository
+- Pin the version with `mise use yamlfmt@<version>`
+- Apply the initial formatting as a separate commit (e.g. `style: apply yamlfmt`) and exclude it from blame via `.git-blame-ignore-revs`
 
-## アンカーと参照
+## Anchors and references
 
-YAML の `&anchor` / `*anchor` はフォーマッタで展開されない（意味が変わるため）。使っている場合は意図通りか目視確認必須。`disallow_anchors: true` で禁止して明示的なコピーに強制するのも手。
+The formatter does not expand YAML `&anchor` / `*anchor` (since that would change semantics). If you use them, be sure to visually verify the result matches intent. Setting `disallow_anchors: true` to forbid them and force explicit copies is also an option.
 
-## 複雑な型の扱い
+## Handling of complex types
 
 ```yaml
-# block style（デフォルト保持）
+# block style (preserved by default)
 list:
   - a
   - b
 
-# flow style（強制変換しない、ユーザー指定を尊重）
+# flow style (not forcibly converted, user's choice respected)
 list: [a, b]
 ```
 
-yamlfmt は既存のスタイル（block / flow）を変えず、インデントと行末のみ整える保守的な方針。
+yamlfmt takes the conservative approach of only adjusting indentation and line endings, without changing the existing style (block / flow).
 
-## trouble shooting
+## Troubleshooting
 
-### `document_start` が勝手に挿入される
+### `document_start` gets inserted unexpectedly
 
-デフォルト設定を確認。`include_document_start: false` で抑止。
+Check the default config. Suppress it with `include_document_start: false`.
 
-### Helm / Ansible の template 構文で壊れる
+### Breaks Helm / Ansible template syntax
 
-`{{ }}` / `{% %}` は YAML として解析できないため、`exclude` で対象ディレクトリを除外。
+`{{ }}` / `{% %}` cannot be parsed as YAML, so exclude the affected directories via `exclude`.
 
-### pnpm-lock.yaml を整形して lockfile が壊れる
+### Formatting pnpm-lock.yaml breaks the lockfile
 
-lockfile は絶対に手で整形しない。`exclude: [pnpm-lock.yaml]` を必ず入れる。
+Never hand-format the lockfile. Always add `exclude: [pnpm-lock.yaml]`.
 
-### yamllint と衝突する
+### Conflicts with yamllint
 
-yamllint で「trailing-spaces」警告が出るなら yamlfmt の `trim_trailing_whitespace: true` で自動修正される。ルール設定を両ツールで揃える。
+If yamllint raises a "trailing-spaces" warning, yamlfmt's `trim_trailing_whitespace: true` will auto-fix it. Keep the rule configuration aligned between the two tools.
 
-## 他ツールとの比較
+## Comparison with other tools
 
-| 観点 | yamlfmt | Prettier (YAML) | yq |
+| Aspect | yamlfmt | Prettier (YAML) | yq |
 |---|---|---|---|
-| 用途 | フォーマッタ専用 | 多言語フォーマッタ | パーサ + クエリ + フォーマット |
-| 言語 | Go | Node.js | Go |
-| 保守的整形 | ◎ | ○ | △（クエリ副作用あり） |
-| 設定柔軟性 | 中 | 高 | — |
+| Purpose | Formatter only | Multi-language formatter | Parser + query + format |
+| Language | Go | Node.js | Go |
+| Conservative formatting | Excellent | Good | Fair (query has side effects) |
+| Config flexibility | Medium | High | — |
 
-Prettier を他言語で既に使っているなら Prettier の YAML プラグインで十分な場合もある。shell ツールのみで完結させたい / Go バイナリで速度を出したいなら yamlfmt。
+If you already use Prettier for other languages, its YAML plugin may be sufficient. Choose yamlfmt if you want to stay within shell tooling alone, or want speed from a Go binary.

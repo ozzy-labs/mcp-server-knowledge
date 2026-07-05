@@ -3,86 +3,86 @@ reviewed: 2026-06-28
 tags: [ai-workflow, methodology, practice]
 ---
 
-# AI エージェント向けツール設計（Agent-Computer Interface / ACI）
+# Tool Design for AI Agents (Agent-Computer Interface / ACI)
 
-エージェントの[ループ](loop-engineering.md)を駆動するのはツールであり、**ツールの良し悪しがエージェントの成否を直接左右する**。Anthropic は人間向け UI（HCI）に注ぐのと**同等の労力をエージェント向けインターフェース（ACI: Agent-Computer Interface）に投資せよ**と主張する。本記事はエージェントが使いやすいツールの設計原則をまとめる。
+Tools are what drive an agent's [loop](loop-engineering.md), and **tool quality directly determines agent success or failure**. Anthropic argues you should **invest as much effort in the agent-facing interface (ACI: Agent-Computer Interface) as you do in the human-facing UI (HCI)**. This article summarizes design principles for tools that agents can use effectively.
 
-鍵は「**人間やシステム向けの API をそのままラップしない**」こと。従来の API（`getWeather("NYC")` が常に同じ挙動）と違い、エージェントは呼び方を誤る・引数をハルシネートし得る**非決定的な呼び手**である。ツールはこの前提で設計する。
+The key is: **do not simply wrap a human- or system-facing API as-is**. Unlike a traditional API (`getWeather("NYC")` always behaves the same way), an agent is a **non-deterministic caller** that can misuse a call or hallucinate arguments. Design tools with this assumption in mind.
 
-## ACI の基本原則
+## Basic principles of ACI
 
-Anthropic "Building effective agents"（Appendix 2）/ "Writing effective tools for AI agents" より:
+From Anthropic's "Building effective agents" (Appendix 2) / "Writing effective tools for AI agents":
 
-- **モデル視点で書く** — 「説明とパラメータを見て使い方が自明か、それとも考え込む必要があるか。考え込むなら、モデルも詰まる」
-- **ジュニア開発者向けの docstring のように** — パラメータ命名・説明を、チームの新人に渡す優れた docstring の感覚で書く
-- **poka-yoke（ポカヨケ）設計** — 間違えにくいよう引数を変える。実例: SWE-bench でモデルが相対パスを誤るのを発見し、**絶対パス必須**に変えたら完璧に使えるようになった
-- 良いツール定義に含めるべきもの: **使用例・エッジケース・入力フォーマット要件・他ツールとの明確な境界**
+- **Write from the model's perspective** — "Looking at the description and parameters, is usage self-evident, or does it require thought? If it requires thought, the model will get stuck too."
+- **Like a docstring for a junior developer** — write parameter names and descriptions with the same care you'd put into a good docstring handed to a new team member
+- **Poka-yoke design** — change arguments to make mistakes harder. Real example: on SWE-bench, a model kept getting relative paths wrong; switching to **mandatory absolute paths** made it work perfectly
+- A good tool definition should include: **usage examples, edge cases, input format requirements, and clear boundaries with other tools**
 
-## ツールの統合（consolidation）
+## Tool consolidation
 
-細粒度ツールを乱立させず、**1 ツールが内部で複数の操作をこなす**ように統合する。人間がタスクを分割して解くのと同じ粒度でエージェントが解けるように設計する:
+Rather than proliferating fine-grained tools, **consolidate so a single tool handles multiple operations internally**. Design at the same granularity a human would use to break down a task, so the agent can solve it the same way:
 
-| ✗ 細粒度の乱立 | ✓ 統合された高機能ツール |
+| ✗ Fine-grained sprawl | ✓ Consolidated, capable tool |
 |---|---|
-| `list_users` + `list_events` + `create_event` | `schedule_event`（空き枠検索 + 予約）|
-| 生の `read_logs` | 文脈付きの `search_logs` |
-| 個別取得の積み重ね | `get_customer_context`（直近取引 + メモを束ねる）|
+| `list_users` + `list_events` + `create_event` | `schedule_event` (find open slot + book) |
+| Raw `read_logs` | `search_logs` with context |
+| Stacking individual lookups | `get_customer_context` (bundles recent transactions + notes) |
 
-## スキーマと命名
+## Schema and naming
 
-- **曖昧さを排除した命名** — `user` より `user_id`。`query_db_orders` / "Execute order query" より `search_customer_orders`
-- **namespacing** — プレフィックスで境界を明示（`asana_projects_search` / `notification-send-user` vs `notification-send-channel`）。似た名前のツールは誤選択を招く
-- **JSON Schema** — `type` / `properties` / `required`、enum・制約で入力を縛る。[MCP](../platform/mcp-protocol.md) ツールは `name` / `description` / `inputSchema` / 任意の `outputSchema` で定義する
-- 名前と description は **Tool Search の一致対象**でもあるため、明確で記述的にすると発見精度が上がる
+- **Eliminate ambiguous naming** — `user_id` instead of `user`. `search_customer_orders` instead of `query_db_orders` / "Execute order query"
+- **Namespacing** — make boundaries explicit with prefixes (`asana_projects_search` / `notification-send-user` vs `notification-send-channel`). Similarly named tools invite misselection
+- **JSON Schema** — constrain input with `type` / `properties` / `required`, enums, and other constraints. [MCP](../platform/mcp-protocol.md) tools are defined with `name` / `description` / `inputSchema` / optional `outputSchema`
+- Name and description are also **matched against by Tool Search**, so making them clear and descriptive improves discoverability
 
-## エラーの返し方
+## How to return errors
 
-エラーメッセージはエージェントが**回復に使える**ように設計する。不透明なコードやスタックトレースではなく、エラー応答自体をプロンプトエンジニアリングして**具体的かつ実行可能（actionable）**にする:
+Design error messages so the agent can **use them to recover**. Rather than opaque codes or stack traces, prompt-engineer the error response itself to be **specific and actionable**:
 
-- 例外を投げて握りつぶすのでなく、**構造化された回復可能エラー**として返す
-- MCP は 2 系統を区別する: **Protocol Error**（JSON-RPC、未知ツール・不正引数）と **Tool Execution Error**（結果に `isError: true` を立て `content` に「API rate limit exceeded」のような説明）
-- エラーでトークン効率の良い戦略へ誘導する（例: 広域検索でなくフィルタを使うよう促す）
+- Instead of throwing an exception and swallowing it, return a **structured, recoverable error**
+- MCP distinguishes two categories: **Protocol Error** (JSON-RPC, e.g. unknown tool or invalid arguments) and **Tool Execution Error** (set `isError: true` on the result, with an explanation such as "API rate limit exceeded" in `content`)
+- Steer errors toward token-efficient strategies (e.g. nudge the agent to use a filter instead of a broad search)
 
-## ツール数と動的ロードアウト
+## Tool count and dynamic loadouts
 
-**「ツールは多いほど良い」とは限らない**。エージェントのコンテキストは有限で、ツールが増えると選択精度が落ち、定義がトークンを食う:
+**"More tools is not necessarily better."** An agent's context is finite; more tools means worse selection accuracy, and definitions consume tokens:
 
-- 似た名前のツールでの**誤選択・誤パラメータ**が最頻の失敗
-- ツール定義だけで数万トークンに達する（複数 MCP サーバ構成で数十 K トークンの例）
-- 対策の動的ロードアウト:
-  - **Tool Search Tool / `defer_loading`** — 重要ツールのみ初期ロードし、必要時に検索して該当定義だけ展開（トークン削減と選択精度向上が報告されている）
-  - **Code execution with MCP** — 全定義を前倒しで読まず、MCP サーバをコード API として提示し、エージェントが必要なツールだけ読む
+- **Misselection and wrong parameters** among similarly named tools are the most common failure
+- Tool definitions alone can reach tens of thousands of tokens (examples of tens of thousands of tokens across multiple MCP server configurations)
+- Countermeasures via dynamic loadouts:
+  - **Tool Search Tool / `defer_loading`** — load only critical tools initially, and search and expand definitions only when needed (reported to reduce tokens and improve selection accuracy)
+  - **Code execution with MCP** — instead of reading all definitions up front, expose the MCP server as a code API so the agent reads only the tools it needs
 
-## トークン効率・レスポンス設計
+## Token efficiency and response design
 
-- **high-signal のみ返す** — 文脈的に関連する情報だけ。冗長度を enum パラメータ（例 `concise` / `detailed`）で切り替えさせる
-- **ページネーション・フィルタ・truncation** を sensible default 付きで実装。ツール応答にはデフォルト上限（Anthropic 実装例では 25,000 トークン）を設ける
-- **識別子返し（just-in-time）** — 詳細を毎回埋め込まず、識別子（[MCP](../platform/mcp-protocol.md) の `resource_link` 等）を返して必要時に取得させる
-- 応答構造（XML / JSON / Markdown）はタスクとエージェントで最適が変わるため、評価で経験的に選ぶ
+- **Return only high-signal information** — only what's contextually relevant. Let a verbosity enum parameter (e.g. `concise` / `detailed`) toggle this
+- Implement **pagination, filtering, and truncation** with sensible defaults. Set a default cap on tool responses (Anthropic's implementation example uses 25,000 tokens)
+- **Return identifiers just-in-time** — instead of embedding full details every time, return identifiers ([MCP](../platform/mcp-protocol.md)'s `resource_link`, etc.) and let the agent fetch details when needed
+- The optimal response structure (XML / JSON / Markdown) varies by task and agent, so choose empirically through evaluation
 
-## 評価駆動でツールを磨く
+## Eval-driven tool refinement
 
-ツール説明の小さな改善が劇的な効果を生む（Anthropic は説明の精緻化後に Claude Sonnet が SWE-bench Verified で SOTA を達成したと報告）。
+Small improvements to tool descriptions can have dramatic effects (Anthropic reports that Claude Sonnet achieved SOTA on SWE-bench Verified after refining descriptions).
 
-- 実ワークフローに基づく**現実的・複数ステップのタスクで [eval](agent-evaluation.md) を作り**、agentic loop でプログラム的に走らせて反復改善する
-- Claude 自身に評価トランスクリプトを渡し、**ツール定義を分析・リファクタさせる**こともできる
+- Build [evals](agent-evaluation.md) around **realistic, multi-step tasks based on real workflows**, run them programmatically through the agentic loop, and iterate
+- You can also hand Claude the eval transcripts and have it **analyze and refactor the tool definitions itself**
 
-## セキュリティ（MCP 公開時）
+## Security (when exposing MCP)
 
-- **HITL を挟む** — MCP 仕様は「ツール呼び出しを拒否できる human in the loop を常に置くべき」とする（[Human-in-the-Loop](human-in-the-loop.md)）
-- **Tool Poisoning** — ツールの description / パラメータ説明 / `inputSchema` などユーザーに見えにくいメタデータに悪性指示を仕込む間接[プロンプトインジェクション](prompt-injection.md)。LLM はメタデータを ground-truth として扱うため危険。信頼できないサーバの annotations は untrusted として扱う
+- **Insert HITL** — the MCP spec states there should "always be a human in the loop who can deny tool invocations" ([Human-in-the-Loop](human-in-the-loop.md))
+- **Tool Poisoning** — an indirect [prompt injection](prompt-injection.md) that embeds malicious instructions in metadata not readily visible to users, such as a tool's description, parameter descriptions, or `inputSchema`. Because LLMs treat this metadata as ground truth, it's dangerous. Treat annotations from untrusted servers as untrusted
 
-## アンチパターン
+## Anti-patterns
 
-- **人間用 API をそのままツール化** — 非決定的な呼び手を想定せず、誤用を誘発する
-- **細粒度ツールを大量に並べる** — 選択精度が落ち、コンテキストを食う。統合と動的ロードアウトを使う
-- **生のスタックトレースを返す** — エージェントが回復できない。actionable な構造化エラーにする
-- **全ツール出力を丸ごと返す** — トークン浪費。high-signal + ページネーション + 識別子返し
-- **ツール説明を雑に書く** — ACI への投資不足。eval で磨く
+- **Turning a human-facing API into a tool as-is** — doesn't account for a non-deterministic caller and invites misuse
+- **Lining up a large number of fine-grained tools** — hurts selection accuracy and consumes context. Use consolidation and dynamic loadouts
+- **Returning raw stack traces** — the agent can't recover. Use actionable, structured errors instead
+- **Returning entire tool output wholesale** — wastes tokens. Use high-signal responses + pagination + identifier returns
+- **Writing tool descriptions carelessly** — underinvesting in ACI. Refine through evals
 
-## 参考
+## References
 
-- Anthropic: [Writing effective tools for AI agents](https://www.anthropic.com/engineering/writing-tools-for-agents) / [Building effective agents（Appendix 2: ACI）](https://www.anthropic.com/research/building-effective-agents)
-- Anthropic: [Advanced tool use（Tool Search / Programmatic Tool Calling）](https://www.anthropic.com/engineering/advanced-tool-use) / [Code execution with MCP](https://www.anthropic.com/engineering/code-execution-with-mcp)
-- [MCP ツール仕様（2025-06-18）](https://modelcontextprotocol.io/specification/2025-06-18/server/tools) / [OWASP: Tool Poisoning (MCP03:2025)](https://owasp.org/www-project-mcp-top-10/2025/MCP03-2025%E2%80%93Tool-Poisoning)
-- 関連: [ループエンジニアリング](loop-engineering.md), [Agentic Workflow Patterns](agentic-workflow-patterns.md), [エージェント評価](agent-evaluation.md), [プロンプトインジェクション対策](prompt-injection.md), [MCP プロトコル](../platform/mcp-protocol.md)
+- Anthropic: [Writing effective tools for AI agents](https://www.anthropic.com/engineering/writing-tools-for-agents) / [Building effective agents (Appendix 2: ACI)](https://www.anthropic.com/research/building-effective-agents)
+- Anthropic: [Advanced tool use (Tool Search / Programmatic Tool Calling)](https://www.anthropic.com/engineering/advanced-tool-use) / [Code execution with MCP](https://www.anthropic.com/engineering/code-execution-with-mcp)
+- [MCP tool specification (2025-06-18)](https://modelcontextprotocol.io/specification/2025-06-18/server/tools) / [OWASP: Tool Poisoning (MCP03:2025)](https://owasp.org/www-project-mcp-top-10/2025/MCP03-2025%E2%80%93Tool-Poisoning)
+- Related: [Loop Engineering](loop-engineering.md), [Agentic Workflow Patterns](agentic-workflow-patterns.md), [Agent Evaluation](agent-evaluation.md), [Prompt Injection Defenses](prompt-injection.md), [MCP Protocol](../platform/mcp-protocol.md)

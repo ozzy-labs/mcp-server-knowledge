@@ -3,124 +3,124 @@ reviewed: 2026-06-23
 tags: [ai-platform, cli, practice]
 ---
 
-# 用途別 Agent Skills カタログ（エンジニアリング / ドキュメンテーション / 調査）
+# Agent Skills Catalog by Use Case (Engineering / Documentation / Research)
 
-ソフトウェア開発の実務でよく使われる公開 Agent Skills を、**エンジニアリング / ドキュメンテーション / 調査** の 3 ドメイン別に整理する。Claude Code と Codex CLI の両方を対象とする。フォーマット仕様は `ai/platform/agent-skills-spec.md`、オーサリングの一般指針は `ai/platform/agent-skills-best-practices.md` を参照。
+Organizes widely-used public Agent Skills into three domains: **engineering, documentation, and research**, based on common software development practice. Covers both Claude Code and Codex CLI. See `ai/platform/agent-skills-spec.md` for the format spec and `ai/platform/agent-skills-best-practices.md` for general authoring guidance.
 
-公開スキルは品質・保守状況がまちまちで、実行スクリプトを同梱するものもある。Anthropic / OpenAI 双方が「**信頼できるソースからのみ install する**」ことを推奨している。star 数や CVE 同様、利用前に各スキルの中身を必ず確認すること。
+Quality and maintenance status of public skills vary widely, and some bundle executable scripts. Both Anthropic and OpenAI recommend "**installing only from trusted sources**." As with star counts and CVEs, always inspect a skill's contents before use.
 
-## クロスツールの前提（Claude Code ↔ Codex CLI）
+## Cross-tool prerequisites (Claude Code ↔ Codex CLI)
 
-Agent Skills はオープン標準（`SKILL.md` の `name` / `description` 必須）。`SKILL.md` の中身は両ツールで可搬だが、ディスカバリパスと起動方法が異なる。
+Agent Skills is an open standard (`SKILL.md` requires `name` / `description`). The contents of `SKILL.md` are portable across both tools, but discovery paths and invocation methods differ.
 
 | | Claude Code | Codex CLI |
 |---|---|---|
-| 標準ディスカバリ | `.claude/skills/` + クロス慣習 `.agents/skills/` | **主たる場所が `.agents/skills/`**（`$CWD` → 親 → repo root → `$HOME` → `/etc/codex/skills` → built-in） |
-| 明示起動 | `/skill-name` | `$skill-name` または `/skills` |
-| 暗黙起動 | description マッチで自動委譲（積極的） | description マッチで自動選択だが保守的。`agents/openai.yaml` の `policy.allow_implicit_invocation` で制御 |
-| ツール許可 | `allowed-tools`（実験的） | `allowed-tools` は信頼性低。`agents/openai.yaml` policy + `config.toml` の `approval_policy="granular"` → `skill_approval` を使う |
-| 配布単位 | plugin marketplace（`/plugin`） | **Plugins**（skills/apps/MCP を束ねる。`openai/plugins`） |
+| Standard discovery | `.claude/skills/` + cross-tool convention `.agents/skills/` | **Primary location is `.agents/skills/`** (`$CWD` → parent → repo root → `$HOME` → `/etc/codex/skills` → built-in) |
+| Explicit invocation | `/skill-name` | `$skill-name` or `/skills` |
+| Implicit invocation | Auto-delegation on description match (aggressive) | Auto-selection on description match, but conservative. Controlled via `policy.allow_implicit_invocation` in `agents/openai.yaml` |
+| Tool permissions | `allowed-tools` (experimental) | `allowed-tools` has low reliability. Use `agents/openai.yaml` policy + `approval_policy="granular"` in `config.toml` → `skill_approval` |
+| Distribution unit | plugin marketplace (`/plugin`) | **Plugins** (bundles skills/apps/MCP; `openai/plugins`) |
 
-- **相互運用**: `.agents/skills/` に置いた標準準拠スキルは両ツールで動く。ただし Claude 固有 frontmatter（`when_to_use` / `argument-hint` / `paths` / `hooks`）は Codex が無視し、Codex 固有 `agents/openai.yaml` は Claude が無視する。**本文 + `name` / `description` は可搬**だが機能完全互換ではない。
-- **Codex のトークン予算**: 起動時のスキル一覧は「コンテキストの最大 2%、不明時は 8,000 文字」に制限。本文は選択時のみロード（progressive disclosure）。
-- **AGENTS.md** は OpenAI 発祥で今はクロスベンダ標準（agents.md）。skills とは独立した常時オン指示で、直接の結合はない。
-- Codex の旧 `~/.codex/prompts/*.md`（custom prompts）は 2026-01-22 に deprecated、Skills へ移行が公式方針。
+- **Interoperability**: Standard-compliant skills placed in `.agents/skills/` work on both tools. However, Claude-specific frontmatter (`when_to_use` / `argument-hint` / `paths` / `hooks`) is ignored by Codex, and Codex-specific `agents/openai.yaml` is ignored by Claude. **Body content + `name` / `description` are portable**, but functional parity is not guaranteed.
+- **Codex's token budget**: The skill list shown at startup is capped at "2% of context, or 8,000 characters if unknown." Body content loads only when selected (progressive disclosure).
+- **AGENTS.md** originated at OpenAI and is now a cross-vendor standard (agents.md). It is an always-on instruction independent of skills, with no direct coupling.
+- Codex's legacy `~/.codex/prompts/*.md` (custom prompts) was deprecated on 2026-01-22; migration to Skills is the official direction.
 
-## エンジニアリング（要件・設計・実装・テスト・レビュー）
+## Engineering (requirements, design, implementation, testing, review)
 
-### 公開スキル（エンジニアリング）
+### Public skills (engineering)
 
-| スキル | 配布元 | 用途 | フェーズ |
+| Skill | Source | Purpose | Phase |
 |---|---|---|---|
-| `mcp-builder` | `anthropics/skills`（公式） | MCP サーバー構築ガイド（FastMCP / TS SDK） | 設計・実装 |
-| `webapp-testing` | `anthropics/skills`（公式） | Playwright でローカル Web アプリをテスト | テスト |
-| `web-artifacts-builder` | `anthropics/skills`（公式） | React/Tailwind/shadcn の UI 構築 | 実装 |
-| `frontend-design` | `anthropics/skills`（公式） | 意図的な UI ビジュアルデザイン | 設計（UI） |
-| `skill-creator` | `anthropics/skills`（公式） | スキルの作成・改善・eval 計測（メタ） | プロセス整備 |
-| `/code-review`, `/security-review`, `/run`, `/verify` | Claude Code 同梱 | diff レビュー / 脆弱性レビュー / アプリ起動検証 | レビュー・テスト |
-| `anthropics/claude-code-security-review` | 公式 GitHub Action | SQLi/XSS/認証認可/依存脆弱性スキャン | レビュー（CI） |
-| `kiro-spec-requirements/-design/-tasks/-impl` 他 | `gotalab/cc-sdd`（17 skills） | EARS 要件 → 設計 → タスク → 実装の SDD。Claude/**Codex 両対応**（`--codex-skills`） | 要件〜実装 |
-| `speckit-specify/-plan/-tasks/-clarify/-analyze` | `github/spec-kit` | 仕様駆動。Codex は `$speckit-*`、`--skills` で導入 | 要件・設計 |
-| `getsentry/sentry-pr-code-review`, `trailofbits/differential-review` | ベンダ公式（VoltAgent 集約） | PR コードレビュー / 差分レビュー | レビュー |
-| Codex Security plugin / `gh-address-comments` | `openai/plugins`（公式） | 脆弱性スキャン / PR コメント対応 | レビュー |
+| `mcp-builder` | `anthropics/skills` (official) | MCP server build guide (FastMCP / TS SDK) | Design/Implementation |
+| `webapp-testing` | `anthropics/skills` (official) | Test local web apps with Playwright | Testing |
+| `web-artifacts-builder` | `anthropics/skills` (official) | Build UI with React/Tailwind/shadcn | Implementation |
+| `frontend-design` | `anthropics/skills` (official) | Intentional UI visual design | Design (UI) |
+| `skill-creator` | `anthropics/skills` (official) | Create/improve skills, measure evals (meta) | Process setup |
+| `/code-review`, `/security-review`, `/run`, `/verify` | Bundled with Claude Code | Diff review / vulnerability review / app-launch verification | Review/Testing |
+| `anthropics/claude-code-security-review` | Official GitHub Action | SQLi/XSS/authN-authZ/dependency vulnerability scanning | Review (CI) |
+| `kiro-spec-requirements/-design/-tasks/-impl` etc. | `gotalab/cc-sdd` (17 skills) | SDD flow from EARS requirements → design → tasks → implementation. Supports **both Claude and Codex** (`--codex-skills`) | Requirements–Implementation |
+| `speckit-specify/-plan/-tasks/-clarify/-analyze` | `github/spec-kit` | Spec-driven development. Codex uses `$speckit-*`, installed via `--skills` | Requirements/Design |
+| `getsentry/sentry-pr-code-review`, `trailofbits/differential-review` | Vendor-official (aggregated via VoltAgent) | PR code review / diff review | Review |
+| Codex Security plugin / `gh-address-comments` | `openai/plugins` (official) | Vulnerability scanning / PR comment resolution | Review |
 
-> Codex の公式スキルは `openai/skills`（**deprecated**）から `openai/plugins`（plugin 形式）へ移行。`build-web-apps` / `build-ios-apps` / `build-macos-apps` 等が実装系。SE 専用の role テンプレートは `openai/role-specific-plugins` には未収録。
+> Codex's official skills migrated from `openai/skills` (**deprecated**) to `openai/plugins` (plugin format). `build-web-apps` / `build-ios-apps` / `build-macos-apps` etc. are implementation-focused. SE-specific role templates are not included in `openai/role-specific-plugins`.
 
-### ベストプラクティス（エンジニアリング）
+### Best practices (engineering)
 
-- **核心は自由度（degrees of freedom）の調整**。「崖に挟まれた狭い橋＝低自由度（固定スクリプト）」vs「障害物のない野原＝高自由度（散文）」。
-  - 高: コードレビュー・設計判断（散文の手順）
-  - 中: 推奨パターンのある codegen（擬似コード/パラメータ付き）
-  - 低: **DB マイグレーション・テスト実行**（`migrate.py --verify --backup`、「フラグ追加・変更禁止」）
-- **壊れやすく一貫性が要る処理はスクリプト化**: 生成させるより `validate_form.py` を書く。実行意図は `Run`（実行）/ `See ... for the algorithm`（参照）で区別。
-- **プロセス型 skill は checklist + feedback loop**: コピー可能な `- [ ]` チェックリスト + 「validator 実行 → 修正 → 繰り返し」。破壊的操作は **plan-validate-execute**（plan を `changes.json` に書く → 検証 → 実行 → 確認）。TDD ループ・レビュー手順・SDD フローに適用できる。
-- **知識型 skill は `references/` にドメイン別・1 階層**（API スキーマ・規約）。読まれるまでトークン消費ゼロ。
+- **The core is tuning degrees of freedom.** "A narrow bridge between cliffs = low freedom (fixed script)" vs. "an open field with no obstacles = high freedom (prose)."
+  - High: code review, design decisions (prose procedures)
+  - Medium: codegen with recommended patterns (pseudocode/parameterized)
+  - Low: **DB migrations, test execution** (`migrate.py --verify --backup`, "no adding/changing flags")
+- **Script brittle, consistency-critical operations**: write `validate_form.py` rather than having the model generate it. Distinguish execution intent with `Run` vs. `See ... for the algorithm` (reference).
+- **Process-type skills use a checklist + feedback loop**: a copyable `- [ ]` checklist plus a "run validator → fix → repeat" cycle. Destructive operations use **plan-validate-execute** (write the plan to `changes.json` → validate → execute → confirm). Applies to TDD loops, review procedures, and SDD flows.
+- **Knowledge-type skills put domain-specific material in `references/`, one level deep** (API schemas, conventions). Zero token cost until read.
 
-## ドキュメンテーション（提案書・仕様書・設計書・技術文書・スライド）
+## Documentation (proposals, specs, design docs, technical writing, slides)
 
-### 公開スキル（ドキュメンテーション）
+### Public skills (documentation)
 
-| スキル | 配布元 | 用途 |
+| Skill | Source | Purpose |
 |---|---|---|
-| `doc-coauthoring` | `anthropics/skills`（公式） | 提案 / 技術仕様 / 意思決定文書（RFC/PRD）の共同執筆。context → refinement → reader testing の 3 段階。リソースなしの純手順型 |
-| `internal-comms` | `anthropics/skills`（公式） | 社内コミュニケーション（3P 更新 / newsletter / FAQ / status / incident）。`examples/` に書式別スタイルガイド |
-| `docx` / `pptx` / `pdf` / `xlsx` | `anthropics/skills`（公式・**source-available / 非 OSS**） | Office 文書の生成・編集・抽出・変換。`scripts/`（pack/unpack/validate, soffice, markitdown）+ OOXML schema |
-| `theme-factory` | `anthropics/skills`（公式） | アーティファクト（slides/docs/HTML）を 10 プリセット or 生成テーマでスタイリング。`assets/` + `themes/*.md` |
-| `brand-guidelines` | `anthropics/skills`（公式） | ブランドカラー/タイポを後処理で適用（知識型） |
-| cc-sdd `kiro-spec-requirements/-design`, Spec Kit `speckit-specify/-checklist` | `gotalab/cc-sdd` / `github/spec-kit` | 要件 / 設計 / 仕様文書の生成（Codex 対応）。Spec Kit の `checklist` は「仕様の英語ユニットテスト」 |
-| `garrytan/document-release` | コミュニティ | 出荷コードに合わせて docs を更新 |
-| Mermaid 系（`Agents365-ai/mermaid-skill` 等） | コミュニティ | NL → `.mmd`、検証ループ、多種ダイアグラム。ADR/README に図を埋め込む用途 |
-| `notion` / `google-slides` plugin | `openai/plugins`（公式・Codex） | Notion / Google Slides 連携 |
+| `doc-coauthoring` | `anthropics/skills` (official) | Co-authoring proposals / technical specs / decision docs (RFC/PRD). Three stages: context → refinement → reader testing. Pure procedure type with no resources |
+| `internal-comms` | `anthropics/skills` (official) | Internal communications (3P updates / newsletters / FAQ / status / incident). `examples/` holds format-specific style guides |
+| `docx` / `pptx` / `pdf` / `xlsx` | `anthropics/skills` (official, **source-available / not OSS**) | Generate, edit, extract, and convert Office documents. `scripts/` (pack/unpack/validate, soffice, markitdown) + OOXML schema |
+| `theme-factory` | `anthropics/skills` (official) | Style artifacts (slides/docs/HTML) with 10 presets or generated themes. `assets/` + `themes/*.md` |
+| `brand-guidelines` | `anthropics/skills` (official) | Apply brand colors/typography as post-processing (knowledge type) |
+| cc-sdd `kiro-spec-requirements/-design`, Spec Kit `speckit-specify/-checklist` | `gotalab/cc-sdd` / `github/spec-kit` | Generate requirements / design / spec documents (Codex-compatible). Spec Kit's `checklist` acts as "unit tests in English for the spec" |
+| `garrytan/document-release` | Community | Update docs to match shipped code |
+| Mermaid family (`Agents365-ai/mermaid-skill` etc.) | Community | NL → `.mmd`, validation loop, various diagram types. For embedding diagrams into ADRs/READMEs |
+| `notion` / `google-slides` plugin | `openai/plugins` (official, Codex) | Notion / Google Slides integration |
 
-### ベストプラクティス（ドキュメンテーション）
+### Best practices (documentation)
 
-- **リソース配置の使い分け**:
-  - `assets/` = 出力に使うテンプレート・boilerplate（docx/pptx テンプレ、レターヘッド、テーマ）
-  - `references/` = スタイルガイド・執筆規約（読んで従う。100 行超は目次必須）
-  - `scripts/` = 決定的な生成・変換（markitdown で読込、soffice で `.doc`→`.docx`、PDF フォーム入力、OOXML validate）
-- **構造化執筆ワークフロー**（`doc-coauthoring` が範例）: ①context gathering（5–10 個の明確化質問）→②refinement（3–5 セクション骨子、不確実箇所優先、`str_replace` で部分編集）→③**reader testing**（コンテキストなしの別 Claude に読ませ、読者の疑問を予測させて gap が出なくなるまで反復）。
-- **skill の型を意識する**: 手順型（co-authoring、リソースなし・高自由度）/ テンプレート型（docx/pptx、`assets`+`scripts`・低自由度・「既存テンプレ規約が常に優先」）/ 知識型（brand-guidelines、`references` 中心）。
-- **ブランド・トーン**: ブランド適用は生成後の後処理パスとして分離。トーンは「汎用指示 1 本」ではなく書式別 reference にルーティング。`description` は三人称・トリガー明示。
+- **Resource placement conventions**:
+  - `assets/` = templates/boilerplate used in output (docx/pptx templates, letterhead, themes)
+  - `references/` = style guides and writing conventions (read and follow; tables of contents required beyond 100 lines)
+  - `scripts/` = deterministic generation/conversion (loading via markitdown, `.doc`→`.docx` via soffice, PDF form filling, OOXML validation)
+- **Structured writing workflow** (exemplified by `doc-coauthoring`): ① context gathering (5–10 clarifying questions) → ② refinement (3–5 section outline, prioritizing uncertain areas, partial edits via `str_replace`) → ③ **reader testing** (have a separate Claude instance with no context read it, predict reader questions, and iterate until gaps disappear).
+- **Be aware of the skill's type**: procedural (co-authoring; no resources, high freedom) / template-based (docx/pptx; `assets`+`scripts`, low freedom, "existing template conventions always take priority") / knowledge-based (brand-guidelines; centered on `references`).
+- **Brand and tone**: separate brand application as a post-generation pass. Route tone into format-specific references rather than a single generic instruction. `description` should be third-person with explicit triggers.
 
-## 調査（ディープリサーチ・Web リサーチ・コードベース探索・データ分析）
+## Research (deep research, web research, codebase exploration, data analysis)
 
-### 公開スキル（調査）
+### Public skills (research)
 
-| スキル | 配布元 | 用途 |
+| Skill | Source | Purpose |
 |---|---|---|
-| `xlsx` | `anthropics/skills`（公式） | スプレッドシートのデータ分析（pandas / openpyxl）。公式で最もデータ分析に近い |
-| `webapp-testing` | `anthropics/skills`（公式） | Web アプリの調査・検証（Playwright） |
-| `deep-research` | **Claude Code harness 組み込み** | fan-out Web 検索 → ソース取得 → 主張を敵対的に検証 → 引用付きレポート合成 |
-| `Weizhena/Deep-Research-skills` | コミュニティ（最多 star） | アウトライン生成 → 並列エージェント Web 調査 → Markdown レポート（HITL）。Claude/OpenCode/Codex 対応 |
-| `glebis/claude-skills`（Deep Research / Firecrawl Research 他） | コミュニティ | 外部 Deep Research API ラップ、スクレイプ + BibTeX、GRADE 評価ヘルスリサーチ |
-| `jamditis/claude-skills-journalism` | コミュニティ | 14 skill。SIFT / C2PA によるソース検証、fact-check、データジャーナリズム（pandas/polars/DuckDB） |
-| `petar-nauka/fact-check-skill` | コミュニティ | SIFT + CRAAP + claim 分解の 11 段階パイプライン |
-| `trailofbits/audit-context-building` | ベンダ公式 | コードベースの深い構造的コンテキスト構築 |
-| Data Analytics / Financial Markets role plugin | `openai/role-specific-plugins`（公式・Codex） | メトリクス調査・データ検証 / 株式リサーチ・メモ |
+| `xlsx` | `anthropics/skills` (official) | Spreadsheet data analysis (pandas / openpyxl). The official skill closest to data analysis |
+| `webapp-testing` | `anthropics/skills` (official) | Investigating/verifying web apps (Playwright) |
+| `deep-research` | **Built into the Claude Code harness** | Fan-out web search → fetch sources → adversarially verify claims → synthesize a cited report |
+| `Weizhena/Deep-Research-skills` | Community (most starred) | Outline generation → parallel agent web research → Markdown report (HITL). Supports Claude/OpenCode/Codex |
+| `glebis/claude-skills` (Deep Research / Firecrawl Research etc.) | Community | Wraps external Deep Research APIs, scraping + BibTeX, GRADE-based health research evaluation |
+| `jamditis/claude-skills-journalism` | Community | 14 skills. SIFT/C2PA-based source verification, fact-checking, data journalism (pandas/polars/DuckDB) |
+| `petar-nauka/fact-check-skill` | Community | 11-stage pipeline combining SIFT + CRAAP + claim decomposition |
+| `trailofbits/audit-context-building` | Vendor-official | Building deep structural context of a codebase |
+| Data Analytics / Financial Markets role plugin | `openai/role-specific-plugins` (official, Codex) | Metrics investigation/data validation / equity research memos |
 
-> ⚠️ **`anthropics/skills` に汎用「deep-research」公式スキルは存在しない**。公式の調査隣接は `xlsx`（データ分析）と `webapp-testing`（Web 調査）のみ。Claude Code の `deep-research` は harness が実行時に注入する組み込みで、ディスク上にも公開リポにも無い（公開アーティファクトではない）。Codex 側にも汎用公式 deep-research スキルは無い。
+> **Warning: there is no official general-purpose "deep-research" skill in `anthropics/skills`.** The only official research-adjacent skills are `xlsx` (data analysis) and `webapp-testing` (web investigation). Claude Code's `deep-research` is a harness-injected built-in at runtime — it exists neither on disk nor in a public repo (it is not a published artifact). Codex likewise has no official general-purpose deep-research skill.
 
-### ベストプラクティス（調査）
+### Best practices (research)
 
-- **orchestrator-worker / fan-out**（Anthropic「multi-agent research system」由来）: lead が 3–5（複雑時 10+）の subagent を並列起動、各 subagent も 3+ ツール並列。広探索（breadth-first）では multi-agent が単一 Opus を **90.2% 上回った**。
-- **skill か agent オーケストレーションか**: 自己完結・逐次の調査手順 + ツール/ルーブリック同梱なら **skill**。1 コンテキストに収まらない並列広探索が要るなら **orchestrator + 並列 subagent** に昇格（skill はその入口/プロンプトになる）。全 agent が同一コンテキスト共有や依存が多い場合（多くのコーディング）は multi-agent を避ける。
-- **検証と引用規律**: 主張をソース位置に対応づける（`CitationAgent` 相当）。LLM judge で引用正確性を採点。**単一ソースの主張は flag、ソース衝突は均さず明示**。
-- **ハルシネーション回避**: 多ソース triangulation、不確実性の明示。
-- **トークン/コンテキスト管理**: multi-agent は chat の約 15× トークンを消費（「トークン量だけで eval 分散の 80% を説明」）。**start wide, then narrow down**（要約してからドリル）、複雑度に応じた労力配分、subagent は lead に返す前に findings を圧縮。`references/` にソース評価ルーブリック（CRAAP/SIFT）、`scripts/` に fetch/parse/dedup を置く。
+- **Orchestrator-worker / fan-out** (from Anthropic's "multi-agent research system"): a lead launches 3–5 subagents in parallel (10+ for complex tasks), each running 3+ tools in parallel. For breadth-first exploration, multi-agent setups **outperformed a single Opus by 90.2%**.
+- **Skill vs. agent orchestration**: use a **skill** for self-contained, sequential research procedures bundled with tools/rubrics. Escalate to **orchestrator + parallel subagents** when broad parallel exploration exceeds a single context (the skill then becomes its entry point/prompt). Avoid multi-agent setups when all agents need to share the same context or have heavy dependencies (as with much coding work).
+- **Verification and citation discipline**: map claims to source locations (equivalent to a `CitationAgent`). Score citation accuracy with an LLM judge. **Flag single-sourced claims; surface source conflicts explicitly rather than smoothing them over.**
+- **Avoiding hallucination**: triangulate across multiple sources and state uncertainty explicitly.
+- **Token/context management**: multi-agent setups consume roughly 15x the tokens of a chat ("token volume alone explains 80% of eval variance"). **Start wide, then narrow down** (summarize, then drill in), allocate effort by complexity, and have subagents compress findings before returning them to the lead. Put source-evaluation rubrics (CRAAP/SIFT) in `references/` and fetch/parse/dedup logic in `scripts/`.
 
-## 共通の選定・運用指針
+## General selection and operating guidance
 
-- **公式 > ベンダ公式 > コミュニティ**の順で信頼。awesome 系（`ComposioHQ/awesome-claude-skills` 66k★、`VoltAgent/awesome-agent-skills` 26k★）は**索引**であり、star は個々のスキル品質を保証しない。
-- **クロスツール運用**は `.agents/skills/` に標準準拠で置く。Claude/Codex 固有 frontmatter は相手側で無視される前提で本文を可搬に保つ。
-- **セキュリティ**: コミュニティスキルは実行スクリプト同梱。導入前に scripts/依存/外部誘導指示（プロンプトインジェクション経路）を監査。`allowed-tools` は実験的で境界として信用しない。
+- **Trust order: official > vendor-official > community.** Awesome-list aggregators (`ComposioHQ/awesome-claude-skills` 66k★, `VoltAgent/awesome-agent-skills` 26k★) are **indexes**; stars do not guarantee the quality of any individual skill.
+- **Cross-tool operation**: place standard-compliant skills in `.agents/skills/`. Keep the body content portable on the assumption that Claude/Codex-specific frontmatter will be ignored by the other tool.
+- **Security**: community skills bundle executable scripts. Before adopting, audit scripts/dependencies/instructions that could redirect execution externally (prompt-injection vectors). `allowed-tools` is experimental and should not be trusted as a boundary.
 
-## 参考
+## References
 
 - [Skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)
 - [How we built our multi-agent research system](https://www.anthropic.com/engineering/built-multi-agent-research-system)
-- [anthropics/skills（公式公開スキル）](https://github.com/anthropics/skills)
+- [anthropics/skills (official public skills)](https://github.com/anthropics/skills)
 - [anthropics/claude-code-security-review](https://github.com/anthropics/claude-code-security-review)
-- [Codex Agent Skills（OpenAI 公式）](https://developers.openai.com/codex/skills)
-- [openai/plugins（Codex 公式プラグイン）](https://github.com/openai/plugins) / [openai/role-specific-plugins](https://github.com/openai/role-specific-plugins)
+- [Codex Agent Skills (OpenAI official)](https://developers.openai.com/codex/skills)
+- [openai/plugins (Codex official plugins)](https://github.com/openai/plugins) / [openai/role-specific-plugins](https://github.com/openai/role-specific-plugins)
 - [gotalab/cc-sdd](https://github.com/gotalab/cc-sdd) / [github/spec-kit](https://github.com/github/spec-kit)
-- 関連: `ai/platform/agent-skills-best-practices.md`（オーサリング指針）, `ai/platform/agent-skills-spec.md`（仕様）, `ai/agents/codex-cli.md`, `ai/workflow/cc-sdd.md`, `ai/workflow/github-spec-kit.md`
+- Related: `ai/platform/agent-skills-best-practices.md` (authoring guidance), `ai/platform/agent-skills-spec.md` (spec), `ai/agents/codex-cli.md`, `ai/workflow/cc-sdd.md`, `ai/workflow/github-spec-kit.md`

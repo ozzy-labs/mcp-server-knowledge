@@ -7,28 +7,28 @@ stability: research-preview
 
 # Open Knowledge Format (OKF)
 
-AI エージェントに渡す「キュレーションされた知識」（テーブル定義・メトリクス計算式・runbook・API 仕様など）を、YAML frontmatter 付き Markdown ファイルのディレクトリとして表現するオープン仕様。Google Cloud が 2026-06-13 に v0.1 を公開した。LLM-wiki パターン（人間も AI も読める知識ベースを Git で管理する）を、特定のベンダー・SDK・ランタイムに依存しないポータブルなフォーマットへ形式化したもの。仕様本体は GitHub（`GoogleCloudPlatform/knowledge-catalog`）に Apache License 2.0 で公開されている。
+An open specification for representing "curated knowledge" passed to AI agents (table definitions, metric formulas, runbooks, API specs, etc.) as a directory of YAML-frontmatter Markdown files. Google Cloud published v0.1 on 2026-06-13. It formalizes the LLM-wiki pattern (managing a knowledge base readable by both humans and AI in Git) into a portable format independent of any specific vendor, SDK, or runtime. The spec itself is published on GitHub (`GoogleCloudPlatform/knowledge-catalog`) under the Apache License 2.0.
 
-## 背景と狙い
+## Background and Goals
 
-エージェントを構築するたびに「コンテキスト組み立て」を一から解く問題（社内知識が互いに非互換なシステムに散在する）を解消する。OKF は知識交換のための共通言語（lingua franca）を提供し、システム・組織・ツールをまたいでも知識が生き残るようにする。
+Solves the problem of re-solving "context assembly" from scratch every time an agent is built (internal knowledge scattered across mutually incompatible systems). OKF provides a lingua franca for knowledge exchange, so knowledge survives across systems, organizations, and tools.
 
-- **RAG との違い**: RAG はクエリ時に知識を導出するが、OKF は「バージョン管理されたキュレーション済み concept」をエージェントが直接読み書きする。
-- **AGENTS.md との違い**: [[agents-md]] はリポジトリ単位の「エージェントへの指示・方針」、OKF は組織横断で共有する「ドメイン知識のバンドル」。レイヤが異なり競合しない。
+- **Difference from RAG**: RAG derives knowledge at query time, while OKF lets agents directly read and write "version-controlled, curated concepts."
+- **Difference from AGENTS.md**: [[agents-md]] provides per-repository "instructions and policy for agents," while OKF is a "bundle of domain knowledge" shared across organizations. Different layers, no conflict.
 
-## 基本概念
+## Basic Concepts
 
-| 用語 | 定義 |
+| Term | Definition |
 |---|---|
-| **Knowledge Bundle** | 知識ドキュメントの自己完結した階層コレクション。交換の単位 |
-| **Concept** | 1 つの知識単位を表す単一の Markdown ドキュメント（1 ファイル = 1 concept） |
-| **Concept ID** | `.md` を除いたファイルパス（例: `tables/users.md` → `tables/users`） |
+| **Knowledge Bundle** | A self-contained, hierarchical collection of knowledge documents. The unit of exchange |
+| **Concept** | A single Markdown document representing one unit of knowledge (1 file = 1 concept) |
+| **Concept ID** | The file path with `.md` removed (e.g., `tables/users.md` → `tables/users`) |
 
-concept 同士は Markdown リンクで結ばれ、ディレクトリの親子構造を超えたグラフを形成する。
+Concepts are linked to each other via Markdown links, forming a graph that spans beyond the directory's parent-child structure.
 
-## ファイル構造
+## File Structure
 
-bundle は concept を表す Markdown ファイルのディレクトリ。
+A bundle is a directory of Markdown files representing concepts.
 
 ```text
 sales/
@@ -45,20 +45,20 @@ sales/
     └── weekly_active_users.md
 ```
 
-## frontmatter
+## Frontmatter
 
-各 concept は `---` で区切った YAML frontmatter と自由形式の Markdown 本文で構成する。
+Each concept consists of YAML frontmatter delimited by `---` and free-form Markdown body.
 
-| フィールド | 必須 | 内容 |
+| Field | Required | Content |
 |---|---|---|
-| `type` | **必須**（唯一） | concept の種別を表す記述的文字列（例: `BigQuery Table`, `Playbook`）。値は producer が定義し、中央レジストリには登録しない |
-| `title` | 推奨 | 人間可読の表示名 |
-| `description` | 推奨 | 1 文の要約 |
-| `resource` | 推奨 | 実体アセットを一意に指す URI |
-| `tags` | 推奨 | 横断的な分類用の YAML リスト |
-| `timestamp` | 推奨 | 最終更新の ISO 8601 日時 |
+| `type` | **Required** (the only one) | A descriptive string for the concept's type (e.g., `BigQuery Table`, `Playbook`). Values are defined by the producer and are not registered in any central registry |
+| `title` | Recommended | Human-readable display name |
+| `description` | Recommended | One-sentence summary |
+| `resource` | Recommended | URI uniquely pointing to the underlying asset |
+| `tags` | Recommended | YAML list for cross-cutting classification |
+| `timestamp` | Recommended | ISO 8601 datetime of last update |
 
-producer は任意の独自キーを追加してよい（最小限の制約・自由に拡張可能）。
+Producers may add arbitrary custom keys (minimally constrained, freely extensible).
 
 ```yaml
 ---
@@ -71,54 +71,54 @@ timestamp: 2026-05-28T14:30:00Z
 ---
 ```
 
-## 予約ファイル名
+## Reserved File Names
 
-| ファイル名 | 役割 |
+| File name | Role |
 |---|---|
-| `index.md` | frontmatter なしのディレクトリ目次。progressive disclosure（段階的開示）を支援 |
-| `log.md` | ISO 8601 日付でグルーピングした時系列の更新履歴 |
+| `index.md` | Directory index without frontmatter. Supports progressive disclosure |
+| `log.md` | Chronological update history grouped by ISO 8601 date |
 
-予約名以外の `.md` はすべて concept ドキュメントとして扱う。
+Every `.md` file other than the reserved names is treated as a concept document.
 
-## リンク規約
+## Linking Convention
 
-- **絶対（bundle 相対）**: `/` で始まるリンクは bundle ルートからの解決。安定性のため推奨。
-- **相対**: 通常の Markdown 相対パス。
+- **Absolute (bundle-relative)**: Links starting with `/` resolve from the bundle root. Recommended for stability.
+- **Relative**: Ordinary Markdown relative paths.
 
-いずれも型なしの関係を表し、意味は周囲の散文から立ち上がる。
+Both represent untyped relationships; meaning emerges from surrounding prose.
 
-## 適合条件（v0.1）
+## Conformance (v0.1)
 
-bundle が OKF v0.1 に適合するのは以下を満たすとき:
+A bundle conforms to OKF v0.1 when it satisfies all of the following:
 
-1. 予約名以外のすべての `.md` がパース可能な YAML frontmatter を持つ
-2. すべての frontmatter が空でない `type` フィールドを含む
-3. 予約ファイルが存在する場合、規定の構造に従う
+1. Every `.md` file other than the reserved names has parseable YAML frontmatter
+2. All frontmatter includes a non-empty `type` field
+3. Reserved files, where present, follow the prescribed structure
 
-### consumer の義務
+### Consumer Obligations
 
-consumer（エージェント・ツール）は寛容に振る舞うことが求められる。
+Consumers (agents, tools) are required to behave leniently.
 
-- **MUST**: 未知の `type` 値を許容する / 壊れたクロスリンクを許容する / round-trip 時に未知の frontmatter キーを保持する
-- **SHOULD**: 未認識フィールドを持つドキュメントを拒否しない / 未認識の OKF バージョンも best-effort で消費する / 適合条件を超える制約はソフトガイダンスとして扱う
+- **MUST**: Tolerate unknown `type` values / tolerate broken cross-links / preserve unknown frontmatter keys on round-trip
+- **SHOULD**: Not reject documents with unrecognized fields / consume unrecognized OKF versions on a best-effort basis / treat constraints beyond the conformance conditions as soft guidance
 
-この寛容モデルにより、bundle の成長やエージェント生成コンテンツに対して段階的な進化が可能になる。
+This lenient model enables incremental evolution as bundles grow and as agents generate content.
 
-## リファレンス実装
+## Reference Implementations
 
-仕様と併せて以下が公開されている。
+Published alongside the spec:
 
-- **Enrichment agent**: BigQuery データセットを走査し、スキーマや引用を付けて OKF ドキュメントを起草する
-- **静的 HTML ビジュアライザ**: OKF bundle をインタラクティブなグラフビューでレンダリング
-- **サンプル bundle**: GA4 e-commerce / Stack Overflow / Bitcoin データセット
+- **Enrichment agent**: Crawls BigQuery datasets and drafts OKF documents with schema and citations attached
+- **Static HTML visualizer**: Renders an OKF bundle as an interactive graph view
+- **Sample bundles**: GA4 e-commerce / Stack Overflow / Bitcoin datasets
 
-## 設計原則
+## Design Principles
 
-- **Minimally opinioned**: 必須は `type` のみ。コンテンツモデルを規定しない
-- **Producer/consumer independence**: フォーマットが契約であり、両端のツールは独立に差し替え可能
-- **Format, not platform**: クラウド・DB・モデルプロバイダ・フレームワークに非依存
+- **Minimally opinioned**: `type` is the only required field. No content model is prescribed
+- **Producer/consumer independence**: The format is the contract; tooling on either end can be swapped independently
+- **Format, not platform**: Independent of cloud, database, model provider, and framework
 
-## 参考
+## References
 
-- OKF 仕様（GitHub, Apache-2.0）: <https://github.com/GoogleCloudPlatform/knowledge-catalog/tree/main/okf>
-- Google Cloud Blog「How the Open Knowledge Format can improve data sharing」: <https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing>
+- OKF spec (GitHub, Apache-2.0): <https://github.com/GoogleCloudPlatform/knowledge-catalog/tree/main/okf>
+- Google Cloud Blog, "How the Open Knowledge Format can improve data sharing": <https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing>

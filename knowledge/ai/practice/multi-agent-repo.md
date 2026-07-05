@@ -3,93 +3,93 @@ reviewed: 2026-06-07
 tags: [ai-workflow, methodology]
 ---
 
-# マルチエージェント対応リポジトリの設計
+# Designing a Multi-Agent-Compatible Repository
 
-1 つのリポジトリを Claude Code / Codex CLI / Gemini CLI / GitHub Copilot CLI のいずれでも扱えるようにする設計指針。拡張機構そのものの仕様は `ai/platform/agent-extensions.md`、共通指示ファイルは `ai/platform/agents-md.md` を参照。
+Design guidance for making a single repository usable by Claude Code / Codex CLI / Gemini CLI / GitHub Copilot CLI alike. For the specification of the extension mechanism itself, see `ai/platform/agent-extensions.md`; for the shared instruction file, see `ai/platform/agents-md.md`.
 
-## 設計目標
+## Design Goals
 
-| 目標 | アプローチ |
+| Goal | Approach |
 |---|---|
-| 指示の DRY | `AGENTS.md` を single source of truth。CLI 固有ファイルは差分のみ |
-| Skills の再利用 | `.agents/skills/` に置き、複数 CLI から発見させる |
-| Hooks の一貫性 | 共通の shell スクリプトを呼び出し、各 CLI の hooks.json から参照 |
-| チーム共有 | project スコープを Git で共有、user スコープは個人に任せる |
-| 新 CLI 対応の容易さ | CLI 固有設定を薄くし、汎用資産を厚くする |
+| DRY instructions | `AGENTS.md` as the single source of truth. CLI-specific files hold only the diff |
+| Skill reuse | Place in `.agents/skills/` so multiple CLIs can discover them |
+| Consistent hooks | Call common shell scripts, referenced from each CLI's hooks.json |
+| Team sharing | Share project scope via Git; leave user scope to individuals |
+| Easy support for new CLIs | Keep CLI-specific config thin, generic assets thick |
 
-## 推奨ディレクトリ構成
+## Recommended Directory Layout
 
 ```text
 <repo>/
-├── AGENTS.md                       # 全 CLI 共通の指示
-├── CLAUDE.md                       # Claude Code 固有の差分
+├── AGENTS.md                       # Instructions shared across all CLIs
+├── CLAUDE.md                       # Claude Code-specific diff
 ├── .agents/
-│   └── skills/                     # 4 CLI が発見する共通スキル
+│   └── skills/                     # Common skills discovered by 4 CLIs
 │       └── <skill-name>/SKILL.md
 ├── .claude/
-│   ├── settings.json               # Claude Code 権限・フック
-│   ├── agents/<name>.md            # Claude Code 固有 subagent
-│   ├── commands/<name>.md          # Claude Code 固有 command
-│   └── rules/                      # 追加ルール
+│   ├── settings.json               # Claude Code permissions/hooks
+│   ├── agents/<name>.md            # Claude Code-specific subagent
+│   ├── commands/<name>.md          # Claude Code-specific command
+│   └── rules/                      # Additional rules
 ├── .codex/
-│   └── config.toml                 # Codex CLI 固有設定
+│   └── config.toml                 # Codex CLI-specific config
 ├── .gemini/
-│   ├── settings.json               # Gemini CLI 固有設定
-│   └── commands/<ns>/<cmd>.toml    # Gemini 固有 command
+│   ├── settings.json               # Gemini CLI-specific config
+│   └── commands/<ns>/<cmd>.toml    # Gemini-specific command
 ├── .github/
-│   ├── agents/<name>.agent.md      # Copilot CLI 固有 agent
+│   ├── agents/<name>.agent.md      # Copilot CLI-specific agent
 │   ├── hooks/hooks.json            # Copilot CLI hooks
-│   └── skills/                     # （任意）Copilot 専用 skill
-├── .mcp.json                       # プロジェクト MCP（Claude/Gemini/Copilot）
+│   └── skills/                     # (optional) Copilot-only skill
+├── .mcp.json                       # Project MCP (Claude/Gemini/Copilot)
 └── scripts/
-    └── hooks/                      # shell で書いた共通フック
+    └── hooks/                      # Shared hooks written in shell
         ├── pre-tool-use.sh
         └── post-tool-use.sh
 ```
 
-**原則**:
+**Principles**:
 
-- **`.agents/skills/` を中心に据える**。4 CLI すべてが読める唯一の共通ディレクトリ
-- **CLI 固有ディレクトリには CLI 固有機能だけ**を置く。汎用資産は共通側に
-- **`.mcp.json` は Claude Code が読む名前だが、Gemini/Copilot も類似パスを参照可能** — 詳細は `ai/platform/mcp-protocol.md`
+- **Center everything on `.agents/skills/`**. It's the one shared directory readable by all 4 CLIs
+- **Keep CLI-specific directories limited to CLI-specific features**. Put generic assets on the shared side
+- **`.mcp.json` is named for Claude Code, but Gemini/Copilot can reference similar paths too** — see `ai/platform/mcp-protocol.md` for details
 
-## 指示ファイルの分担
+## Splitting Instruction Files
 
 ```text
-AGENTS.md          ... プロジェクト概要 / Tech Stack / 主要コマンド / 規約リンク
+AGENTS.md          ... Project overview / tech stack / key commands / links to conventions
   │
-  ├─ CLAUDE.md     ... 「共通方針は AGENTS.md を参照」+ Claude 固有のスキル／フック言及
-  ├─ GEMINI.md     ... Gemini 固有の追加コンテキスト（任意）
-  └─ .github/copilot-instructions.md ... レガシー互換のみ
+  ├─ CLAUDE.md     ... "See AGENTS.md for shared policy" + Claude-specific skills/hooks notes
+  ├─ GEMINI.md     ... Gemini-specific extra context (optional)
+  └─ .github/copilot-instructions.md ... Legacy compatibility only
 ```
 
-**DRY の要**: `CLAUDE.md` の先頭で「共通方針は AGENTS.md を参照」とリダイレクトし、Claude Code 固有の事項（Skills 一覧、出力スタイル、ステータスラインなど）だけを残す。この手法は Gemini CLI / Copilot CLI でも同様に機能する。
+**The key to DRY**: at the top of `CLAUDE.md`, redirect with "see AGENTS.md for shared policy," leaving only Claude Code-specific items (list of Skills, output style, status line, etc.). The same technique works equally well for Gemini CLI / Copilot CLI.
 
-## Skills の相互運用設計
+## Interoperable Skill Design
 
-### 共通 Skill の置き場所
+### Where to place shared Skills
 
 ```text
 .agents/skills/code-review/SKILL.md
 .agents/skills/release-notes/SKILL.md
 ```
 
-| CLI | 読み取り挙動 |
+| CLI | Read behavior |
 |---|---|
-| Codex CLI | `.agents/skills/` を **一次配置**として読む |
-| Gemini CLI | `.gemini/skills/` または `.agents/skills/` を読む |
-| Copilot CLI | `.github/skills/` / `.claude/skills/` / `.agents/skills/` を全て読む |
-| Claude Code | デフォルトでは `.claude/skills/` のみ |
+| Codex CLI | Reads `.agents/skills/` as the **primary location** |
+| Gemini CLI | Reads `.gemini/skills/` or `.agents/skills/` |
+| Copilot CLI | Reads all of `.github/skills/` / `.claude/skills/` / `.agents/skills/` |
+| Claude Code | By default, only `.claude/skills/` |
 
-**Claude Code を参加させるトリック**: Claude Code の `.claude/skills/` にシンボリックリンクで共通ディレクトリを参照させる。
+**Trick for getting Claude Code to participate**: have Claude Code's `.claude/skills/` reference the shared directory via a symlink.
 
 ```bash
 ln -s ../../.agents/skills ./.claude/skills
 ```
 
-> **注意**: Windows では symlink 作成に admin 権限または developer mode が必要。代替として `mklink /J` のジャンクションを使うか、共通 skill をプラグイン化して配布する（`ai/platform/agent-extensions.md` の Plugins 節）。
+> **Note**: On Windows, creating symlinks requires admin privileges or developer mode. As an alternative, use an `mklink /J` junction, or package the shared skill as a plugin for distribution (see the Plugins section of `ai/platform/agent-extensions.md`).
 
-### SKILL.md の書き方（4 CLI 共通）
+### Writing SKILL.md (common to all 4 CLIs)
 
 ```markdown
 ---
@@ -100,43 +100,43 @@ allowed-tools: Read Grep Glob
 
 # Code Review
 
-## 観点
-- セキュリティ脆弱性
-- パフォーマンス問題
-- テストカバレッジ
+## Checkpoints
+- Security vulnerabilities
+- Performance issues
+- Test coverage
 ```
 
-**共通で使えるフィールド**: `name`, `description`, `allowed-tools`
+**Commonly usable fields**: `name`, `description`, `allowed-tools`
 
-**CLI 固有のフィールドは別ファイルに切り出す**:
+**Split CLI-specific fields into separate files**:
 
-- Codex CLI 固有: `agents/openai.yaml`（同ディレクトリ内）
-- Claude Code 固有: `when_to_use` / `argument-hint` / `paths` / `hooks`（他 CLI では無視される）
+- Codex CLI-specific: `agents/openai.yaml` (in the same directory)
+- Claude Code-specific: `when_to_use` / `argument-hint` / `paths` / `hooks` (ignored by other CLIs)
 
-CLI 固有フィールドを SKILL.md に混ぜても**他 CLI は無視するだけ**なので致命的ではないが、可搬性を重視するなら最小共通仕様に留める。
+Mixing CLI-specific fields into SKILL.md **is not fatal since other CLIs simply ignore them**, but if portability matters, stick to the minimal common spec.
 
-## Subagents の設計
+## Subagent Design
 
-**Subagents は CLI 間の相互運用性が低い**。各 CLI のディレクトリ・frontmatter フォーマットが異なるため、1 つの定義を共有するのは現実的でない。
+**Subagents have poor interoperability across CLIs**. Each CLI's directory and frontmatter formats differ, so sharing a single definition isn't realistic.
 
-推奨アプローチ:
+Recommended approach:
 
-1. **Skills で代用できるなら Skills にする**。Skill を `context: fork` で子エージェント起動できる CLI もある（Claude Code）
-2. **CLI 固有機能が必要な場合のみ subagent を書く**。各 CLI の `agents/` ディレクトリに個別配置
-3. **定義内容は類似する**ので、`.agents/agents-template/<name>.md` にテンプレートを置き、各 CLI 用に生成するスクリプトを用意する手もある
+1. **Use Skills instead, wherever they suffice**. Some CLIs (Claude Code) can spawn a child agent from a Skill with `context: fork`
+2. **Write a subagent only when CLI-specific capability is actually needed**. Place it individually in each CLI's `agents/` directory
+3. **Since the definitions tend to be similar**, one option is to keep a template at `.agents/agents-template/<name>.md` and a generator script that produces the per-CLI version
 
-## Hooks の一貫化
+## Consolidating Hooks
 
-各 CLI の hooks フォーマットは異なるが、**shell スクリプトを共通化**できる。
+Each CLI's hooks format differs, but **the shell script itself can be shared**.
 
-### 共通 shell スクリプト
+### Shared shell script
 
 ```bash
 # scripts/hooks/pre-tool-use.sh
 #!/usr/bin/env bash
-# stdin JSON のフィールド名は CLI ごとに異なる（Claude Code は tool_name、
-# Codex / Copilot はそれぞれ別スキーマ）。実装前に各 CLI のドキュメントで
-# 受け取る JSON 構造を確認し、分岐を調整すること
+# The stdin JSON field names differ per CLI (Claude Code uses tool_name;
+# Codex / Copilot each use a different schema). Check each CLI's docs for
+# the JSON structure it sends before implementing, and adjust branching accordingly.
 input=$(cat)
 if echo "$input" | jq -e '.tool_name == "Bash" and (.tool_input.command | test("rm -rf"))' > /dev/null; then
   echo '{"permissionDecision": "deny", "reason": "destructive rm blocked"}'
@@ -145,7 +145,7 @@ fi
 exit 0
 ```
 
-### 各 CLI からの参照
+### Referencing from each CLI
 
 ```json
 // .claude/settings.json
@@ -175,11 +175,11 @@ exit 0
 }
 ```
 
-**注意**: stdin の JSON スキーマは CLI ごとに異なる（例: Claude Code は `tool_name` / `tool_input`）。実際に使う前に各 CLI のドキュメントでキー名を確認し、スクリプト側を調整する必要がある。Gemini CLI の環境変数は `CLAUDE_PROJECT_DIR` を互換エイリアスとして提供する点も覚えておく。
+**Note**: the stdin JSON schema differs by CLI (e.g., Claude Code uses `tool_name` / `tool_input`). Before actually using this, verify the key names in each CLI's docs and adjust the script accordingly. Also keep in mind that Gemini CLI provides `CLAUDE_PROJECT_DIR` as a compatible environment-variable alias.
 
-## MCP 設定の共有
+## Sharing MCP Configuration
 
-`.mcp.json` を Claude Code が読み、類似パスを他 CLI も読む。プロジェクトスコープ MCP の単一定義は以下の形で実現できる:
+Claude Code reads `.mcp.json`, and other CLIs read similar paths. A single definition for project-scoped MCP can be achieved as follows:
 
 ```json
 {
@@ -192,71 +192,71 @@ exit 0
 }
 ```
 
-各 CLI の設定ファイルから参照:
+Referenced from each CLI's config file:
 
-- Claude Code: `.mcp.json` を自動読み取り
-- Gemini CLI: `.gemini/settings.json` の `mcpServers` に同内容を複製（または `extends` 経由）
-- Codex CLI: `config.toml` の `[mcp_servers.knowledge]` に同内容を複製
-- Copilot CLI: `.github/mcp.json` または `~/.copilot/mcp-config.json` に複製
+- Claude Code: reads `.mcp.json` automatically
+- Gemini CLI: duplicate the same content in `.gemini/settings.json`'s `mcpServers` (or via `extends`)
+- Codex CLI: duplicate the same content in `config.toml`'s `[mcp_servers.knowledge]`
+- Copilot CLI: duplicate in `.github/mcp.json` or `~/.copilot/mcp-config.json`
 
-**自動同期スクリプト**: `.mcp.json` を single source of truth にして、他 CLI 用の設定を生成する `scripts/sync-mcp.mjs` を用意すると保守が楽。
+**Auto-sync script**: make `.mcp.json` the single source of truth and prepare a `scripts/sync-mcp.mjs` that generates the configuration for the other CLIs — this eases maintenance.
 
-## スコープ設計
+## Scope Design
 
 ```text
 ┌────────────────────────────────────────┐
-│ Enterprise / Managed settings           │ ← 組織ポリシーで上書き
+│ Enterprise / Managed settings           │ ← Overridden by org policy
 ├────────────────────────────────────────┤
-│ Project (Git 管理、.claude/ / .github/) │ ← チーム共有
+│ Project (Git-managed, .claude/ / .github/) │ ← Team shared
 ├────────────────────────────────────────┤
-│ Personal (~/.claude/ / ~/.codex/ 等)    │ ← 個人設定
+│ Personal (~/.claude/ / ~/.codex/ etc.)  │ ← Individual settings
 └────────────────────────────────────────┘
 ```
 
-| 置く層 | 内容 |
+| Layer | Contents |
 |---|---|
-| Project | プロジェクト固有のスキル、ルール、禁止事項、MCP 設定 |
-| Personal | 好みの出力スタイル、個人の補助スキル、認証情報 |
-| Managed | 組織全体の deny list、強制フック |
+| Project | Project-specific skills, rules, prohibitions, MCP config |
+| Personal | Preferred output style, personal helper skills, credentials |
+| Managed | Org-wide deny list, enforced hooks |
 
-`.gitignore` に `*.local.json` / `**/secrets/**` を入れ、プロジェクト層から個人情報を排除する。
+Put `*.local.json` / `**/secrets/**` in `.gitignore` to keep personal information out of the project layer.
 
-## CI/CD との統合
+## CI/CD Integration
 
-エージェントリポジトリを複数人で運用する際、以下を CI で検査する:
+When multiple people operate an agent repository, check the following in CI:
 
-- `SKILL.md` の frontmatter バリデーション（`name` / `description` 必須）
-- `AGENTS.md` / `CLAUDE.md` の行数上限（肥大化防止）
-- `.mcp.json` と各 CLI 設定の内容一致（同期スクリプトの副産物）
-- Hooks スクリプトのテスト（モック JSON を流して exit code / 出力を検証）
+- `SKILL.md` frontmatter validation (`name` / `description` required)
+- Line-count limits on `AGENTS.md` / `CLAUDE.md` (prevent bloat)
+- Content consistency between `.mcp.json` and each CLI's config (a byproduct of the sync script)
+- Tests for hook scripts (feed mock JSON and verify exit code / output)
 
-markdownlint + zod 等のランタイムバリデータで静的チェック可能。
+Static checks are possible with markdownlint + a runtime validator such as zod.
 
-## 採用判断のフレーム
+## A Framework for Adoption Decisions
 
-**すべての CLI に対応する必要はない**。チームが使う CLI だけサポートするのが現実的。
+**You don't need to support every CLI**. It's more realistic to support only the CLIs your team actually uses.
 
-| チーム構成 | 推奨対応 |
+| Team composition | Recommended support |
 |---|---|
-| Claude Code 単独 | `CLAUDE.md` + `.claude/` のみ。`AGENTS.md` は任意 |
+| Claude Code only | Just `CLAUDE.md` + `.claude/`. `AGENTS.md` is optional |
 | Claude Code + Codex CLI | `AGENTS.md` + `CLAUDE.md` + `.agents/skills/` |
-| 全員バラバラ | 共通化のコストに見合うかを慎重に判断。最低限 `AGENTS.md` + 共通 skill |
+| Everyone uses something different | Carefully weigh whether the cost of unification is worth it. At minimum, `AGENTS.md` + shared skills |
 
-**オーバーエンジニアリング警告**: 未使用の CLI のために設定を書き続けるのはコスト。実際に使われている CLI だけ対応する。
+**Over-engineering warning**: continuing to write configuration for an unused CLI is pure cost. Support only the CLIs that are actually in use.
 
-## AI エージェントがよくやるミス
+## Common Mistakes AI Agents Make
 
-1. **`AGENTS.md` と `CLAUDE.md` に同じ内容を複製** — DRY の目的が崩れる。`CLAUDE.md` は差分のみ
-2. **Skills を `.claude/skills/` だけに置く** — 他 CLI が発見しない。共通化するなら `.agents/skills/`
-3. **Subagent 定義を 4 CLI で無理に統一しようとする** — フォーマットが違う。CLI 固有で十分
-4. **Hooks を JSON ごと複製して差分管理できなくする** — 共通 shell スクリプトを作り、各 hooks.json から参照
-5. **`.mcp.json` の内容を手動で各 CLI に同期** — 設定のズレでトラブル。同期スクリプトを書く
-6. **使っていない CLI のサポートを先回りで書く** — 死に設定が増える。実需要ベースで追加
+1. **Duplicating the same content in `AGENTS.md` and `CLAUDE.md`** — defeats the purpose of DRY. `CLAUDE.md` should hold only the diff
+2. **Placing Skills only in `.claude/skills/`** — other CLIs won't discover them. Use `.agents/skills/` if you want them shared
+3. **Forcing a single subagent definition to work across all 4 CLIs** — the formats differ. CLI-specific definitions are fine
+4. **Duplicating hooks as whole JSON files, making diff management impossible** — create a shared shell script and reference it from each hooks.json
+5. **Manually syncing `.mcp.json` content across CLIs** — configuration drift causes trouble. Write a sync script
+6. **Preemptively writing support for a CLI that isn't in use** — increases dead configuration. Add it based on actual demand
 
-## 参考
+## References
 
-- 本リポジトリの `ai/platform/agent-extensions.md` — 拡張機構の横断仕様
-- 本リポジトリの `ai/platform/agents-md.md` — `AGENTS.md` の書き方
-- 本リポジトリの `ai/practice/ai-context-management.md` — 指示ファイルの肥大化対策
-- 本リポジトリの `ai/platform/mcp-protocol.md` — MCP サーバー設計
-- 本リポジトリの `ai/practice/prompt-injection.md` — Skills / Hooks のセキュリティ
+- `ai/platform/agent-extensions.md` in this repository — cross-cutting spec for the extension mechanism
+- `ai/platform/agents-md.md` in this repository — how to write `AGENTS.md`
+- `ai/practice/ai-context-management.md` in this repository — measures against instruction-file bloat
+- `ai/platform/mcp-protocol.md` in this repository — MCP server design
+- `ai/practice/prompt-injection.md` in this repository — security for Skills / Hooks
