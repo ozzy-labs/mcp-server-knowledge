@@ -244,7 +244,11 @@ export async function findRelated(
 
     const parentDir = path.dirname(snapshot.path) === "." ? "" : path.dirname(snapshot.path);
     if (parentDir === targetParent && targetParent !== "") {
-      score += 3;
+      // Weighted below a single shared tag (+2) so that topical relatedness
+      // (shared tags) outranks mere co-location. Large flat directories such as
+      // `tools/` would otherwise let unrelated neighbours outrank genuinely
+      // related articles in other directories that share tags.
+      score += 1;
       reasons.push("same directory");
     }
 

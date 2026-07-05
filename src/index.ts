@@ -154,7 +154,7 @@ server.registerTool(
     title: "Related Knowledge",
     description:
       "Find knowledge articles related to the given path. " +
-      "Scoring: same directory (+3), each shared tag (+2), alias overlap (+1).",
+      "Scoring: each shared tag (+2), same directory (+1), alias overlap (+1).",
     inputSchema: {
       path: z.string().describe('Path to the source article, e.g. "ai/agents/claude-code".'),
       limit: z

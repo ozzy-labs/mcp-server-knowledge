@@ -16,7 +16,18 @@ describe("findRelated", () => {
     const top = results[0];
     expect(top.reasons.some((r) => r.includes("same directory"))).toBe(true);
     expect(top.reasons.some((r) => r.includes("shared tags"))).toBe(true);
-    expect(top.score).toBeGreaterThanOrEqual(3 + 2);
+    // same directory (+1) + two shared tags [ai-workflow, oss] (+2 each) = 5.
+    expect(top.score).toBe(1 + 2 * 2);
+  });
+
+  it("weights same directory below a single shared tag", async () => {
+    // sample-tool-a and sample-tool-b are both in tools/ (same directory, +1)
+    // and both tagged `cli` (one shared tag, +2). No alias overlap.
+    // This pins the same-directory weight at +1: with the old +3 the score
+    // would have been 5, not 3.
+    const results = await findRelated(FIXTURES_DIR, "tools/sample-tool-a");
+    const toolB = results.find((r) => r.path === "tools/sample-tool-b");
+    expect(toolB?.score).toBe(1 + 2);
   });
 
   it("excludes the source article itself", async () => {
@@ -47,8 +58,8 @@ describe("findRelated", () => {
     // and "sample-nested-agent" is returned, what is the score?
     const nested = results.find((r) => r.path === "ai/agents/sample-nested-agent");
     expect(nested).toBeDefined();
-    // They are in the same directory (+3)
-    expect(nested?.score).toBeGreaterThanOrEqual(3);
+    // Same directory (+1) plus shared tags [ai-workflow, oss] (+2 each).
+    expect(nested?.score).toBeGreaterThanOrEqual(1);
   });
 
   it("scores alias overlap specifically", async () => {
