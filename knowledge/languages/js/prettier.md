@@ -144,7 +144,7 @@ pnpm exec prettier --check "**/*.{md,yaml,yml}"
 | `prettier-plugin-svelte` | `.svelte` files |
 | `prettier-plugin-tailwindcss` | Auto-sorts Tailwind CSS classes |
 | `prettier-plugin-toml` | TOML (see also `tools/taplo.md`) |
-| `prettier-plugin-sh` | Shell scripts (usually unnecessary since it conflicts with `tools/shfmt.md`) |
+| `prettier-plugin-sh` | Shell scripts (usually unnecessary since it conflicts with `languages/bash/shfmt.md`) |
 | `@prettier/plugin-xml` | XML |
 
 Add to the `plugins` array in the config file, or specify via the CLI with `--plugin <pkg>`.

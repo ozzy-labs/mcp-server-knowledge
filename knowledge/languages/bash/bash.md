@@ -5,7 +5,7 @@ tags: [bash]
 
 # Bash / POSIX shell
 
-One of the languages AI coding agents write most often. Most pitfalls cluster around "variable expansion", "exit codes", and "subshell boundaries". For tool articles see `tools/shellcheck.md` / `tools/shfmt.md`.
+One of the languages AI coding agents write most often. Most pitfalls cluster around "variable expansion", "exit codes", and "subshell boundaries". For tool articles see `languages/bash/shellcheck.md` / `languages/bash/shfmt.md`.
 
 Official: [GNU Bash Manual](https://www.gnu.org/software/bash/manual/bash.html) / [POSIX.1-2024 Shell Command Language](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html)
 
@@ -245,8 +245,8 @@ Add a tty check: `[[ -t 1 ]] && red=$'\e[31m' reset=$'\e[0m'`. Prevents control 
 ## Relationship to other tools
 
 - **git submodule** (`tools/git-submodule.md`): used when pulling an external shell script library into a project and managing it as a dependency.
-- **ShellCheck** (`tools/shellcheck.md`): always run after writing. SC2086 / 2155 / 2164 are classic AI agent mistakes.
-- **shfmt** (`tools/shfmt.md`): formatter. Align `indent_size` / `binary_next_line` / `space_redirects` via `.editorconfig`.
+- **ShellCheck** (`languages/bash/shellcheck.md`): always run after writing. SC2086 / 2155 / 2164 are classic AI agent mistakes.
+- **shfmt** (`languages/bash/shfmt.md`): formatter. Align `indent_size` / `binary_next_line` / `space_redirects` via `.editorconfig`.
 - **lefthook** (`tools/lefthook.md`): this repo's default setup runs shellcheck + shfmt automatically on pre-commit.
 
 ## References

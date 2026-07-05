@@ -5,7 +5,7 @@ tags: [package, release, npm]
 
 # npm publish
 
-Commands and operational essentials for publishing packages to the npm registry. The core pitfalls are tarball contents (`files` / `.npmignore`), dist-tags, lifecycle scripts, provenance, and the unpublish policy. Use alongside `tools/pnpm.md` for package manager operations, `standards/npm-trusted-publishers.md` for OIDC, and `standards/semver.md` for version decisions.
+Commands and operational essentials for publishing packages to the npm registry. The core pitfalls are tarball contents (`files` / `.npmignore`), dist-tags, lifecycle scripts, provenance, and the unpublish policy. Use alongside `languages/js/pnpm.md` for package manager operations, `standards/npm-trusted-publishers.md` for OIDC, and `standards/semver.md` for version decisions.
 
 Official: [docs.npmjs.com — npm-publish](https://docs.npmjs.com/cli/v11/commands/npm-publish)
 
