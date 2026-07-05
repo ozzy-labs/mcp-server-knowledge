@@ -5,22 +5,22 @@ tags: [release, github, cloud-hosted]
 
 # release-please
 
-Google が開発するリリース自動化ツール。Conventional Commits の履歴から次のバージョンを決定し、`CHANGELOG.md` と `package.json` 等を更新した **単一の「Release PR」** を常に最新に保つ。Release PR をマージすると GitHub Release と Git タグが作成される。`standards/conventional-commits.md` + `standards/semver.md` + `tools/commitlint.md` と四点セットで使うのが定番。
+A release automation tool developed by Google. It determines the next version from Conventional Commits history and keeps a **single "Release PR"** always up to date with an updated `CHANGELOG.md`, `package.json`, etc. Merging the Release PR creates a GitHub Release and a Git tag. It's commonly used as a four-piece set together with `standards/conventional-commits.md` + `standards/semver.md` + `tools/commitlint.md`.
 
-公式: [googleapis/release-please](https://github.com/googleapis/release-please) ・ [googleapis/release-please-action](https://github.com/googleapis/release-please-action)
+Official: [googleapis/release-please](https://github.com/googleapis/release-please) / [googleapis/release-please-action](https://github.com/googleapis/release-please-action)
 
-> **注意**: かつての `google-github-actions/release-please-action` はアーカイブ済み。現在は `googleapis/release-please-action` を使う。
+> **Note**: The former `google-github-actions/release-please-action` is archived. Use `googleapis/release-please-action` now.
 
-## 動作モデル
+## Operating model
 
-1. 開発者が `main` に Conventional Commits 形式でマージする
-2. Actions が `main` の更新を検知し、前回リリース以降のコミットを解析
-3. 次のバージョンを算出し、`CHANGELOG.md` を追記した Release PR を作成／更新（常に 1 本）
-4. Release PR をマージすると Git タグと GitHub Release が作られる
+1. A developer merges to `main` using Conventional Commits format
+2. Actions detects the update to `main` and parses commits since the last release
+3. It computes the next version and creates/updates the Release PR with an appended `CHANGELOG.md` (always exactly one)
+4. Merging the Release PR creates a Git tag and a GitHub Release
 
-**npm publish などレジストリ公開はしない**。公開ジョブは `release_created` 出力で分岐させる。
+**It does not publish to registries** such as npm. Branch the publish job on the `release_created` output.
 
-## 最小ワークフロー
+## Minimal workflow
 
 ```yaml
 # .github/workflows/release-please.yaml
@@ -50,11 +50,11 @@ jobs:
         run: pnpm publish --no-git-checks
 ```
 
-2026-05 時点の現行 major は `release-please-action@v5`（node24 ランタイム、内部の release-please ライブラリは 17.6.x 系）。v5.0.0 は 2026-04-22 にリリースされたメジャー更新。
+As of 2026-05, the current major is `release-please-action@v5` (node24 runtime; the internal release-please library is in the 17.6.x line). v5.0.0 was released on 2026-04-22 as a major update.
 
 ## `release-please-config.json`
 
-単一パッケージ:
+Single package:
 
 ```json
 {
@@ -74,7 +74,7 @@ jobs:
 }
 ```
 
-pnpm workspaces のモノレポ:
+pnpm workspaces monorepo:
 
 ```json
 {
@@ -86,26 +86,26 @@ pnpm workspaces のモノレポ:
 }
 ```
 
-### 主要フィールド
+### Key fields
 
-| フィールド | 説明 |
+| Field | Description |
 |---|---|
-| `release-type` | `node` / `python` / `go` / `rust` / `simple` など |
-| `bump-minor-pre-major` | `0.x` 中に `feat` を MINOR 扱いする（既定は PATCH） |
-| `bump-patch-for-minor-pre-major` | `0.x` 中の MINOR を PATCH 扱いする |
-| `initial-version` | 最初のリリースバージョン |
-| `changelog-sections` | コミット type → CHANGELOG 見出しのマッピング |
-| `changelog-path` | CHANGELOG の出力先（既定 `CHANGELOG.md`） |
-| `include-commit-authors` | PR 作者を CHANGELOG に含める |
-| `draft` / `prerelease` | リリース扱いの調整 |
-| `packages` | パッケージごとのパス → 個別設定 |
-| `plugins` | `node-workspace` / `cargo-workspace` / `linked-versions` 等 |
+| `release-type` | `node` / `python` / `go` / `rust` / `simple`, etc. |
+| `bump-minor-pre-major` | Treat `feat` as MINOR while in `0.x` (default is PATCH) |
+| `bump-patch-for-minor-pre-major` | Treat MINOR as PATCH while in `0.x` |
+| `initial-version` | The first release version |
+| `changelog-sections` | Mapping from commit type to CHANGELOG heading |
+| `changelog-path` | CHANGELOG output path (default `CHANGELOG.md`) |
+| `include-commit-authors` | Include PR authors in the CHANGELOG |
+| `draft` / `prerelease` | Adjust release treatment |
+| `packages` | Per-package path → individual config |
+| `plugins` | `node-workspace` / `cargo-workspace` / `linked-versions`, etc. |
 
-全フィールドは [customizing.md](https://github.com/googleapis/release-please/blob/main/docs/customizing.md) に記載。
+All fields are documented in [customizing.md](https://github.com/googleapis/release-please/blob/main/docs/customizing.md).
 
 ## `.release-please-manifest.json`
 
-パッケージパス → 現在バージョンの JSON。Release PR がマージされるたびに自動更新される。初期化時は空 `{}` でも、既存バージョンを手動で書いてもよい。
+A JSON mapping of package path → current version. It's automatically updated every time a Release PR is merged. You may initialize it as an empty `{}` or manually write existing versions.
 
 ```json
 {
@@ -113,40 +113,40 @@ pnpm workspaces のモノレポ:
 }
 ```
 
-## よく使うコミット type と CHANGELOG
+## Common commit types and CHANGELOG
 
-既定のセクション分け（設定なしでも）:
+Default section mapping (even without configuration):
 
-| type | SemVer 影響 | CHANGELOG |
+| type | SemVer impact | CHANGELOG |
 |---|---|---|
-| `feat` | MINOR（`0.x` 時は PATCH、上記フラグで MINOR） | Features |
+| `feat` | MINOR (PATCH while in `0.x`; MINOR with the flag above) | Features |
 | `fix` | PATCH | Bug Fixes |
-| `perf` | PATCH | — （`changelog-sections` で明示） |
-| `docs` / `chore` / `refactor` / `test` / `ci` / `build` | 無し | 非表示 |
-| `feat!` / `BREAKING CHANGE:` | MAJOR（`0.x` は MINOR） | Breaking Changes |
+| `perf` | PATCH | — (specify explicitly via `changelog-sections`) |
+| `docs` / `chore` / `refactor` / `test` / `ci` / `build` | None | Hidden |
+| `feat!` / `BREAKING CHANGE:` | MAJOR (MINOR while in `0.x`) | Breaking Changes |
 
-## AI エージェントがよくやるミス
+## Common mistakes by AI agents
 
-1. **`permissions` を書き忘れて Release PR が作れない** — `contents: write` / `issues: write` / `pull-requests: write` が必須。
-2. **Release PR のマージで他ワークフローが発火しないのを忘れる** — `GITHUB_TOKEN` で作られたタグは downstream CI をトリガしない。publish を回したい場合は GitHub App トークンまたは PAT を `token:` に渡す。
-3. **`bump-minor-pre-major` を未設定で `0.x` が永久 PATCH** — 公開前プロジェクトでは通常 `true` にする。
-4. **`node-workspace` プラグイン無しで内部依存が更新されない** — pnpm/yarn workspaces なら必須。Cargo は `cargo-workspace`。
-5. **`release-please-config.json` を置いたのに反映されない** — v4 のデフォルトは manifest モード。`config-file` / `manifest-file` 両方の指定を確認する。
+1. **Forgetting `permissions`, so the Release PR can't be created** — `contents: write` / `issues: write` / `pull-requests: write` are required.
+2. **Forgetting that merging the Release PR doesn't trigger other workflows** — tags created with `GITHUB_TOKEN` do not trigger downstream CI. If you want publishing to run, pass a GitHub App token or a PAT via `token:`.
+3. **Leaving `bump-minor-pre-major` unset, so `0.x` stays PATCH forever** — for pre-release projects, this is usually set to `true`.
+4. **Missing the `node-workspace` plugin, so internal dependencies don't get updated** — required for pnpm/yarn workspaces. Cargo uses `cargo-workspace`.
+5. **Placing `release-please-config.json` but it has no effect** — v4's default is manifest mode. Confirm both `config-file` and `manifest-file` are specified.
 
-## 他ツールとの比較
+## Comparison with other tools
 
-| ツール | 特徴 |
+| Tool | Characteristics |
 |---|---|
-| release-please | Release PR 方式。**次の**リリース候補が常に 1 本の PR で可視化 |
-| semantic-release | タグ即発行。コミット直後にリリース発行、人間レビューは入らない |
-| changesets | PR 単位で「変更記録ファイル」を足す。pnpm workspaces で人気 |
-| release-it | 手動起動のインタラクティブ CLI |
+| release-please | Release PR approach. The **next** release candidate is always visible as a single PR |
+| semantic-release | Tags immediately. Publishes a release right after a commit; no human review |
+| changesets | Adds a "changeset file" per PR. Popular with pnpm workspaces |
+| release-it | Manually invoked interactive CLI |
 
-Release PR モデルは「**リリースの事前レビュー可能性**」が強み。tag-and-publish を自動化しすぎたくないチームに向く。
+The Release PR model's strength is **"pre-review of releases."** It suits teams that don't want to fully automate tag-and-publish.
 
-## 参考
+## References
 
-- [release-please リポジトリ](https://github.com/googleapis/release-please)
+- [release-please repository](https://github.com/googleapis/release-please)
 - [release-please-action](https://github.com/googleapis/release-please-action)
 - [Manifest Releaser Docs](https://github.com/googleapis/release-please/blob/main/docs/manifest-releaser.md)
 - [Customizing Releases](https://github.com/googleapis/release-please/blob/main/docs/customizing.md)

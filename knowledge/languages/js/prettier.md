@@ -5,54 +5,54 @@ tags: [format, javascript, typescript, markdown, yaml]
 
 # Prettier
 
-主観的なコードフォーマッタ。元のスタイルを破棄して一貫した形に再出力する。2026-05 時点では **Biome がまだ整形に対応していない Markdown / YAML / HTML / Vue / Svelte** などを補完する役割で残り続けている。Biome を採用したプロジェクトでも、非 JS 資産に Prettier を併用するハイブリッド構成が一般的。
+An opinionated code formatter. It discards the original style and re-outputs code in a consistent form. As of 2026-05, it continues to play a complementary role for **Markdown / YAML / HTML / Vue / Svelte and other formats that Biome still does not support**. Even projects that have adopted Biome commonly run a hybrid setup where Prettier handles non-JS assets.
 
-公式: [prettier.io](https://prettier.io/)
+Official site: [prettier.io](https://prettier.io/)
 
-## バージョン
+## Version
 
-2026-05 時点の現行は **3.8 系**（3.8.3, 2026-04-15）。4.0 は CLI 高速化を中心に計画中。
+The current release as of 2026-05 is the **3.8 line** (3.8.3, 2026-04-15). 4.0 is planned, mainly focused on CLI speedups.
 
-## インストール
+## Installation
 
 ```bash
 pnpm add -D -E prettier
 ```
 
-マイナー更新でフォーマット差分が出ることがあるため exact 固定（`-E`）が公式推奨。
+Minor updates can produce formatting diffs, so pinning to an exact version (`-E`) is the officially recommended practice.
 
-## 基本コマンド
+## Basic commands
 
 ```bash
-# 差分チェック（CI 向け。違反で非 0 終了）
+# Diff check (for CI; exits non-zero on violations)
 pnpm exec prettier --check .
 
-# 書き込み（整形を適用）
+# Write (apply formatting)
 pnpm exec prettier --write .
 
-# 特定拡張子のみ
+# Specific extensions only
 pnpm exec prettier --write "**/*.{md,yaml,yml}"
 ```
 
-## サポート言語（組み込み）
+## Supported languages (built-in)
 
-| 言語 | 備考 |
+| Language | Notes |
 |---|---|
-| JavaScript / TypeScript / JSX | Biome と競合する領域 |
-| Flow | JS 系 |
-| Vue / Angular | フレームワーク固有 |
-| CSS / Less / SCSS | Biome は CSS 対応済み |
-| HTML / Handlebars | Biome 未対応 |
-| JSON / JSON5 / JSONC | Biome と競合 |
+| JavaScript / TypeScript / JSX | Overlaps with Biome |
+| Flow | JS family |
+| Vue / Angular | Framework-specific |
+| CSS / Less / SCSS | Biome also supports CSS |
+| HTML / Handlebars | Not supported by Biome |
+| JSON / JSON5 / JSONC | Overlaps with Biome |
 | GraphQL | — |
-| **Markdown（GFM / MDX v1）** | **Biome 未対応** |
-| **YAML** | **Biome 未対応** |
+| **Markdown (GFM / MDX v1)** | **Not supported by Biome** |
+| **YAML** | **Not supported by Biome** |
 
-プラグイン（`prettier-plugin-*`）で TOML / XML / PHP / Astro / Svelte / Tailwind クラスソートなどを拡張できる。
+Plugins (`prettier-plugin-*`) extend support to TOML / XML / PHP / Astro / Svelte / Tailwind class sorting, and more.
 
-## 設定ファイル
+## Configuration file
 
-`.prettierrc` / `.prettierrc.json` / `.prettierrc.yaml` / `prettier.config.mjs` / `package.json` の `"prettier"` キーなど複数の形式をサポート:
+Supports multiple formats: `.prettierrc` / `.prettierrc.json` / `.prettierrc.yaml` / `prettier.config.mjs` / the `"prettier"` key in `package.json`, etc.:
 
 ```json
 {
@@ -68,17 +68,17 @@ pnpm exec prettier --write "**/*.{md,yaml,yml}"
 }
 ```
 
-| オプション | 典型値 | 説明 |
+| Option | Typical value | Description |
 |---|---|---|
-| `printWidth` | 80 / 100 | 折り返し目安（強制ではない） |
-| `tabWidth` | 2 | インデント幅 |
-| `useTabs` | false | タブ vs スペース |
-| `semi` | true | セミコロン |
-| `singleQuote` | false | シングルクォート |
-| `trailingComma` | `"all"` | 末尾カンマ（3.0 から既定 `all`） |
-| `endOfLine` | `"lf"` | 改行コード |
+| `printWidth` | 80 / 100 | Target wrap width (not enforced strictly) |
+| `tabWidth` | 2 | Indent width |
+| `useTabs` | false | Tabs vs. spaces |
+| `semi` | true | Semicolons |
+| `singleQuote` | false | Single quotes |
+| `trailingComma` | `"all"` | Trailing commas (default `all` since 3.0) |
+| `endOfLine` | `"lf"` | Line ending |
 
-### `overrides` で拡張子別の上書き
+### Per-extension overrides with `overrides`
 
 ```json
 {
@@ -99,26 +99,26 @@ pnpm-lock.yaml
 CHANGELOG.md
 ```
 
-Prettier 3.0 から **`.gitignore` も自動で尊重**される。
+Since Prettier 3.0, **`.gitignore` is also respected automatically**.
 
-## Biome との使い分け（2026-05 時点）
+## Division of labor with Biome (as of 2026-05)
 
-現実解は **Biome を中心にしつつ、Biome が扱えないものに Prettier を当てる**:
+The practical approach is to **center on Biome and use Prettier for what Biome cannot handle**:
 
-| 対象 | Biome | Prettier |
+| Target | Biome | Prettier |
 |---|---|---|
-| JS / TS / JSX / JSON | ✓（推奨） | 可 |
-| CSS | ✓ | 可 |
-| Markdown / YAML | ✗ | ✓（**これが主目的**） |
-| HTML / Vue / Svelte / Astro | 限定的 | プラグイン経由で ✓ |
+| JS / TS / JSX / JSON | ✓ (recommended) | Possible |
+| CSS | ✓ | Possible |
+| Markdown / YAML | ✗ | ✓ (**this is the main purpose**) |
+| HTML / Vue / Svelte / Astro | Limited | ✓ via plugins |
 
-**二重フォーマットを避ける**ため、以下のいずれかで担当を分ける:
+**To avoid double-formatting**, separate responsibilities using one of the following:
 
-- `biome.json` の `files.includes` で JS/TS/JSON のみに絞る
-- `.prettierignore` で Biome が扱う拡張子を除外する
-- `pnpm run lint:md` / `lint:yaml` のように Prettier 呼び出しをコマンド分離する
+- Restrict Biome to JS/TS/JSON only via `files.includes` in `biome.json`
+- Exclude extensions handled by Biome via `.prettierignore`
+- Separate Prettier invocations into their own commands, e.g. `pnpm run lint:md` / `lint:yaml`
 
-## CI と pre-commit
+## CI and pre-commit
 
 ```yaml
 # lefthook.yaml
@@ -130,36 +130,36 @@ pre-commit:
       stage_fixed: true
 ```
 
-CI 側:
+CI side:
 
 ```bash
 pnpm exec prettier --check "**/*.{md,yaml,yml}"
 ```
 
-## プラグイン
+## Plugins
 
-| プラグイン | 用途 |
+| Plugin | Purpose |
 |---|---|
-| `prettier-plugin-astro` | `.astro` ファイル |
-| `prettier-plugin-svelte` | `.svelte` ファイル |
-| `prettier-plugin-tailwindcss` | Tailwind CSS クラスの自動ソート |
-| `prettier-plugin-toml` | TOML（`tools/taplo.md` も参照） |
-| `prettier-plugin-sh` | シェルスクリプト（`tools/shfmt.md` と競合するため通常不要） |
+| `prettier-plugin-astro` | `.astro` files |
+| `prettier-plugin-svelte` | `.svelte` files |
+| `prettier-plugin-tailwindcss` | Auto-sorts Tailwind CSS classes |
+| `prettier-plugin-toml` | TOML (see also `tools/taplo.md`) |
+| `prettier-plugin-sh` | Shell scripts (usually unnecessary since it conflicts with `tools/shfmt.md`) |
 | `@prettier/plugin-xml` | XML |
 
-設定ファイルの `plugins` 配列に追記するか、CLI `--plugin <pkg>` で指定。
+Add to the `plugins` array in the config file, or specify via the CLI with `--plugin <pkg>`.
 
-## AI エージェントがよくやるミス
+## Common mistakes made by AI agents
 
-1. **Biome と Prettier を同じファイルに両方かけて無限整形差分** — 担当拡張子を必ず分離する。
-2. **`printWidth` を物理的な厳格ルールと勘違い** — Prettier は「折り返しの目安」であって厳密上限ではない（特に長い URL / 識別子は超過する）。
-3. **Markdown の `proseWrap: "always"` を入れて差分が膨大になる** — 日本語混じりは `"preserve"` が安全。既存ドキュメントなら既定の `"preserve"` を変えない。
-4. **`pnpm-lock.yaml` や自動生成ファイルを整形して差分ノイズ** — `.prettierignore` に追加する（`.gitignore` 経由でも除外される）。
-5. **v2 の設定（`trailingComma: "es5"` など）をコピペ** — 3.x の既定 `"all"` に合わせる方がノイズが少ない。
+1. **Running both Biome and Prettier on the same files, causing an endless formatting diff loop** — always separate which extensions each tool owns.
+2. **Mistaking `printWidth` for a strict physical rule** — Prettier treats it as a "target wrap width," not a hard limit (long URLs / identifiers in particular can exceed it).
+3. **Setting Markdown's `proseWrap` to `"always"`, causing huge diffs** — for content mixed with Japanese, `"preserve"` is safer. For existing documents, don't change the default `"preserve"`.
+4. **Formatting `pnpm-lock.yaml` or other generated files, creating diff noise** — add them to `.prettierignore` (they are also excluded via `.gitignore`).
+5. **Copy-pasting v2 settings (e.g., `trailingComma: "es5"`)** — aligning with the 3.x default of `"all"` produces less noise.
 
-## 参考
+## References
 
-- [Prettier 公式ドキュメント](https://prettier.io/docs/en/)
+- [Prettier official documentation](https://prettier.io/docs/en/)
 - [Options](https://prettier.io/docs/en/options)
 - [Plugins](https://prettier.io/docs/en/plugins)
-- [Biome: Prettier との差異](https://biomejs.dev/formatter/differences-with-prettier/)
+- [Biome: Differences with Prettier](https://biomejs.dev/formatter/differences-with-prettier/)

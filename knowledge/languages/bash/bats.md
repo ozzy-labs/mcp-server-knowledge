@@ -5,11 +5,11 @@ tags: [test, bash]
 
 # bats (bats-core)
 
-Bash 3.2+ で動く TAP 準拠のテストフレームワーク。`.bats` ファイル内に `@test` ブロックを書き、`run` でコマンドを実行して終了コードや出力を assert する。AI エージェントがシェルスクリプトを書くなら、`shellcheck` でも捕まえられない**動作面の回帰**を防ぐ唯一現実的な手段。`languages/bash.md` と組で使う。
+A TAP-compliant test framework that runs on Bash 3.2+. You write `@test` blocks inside `.bats` files, run commands with `run`, and assert on exit codes and output. If an AI agent is writing shell scripts, this is the only practical way to catch **behavioral regressions** that `shellcheck` can't. Used together with `languages/bash.md`.
 
-公式: [bats-core.readthedocs.io](https://bats-core.readthedocs.io/en/stable/) / [bats-core/bats-core](https://github.com/bats-core/bats-core)
+Official: [bats-core.readthedocs.io](https://bats-core.readthedocs.io/en/stable/) / [bats-core/bats-core](https://github.com/bats-core/bats-core)
 
-## インストール
+## Installation
 
 ```bash
 # npm
@@ -21,15 +21,15 @@ brew install bats-core
 # mise
 mise use bats
 
-# git submodule（リポジトリ内に固定したい場合）
+# git submodule (to pin inside the repo)
 git submodule add https://github.com/bats-core/bats-core.git test/bats
 git submodule add https://github.com/bats-core/bats-support.git test/test_helper/bats-support
 git submodule add https://github.com/bats-core/bats-assert.git test/test_helper/bats-assert
 ```
 
-ヘルパライブラリ（後述）も同時に入れるのが定石。
+Standard practice is to install the helper libraries (below) at the same time.
 
-## 最小例
+## Minimal example
 
 ```bash
 # tests/hello.bats
@@ -47,24 +47,24 @@ git submodule add https://github.com/bats-core/bats-assert.git test/test_helper/
 ```
 
 ```bash
-bats tests/hello.bats           # 単一ファイル
-bats -r tests/                  # 再帰
-bats --tap tests/               # TAP 出力（CI 連携）
-bats -j 4 tests/                # 4 並列
-bats --filter 'echo' tests/     # 名前パターンで絞る
+bats tests/hello.bats           # single file
+bats -r tests/                  # recursive
+bats --tap tests/               # TAP output (for CI integration)
+bats -j 4 tests/                # 4-way parallel
+bats --filter 'echo' tests/     # filter by name pattern
 ```
 
-## `run` と特殊変数
+## `run` and special variables
 
-`run <command>` で実行すると、以下の変数が自動セットされる:
+Running via `run <command>` automatically sets the following variables:
 
-| 変数 | 内容 |
+| Variable | Content |
 |---|---|
-| `$status` | 終了コード |
-| `$output` | stdout + stderr の結合（既定で merge） |
-| `$stderr` | stderr のみ（`run --separate-stderr` 時） |
-| `$lines[]` | `$output` を行で分割した配列 |
-| `$stderr_lines[]` | `$stderr` の行配列 |
+| `$status` | Exit code |
+| `$output` | Combined stdout + stderr (merged by default) |
+| `$stderr` | stderr only (with `run --separate-stderr`) |
+| `$lines[]` | `$output` split into an array by line |
+| `$stderr_lines[]` | `$stderr` split into a line array |
 
 ```bash
 @test "ls reports files" {
@@ -74,9 +74,9 @@ bats --filter 'echo' tests/     # 名前パターンで絞る
 }
 ```
 
-`run` の前に `set -e` 等を付けると意図せず止まることがあるので、Bats では原則使わない。
+Adding `set -e` etc. before `run` can cause unintended aborts, so as a rule don't use it inside Bats.
 
-パイプを伴うコマンドは `run` 単体だと最後のコマンドの終了コードしか拾えないため、`bats_pipe`（v1.10+）を介す:
+For commands involving pipes, `run` alone only captures the exit code of the last command, so route it through `bats_pipe` (v1.10+):
 
 ```bash
 @test "grep finds match" {
@@ -86,17 +86,17 @@ bats --filter 'echo' tests/     # 名前パターンで絞る
 }
 ```
 
-## 主要フック
+## Key hooks
 
-| フック | タイミング |
+| Hook | Timing |
 |---|---|
-| `setup` | **各 `@test` の前**（同ファイル内） |
-| `teardown` | 各 `@test` の後（成功・失敗どちらも） |
-| `setup_file` | ファイル先頭で 1 回 |
-| `teardown_file` | ファイル末尾で 1 回 |
-| `setup_suite` | スイート全体で 1 回（`setup_suite.bash` を別途配置） |
-| `teardown_suite` | スイート末尾で 1 回 |
-| `bats::on_failure` | テストまたは `setup*` 失敗時（v1.12+） |
+| `setup` | **Before each `@test`** (within the same file) |
+| `teardown` | After each `@test` (whether it passes or fails) |
+| `setup_file` | Once at the start of the file |
+| `teardown_file` | Once at the end of the file |
+| `setup_suite` | Once for the whole suite (placed separately in `setup_suite.bash`) |
+| `teardown_suite` | Once at the end of the suite |
+| `bats::on_failure` | On test or `setup*` failure (v1.12+) |
 
 ```bash
 setup() {
@@ -113,19 +113,19 @@ teardown() {
 }
 ```
 
-`setup_suite` のみ命名が特殊で、`tests/setup_suite.bash` という**専用ファイル**に書く必要がある（同名関数を `.bats` に書いても呼ばれない）。
+`setup_suite` alone has special naming: it must be written in a **dedicated file** called `tests/setup_suite.bash` (a same-named function written inside a `.bats` file will not be called).
 
-## バージョン要求と動的テスト登録
+## Version requirements and dynamic test registration
 
 ```bash
-# ファイル先頭で最低バージョンを要求（v1.7+）
+# Require a minimum version at the top of the file (v1.7+)
 bats_require_minimum_version 1.13.0
 
-# システム共通ライブラリの読み込み（BATS_LIB_PATH を見る）
+# Load system-wide shared libraries (looks at BATS_LIB_PATH)
 bats_load_library bats-support
 bats_load_library bats-assert
 
-# 動的テスト登録（v1.11+）— ループでテストを生成したい場合
+# Dynamic test registration (v1.11+) — for generating tests in a loop
 for case in alpha beta gamma; do
   bats_test_function --description "handles $case" -- run_case "$case"
 done
@@ -136,7 +136,7 @@ run_case() {
 }
 ```
 
-## ヘルパライブラリ
+## Helper libraries
 
 ```bash
 # tests/test_helper.bash
@@ -158,16 +158,16 @@ load test_helper
 }
 ```
 
-| ライブラリ | 用途 |
+| Library | Purpose |
 |---|---|
-| `bats-support` | 他ヘルパの基盤（共通エラー出力等） |
+| `bats-support` | Foundation for other helpers (shared error output, etc.) |
 | `bats-assert` | `assert_success` / `assert_failure` / `assert_output` / `assert_line` / `refute_*` |
 | `bats-file` | `assert_file_exists` / `assert_file_not_executable` / `assert_dir_exists` |
-| `bats-mock` | コマンドのモック化 |
+| `bats-mock` | Mocking commands |
 
-素の `[ ... ]` よりエラーメッセージが圧倒的に親切（失敗時に diff 風に出る）。
+Error messages are dramatically friendlier than plain `[ ... ]` (diff-style output on failure).
 
-## `skip` と `bats run` のタグ
+## `skip` and `bats run` tags
 
 ```bash
 @test "wip feature" {
@@ -181,10 +181,10 @@ load test_helper
 }
 ```
 
-タグ機能（v1.10+）:
+Tag feature (v1.10+):
 
 ```bash
-# bats file:tag テスト名
+# bats file:tag test name
 @test "needs network" {
   # bats test_tags=network,slow
   ...
@@ -192,38 +192,38 @@ load test_helper
 ```
 
 ```bash
-bats --filter-tags 'network' tests/      # network タグのみ
-bats --filter-tags '!slow' tests/        # slow を除外
-bats --negative-filter 'integration' .   # 名前一致を除外（v1.13+）
+bats --filter-tags 'network' tests/      # only the network tag
+bats --filter-tags '!slow' tests/        # exclude slow
+bats --negative-filter 'integration' .   # exclude by name match (v1.13+)
 ```
 
-`bats:focus` タグ（v1.9+）を付けたテストがあると、そのテストだけが実行される（CI で誤って残すのを避けるため、focus 残存時は終了コード 1 になる）:
+If any test carries the `bats:focus` tag (v1.9+), only that test runs (to prevent it from being accidentally left in CI, the exit code is 1 while a focus tag remains):
 
 ```bash
 # bats test_tags=bats:focus
 @test "only this one" { ... }
 ```
 
-## 並列実行と分離
+## Parallel execution and isolation
 
 ```bash
 bats -j 4 tests/
-bats --abort tests/   # 最初の失敗で打ち切り（v1.13+）
+bats --abort tests/   # stop on first failure (v1.13+)
 ```
 
-`setup_file` / `teardown_file` を使うと並列で衝突しやすいので、`BATS_RUN_TMPDIR` や `BATS_FILE_TMPDIR` を使ってファイル単位で隔離する。
+`setup_file` / `teardown_file` are prone to collisions under parallel execution, so use `BATS_RUN_TMPDIR` or `BATS_FILE_TMPDIR` to isolate per file.
 
-| 変数 | 内容 |
+| Variable | Content |
 |---|---|
-| `BATS_TEST_TMPDIR` | テスト単位の tmpdir |
-| `BATS_FILE_TMPDIR` | ファイル単位の tmpdir |
-| `BATS_SUITE_TMPDIR` | スイート単位の tmpdir |
-| `BATS_TEST_NAME` | 実行中のテスト名 |
-| `BATS_TEST_FILENAME` | テストファイルのパス |
+| `BATS_TEST_TMPDIR` | Per-test tmpdir |
+| `BATS_FILE_TMPDIR` | Per-file tmpdir |
+| `BATS_SUITE_TMPDIR` | Per-suite tmpdir |
+| `BATS_TEST_NAME` | Name of the running test |
+| `BATS_TEST_FILENAME` | Path of the test file |
 
-これらは終了時に自動削除される（`--no-tempdir-cleanup` で残せる）。
+These are automatically deleted on exit (use `--no-tempdir-cleanup` to keep them).
 
-## CI 連携
+## CI integration
 
 ```yaml
 - uses: actions/checkout@v6
@@ -232,9 +232,9 @@ bats --abort tests/   # 最初の失敗で打ち切り（v1.13+）
     bats --tap -r tests/
 ```
 
-`--tap` を `mocha-tap` 等のレポーターに食わせると JUnit XML 化できる。GitHub Actions なら `bats-action` という公式アクションも使える。
+Feeding `--tap` into a reporter like `mocha-tap` can convert it to JUnit XML. On GitHub Actions you can also use the official `bats-action`.
 
-## CLI ツールのテスト例
+## Example: testing a CLI tool
 
 ```bash
 # tests/cli.bats
@@ -257,24 +257,24 @@ setup() {
 }
 ```
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **`run` を使わずに直接コマンド実行** — 直接実行だと終了コード非ゼロでテストが即落ちる。回避には `run` で捕捉してから assert する
-2. **`set -e` を `setup` に書く** — `run` の挙動と相性が悪く、誤検出が増える。Bats 内では `set -e` を使わない
-3. **`$output` が改行混じりで等値比較できない** — `assert_output --partial` か `[[ "$output" == *"foo"* ]]` を使う
-4. **`setup_suite` を `.bats` 内に書いて呼ばれない** — `tests/setup_suite.bash` という専用ファイルに置く
-5. **テスト名に変数展開を期待する** — `@test "$VAR"` は展開されない（リテラル文字列のみ）
-6. **並列で `BATS_TMPDIR` をハードコード** — 並列実行時は `BATS_TEST_TMPDIR` / `BATS_FILE_TMPDIR` を使う
-7. **`assert_*` が動かない** — `load test_helper` を忘れている。または submodule 取得忘れ
-8. **`bash` 4 専用構文を使って 3.2 で落ちる** — Bats は Bash 3.2+ サポート。`mapfile` / `${var^^}` 等は 3.2 では動かない
+1. **Running a command directly without `run`** — a direct run fails the test immediately on a nonzero exit code. Avoid this by capturing with `run` and asserting afterward
+2. **Putting `set -e` in `setup`** — this interacts badly with `run`'s behavior and increases false detections. Don't use `set -e` inside Bats
+3. **Trying to equality-compare `$output` when it contains embedded newlines** — use `assert_output --partial` or `[[ "$output" == *"foo"* ]]`
+4. **Writing `setup_suite` inside a `.bats` file so it never gets called** — it must live in the dedicated file `tests/setup_suite.bash`
+5. **Expecting variable expansion in test names** — `@test "$VAR"` is not expanded (literal string only)
+6. **Hardcoding `BATS_TMPDIR` under parallel execution** — use `BATS_TEST_TMPDIR` / `BATS_FILE_TMPDIR` when running in parallel
+7. **`assert_*` doesn't work** — forgot `load test_helper`, or forgot to fetch the submodules
+8. **Using Bash-4-only syntax and it breaks on 3.2** — Bats supports Bash 3.2+. Things like `mapfile` / `${var^^}` don't work on 3.2
 
-## 関連
+## Related
 
-- [`languages/bash/bash.md`](bash.md) — テスト対象の言語
-- [`languages/bash/shellcheck.md`](shellcheck.md) — 静的解析。Bats は動的テストなので併用が前提
-- [`languages/bash/shfmt.md`](shfmt.md) — `.bats` ファイルもフォーマット可能（`-ln bats` を使う実装は無いので `-ln bash`）
+- [`languages/bash/bash.md`](bash.md) — the language under test
+- [`languages/bash/shellcheck.md`](shellcheck.md) — static analysis. Bats does dynamic testing, so using both together is assumed
+- [`languages/bash/shfmt.md`](shfmt.md) — `.bats` files can also be formatted (there's no implementation with `-ln bats`, so use `-ln bash`)
 
-## 参考
+## References
 
 - [bats-core Documentation](https://bats-core.readthedocs.io/en/stable/)
 - [bats-core on GitHub](https://github.com/bats-core/bats-core)

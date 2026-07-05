@@ -5,69 +5,69 @@ tags: [python]
 
 # Python
 
-動的型付けスクリプト言語。AI エージェントが最も頻繁に読み書きする言語のひとつで、**依存管理** と **型ヒント** の現状を押さえておけば大半の落とし穴を避けられる。
+Dynamically typed scripting language. One of the languages AI agents read and write most often — understanding the current state of **dependency management** and **type hints** avoids most pitfalls.
 
-公式: [docs.python.org](https://docs.python.org/3/) / [uv](https://docs.astral.sh/uv/) / [ruff](https://docs.astral.sh/ruff/)
+Official: [docs.python.org](https://docs.python.org/3/) / [uv](https://docs.astral.sh/uv/) / [ruff](https://docs.astral.sh/ruff/)
 
-## バージョンと EOL
+## Versions and EOL
 
-| 系列 | リリース | ステータス（2026-05 時点） | EOL |
+| Series | Release | Status (as of 2026-05) | EOL |
 |---|---|---|---|
-| 3.14 | 2025-10 | **Current**（bugfix） | 2030-10 |
+| 3.14 | 2025-10 | **Current** (bugfix) | 2030-10 |
 | 3.13 | 2024-10 | bugfix | 2029-10 |
 | 3.12 | 2023-10 | security-only | 2028-10 |
 | 3.11 | 2022-10 | security-only | 2027-10 |
 | 3.10 | 2021-10 | security-only | 2026-10 |
 | 3.9  | 2020-10 | EOL | 2025-10 |
 
-- 毎年 10 月にメジャーリリース。3.13 以降は **PEP 602 改定**で「フルサポート 2 年 + security-only 3 年 = **計 5 年**」。3.12 以前は「1.5 + 3.5 年」だった。
-- 本番は 3.13 または 3.14 を推奨。3.10 は 2026-10 EOL のため移行を計画する。
-- Windows は公式インストーラ同梱の **`py` ランチャー**で `py -3.14` / `py -3.13` を切り替えられる。Unix では `python3.14` のように versioned binary を直接呼ぶ。
+- A major release ships every October. From 3.13 onward, under the **revised PEP 602**, the lifecycle is "2 years full support + 3 years security-only = **5 years total**." 3.12 and earlier used "1.5 + 3.5 years."
+- 3.13 or 3.14 is recommended for production. 3.10 reaches EOL in 2026-10, so plan a migration.
+- On Windows, the **`py` launcher** bundled with the official installer switches versions via `py -3.14` / `py -3.13`. On Unix, call versioned binaries directly, e.g. `python3.14`.
 
-## インストール / バージョン管理
+## Installation / version management
 
-| ツール | 用途 |
+| Tool | Purpose |
 |---|---|
-| **uv** (astral.sh, Rust 製) | ランタイム入手 + venv + パッケージ管理 + lockfile + ツール実行の統合。2026 デファクト |
-| `mise` | 多言語対応。`mise.toml` で Python バージョン固定（`tools/mise.md`） |
-| `pyenv` | shim ベースの古参。Unix で今も健在。Windows は `pyenv-win` |
-| 公式 python.org | Windows は `py` launcher 同梱 |
-| Docker Hub `python:3.14-slim` | 本番・CI の固定イメージ |
+| **uv** (astral.sh, written in Rust) | Unifies runtime acquisition + venv + package management + lockfile + tool execution. The 2026 de facto standard |
+| `mise` | Multi-language support. Pin the Python version via `mise.toml` (`tools/mise.md`) |
+| `pyenv` | Veteran shim-based tool. Still active on Unix. `pyenv-win` for Windows |
+| Official python.org | Windows installer bundles the `py` launcher |
+| Docker Hub `python:3.14-slim` | Pinned image for production/CI |
 
-`uv python install 3.14` で Python ランタイム自体を取得できる。`uv` 単体で `pyenv` + `pip` + `virtualenv` + `poetry` + `pipx` をほぼ代替可能。
+`uv python install 3.14` fetches the Python runtime itself. `uv` alone can largely replace `pyenv` + `pip` + `virtualenv` + `poetry` + `pipx`.
 
-## 仮想環境
+## Virtual environments
 
-グローバル `site-packages` を汚染しないよう**必ず venv を使う**。Debian 系では PEP 668 により system Python への `pip install` がエラー (`externally-managed-environment`) になる。
+**Always use a venv** to avoid polluting the global `site-packages`. On Debian-based systems, PEP 668 makes `pip install` into the system Python fail with `externally-managed-environment`.
 
 ```bash
-# 標準 (venv モジュール)
+# Standard (venv module)
 python -m venv .venv
 source .venv/bin/activate     # POSIX
 .venv\Scripts\activate        # Windows
 
-# uv (activate 不要)
+# uv (no activation needed)
 uv venv
 uv run python script.py
 ```
 
-## パッケージ管理
+## Package management
 
-2026 時点の推奨フロー:
+The recommended flow as of 2026:
 
-| ツール | 位置付け |
+| Tool | Position |
 |---|---|
-| **uv** | 新規プロジェクトの第一候補。`uv add`/`uv sync`/`uv lock` |
-| **Poetry** | 従来の有力選択肢。既存プロジェクトでの継続利用は可 |
-| **Hatch** | PyPA 公式系。ビルド + 環境管理 |
-| **pip-tools** | `pip-compile` で `requirements.txt` → lockfile |
-| **pipx** / `uv tool` | CLI ツールの分離インストール |
+| **uv** | First choice for new projects. `uv add`/`uv sync`/`uv lock` |
+| **Poetry** | Traditional leading choice. Fine to keep using on existing projects |
+| **Hatch** | Official PyPA lineage. Build + environment management |
+| **pip-tools** | `pip-compile` turns `requirements.txt` into a lockfile |
+| **pipx** / `uv tool` | Isolated installs for CLI tools |
 
-`pip install` 直は lockfile なしで再現性を欠くため、ライブラリ開発以外では非推奨。`requirements.txt` は legacy だが今も有効。lockfile は `uv.lock` / `poetry.lock` が主流。
+Using `pip install` directly lacks a lockfile and reproducibility, so it's discouraged outside library development. `requirements.txt` is legacy but still valid. `uv.lock` / `poetry.lock` are the mainstream lockfiles.
 
 ## pyproject.toml
 
-PEP 621 で `[project]` テーブルが標準化され、ツール非依存のメタデータが定着。
+PEP 621 standardized the `[project]` table, establishing tool-agnostic metadata.
 
 ```toml
 [project]
@@ -82,7 +82,7 @@ dependencies = [
 [project.optional-dependencies]
 plot = ["matplotlib>=3.9"]
 
-# PEP 735: dev 依存はビルド成果物に含めない
+# PEP 735: dev dependencies are excluded from build artifacts
 [dependency-groups]
 test = ["pytest>=8", "pytest-asyncio"]
 lint = ["ruff>=0.8", "mypy>=1.13"]
@@ -101,11 +101,11 @@ addopts = ["-ra", "--strict-markers"]
 testpaths = ["tests"]
 ```
 
-## 型ヒント
+## Type hints
 
-- **PEP 585 (3.9+)**: 組み込みジェネリクス `list[int]` / `dict[str, int]`。`from typing import List` は不要。
-- **PEP 604 (3.10+)**: Union の `|` 構文。`X | Y`、`X | None`。
-- **PEP 695 (3.12+)**: 型パラメータ新構文。`TypeVar` / `Generic` import 不要。
+- **PEP 585 (3.9+)**: Built-in generics like `list[int]` / `dict[str, int]`. `from typing import List` is no longer needed.
+- **PEP 604 (3.10+)**: The `|` union syntax. `X | Y`, `X | None`.
+- **PEP 695 (3.12+)**: New type parameter syntax. No need to import `TypeVar` / `Generic`.
 
   ```python
   class Box[T]:
@@ -118,35 +118,35 @@ testpaths = ["tests"]
   type Vec[T] = list[T]
   ```
 
-- **PEP 696 (3.13+)**: `TypeVar` のデフォルト値。
-- **PEP 705 (3.13+)**: `TypedDict` の `ReadOnly[...]`。
-- **PEP 742 (3.13+)**: `TypeIs[T]` — `TypeGuard` と違い **else 側でも型を絞り込む** 双方向 narrowing。`typing_extensions>=4.10` で 3.12 以下にも提供。
-- `from __future__ import annotations`: 全アノテーションを文字列遅延評価にする。3.14 以降は PEP 649/749（deferred evaluation）が入り、このインポートの必要性は下がる方向。
+- **PEP 696 (3.13+)**: Default values for `TypeVar`.
+- **PEP 705 (3.13+)**: `ReadOnly[...]` for `TypedDict`.
+- **PEP 742 (3.13+)**: `TypeIs[T]` — unlike `TypeGuard`, this provides bidirectional narrowing that **also narrows the type in the else branch**. Available on 3.12 and below via `typing_extensions>=4.10`.
+- `from __future__ import annotations`: makes all annotations lazily evaluated as strings. From 3.14 onward, PEP 649/749 (deferred evaluation) reduces the need for this import.
 
-## 型チェッカー
+## Type checkers
 
-| ツール | 位置付け |
+| Tool | Position |
 |---|---|
-| **mypy** | 公式系のリファレンス実装。`[tool.mypy]`、`strict = true` |
-| **pyright** (Microsoft, TS 製) | 高速。VSCode の **Pylance** 拡張が内蔵 |
-| **ty** (astral.sh, Rust 製) | 2025-12-16 ベータ公開。1.0 は 2026 中目標（要確認） |
-| pyre (Meta) / pytype (Google) | 大規模 codebase 向け / メンテ停滞 |
+| **mypy** | The official reference implementation. `[tool.mypy]`, `strict = true` |
+| **pyright** (Microsoft, written in TS) | Fast. Bundled inside the **Pylance** VSCode extension |
+| **ty** (astral.sh, written in Rust) | Public beta released 2025-12-16. 1.0 targeted for 2026 (to be confirmed) |
+| pyre (Meta) / pytype (Google) | For large codebases / maintenance has stalled |
 
-VSCode なら Pylance が標準。CI では mypy か pyright を `pre-commit` / `lefthook` 経由で回す構成が多い。
+Pylance is the default in VSCode. In CI, running mypy or pyright via `pre-commit` / `lefthook` is common.
 
-## Lint / Format: ruff
+## Lint / format: ruff
 
-**ruff** が 2026 デファクト。`black` + `isort` + `flake8` + `pydocstyle` + `pyupgrade` + `autoflake` を Rust 実装で統合し、数十倍高速。
+**ruff** is the 2026 de facto standard. It integrates `black` + `isort` + `flake8` + `pydocstyle` + `pyupgrade` + `autoflake` in a Rust implementation, dozens of times faster.
 
 ```bash
 ruff check .        # lint
-ruff check --fix .  # 自動修正
-ruff format .       # format (black 互換)
+ruff check --fix .  # auto-fix
+ruff format .       # format (black-compatible)
 ```
 
-`[tool.ruff.lint]` セクションの `select = ["E", "F", "I", "UP", "B", "SIM"]` のようにルールを選択。black / pylint を個別に使う場面は減っている。
+Select rules via the `[tool.ruff.lint]` section, e.g. `select = ["E", "F", "I", "UP", "B", "SIM"]`. Using black / pylint individually is becoming less common.
 
-## テスト: pytest
+## Testing: pytest
 
 ```python
 import pytest
@@ -165,13 +165,13 @@ async def test_fetch(client: Client) -> None:
     assert resp.status_code == 200
 ```
 
-- プレーンな `def test_*` 関数で書ける。`assert` は pytest が rewrite して詳細な diff を出す。
-- 組み込み fixture: `tmp_path` / `monkeypatch` / `capsys` / `caplog`。
-- プラグイン: `pytest-xdist` (`-n auto` で並列)、`pytest-asyncio`、`pytest-cov`、`pytest-mock`。
-- `conftest.py` に fixture を置くと配下で共有。
-- 設定は `[tool.pytest.ini_options]`。
+- Write tests as plain `def test_*` functions. pytest rewrites `assert` to produce detailed diffs.
+- Built-in fixtures: `tmp_path` / `monkeypatch` / `capsys` / `caplog`.
+- Plugins: `pytest-xdist` (parallelize with `-n auto`), `pytest-asyncio`, `pytest-cov`, `pytest-mock`.
+- Placing fixtures in `conftest.py` shares them across the directory.
+- Configure via `[tool.pytest.ini_options]`.
 
-`unittest` (標準) は JUnit 系のボイラプレート多め。新規は pytest 一択。
+`unittest` (standard library) has more JUnit-style boilerplate. pytest is the clear choice for new code.
 
 ## async / await
 
@@ -184,7 +184,7 @@ async def fetch(url: str) -> str:
         return resp.text
 
 async def main() -> None:
-    # TaskGroup (3.11+) が structured concurrency の推奨形
+    # TaskGroup (3.11+) is the recommended form of structured concurrency
     async with asyncio.TaskGroup() as tg:
         t1 = tg.create_task(fetch("https://a.example"))
         t2 = tg.create_task(fetch("https://b.example"))
@@ -193,14 +193,14 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-- `asyncio.run()` がエントリポイント。ネストは禁止。
-- **TaskGroup (3.11+)** で子タスクをまとめて待つ。いずれかが失敗すれば他もキャンセルされ、例外は `ExceptionGroup` で集約。
-- `asyncio.timeout(seconds)` (3.11+) はタイムアウト制御の推奨形。`asyncio.gather` + `asyncio.wait_for` の古い書き方は避ける。
-- **anyio** は `asyncio` / `trio` 両対応の高水準ラッパ。FastAPI などで採用。
+- `asyncio.run()` is the entry point. Nesting it is forbidden.
+- **TaskGroup (3.11+)** waits on child tasks as a group. If one fails, the others are cancelled and exceptions are aggregated into an `ExceptionGroup`.
+- `asyncio.timeout(seconds)` (3.11+) is the recommended way to control timeouts. Avoid the older `asyncio.gather` + `asyncio.wait_for` pattern.
+- **anyio** is a high-level wrapper supporting both `asyncio` and `trio`, used by frameworks like FastAPI.
 
-## エラーハンドリング
+## Error handling
 
-- **PEP 654 (3.11+)**: `ExceptionGroup` と `except*` 構文で複数同時例外を扱う。
+- **PEP 654 (3.11+)**: `ExceptionGroup` and the `except*` syntax handle multiple simultaneous exceptions.
 
   ```python
   try:
@@ -212,91 +212,91 @@ asyncio.run(main())
       ...
   ```
 
-- **PEP 758 (3.14+)**: `except` / `except*` の複数型で括弧不要: `except TimeoutError, ConnectionError:`。
-- **PEP 765 (3.14+)**: `finally` から `return`/`break`/`continue` で抜けると `SyntaxWarning`（例外飲み込み防止）。
-- ロギングは `logging.exception("msg")` で traceback 付きで出る。`print` より logger。
+- **PEP 758 (3.14+)**: Parentheses are no longer required for multiple types in `except` / `except*`: `except TimeoutError, ConnectionError:`.
+- **PEP 765 (3.14+)**: A `SyntaxWarning` is raised when `return`/`break`/`continue` exits from within `finally` (prevents exception swallowing).
+- For logging, `logging.exception("msg")` includes the traceback. Prefer a logger over `print`.
 
-## 実行モード
+## Execution modes
 
-| コマンド | 用途 |
+| Command | Purpose |
 |---|---|
-| `python -m pkg` | パッケージの `__main__.py` を実行。CLI 起動の標準 |
-| `python script.py` | スクリプト直接。`sys.path[0]` は script のディレクトリ |
-| `python -I` | 分離モード。環境変数・user site を無視し再現性◎ |
-| `python -W error` | warning を例外化 |
-| `python -X faulthandler` | SEGV 時に traceback。`PYTHONFAULTHANDLER=1` でも可 |
-| `uv run <cmd>` | 依存解決 + venv 起動を 1 コマンドで |
+| `python -m pkg` | Runs the package's `__main__.py`. The standard way to launch a CLI |
+| `python script.py` | Runs a script directly. `sys.path[0]` is the script's directory |
+| `python -I` | Isolated mode. Ignores environment variables and user site, good for reproducibility |
+| `python -W error` | Turns warnings into exceptions |
+| `python -X faulthandler` | Prints a traceback on SEGV. Also settable via `PYTHONFAULTHANDLER=1` |
+| `uv run <cmd>` | Resolves dependencies and launches the venv in one command |
 
-`PYTHONPATH` を不用意にいじると import がぶれる。プロジェクトは `pyproject.toml` の `[tool.setuptools.packages.find]` やビルド backend 側で解決する。
+Carelessly tweaking `PYTHONPATH` destabilizes imports. Resolve project layout via `[tool.setuptools.packages.find]` in `pyproject.toml` or the build backend instead.
 
-## パフォーマンス / GIL
+## Performance / GIL
 
-- **PEP 703 (free-threaded CPython)**: 3.13 で experimental (`python3.13t`)、3.14 で **PEP 779 により "公式サポート"** へ昇格。GIL デフォルト無効化は 2028–2030 想定。
-- **PEP 744 (JIT)**: 3.13 で experimental 導入、3.14 で Windows/macOS 配布バイナリに同梱（`PYTHON_JIT=1`）。
-- **PEP 734 (subinterpreters)**: 3.14 で `concurrent.interpreters` 標準化。`concurrent.futures.InterpreterPoolExecutor` も同梱。CPU バウンドを GIL を跨いで並列化できる。
+- **PEP 703 (free-threaded CPython)**: experimental in 3.13 (`python3.13t`), promoted to **"officially supported" via PEP 779** in 3.14. GIL-disabled-by-default is expected around 2028–2030.
+- **PEP 744 (JIT)**: introduced experimentally in 3.13, bundled into the Windows/macOS distribution binaries in 3.14 (`PYTHON_JIT=1`).
+- **PEP 734 (subinterpreters)**: `concurrent.interpreters` standardized in 3.14. `concurrent.futures.InterpreterPoolExecutor` is also included. Enables parallelizing CPU-bound work across the GIL.
 
-## 標準ライブラリの押さえどころ
+## Standard library essentials
 
-| モジュール | 定番ポイント |
+| Module | Key points |
 |---|---|
-| `pathlib` | `Path("a")/"b"`、`.read_text()`、`.glob()`、3.14 で `.copy()`/`.move()` 追加 |
-| `dataclasses` | `@dataclass(frozen=True, slots=True)`（slots は 3.10+） |
-| `logging` | `logger = logging.getLogger(__name__)`。root logger 直叩きは避ける |
-| `subprocess` | `run([...], check=True, capture_output=True, text=True)`。`shell=True` は避ける |
-| `argparse` | 標準。`typer` / `click` は型ヒント・デコレータで補完性◎ |
-| `json` | `json.loads` / `dumps(obj, indent=2)`。datetime は標準では未対応 |
+| `pathlib` | `Path("a")/"b"`, `.read_text()`, `.glob()`; `.copy()`/`.move()` added in 3.14 |
+| `dataclasses` | `@dataclass(frozen=True, slots=True)` (slots available from 3.10+) |
+| `logging` | `logger = logging.getLogger(__name__)`. Avoid calling the root logger directly |
+| `subprocess` | `run([...], check=True, capture_output=True, text=True)`. Avoid `shell=True` |
+| `argparse` | Standard. `typer` / `click` complement it well with type hints and decorators |
+| `json` | `json.loads` / `dumps(obj, indent=2)`. datetime is not supported by default |
 | `contextlib` | `contextmanager` / `suppress` / `ExitStack` |
 | `functools` | `@cache` (3.9+) / `@lru_cache(maxsize=...)` |
 
-3.12 で `distutils` 削除、3.13 で PEP 594 により `cgi` / `telnetlib` / `aifc` / `imghdr` など **19 モジュールが削除**された。AI エージェントが書く過去の作法がそのまま落ちるので注意。
+`distutils` was removed in 3.12, and in 3.13 PEP 594 removed **19 modules** including `cgi` / `telnetlib` / `aifc` / `imghdr`. Watch out — older patterns AI agents write can break outright.
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **mutable default argument** — `def f(x=[])` は全呼び出しで同じリストを共有。`def f(x=None): x = x if x is not None else []`。
-2. **`except:` / `except Exception:` の乱用** — 具体型を書く。`except BaseException:` は `KeyboardInterrupt` を握りつぶす。
-3. **`subprocess.run(cmd, shell=True)`** — シェル injection の温床。**リスト形式で `shell=False`** が鉄則。
-4. **`os.path.join` / 文字列結合でパス** — `pathlib.Path` を使う。OS 差を自動吸収。
-5. **`==` と `is` の混同** — `is None` / `is True` は OK。文字列・整数は `==`。CPython の小整数キャッシュに依存しない。
-6. **`print` デバッグを残す** — `logging.getLogger(__name__)` に置き換える。
-7. **`from __future__ import annotations` を全ファイルで機械的に付ける** — 3.14+ では PEP 649 で必要性が下がる。新規コードは必要に応じて。
-8. **`distutils` / 削除済みモジュール参照** — 3.12+ で `distutils` 不在、3.13+ で PEP 594 バッテリ削除。import エラー時はまず deprecation を疑う。
-9. **循環 import / `sys.path.insert`** — パッケージ構造と `pyproject.toml` の `[tool.setuptools.packages]` で解く。
-10. **CPython 前提の副作用 `__del__`** — refcount に依存すると PyPy / free-threaded で挙動変化。`with` / `contextmanager` で明示する。
-11. **`asyncio.gather(*tasks)` 濫用** — 3.11+ は `TaskGroup` を使う。エラー集約と cancellation の整合が取れる。
-12. **`requires-python` と構文のズレ** — `requires-python = ">=3.9"` なのに `match`（3.10+）や `Box[T]`（3.12+）を書く。リリース前に CI で下位バージョンも回す。
-13. **f-string を書かず `%` / `.format`** — 新規コードは f-string 統一。
-14. **`subprocess.run(...).returncode` を手動確認** — `check=True` を付ければ非 0 で `CalledProcessError`。
+1. **Mutable default arguments** — `def f(x=[])` shares the same list across all calls. Use `def f(x=None): x = x if x is not None else []`.
+2. **Overusing bare `except:` / `except Exception:`** — write specific exception types. `except BaseException:` swallows `KeyboardInterrupt`.
+3. **`subprocess.run(cmd, shell=True)`** — a breeding ground for shell injection. The rule is **list form with `shell=False`**.
+4. **Building paths with `os.path.join` / string concatenation** — use `pathlib.Path` instead, which absorbs OS differences automatically.
+5. **Confusing `==` with `is`** — `is None` / `is True` are fine. Use `==` for strings and integers; don't rely on CPython's small-integer cache.
+6. **Leaving `print` debugging in place** — replace with `logging.getLogger(__name__)`.
+7. **Mechanically adding `from __future__ import annotations` to every file** — its necessity decreases in 3.14+ due to PEP 649. Add it only when needed in new code.
+8. **Referencing `distutils` / removed modules** — `distutils` is gone from 3.12+, and PEP 594 batteries were removed in 3.13+. Suspect deprecation first when hitting import errors.
+9. **Circular imports / `sys.path.insert`** — resolve via package structure and `[tool.setuptools.packages]` in `pyproject.toml`.
+10. **CPython-dependent side effects in `__del__`** — relying on refcounting changes behavior on PyPy / free-threaded builds. Make cleanup explicit with `with` / `contextmanager`.
+11. **Overusing `asyncio.gather(*tasks)`** — use `TaskGroup` on 3.11+ for consistent error aggregation and cancellation.
+12. **Mismatch between `requires-python` and syntax used** — e.g. declaring `requires-python = ">=3.9"` while using `match` (3.10+) or `Box[T]` (3.12+). Run CI against the lower-bound version before release.
+13. **Using `%` / `.format` instead of f-strings** — standardize new code on f-strings.
+14. **Manually checking `subprocess.run(...).returncode`** — add `check=True` to raise `CalledProcessError` on nonzero exit.
 
-## トラブルシュート
+## Troubleshooting
 
-### `externally-managed-environment` で `pip install` が拒否される
+### `pip install` refused with `externally-managed-environment`
 
-Debian 系の PEP 668 保護。必ず venv を作って使う（`python -m venv .venv` か `uv venv`）。
+PEP 668 protection on Debian-based systems. Always create and use a venv (`python -m venv .venv` or `uv venv`).
 
-### `ModuleNotFoundError` だが `pip show` では入っている
+### `ModuleNotFoundError` even though `pip show` says it's installed
 
-複数 Python（system / pyenv / uv）が混在しており、想定と違う Python で実行している。`python -c "import sys; print(sys.executable)"` で使われている interpreter を確認する。
+Multiple Pythons (system / pyenv / uv) coexist, and you're running the wrong interpreter. Check which interpreter is in use with `python -c "import sys; print(sys.executable)"`.
 
-### 型チェックは通るが実行時に AttributeError
+### Type checking passes but `AttributeError` at runtime
 
-`from __future__ import annotations` で全アノテーションが文字列化され、`typing.get_type_hints()` が失敗する古いコードパターン。3.14+ の PEP 649 で改善される。`pydantic` など reflection 使う系は互換性を確認。
+An older code pattern where `from __future__ import annotations` stringifies all annotations, causing `typing.get_type_hints()` to fail. This improves with PEP 649 in 3.14+. Check compatibility for reflection-heavy libraries like `pydantic`.
 
 ### `RuntimeError: asyncio.run() cannot be called from a running event loop`
 
-Jupyter / IPython 内では既にイベントループが走っている。`await` を直接書くか、`nest_asyncio` で二重起動を許可する。
+An event loop is already running inside Jupyter / IPython. Write `await` directly, or allow double-starting via `nest_asyncio`.
 
-### ruff と black で format 差分が出る
+### Format differences between ruff and black
 
-ruff の format は black と**ほぼ**互換だが完全一致ではない。`[tool.ruff.format]` の設定で揃えるか、ruff 一本化する。
+ruff's formatter is **nearly** but not perfectly compatible with black. Align settings under `[tool.ruff.format]`, or standardize on ruff alone.
 
-## 関連記事
+## Related articles
 
-- `tools/mise.md` — Python を含む多言語バージョン管理
-- `tools/lefthook.md` — pre-commit で ruff / mypy を自動実行
-- `languages/bash.md` — Python を呼び出すスクリプト側の落とし穴
-- `standards/semver.md` — `requires-python` の記法と semver
+- `tools/mise.md` — Multi-language version management including Python
+- `tools/lefthook.md` — Automatically running ruff / mypy via pre-commit
+- `languages/bash.md` — Pitfalls on the scripting side when invoking Python
+- `standards/semver.md` — `requires-python` notation and semver
 
-## 参考
+## References
 
 - [Python Documentation](https://docs.python.org/3/)
 - [What's New in Python 3.14](https://docs.python.org/3/whatsnew/3.14.html)

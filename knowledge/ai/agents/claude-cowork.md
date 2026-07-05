@@ -5,50 +5,50 @@ tags: [ai-agent, desktop, anthropic]
 
 # Claude Cowork
 
-Anthropic が提供する、デスクトップ（GUI）ベースの自律型 AI エージェント。開発者向けの CLI ツールである「Claude Code」と同じエージェントエンジンを搭載し、一般のナレッジワーカー向けに複雑なファイル操作やワークフローの自動化を提供する。
+A desktop (GUI) based autonomous AI agent provided by Anthropic. It runs on the same agent engine as "Claude Code," the CLI tool for developers, but offers complex file operations and workflow automation for general knowledge workers.
 
-公式: [anthropic.com/product/claude-cowork](https://www.anthropic.com/product/claude-cowork)
+Official: [anthropic.com/product/claude-cowork](https://www.anthropic.com/product/claude-cowork)
 
-## 主な特徴
+## Key Features
 
-- **自律的プランニング**: 単なるチャットではなく、目標を与えると複数のステップ（調査、実行、検証）を自動的に組み立てて実行する。
-- **直接ファイル操作**: ユーザーが許可したローカルフォルダ内のファイルを読み取り、編集、作成、移動、削除できる。
-- **サンドボックス実行**: コードの実行やシェル操作は、ホスト環境から隔離された **Linux 仮想マシン (VM)** 内で行われるため、安全性が高い。
-- **並列タスク処理**: 複雑なタスクを内部的にサブエージェントへ分割・委譲し、並列実行することで処理時間を短縮する。
-- **スケジュール実行**: 定型タスクを保存し、定期的に、またはトリガーに応じて自動実行させることが可能。
+- **Autonomous planning**: Rather than being a simple chat, it automatically assembles and executes multiple steps (research, execution, verification) when given a goal.
+- **Direct file operations**: Can read, edit, create, move, and delete files within local folders the user has authorized.
+- **Sandboxed execution**: Code execution and shell operations run inside a **Linux virtual machine (VM)** isolated from the host environment, providing strong safety guarantees.
+- **Parallel task processing**: Internally splits and delegates complex tasks to sub-agents, running them in parallel to reduce processing time.
+- **Scheduled execution**: Recurring tasks can be saved and run automatically on a schedule or in response to triggers.
 
-## ユースケース
+## Use Cases
 
-- **ファイル整理**: 大量のファイルを内容（日付、カテゴリ、プロジェクト名等）に基づいて自動で分類・リネームする。
-- **データ抽出と集計**: 大量の PDF や画像（レシート等）を読み込み、構造化データとしてスプレッドシートや Markdown にまとめる。
-- **リサーチと執筆**: Web 検索（Claude in Chrome 連携）の結果とローカル資料を組み合わせ、レポートのドラフトを自動生成する。
-- **定型業務の自動化**: 毎日発生するログの集計や、決まった形式の報告書作成を「1 クリック」または「自動」で実行する。
+- **File organization**: Automatically classifies and renames large numbers of files based on content (date, category, project name, etc.).
+- **Data extraction and aggregation**: Reads large volumes of PDFs or images (e.g., receipts) and consolidates them into structured data in spreadsheets or Markdown.
+- **Research and writing**: Combines web search results (via Claude in Chrome integration) with local materials to automatically generate report drafts.
+- **Routine task automation**: Runs daily log aggregation or standard-format report generation with "one click" or fully automatically.
 
-## Claude Code (CLI) との比較
+## Comparison with Claude Code (CLI)
 
-| 特徴 | Claude Cowork | Claude Code |
+| Feature | Claude Cowork | Claude Code |
 |---|---|---|
-| **インターフェース** | デスクトップアプリ (GUI) | ターミナル (CUI) |
-| **主な対象ユーザー** | ナレッジワーカー / 全ユーザー | ソフトウェアエンジニア |
-| **主な用途** | 事務・調査・ファイル管理 | コーディング・デバッグ・Git 操作 |
-| **実行環境** | 隔離された専用 VM 内 | ローカルホスト（直接実行） |
-| **導入ハードル** | 低い（アプリをインストール） | 高い（Node.js / CLI 知識が必要） |
+| **Interface** | Desktop app (GUI) | Terminal (CUI) |
+| **Primary users** | Knowledge workers / general users | Software engineers |
+| **Primary use** | Administrative work, research, file management | Coding, debugging, Git operations |
+| **Execution environment** | Isolated dedicated VM | Local host (direct execution) |
+| **Onboarding barrier** | Low (install the app) | High (requires Node.js / CLI knowledge) |
 
-## 利用条件
+## Availability
 
-リサーチプレビューを経て、Claude Desktop アプリの機能として一般提供されている。
+After a research preview, it is now generally available as a feature of the Claude Desktop app.
 
-- **プラン**: いずれかの**有料プラン**（Pro / Max / Team / Enterprise）が必要。
-- **OS**: macOS 版・Windows 版の両方を提供（Windows は最新版が必要）。
-- **常駐**: 作業中は Claude Desktop アプリを開いたままにする必要がある（閉じるとセッションが終了する）。
+- **Plan**: Requires a **paid plan** (Pro / Max / Team / Enterprise).
+- **OS**: Available for both macOS and Windows (Windows requires the latest version).
+- **Foreground app**: The Claude Desktop app must remain open while work is in progress (closing it ends the session).
 
-## ベストプラクティス
+## Best Practices
 
-- **フォルダ権限の最小化**: 作業に必要な特定のフォルダのみにアクセスを許可し、システム全体へのアクセスは控える。
-- **プロンプトの具体性**: 実行ステップが多いタスクでは、「最終的にどのようなファイル構成にしたいか」を具体的に示すと成功率が上がる。
-- **サンドボックスの活用**: 信頼できないスクリプトのテストや、複雑なデータ変換処理は Cowork 内の VM を活用することでメイン環境を汚さずに実行できる。
+- **Minimize folder permissions**: Grant access only to the specific folders required for the task, and avoid granting access to the entire system.
+- **Be specific in prompts**: For tasks with many execution steps, specifying concretely "what the final file structure should look like" improves the success rate.
+- **Leverage the sandbox**: Testing untrusted scripts or performing complex data transformations inside the Cowork VM keeps the main environment clean.
 
-## 参考
+## References
 
-- [Claude Cowork 製品ページ](https://www.anthropic.com/product/claude-cowork)
+- [Claude Cowork product page](https://www.anthropic.com/product/claude-cowork)
 - [Claude Help Center: Get started with Claude Cowork](https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork)

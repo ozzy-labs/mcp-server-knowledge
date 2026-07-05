@@ -5,35 +5,35 @@ tags: [github, methodology]
 
 # GitHub Pull Requests
 
-GitHub の Pull Request（PR）はブランチ間の差分を提案・レビュー・取り込みするための単位。コードレビュー、自動チェック、議論、マージ戦略を 1 つの UI に集約する。
+A GitHub Pull Request (PR) is the unit for proposing, reviewing, and merging diffs between branches. It consolidates code review, automated checks, discussion, and merge strategy into a single UI.
 
-公式: [GitHub Pull Requests docs](https://docs.github.com/en/pull-requests)
+Official: [GitHub Pull Requests docs](https://docs.github.com/en/pull-requests)
 
-関連記事:
+Related articles:
 
-- ワークフロー全体: [`standards/github-flow.md`](../../standards/github-flow.md)
-- コミット規約: [`standards/conventional-commits.md`](../../standards/conventional-commits.md)
-- Issue 側のプラクティス: [`platforms/github/github-issues.md`](github-issues.md)
-- CLI 操作: [`platforms/github/gh-cli.md`](gh-cli.md)
+- Overall workflow: [`standards/github-flow.md`](../../standards/github-flow.md)
+- Commit conventions: [`standards/conventional-commits.md`](../../standards/conventional-commits.md)
+- Issue-side practices: [`platforms/github/github-issues.md`](github-issues.md)
+- CLI operations: [`platforms/github/gh-cli.md`](gh-cli.md)
 
-## PR の基本ライフサイクル
+## Basic PR lifecycle
 
 ```text
 feature branch ──push──▶ open PR ──review──▶ approve ──checks pass──▶ merge ──delete branch
                               │
-                              └─ Draft（作業中・レビュー要請しない）
+                              └─ Draft (work in progress, no review requested)
 ```
 
-1. ブランチ作成（`<type>/<short-description>`）
-2. コミット（Conventional Commits）
-3. push
-4. PR open（タイトルは `<type>[scope]: <description>`）
-5. CI 通過 + レビュー approve
-6. **squash merge** + ブランチ削除
+1. Create a branch (`<type>/<short-description>`)
+2. Commit (Conventional Commits)
+3. Push
+4. Open PR (title format `<type>[scope]: <description>`)
+5. CI passes + review approved
+6. **Squash merge** + delete branch
 
-## PR タイトルと本文
+## PR title and body
 
-PR タイトルは squash merge 後の commit message になるため、Conventional Commits 形式で書く:
+The PR title becomes the commit message after a squash merge, so write it in Conventional Commits format:
 
 ```text
 feat(api): add pagination to /users
@@ -41,179 +41,179 @@ fix: handle empty response from upstream
 docs: clarify MCP registration scope
 ```
 
-本文に必ず含めたい情報:
+Information the body should always include:
 
-| セクション | 内容 |
+| Section | Content |
 |---|---|
-| Summary | 何を変えたか・なぜ変えたか（差分の WHAT より WHY） |
-| Linked issue | `Fixes #123` などの closing keyword |
-| Test plan | 動作確認手順（手動 / 自動）。レビュアーが追試できる粒度 |
-| Screenshots | UI 変更がある場合（before/after） |
-| Notes | 後続 Issue・関連 PR・既知の制約 |
+| Summary | What changed and why (the WHY matters more than the WHAT of the diff) |
+| Linked issue | A closing keyword such as `Fixes #123` |
+| Test plan | Verification steps (manual/automated), detailed enough for reviewers to reproduce |
+| Screenshots | Before/after for UI changes |
+| Notes | Follow-up issues, related PRs, known limitations |
 
 ## Draft PR
 
-作業途中で push しておきたい時は **Draft** で open する:
+When you want to push work in progress, open it as a **Draft**:
 
-- レビュー要請が飛ばない
-- CODEOWNERS が自動アサインされない
-- マージ不可（マージボタンが無効化）
-- CI は走る
+- No review request is sent
+- CODEOWNERS are not auto-assigned
+- Merging is disabled (merge button is inactive)
+- CI still runs
 
 ```bash
 gh pr create --draft --title "feat: WIP add pagination"
 gh pr ready    # Draft → Ready for review
 ```
 
-レビューを受ける準備ができたら **Ready for review** に切り替える。
+Switch to **Ready for review** once it's ready for review.
 
-## Issue とのリンク
+## Linking to issues
 
-PR 本文に closing keyword を書くと、デフォルトブランチへのマージ時に Issue が自動 close される:
+Writing a closing keyword in the PR body auto-closes the issue when merged into the default branch:
 
 ```text
 Closes #123
 Fixes your-org/other-repo#45
 ```
 
-詳細は [`github-issues.md`](github-issues.md#closing-keywordspr-から-issue-を閉じる) を参照。
+See [`github-issues.md`](github-issues.md#closing-keywords-closing-issues-from-a-pr) for details.
 
-## 適切な PR サイズ
+## Appropriate PR size
 
-| サイズ目安 | 評価 |
+| Size guideline | Assessment |
 |---|---|
-| 〜200 行 | レビュー容易・推奨 |
-| 200〜500 行 | 上限。レビュー時間が線形以上に増える |
-| 500 行〜 | 分割を検討（refactor と機能追加を混ぜていないか） |
+| Up to ~200 lines | Easy to review, recommended |
+| 200–500 lines | Upper limit; review time grows faster than linearly |
+| 500+ lines | Consider splitting (check whether refactoring is mixed with feature work) |
 
-巨大 PR は:
+For large PRs:
 
-- 機能追加と無関係な refactor を別 PR に分離
-- スタック PR（base ブランチに別 PR をぶら下げる）で段階的にレビュー
-- Sub-issue で実装単位に分割
+- Split unrelated refactors from feature additions into separate PRs
+- Use stacked PRs (a PR based on another PR's branch) for staged review
+- Split into sub-issues along implementation units
 
-## レビュー操作
+## Review actions
 
-レビュアーが取れる 3 つの状態:
+Three states a reviewer can set:
 
-| 状態 | 用途 |
+| State | Purpose |
 |---|---|
-| Comment | フィードバックのみ。承認も差し戻しもしない |
-| Approve | マージ承認 |
-| Request changes | 修正必須。同じレビュアーの再 review が必要 |
+| Comment | Feedback only; neither approves nor rejects |
+| Approve | Approves the merge |
+| Request changes | Requires changes; the same reviewer must re-review |
 
-その他の機能:
+Other features:
 
-- **Suggested changes**: コメント欄に ` ```suggestion ` ブロックを書くと、作者が 1 クリックで適用できるパッチになる
-- **Re-request review**: 修正後にレビュアーへ再依頼
-- **Resolve conversation**: スレッドを解決済みにマーク。`Require conversation resolution` 保護でマージ条件にできる
+- **Suggested changes**: writing a ` ```suggestion ` block in a comment creates a patch the author can apply with one click
+- **Re-request review**: ask a reviewer to review again after fixes
+- **Resolve conversation**: marks a thread as resolved. The `Require conversation resolution` protection can make this a merge requirement
 
-## 自動チェックと CI
+## Automated checks and CI
 
-PR の `Checks` タブに GitHub Actions などの workflow 結果が並ぶ。Branch protection で **Required status checks** に登録すると、green でない限りマージできない。
+The PR's `Checks` tab lists workflow results such as GitHub Actions runs. Registering them as **Required status checks** in branch protection blocks merging unless they're green.
 
-- ステータスは `success` / `skipped` / `neutral` のいずれかで通過扱い
-- ジョブ名（matrix 込み）の完全一致で指定する。matrix 名が変わると required check 設定の更新が必要
+- A status counts as passing if it is `success`, `skipped`, or `neutral`
+- Checks are matched by exact job name (including matrix); if a matrix name changes, the required check configuration must be updated
 
-## マージ戦略
+## Merge strategies
 
-| 方式 | 動作 | 推奨用途 |
+| Method | Behavior | Recommended use |
 |---|---|---|
-| **Squash and merge** | feature の全コミットを 1 コミットに圧縮 | デフォルト推奨。履歴が直線的になる |
-| Rebase and merge | 各コミットを base に replay（新 SHA） | 線形履歴が必要かつ各コミットが意味を持つ場合のみ |
-| Merge commit | merge commit を作成し履歴を保持 | hot-fix の経緯を残したい等の例外 |
+| **Squash and merge** | Compresses all feature commits into one commit | Default recommendation; keeps history linear |
+| Rebase and merge | Replays each commit onto the base (new SHAs) | Only when linear history is needed and each commit carries meaning |
+| Merge commit | Creates a merge commit, preserving history | Exceptions like preserving a hotfix's history |
 
-詳細トレードオフは [`standards/github-flow.md`](../../standards/github-flow.md#merge-戦略) を参照。
+For detailed trade-offs see [`standards/github-flow.md`](../../standards/github-flow.md#merge-strategy).
 
-リポジトリ設定で許可する merge 方式を絞れる（Settings → General → Pull Requests）。Squash のみ許可するのが最もシンプル。
+You can restrict which merge methods are allowed in repository settings (Settings → General → Pull Requests). Allowing only Squash is the simplest option.
 
-### Squash merge のコミットメッセージ
+### Squash merge commit message
 
-GitHub のデフォルトでは PR タイトルがメッセージになる。Conventional Commits 準拠の PR タイトルにしておけば、`main` の commit log もそのまま規約に沿う。
+By default, GitHub uses the PR title as the commit message. Keeping PR titles Conventional-Commits-compliant means `main`'s commit log naturally follows the convention.
 
-`gh pr merge --squash --subject "..." --body "..."` で明示指定も可能。
+You can also specify it explicitly with `gh pr merge --squash --subject "..." --body "..."`.
 
 ## Auto-merge
 
-CI 完了を待ってから自動でマージしたい時は Auto-merge:
+Use Auto-merge to merge automatically once CI completes:
 
 ```bash
 gh pr merge --auto --squash --delete-branch
 ```
 
-要件:
+Requirements:
 
-- リポジトリ設定で Auto-merge が有効化されていること（Settings → General → Pull Requests → Allow auto-merge）
-- マージ条件（reviews / required checks）が即座に満たせない状況であること（満たしていれば即マージ）
-- 書き込み権限を持つユーザーが有効化
+- Auto-merge must be enabled in repository settings (Settings → General → Pull Requests → Allow auto-merge)
+- Merge conditions (reviews / required checks) must not already be immediately satisfiable (if they are, it merges right away)
+- Must be enabled by a user with write access
 
-挙動:
+Behavior:
 
-- 条件が揃った瞬間にマージ実行
-- 条件不一致の push があれば自動的にキャンセル
-- fork からの PR で外部コントリビューターが push すると Auto-merge は解除される（セキュリティ）
+- Merges the instant conditions are met
+- Automatically cancels if a push makes conditions unmet
+- Auto-merge is disabled if an external contributor pushes to a PR from a fork (security)
 
 ## CODEOWNERS
 
-`.github/CODEOWNERS`（または リポジトリルート / `docs/`）でパスごとの自動レビュアーを定義する:
+Define path-based automatic reviewers in `.github/CODEOWNERS` (repository root or `docs/`):
 
 ```text
 # .github/CODEOWNERS
 
-# 全体のフォールバック
+# Fallback for everything
 *           @your-org/maintainers
 
-# 領域別
+# Per-area
 /src/api/   @your-org/backend
 /src/web/   @your-org/frontend
 *.md        @your-org/docs
 
-# CODEOWNERS 自体の改変保護
+# Protect CODEOWNERS itself from changes
 /.github/CODEOWNERS  @your-org/maintainers
 ```
 
-- パスにマッチした owner が自動的に reviewer に追加される
-- Branch protection で **Require review from Code Owners** を有効化すれば、CODEOWNERS の approve 必須化
-- ファイルサイズ上限 3 MB
+- Owners matching a path are automatically added as reviewers
+- Enabling **Require review from Code Owners** in branch protection makes CODEOWNERS approval mandatory
+- File size limit: 3 MB
 
 ## Branch Protection / Rulesets
 
-`main` に対して最低限設定すべき項目:
+Minimum settings to apply to `main`:
 
-| 設定 | 効果 |
+| Setting | Effect |
 |---|---|
-| Require a pull request before merging | 直接 push を禁止 |
-| Require approvals: 1 以上 | レビュー必須 |
-| Dismiss stale approvals when new commits are pushed | 修正後に再 approve を要求 |
-| Require review from Code Owners | CODEOWNERS の approve を必須化 |
-| Require status checks to pass | CI green を要求 |
-| Require branches to be up to date before merging | base の最新化を要求 |
-| Require conversation resolution | 未解決スレッドのマージを禁止 |
-| Restrict force pushes | 履歴改変を禁止 |
-| Restrict deletions | 保護ブランチの削除を禁止 |
-| Require linear history | merge commit を禁止（squash / rebase のみ） |
-| Require signed commits | GPG / SSH 署名を要求 |
+| Require a pull request before merging | Prohibits direct pushes |
+| Require approvals: 1 or more | Requires review |
+| Dismiss stale approvals when new commits are pushed | Requires re-approval after changes |
+| Require review from Code Owners | Requires CODEOWNERS approval |
+| Require status checks to pass | Requires green CI |
+| Require branches to be up to date before merging | Requires the base to be up to date |
+| Require conversation resolution | Prohibits merging with unresolved threads |
+| Restrict force pushes | Prohibits history rewriting |
+| Restrict deletions | Prohibits deleting protected branches |
+| Require linear history | Prohibits merge commits (squash/rebase only) |
+| Require signed commits | Requires GPG/SSH signatures |
 
-GitHub の **Rulesets** は branch protection の上位互換で、組織横断適用や bypass 設定が可能。新規リポジトリは Rulesets を推奨。
+GitHub's **Rulesets** are a superset of branch protection, supporting org-wide application and bypass configuration. Recommended for new repositories.
 
-## レビュー依頼のマナー
+## Review request etiquette
 
-- **小さく出す**: 200 行以内を目指す
-- **目的を本文に書く**: なぜこの変更が必要か（コードからは読めない）
-- **動作確認方法を明記**: レビュアーが追試できる
-- **自分でも先に diff を読む**: 機械的なミス（不要 import、デバッグ print）はセルフレビューで除く
-- **WIP は Draft で**: ready なものだけレビュー要請する
+- **Keep it small**: aim for under 200 lines
+- **State the purpose in the body**: why the change is needed (not evident from the code alone)
+- **Document verification steps**: so reviewers can reproduce them
+- **Read the diff yourself first**: catch mechanical mistakes (unused imports, debug prints) in self-review
+- **Use Draft for WIP**: only request review when it's ready
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **PR タイトルが Conventional Commits 形式でない** — `Update files` のような曖昧タイトル。squash merge 後の commit log が壊れる
-2. **本文に Test plan を書かない** — レビュアーが動作確認の入口を失う。少なくとも「どのコマンドを叩けば検証できるか」を 1 行書く
-3. **無関係な refactor を機能追加 PR に混ぜる** — 差分が読みにくくなり、レビュー時間が爆発する。別 PR に分ける
-4. **`Closes #123` を default 以外のブランチへの PR に書く** — Issue が自動 close されない
-5. **`gh pr merge --auto` をリポジトリ設定未対応のまま叩く** — エラーになる。事前に Allow auto-merge を確認
-6. **Required status check の名前が変わったのに保護設定を更新しない** — 古い check が永遠に pending のままマージ不能になる
+1. **PR title not in Conventional Commits format** — vague titles like `Update files` break the commit log after squash merge
+2. **No Test plan in the body** — reviewers lose their entry point for verification. At minimum, note which command to run to verify
+3. **Mixing unrelated refactors into a feature PR** — makes the diff harder to read and inflates review time; split into a separate PR
+4. **Writing `Closes #123` in a PR targeting a non-default branch** — the issue won't be auto-closed
+5. **Running `gh pr merge --auto` without repository settings support** — errors out; confirm Allow auto-merge beforehand
+6. **Not updating protection settings after a required status check's name changes** — the old check stays pending forever, making the PR unmergeable
 
-## 参考
+## References
 
 - [GitHub Pull Requests docs](https://docs.github.com/en/pull-requests)
 - [About pull request merges](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges)

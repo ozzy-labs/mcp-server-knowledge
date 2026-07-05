@@ -5,95 +5,95 @@ tags: [cli]
 
 # git submodule
 
-`git submodule` は別の Git リポジトリを特定コミットに固定して取り込むサブコマンド。スーパープロジェクトには「サブモジュールがどのコミットを指すか」だけが記録され、依存リポジトリの実体は別管理になる。
+`git submodule` is a subcommand for including another Git repository at a specific pinned commit. The superproject records only "which commit the submodule points to"; the dependency repository's actual content is managed separately.
 
-公式: [git-scm.com/docs/git-submodule](https://git-scm.com/docs/git-submodule)
+Official: [git-scm.com/docs/git-submodule](https://git-scm.com/docs/git-submodule)
 
-## いつ使うか・使わないか
+## When to use it and when not to
 
-向く:
+Good fit:
 
-- ベンダーした C/C++ ライブラリのソース取り込み
-- monorepo 化したくない複数チームが触る共通コード
-- 特定コミットにピン留めして再現性を担保したい依存
+- Vendoring source for a C/C++ library
+- Shared code touched by multiple teams that don't want to go monorepo
+- A dependency you want pinned to a specific commit for reproducibility
 
-向かない（代替を検討）:
+Not a good fit (consider alternatives):
 
-- パッケージマネージャ（npm, pnpm, pip, go modules, cargo 等）が使える依存 → 普通にパッケージ管理する
-- 「常に最新を取り込みたい」だけのケース → subtree merge やパッケージで代替
-- バイナリやドキュメント素材 → Git LFS や別配信
+- Dependencies available via a package manager (npm, pnpm, pip, go modules, cargo, etc.) → use normal package management
+- Cases where you just want to "always pull in the latest" → use subtree merge or a package instead
+- Binaries or documentation assets → use Git LFS or separate distribution
 
-## 仕組み
+## How it works
 
-- スーパープロジェクトの `.gitmodules`（追跡対象）に `path` と `url` を記録
-- `.git/config` の `submodule.<name>.url` に実際の clone 元 URL を保持
-- サブモジュール側の `.git` は `.git/modules/<name>/` に集約され、サブモジュールディレクトリ内の `.git` は gitfile（テキスト）でそこを指す
-- スーパープロジェクトのコミットには「どのサブモジュールがどの SHA を指すか」が gitlink として記録される
+- The superproject's `.gitmodules` (tracked) records `path` and `url`
+- `.git/config`'s `submodule.<name>.url` holds the actual clone source URL
+- The submodule's own `.git` is consolidated under `.git/modules/<name>/`; the `.git` inside the submodule directory is a gitfile (text) pointing there
+- The superproject's commit records "which submodule points to which SHA" as a gitlink
 
 ```text
 super/
-├── .gitmodules                   追跡される
+├── .gitmodules                   tracked
 ├── .git/
 │   ├── config                    submodule.<name>.url
 │   └── modules/
-│       └── lib-foo/              実体の .git 配下
+│       └── lib-foo/              actual .git contents
 └── lib-foo/
     └── .git                      gitfile → super/.git/modules/lib-foo
 ```
 
-## 主要コマンド
+## Key commands
 
 ```bash
-# clone 時にサブモジュールも取得
+# Fetch submodules too at clone time
 git clone --recurse-submodules <url>
 
-# 既存 clone でサブモジュールを後追い取得
+# Fetch submodules afterward in an existing clone
 git submodule update --init --recursive
 
-# サブモジュール追加
+# Add a submodule
 git submodule add <repo-url> <path>
 git submodule add -b main <repo-url> libs/foo
 
-# 各サブモジュールを記録された SHA に同期
+# Sync each submodule to its recorded SHA
 git submodule update --recursive
 
-# 追跡ブランチの最新を取り込む
+# Pull in the latest of the tracked branch
 git submodule update --remote --recursive
 
-# サブモジュールごとにコマンド実行
+# Run a command per submodule
 git submodule foreach 'git fetch --tags'
 
-# 状態確認
+# Check status
 git submodule status --recursive
 
-# URL の変更（.gitmodules 編集後）
+# Apply URL change (after editing .gitmodules)
 git submodule sync --recursive
 
-# 1 つだけ無効化（作業ツリーから外す）
+# Disable just one (remove from working tree)
 git submodule deinit -f libs/foo
 
-# 完全削除（後述）
+# Full removal (see below)
 ```
 
-## サブコマンド一覧
+## Subcommand reference
 
-| サブコマンド | 用途 | 主なオプション |
+| Subcommand | Purpose | Main options |
 |---|---|---|
-| `add` | サブモジュール追加 | `-b <branch>` / `--name <name>` / `--depth <n>` / `--force` |
-| `init` | `.gitmodules` から `.git/config` に登録 | （主要オプションなし） |
-| `deinit` | サブモジュールを未登録に戻す（作業ツリー削除） | `-f` / `--all` |
-| `update` | 記録 SHA または追跡ブランチに同期 | `--init` / `--remote` / `--recursive` / `--checkout`/`--rebase`/`--merge` / `--depth` / `-j <n>` |
-| `status` | 状態表示 | `--cached`（記録 SHA） / `--recursive` |
-| `sync` | URL を `.gitmodules` から `.git/config` に反映 | `--recursive` |
-| `foreach` | 各サブモジュールでコマンド実行 | `--recursive` |
-| `set-branch` | 追跡ブランチを設定 | `-b <branch>` / `-d`（デフォルトに戻す） |
-| `set-url` | URL を変更 | `<path> <newurl>` |
-| `summary` | スーパープロジェクトと比較した変更要約 | `--cached` / `--files` |
-| `absorbgitdirs` | サブモジュール内の `.git` を `.git/modules/` に移動 | （主要オプションなし） |
+| `add` | Add a submodule | `-b <branch>` / `--name <name>` / `--depth <n>` / `--force` |
+| `init` | Register from `.gitmodules` into `.git/config` | (no major options) |
+| `deinit` | Unregister a submodule (removes working tree) | `-f` / `--all` |
+| `update` | Sync to the recorded SHA or tracked branch | `--init` / `--remote` / `--recursive` / `--checkout`/`--rebase`/`--merge` / `--depth` / `-j <n>` |
+| `status` | Show status | `--cached` (recorded SHA) / `--recursive` |
+| `sync` | Apply URL from `.gitmodules` to `.git/config` | `--recursive` |
+| `foreach` | Run a command in each submodule | `--recursive` |
+| `set-branch` | Set the tracked branch | `-b <branch>` / `-d` (reset to default) |
+| `set-url` | Change the URL | `<path> <newurl>` |
+| `summary` | Summarize changes vs. the superproject | `--cached` / `--files` |
+| `absorbgitdirs` | Move a submodule's `.git` into `.git/modules/` | (no major options) |
 
-## 設定
+## Configuration
 
-### `.gitmodules`（コミットされる）
+### `.gitmodules` (committed)
 
 ```ini
 [submodule "libs/foo"]
@@ -105,38 +105,38 @@ git submodule deinit -f libs/foo
     ignore = dirty
 ```
 
-### `.git/config`（ローカルのみ）
+### `.git/config` (local only)
 
-| key | 効果 |
+| key | effect |
 |---|---|
-| `submodule.<name>.url` | 実 URL（HTTPS/SSH 切り替えに使う） |
-| `submodule.<name>.branch` | `update --remote` で追従するブランチ |
-| `submodule.<name>.update` | `checkout`（既定） / `rebase` / `merge` / `!cmd` |
-| `submodule.<name>.shallow` | 浅い clone を使う |
-| `submodule.<name>.ignore` | `none` / `untracked` / `dirty` / `all`。`status` / `diff` での扱い |
-| `submodule.recurse` | `true` で `pull` / `checkout` / `push` 等が自動再帰 |
-| `submodule.fetchJobs` | `update` の並列数（既定 1） |
-| `submodule.active` | アクティブ判定の glob（`pathspec` 形式） |
+| `submodule.<name>.url` | The actual URL (used to switch between HTTPS/SSH) |
+| `submodule.<name>.branch` | Branch followed by `update --remote` |
+| `submodule.<name>.update` | `checkout` (default) / `rebase` / `merge` / `!cmd` |
+| `submodule.<name>.shallow` | Use a shallow clone |
+| `submodule.<name>.ignore` | `none` / `untracked` / `dirty` / `all`. Affects handling in `status` / `diff` |
+| `submodule.recurse` | When `true`, `pull` / `checkout` / `push` etc. auto-recurse |
+| `submodule.fetchJobs` | Parallelism for `update` (default 1) |
+| `submodule.active` | Glob for determining active status (`pathspec` format) |
 
 ```bash
-# pull / checkout が自動でサブモジュールも追従するように
+# Make pull / checkout automatically follow into submodules
 git config --global submodule.recurse true
 
-# 並列 clone を高速化
+# Speed up parallel clones
 git config --global submodule.fetchJobs 8
 ```
 
-## 典型ワークフロー
+## Typical workflows
 
-### 追加してコミット
+### Add and commit
 
 ```bash
 git submodule add https://github.com/example/foo.git libs/foo
 git commit -m "Add foo submodule"
-# .gitmodules と libs/foo の gitlink がコミットされる
+# .gitmodules and the libs/foo gitlink get committed
 ```
 
-### 既存 clone をサブモジュール込みでセットアップ
+### Set up an existing clone including submodules
 
 ```bash
 git clone <super-url>
@@ -144,7 +144,7 @@ cd <super>
 git submodule update --init --recursive --jobs 8
 ```
 
-### サブモジュールを最新ブランチに更新してスーパー側に反映
+### Update a submodule to its latest branch and reflect it in the superproject
 
 ```bash
 git submodule update --remote --recursive
@@ -152,80 +152,80 @@ git add libs/foo
 git commit -m "Bump foo to latest main"
 ```
 
-### サブモジュール内で開発する
+### Developing inside a submodule
 
 ```bash
 cd libs/foo
-git checkout main          # detached HEAD から脱出
-# 編集・コミット・push
+git checkout main          # escape detached HEAD
+# edit, commit, push
 cd -
 git add libs/foo
 git commit -m "Update foo pointer"
 ```
 
-### URL を SSH に切り替え
+### Switching the URL to SSH
 
 ```bash
-# .gitmodules を編集した後
+# after editing .gitmodules
 git submodule sync --recursive
 ```
 
-### 完全削除
+### Full removal
 
 ```bash
 git submodule deinit -f libs/foo
-git rm libs/foo                       # .gitmodules も自動更新
+git rm libs/foo                       # .gitmodules is also updated automatically
 rm -rf .git/modules/libs/foo
 git commit -m "Remove foo submodule"
 ```
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **`git clone` だけで済ませる** — サブモジュールは空のまま。`--recurse-submodules` を付けるか、後で `git submodule update --init --recursive` を実行する
-2. **サブモジュール内で commit したのにスーパー側で commit しない** — gitlink が更新されないので他人の clone で旧 SHA に戻る。サブモジュール push 後に `git add <path> && git commit` を忘れない
-3. **detached HEAD のまま編集してコミットを失う** — `update` 後はデフォルトで detached HEAD。ブランチに `checkout` してから編集する
-4. **`git pull` で勝手にサブモジュールが進むと思っている** — 既定では進まない。`submodule.recurse=true` を設定するか `git submodule update --recursive` を明示的に呼ぶ
-5. **`rm -rf libs/foo` で削除する** — `.gitmodules` / `.git/config` / `.git/modules/` に残骸が残る。`deinit` → `git rm` → `.git/modules/<path>` の削除が正しい順序
-6. **CI で `--recursive` を忘れる** — ネストしたサブモジュールが取得されずビルド失敗。GitHub Actions なら `actions/checkout` の `submodules: recursive` を指定する
-7. **URL 変更を `.gitmodules` だけで済ませる** — clone 済み環境では `.git/config` の URL は変わらない。`git submodule sync` を実行する
+1. **Stopping at `git clone`** — submodules remain empty. Add `--recurse-submodules`, or later run `git submodule update --init --recursive`
+2. **Committing inside the submodule but not committing in the superproject** — the gitlink doesn't get updated, so other clones fall back to the old SHA. Don't forget `git add <path> && git commit` after pushing the submodule
+3. **Losing commits by editing while in detached HEAD** — after `update`, you're in detached HEAD by default. `checkout` a branch before editing
+4. **Assuming `git pull` automatically advances submodules** — it doesn't by default. Set `submodule.recurse=true` or explicitly call `git submodule update --recursive`
+5. **Deleting with `rm -rf libs/foo`** — leaves remnants in `.gitmodules` / `.git/config` / `.git/modules/`. The correct order is `deinit` → `git rm` → delete `.git/modules/<path>`
+6. **Forgetting `--recursive` in CI** — nested submodules aren't fetched and the build fails. For GitHub Actions, specify `submodules: recursive` in `actions/checkout`
+7. **Changing the URL only in `.gitmodules`** — in already-cloned environments the URL in `.git/config` doesn't change. Run `git submodule sync`
 
-## トラブルシュート
+## Troubleshooting
 
 ### `fatal: No url found for submodule path '<path>' in .gitmodules`
 
-`.gitmodules` がコミットされていない、または当該エントリがない。スーパー側で `git submodule add` をやり直すか、`.gitmodules` を整備して `git submodule sync && git submodule update --init`。
+`.gitmodules` isn't committed, or the entry is missing. Either redo `git submodule add` in the superproject, or fix up `.gitmodules` and run `git submodule sync && git submodule update --init`.
 
-### サブモジュールが detached HEAD のまま
+### Submodule stays in detached HEAD
 
 ```bash
 cd libs/foo
 git checkout main
 ```
 
-または `submodule.<name>.update = rebase`/`merge` を設定して、`update --remote` がブランチ上で fast-forward / rebase するようにする。
+Alternatively, set `submodule.<name>.update = rebase`/`merge` so that `update --remote` fast-forwards / rebases on the branch.
 
-### CI で「dirty submodule」エラー
+### "dirty submodule" error in CI
 
-`submodule.<name>.ignore = dirty`（コミットされていない変更を無視）または `untracked` を `.gitmodules` に設定する。CI 用に `git config -f .gitmodules submodule.<name>.ignore dirty`。
+Set `submodule.<name>.ignore = dirty` (ignore uncommitted changes) or `untracked` in `.gitmodules`. For CI: `git config -f .gitmodules submodule.<name>.ignore dirty`.
 
-### サブモジュールの `.git` が肥大している / 移植したい
+### Submodule's `.git` has grown large / you want to relocate it
 
 ```bash
 git submodule absorbgitdirs
 ```
 
-サブモジュール側の `.git` ディレクトリをスーパーの `.git/modules/` に集約する。
+Consolidates the submodule's `.git` directory into the superproject's `.git/modules/`.
 
-## サブモジュールの代替
+## Alternatives to submodules
 
-| シナリオ | 代替 |
+| Scenario | Alternative |
 |---|---|
-| 言語標準のパッケージ管理が使える | npm / pnpm / pip / go mod / cargo |
-| 「最新を常に取り込む」 | git subtree（履歴も統合） |
-| バイナリ・大容量ファイル | Git LFS |
-| 同一組織のコード共有 | monorepo（pnpm workspace, turborepo, nx 等） |
+| A language-standard package manager is available | npm / pnpm / pip / go mod / cargo |
+| "Always pull in the latest" | git subtree (also merges history) |
+| Binary / large files | Git LFS |
+| Sharing code within the same org | monorepo (pnpm workspace, turborepo, nx, etc.) |
 
-## 参考
+## References
 
 - [git-submodule - Git Documentation](https://git-scm.com/docs/git-submodule)
 - [gitsubmodules - Git Documentation](https://git-scm.com/docs/gitsubmodules)

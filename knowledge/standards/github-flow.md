@@ -5,37 +5,37 @@ tags: [methodology, github, git-hook]
 
 # GitHub Flow
 
-GitHub が提唱するシンプルな Git ワークフロー。`main` を常にデプロイ可能に保ち、新しい変更は短命な feature branch で行う。Git Flow より軽量で、継続的デリバリーに適している。
+A simple Git workflow proposed by GitHub. Keep `main` always deployable, and do new work on short-lived feature branches. Lighter weight than Git Flow, and well suited to continuous delivery.
 
-## 核となる原則
+## Core Principles
 
-1. **`main` は常にデプロイ可能**
-2. **新しい作業はブランチで**（`main` への直接 push 禁止）
-3. **ブランチは短命**（数日〜1 週間で merge）
-4. **PR でレビュー・議論**（ここで CI・ペアレビューを通す）
-5. **merge 後すぐデプロイ**（可能ならば自動）
+1. **`main` is always deployable**
+2. **New work happens on a branch** (direct push to `main` is prohibited)
+3. **Branches are short-lived** (merge within days to a week)
+4. **Review and discuss via PR** (this is where CI and peer review happen)
+5. **Deploy immediately after merge** (automated if possible)
 
-## ワークフロー
+## Workflow
 
 ```text
 main
  │
- ├─ feat/add-search         ← ブランチ作成
+ ├─ feat/add-search         ← create branch
  │   │ commit commit commit
- │   └─→ PR open → review → approve → squash merge → feat/add-search 削除
+ │   └─→ PR open → review → approve → squash merge → delete feat/add-search
  │
  ├─ fix/login-regression
  │   │ commit
- │   └─→ PR open → review → squash merge → fix/login-regression 削除
+ │   └─→ PR open → review → squash merge → delete fix/login-regression
  │
  └─ main (deploy)
 ```
 
-## ブランチ命名
+## Branch Naming
 
-- `<type>/<short-description>` 形式
-- type は Conventional Commits と揃える: `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`
-- description は英語、ケバブケース、簡潔に
+- Format: `<type>/<short-description>`
+- Align type with Conventional Commits: `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`
+- Description should be in English, kebab-case, and concise
 
 ```text
 feat/add-blog-pagination
@@ -44,38 +44,38 @@ docs/update-mcp-setup
 chore/bump-zod-3-25
 ```
 
-## Merge 戦略
+## Merge Strategy
 
-### Squash merge を推奨
+### Prefer squash merge
 
-- PR 中の複数コミットを 1 つに圧縮して `main` に取り込む
-- 履歴が直線的になり、`git log main` が読みやすい
-- revert が 1 コミットで済む
-- PR タイトル = Conventional Commits の形式にしておけば、`main` のコミットログも規約準拠になる
+- Compresses the multiple commits in a PR into one when merging into `main`
+- Keeps history linear, making `git log main` easy to read
+- A revert only needs a single commit
+- If the PR title follows the Conventional Commits format, `main`'s commit log also stays convention-compliant
 
-### Rebase merge は避ける
+### Avoid rebase merge
 
-- レビュー途中で force-push が発生しやすく、レビュー UX が悪い
-- 共有ブランチの履歴改変リスク
+- Force-push tends to happen mid-review, hurting the review UX
+- Risk of rewriting history on a shared branch
 
-### Merge commit は避ける
+### Avoid merge commits
 
-- 履歴に merge commit が多数残り、`git log` が読みづらい
-- bisect が困難になる
+- Leaves many merge commits in history, making `git log` harder to read
+- Makes bisect more difficult
 
-## PR のライフサイクル
+## PR Lifecycle
 
-1. **ブランチ作成**: `git switch -c feat/xxx`
-2. **コミット**: Conventional Commits 形式
-3. **push**: `git push -u origin <branch>`
-4. **PR open**: タイトルは `<type>[scope]: <description>` 形式
-5. **CI 通過 + レビュー**: 最低 1 名の approve（プロジェクトによる）
-6. **squash merge**: GitHub UI または `gh pr merge --squash --delete-branch`
-7. **ブランチ削除**: GitHub 側 + ローカル (`git branch -d <branch>`)
+1. **Create branch**: `git switch -c feat/xxx`
+2. **Commit**: Conventional Commits format
+3. **Push**: `git push -u origin <branch>`
+4. **Open PR**: title in `<type>[scope]: <description>` format
+5. **CI passes + review**: at least 1 approval (project-dependent)
+6. **Squash merge**: via GitHub UI or `gh pr merge --squash --delete-branch`
+7. **Delete branch**: on GitHub and locally (`git branch -d <branch>`)
 
-## PR タイトル規約
+## PR Title Convention
 
-PR タイトルそのものが squash merge 後のコミットメッセージになるため、Conventional Commits の形式で書く:
+Since the PR title itself becomes the commit message after squash merge, write it in Conventional Commits format:
 
 ```text
 feat(api): add pagination to /users
@@ -83,17 +83,17 @@ fix: handle empty response from upstream
 docs: clarify MCP registration scope
 ```
 
-## 禁止事項
+## Prohibited
 
-- **`main` への直接 push**: 常にブランチ + PR を経由
-- **`--force` push**: 共有ブランチでは絶対禁止。feature branch でも極力避ける。必要なら `--force-with-lease`
-- **未マージ feature branch の削除**: 作業喪失のリスク
-- **`--no-verify` でのフックスキップ**: 品質チェックを迂回しない
-- **merge 後のブランチ放置**: 認知負荷と混乱の元
+- **Direct push to `main`**: always go through a branch + PR
+- **`--force` push**: absolutely prohibited on shared branches. Avoid as much as possible even on feature branches; use `--force-with-lease` if necessary
+- **Deleting an unmerged feature branch**: risk of losing work
+- **Skipping hooks with `--no-verify`**: don't bypass quality checks
+- **Leaving branches unattended after merge**: a source of cognitive load and confusion
 
-## 保護ルール（推奨）
+## Protection Rules (Recommended)
 
-GitHub の branch protection で `main` に対し:
+Apply GitHub branch protection to `main`:
 
 - Require PR before merging
 - Require approvals: 1+
@@ -102,20 +102,20 @@ GitHub の branch protection で `main` に対し:
 - Restrict force pushes
 - Restrict deletions
 
-## Git Flow との違い
+## Differences from Git Flow
 
-| 観点 | GitHub Flow | Git Flow |
+| Aspect | GitHub Flow | Git Flow |
 |---|---|---|
-| 中心ブランチ | `main` のみ | `main` + `develop` |
-| リリースブランチ | なし | `release/*` を切る |
-| hotfix | 通常の fix ブランチ | `hotfix/*` を切る |
-| 適性 | 継続的デリバリー | 厳格なバージョンリリース |
-| 複雑さ | 低 | 高 |
+| Central branches | `main` only | `main` + `develop` |
+| Release branches | None | Cuts `release/*` |
+| Hotfix | Regular fix branch | Cuts `hotfix/*` |
+| Suitability | Continuous delivery | Strict versioned releases |
+| Complexity | Low | High |
 
-## エージェント運用への影響
+## Impact on Agent Operations
 
-AI エージェントに自動で作業させる場合、GitHub Flow は相性が良い:
+When letting AI agents work autonomously, GitHub Flow is a good fit:
 
-- ブランチ1 つに対して 1 タスク、明確なスコープ
-- PR が作業の単位になり、レビュー可能な粒度に揃う
-- squash merge なら途中コミットの汚さは気にせず細かくコミットできる（エージェントが試行錯誤した痕跡が `main` に残らない）
+- One task per branch, with a clear scope
+- The PR becomes the unit of work, aligning to a reviewable granularity
+- With squash merge, you don't need to worry about messy intermediate commits — you can commit frequently (traces of the agent's trial and error don't end up in `main`)

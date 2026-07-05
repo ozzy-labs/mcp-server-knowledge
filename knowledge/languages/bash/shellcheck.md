@@ -5,11 +5,11 @@ tags: [lint, bash]
 
 # ShellCheck
 
-Bash / POSIX sh スクリプトの静的解析ツール。よくあるバグ・移植性問題・クオート抜けなど、エディタと目視では拾いきれない問題を検出する。Haskell 製。
+A static analysis tool for Bash / POSIX sh scripts. It detects common bugs, portability issues, missing quotes, and other problems that editors and manual review often miss. Written in Haskell.
 
-公式: [shellcheck.net](https://www.shellcheck.net/) / [github.com/koalaman/shellcheck](https://github.com/koalaman/shellcheck)
+Official: [shellcheck.net](https://www.shellcheck.net/) / [github.com/koalaman/shellcheck](https://github.com/koalaman/shellcheck)
 
-## インストール
+## Installation
 
 ```bash
 # mise
@@ -25,66 +25,66 @@ sudo apt install shellcheck
 docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:stable myscript.sh
 ```
 
-## 基本的な使い方
+## Basic usage
 
 ```bash
-# 単一ファイル
+# single file
 shellcheck script.sh
 
-# 複数ファイル（glob）
+# multiple files (glob)
 shellcheck scripts/*.sh
 
-# 再帰
+# recursive
 shellcheck **/*.sh
 
-# フォーマット指定
-shellcheck -f gcc script.sh       # gcc 互換（エディタ統合向け）
+# specify output format
+shellcheck -f gcc script.sh       # gcc-compatible (for editor integration)
 shellcheck -f json script.sh      # JSON
-shellcheck -f sarif script.sh     # SARIF（GitHub Security タブ）
+shellcheck -f sarif script.sh     # SARIF (GitHub Security tab)
 
-# 最小深刻度
-shellcheck -S error script.sh     # error のみ
-shellcheck -S warning script.sh   # warning 以上
+# minimum severity
+shellcheck -S error script.sh     # error only
+shellcheck -S warning script.sh   # warning and above
 ```
 
-## shebang と shell 判定
+## Shebang and shell detection
 
-shellcheck はスクリプトの**shebang**または`-s`フラグで対象 shell を決める:
+shellcheck determines the target shell from the script's **shebang** or the `-s` flag:
 
 ```bash
 #!/bin/bash       # bash
-#!/bin/sh         # POSIX sh（互換性厳格）
+#!/bin/sh         # POSIX sh (strict compatibility)
 #!/usr/bin/env bash
 ```
 
-**sh と bash で挙動が大きく異なる**: `[[ ]]`、`$()` 内の複雑な構文、配列、etc. は POSIX sh では動かない。shebang を正しく付けることが最優先。
+**Behavior differs significantly between sh and bash**: `[[ ]]`, complex syntax inside `$()`, arrays, etc. do not work under POSIX sh. Setting the correct shebang is the top priority.
 
-## 典型的な指摘
+## Common findings
 
-| コード | 意味 | 例 |
+| Code | Meaning | Example |
 |---|---|---|
-| `SC2086` | 未クオート変数展開 | `echo $var` → `echo "$var"` |
-| `SC2046` | コマンド置換の未クオート | `cp $(ls)` → `cp "$(ls)"`（本質的には while read 推奨） |
-| `SC2155` | `declare` + 代入で終了コードがマスクされる | `local x=$(cmd)` → 2 行に分ける |
-| `SC2181` | `$?` の直接比較 | `cmd; if [ $? -ne 0 ]` → `if ! cmd` |
-| `SC2164` | `cd` の失敗チェック欠落 | `cd dir` → `cd dir \|\| exit` |
-| `SC2016` | 単引用符内の `$var` は展開されない | 意図的なら `# shellcheck disable=SC2016` |
-| `SC2034` | 未使用変数 | 参照されない代入 |
-| `SC2059` | `printf` フォーマット文字列に変数 | `printf "$var"` → `printf "%s" "$var"` |
-| `SC2012` | `ls` を parse してはいけない | `for f in $(ls)` → `for f in *` |
+| `SC2086` | Unquoted variable expansion | `echo $var` → `echo "$var"` |
+| `SC2046` | Unquoted command substitution | `cp $(ls)` → `cp "$(ls)"` (a `while read` loop is fundamentally recommended) |
+| `SC2155` | Exit code masked by `declare` + assignment | `local x=$(cmd)` → split into two lines |
+| `SC2181` | Direct comparison of `$?` | `cmd; if [ $? -ne 0 ]` → `if ! cmd` |
+| `SC2164` | Missing failure check on `cd` | `cd dir` → `cd dir \|\| exit` |
+| `SC2016` | `$var` inside single quotes is not expanded | If intentional: `# shellcheck disable=SC2016` |
+| `SC2034` | Unused variable | An assignment that is never referenced |
+| `SC2059` | Variable in a `printf` format string | `printf "$var"` → `printf "%s" "$var"` |
+| `SC2012` | Don't parse the output of `ls` | `for f in $(ls)` → `for f in *` |
 
-完全リスト: [shellcheck wiki](https://www.shellcheck.net/wiki/)
+Full list: [shellcheck wiki](https://www.shellcheck.net/wiki/)
 
-## 抑制
+## Suppression
 
-### 行単位
+### Per line
 
 ```bash
 # shellcheck disable=SC2086
-echo $var   # 意図的に未クオート
+echo $var   # intentionally unquoted
 ```
 
-### ブロック / 関数
+### Per block / function
 
 ```bash
 # shellcheck disable=SC2086
@@ -94,9 +94,9 @@ function f() {
 }
 ```
 
-### ファイル全体
+### Per file
 
-スクリプト先頭（shebang の次行）:
+At the top of the script (the line after the shebang):
 
 ```bash
 #!/bin/bash
@@ -106,7 +106,7 @@ function f() {
 ...
 ```
 
-### プロジェクト全体（`.shellcheckrc`）
+### Project-wide (`.shellcheckrc`)
 
 ```text
 disable=SC2086
@@ -115,25 +115,25 @@ external-sources=true
 source-path=SCRIPTDIR
 ```
 
-リポジトリルートに置く。
+Place it at the repository root.
 
-## ソース指定
+## Specifying sources
 
-別ファイルを `source` で読む場合、shellcheck に場所を教える:
+When reading another file via `source`, tell shellcheck where to find it:
 
 ```bash
 # shellcheck source=./lib/common.sh
 source "$(dirname "$0")/lib/common.sh"
 ```
 
-あるいは `.shellcheckrc` に `source-path=SCRIPTDIR` を書けば自動解決。
+Alternatively, set `source-path=SCRIPTDIR` in `.shellcheckrc` for automatic resolution.
 
-## shfmt との組み合わせ
+## Combining with shfmt
 
-- **shellcheck**: 「意味的」な問題検出
-- **shfmt**: 「構文的」なフォーマッティング
+- **shellcheck**: detects "semantic" issues
+- **shfmt**: handles "syntactic" formatting
 
-両方パスで健全。lefthook 等で併用するのが定番:
+Passing both keeps things healthy. A common pattern is to use both together via lefthook, etc.:
 
 ```yaml
 pre-commit:
@@ -144,7 +144,7 @@ pre-commit:
       stage_fixed: true
 ```
 
-## CI での使い方
+## Usage in CI
 
 ```yaml
 - name: Run ShellCheck
@@ -154,13 +154,13 @@ pre-commit:
     scandir: ./scripts
 ```
 
-または生コマンド:
+Or with a raw command:
 
 ```yaml
 - run: find . -name "*.sh" -not -path "./node_modules/*" | xargs shellcheck
 ```
 
-SARIF 出力を GitHub Security タブに上げる:
+Upload SARIF output to the GitHub Security tab:
 
 ```yaml
 - run: shellcheck -f sarif $(find . -name "*.sh") > shellcheck.sarif
@@ -169,38 +169,38 @@ SARIF 出力を GitHub Security タブに上げる:
     sarif_file: shellcheck.sarif
 ```
 
-## よくある難所
+## Pitfalls
 
-### `set -eu` を先頭に書いていても気が付かない問題
+### Not noticing issues even with `set -eu` at the top
 
-shellcheck は `set -eu` の有無に関わらず問題を指摘する（set の有無とバグの有無は別）。`#!/bin/bash` の直後に `set -euo pipefail` を書くのは別途ベストプラクティス。
+shellcheck flags issues regardless of whether `set -eu` is present (whether `set` is used and whether bugs exist are separate concerns). Writing `set -euo pipefail` right after `#!/bin/bash` is a separate best practice.
 
 ### `[[ ]]` vs `[ ]`
 
-- `[[ ]]`: bash / ksh / zsh の拡張構文。変数展開時のクオート不要、`&&` / `||` サポート
-- `[ ]`: POSIX sh 互換の `test` コマンド。クオート必須
+- `[[ ]]`: extended syntax for bash / ksh / zsh. No quoting needed for variable expansion, supports `&&` / `||`
+- `[ ]`: the POSIX-sh-compatible `test` command. Quoting is mandatory
 
-bash スクリプトなら `[[ ]]` を使うのが推奨（shellcheck も `[[ ]]` を推奨）。
+For bash scripts, using `[[ ]]` is recommended (shellcheck also recommends `[[ ]]`).
 
-### eval を使いたくなったら負け
+### Wanting to use eval means you've already lost
 
-動的なコマンド生成は `eval` 以外の方法を検討する。shellcheck は `eval` 自体は警告しないが、多くの shellcheck ルール（SC2086 等）が `eval` 周辺で頻出する。
+Consider alternatives to `eval` for dynamic command generation. shellcheck does not warn about `eval` itself, but many shellcheck rules (e.g. SC2086) frequently show up around `eval`.
 
-## エディタ統合
+## Editor integration
 
-- VS Code: [ShellCheck 拡張](https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck)
+- VS Code: [ShellCheck extension](https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck)
 - Neovim: null-ls / efm-langserver / ALE
 - Emacs: flycheck-shellcheck
 
-保存時にリアルタイム警告を出せると開発体験が大きく向上する。
+Getting real-time warnings on save greatly improves the developer experience.
 
-## 他ツールとの比較
+## Comparison with other tools
 
-| 観点 | shellcheck | bashate | shfmt |
+| Aspect | shellcheck | bashate | shfmt |
 |---|---|---|---|
-| 対象 | sh / bash / dash / ksh | bash のみ | sh / bash |
-| 検査範囲 | 意味・移植性・バグ | スタイル寄り | フォーマット |
-| 精度 | 非常に高 | 中 | — |
-| エコシステム | デファクト標準 | 小 | デファクト標準 |
+| Targets | sh / bash / dash / ksh | bash only | sh / bash |
+| Scope | semantics, portability, bugs | style-focused | formatting |
+| Accuracy | Very high | Medium | — |
+| Ecosystem | De facto standard | Small | De facto standard |
 
-POSIX 互換を重視するプロジェクトでは shellcheck + shfmt の組み合わせで十分。
+For projects that prioritize POSIX compatibility, the combination of shellcheck + shfmt is sufficient.

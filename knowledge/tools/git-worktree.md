@@ -5,27 +5,27 @@ tags: [cli]
 
 # git worktree
 
-`git worktree` は単一のリポジトリに対して複数の作業ディレクトリを同時にチェックアウトできる Git サブコマンド。Git 2.5 で導入。ブランチを切り替えずに並行作業ができ、`stash` や clone を増やさずに済む。
+`git worktree` is a Git subcommand that lets you check out multiple working directories from a single repository at the same time. Introduced in Git 2.5. It enables parallel work without switching branches, and avoids the need for extra `stash` operations or additional clones.
 
-公式: [git-scm.com/docs/git-worktree](https://git-scm.com/docs/git-worktree)
+Official: [git-scm.com/docs/git-worktree](https://git-scm.com/docs/git-worktree)
 
-## いつ使うか
+## When to use it
 
-- レビュー対象の PR ブランチを別ディレクトリで開き、メイン作業を中断しない
-- feature 開発中に release ブランチで hotfix を当てる
-- AI エージェント（Claude Code, Codex CLI 等）の並列実行で各セッションに独立した作業ツリーを与える
-- ビルド成果物が大きく、ブランチ切り替えで再ビルドが必要なプロジェクトでの切替コスト削減
+- Open a PR branch under review in a separate directory without interrupting your main work
+- Apply a hotfix to a release branch while feature development is in progress
+- Give each session of parallel AI agent runs (Claude Code, Codex CLI, etc.) its own independent working tree
+- Reduce the cost of switching branches in projects with large build artifacts that would otherwise require a rebuild on every branch switch
 
-## 仕組み
+## How it works
 
-- メインの作業ツリーは通常通り `.git/` ディレクトリを持つ
-- `git worktree add` で作った *linked worktree* は `.git` という**ファイル**（gitfile）を持ち、本体の `.git/worktrees/<name>/` を指す
-- HEAD・index・`HEAD` 由来のブランチは worktree ごとに独立
-- オブジェクトデータベース（`.git/objects/`）・refs・hooks・config はメインリポジトリと共有
+- The main working tree has a `.git/` directory as usual
+- A *linked worktree* created with `git worktree add` has a **file** named `.git` (a gitfile) that points to `.git/worktrees/<name>/` in the main repository
+- HEAD, the index, and the branch derived from HEAD are independent per worktree
+- The object database (`.git/objects/`), refs, hooks, and config are shared with the main repository
 
 ```text
 repo/                main worktree
-├── .git/            実体
+├── .git/            actual data
 │   └── worktrees/
 │       ├── feat-x/
 │       └── review/
@@ -36,137 +36,137 @@ repo/                main worktree
 └── src/
 ```
 
-## 主要コマンド
+## Key commands
 
 ```bash
-# 既存ブランチを別ディレクトリでチェックアウト
+# Check out an existing branch in a separate directory
 git worktree add ../review feat/login
 
-# 新ブランチを切って worktree を作成
+# Create a new branch and a worktree for it
 git worktree add -b feat/parser ../parser main
 
-# detached HEAD で（同じブランチを別場所で見たいとき）
+# Detached HEAD (when you want to view the same branch elsewhere)
 git worktree add --detach ../inspect HEAD
 
-# 一覧
-git worktree list                # 人間向け
-git worktree list --porcelain    # スクリプト向け
+# List
+git worktree list                # human-readable
+git worktree list --porcelain    # for scripts
 
-# 削除（作業ツリーと .git/worktrees/<name>/ の両方を消す）
+# Remove (deletes both the working tree and .git/worktrees/<name>/)
 git worktree remove ../review
 
-# クリーンでない worktree も強制削除
+# Force-remove even a dirty worktree
 git worktree remove --force ../review
 
-# ディレクトリだけ手動削除した後の掃除
+# Clean up after manually deleting only the directory
 git worktree prune
 
-# 移動・ロック・修復
+# Move, lock, repair
 git worktree move ../old ../new
 git worktree lock --reason "WIP rebase" ../feat-x
 git worktree unlock ../feat-x
-git worktree repair                  # gitfile と admin entry の整合を回復
+git worktree repair                  # restore consistency between the gitfile and the admin entry
 ```
 
-## サブコマンドのオプション
+## Subcommand options
 
-| サブコマンド | 主なオプション |
+| Subcommand | Main options |
 |---|---|
-| `add` | `-b <new-branch>` / `-B <new-branch>`（強制再作成） / `--detach` / `--orphan` / `--checkout` / `--no-checkout` / `--lock` / `--guess-remote` / `-f` |
+| `add` | `-b <new-branch>` / `-B <new-branch>` (force recreate) / `--detach` / `--orphan` / `--checkout` / `--no-checkout` / `--lock` / `--guess-remote` / `-f` |
 | `list` | `--porcelain` / `-z` / `-v` |
-| `remove` | `-f`（dirty な worktree を消す） |
+| `remove` | `-f` (remove a dirty worktree) |
 | `lock` | `--reason <text>` |
-| `move` | `-f`（locked を移動するときは `-f -f`） |
+| `move` | `-f` (use `-f -f` to move a locked worktree) |
 | `prune` | `--dry-run` / `--expire <time>` / `-v` |
-| `repair` | `<path>...`（移動・コピー後の整合回復） |
+| `repair` | `<path>...` (restore consistency after a move or copy) |
 
-## 設定
+## Configuration
 
-| key | 効果 |
+| key | effect |
 |---|---|
-| `worktree.guessRemote` | `add <path> <name>` で `<name>` 同名のリモート追跡ブランチがあれば自動でそこから分岐 |
-| `worktree.useRelativePaths` | gitfile と admin entry を相対パスで保存。リポ全体を移動・コピーしても壊れにくい（新しめの Git が必要） |
+| `worktree.guessRemote` | With `add <path> <name>`, if a remote-tracking branch with the same name as `<name>` exists, automatically branch off from it |
+| `worktree.useRelativePaths` | Store the gitfile and admin entry as relative paths. Less likely to break when the whole repository is moved or copied (requires a recent Git version) |
 
 ```bash
 git config --global worktree.guessRemote true
 ```
 
-## 制約
+## Constraints
 
-- **同じブランチを複数の worktree で同時にチェックアウトできない**。`-f` で突破できるが、両側のコミットが衝突するので推奨しない。代わりに片方を `--detach` で開く
-- submodule は worktree ごとに独立して clone されない（共有される）
-- `.git/hooks/` は全 worktree で共有
-- bare リポジトリ上では worktree が「メインの作業ツリー」相当として振る舞う
+- **The same branch cannot be checked out in multiple worktrees at the same time.** You can bypass this with `-f`, but it's not recommended since commits on both sides will conflict. Open one side with `--detach` instead
+- Submodules are not cloned independently per worktree (they are shared)
+- `.git/hooks/` is shared across all worktrees
+- On a bare repository, a worktree behaves as the equivalent of the "main working tree"
 
-## 典型ワークフロー
+## Typical workflows
 
-### PR レビュー
+### PR review
 
 ```bash
 git worktree add ../review-pr-123 origin/feat/login
 cd ../review-pr-123
 pnpm install && pnpm run dev
-# 確認後
+# after reviewing
 cd -
 git worktree remove ../review-pr-123
 ```
 
-### Hotfix を別 worktree で
+### Hotfix in a separate worktree
 
 ```bash
 git worktree add -b hotfix/crash ../hotfix origin/release/2.5
 cd ../hotfix
-# 修正・push・PR
+# fix, push, PR
 ```
 
-### AI エージェントの並列実行
+### Parallel execution of AI agents
 
-複数のエージェント（Claude Code Routines, GitHub Spec Kit ワーカー等）を別ブランチで同時に走らせる際、衝突しない sandbox として使う。
+Used as a sandbox to avoid conflicts when running multiple agents (Claude Code Routines, GitHub Spec Kit workers, etc.) concurrently on separate branches.
 
 ```bash
 git worktree add ../agent-a -b agent/task-a main
 git worktree add ../agent-b -b agent/task-b main
-# 各 worktree に CLAUDE.md / AGENTS.md を共有しつつ、
-# index と HEAD は独立しているのでコミット競合が起きない
+# Share CLAUDE.md / AGENTS.md across each worktree; since the
+# index and HEAD are independent, commit conflicts don't occur
 ```
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **`rm -rf` で worktree を消す** — 作業ディレクトリは消えても `.git/worktrees/<name>/` の admin entry が残る。必ず `git worktree remove`、もしくは消した後に `git worktree prune` を実行する
-2. **同じブランチを 2 か所でチェックアウトしようとして失敗** — Git は禁止する。別ブランチを切るか、片方を `--detach` で開く
-3. **worktree 内で `pwd` を信じて `git -C .` する** — 大半のコマンドは linked worktree でも問題なく動くが、`.git` がファイル（ディレクトリではない）であることを前提にしないスクリプトが壊れる
-4. **`git worktree add` の引数順を間違える** — 形式は `add [<options>] <path> [<commit-ish>]`。ブランチ名を `<path>` の位置に渡してしまうと、その名前のディレクトリが掘られる
-5. **worktree を移動した後に `repair` を忘れる** — `mv` で動かすと gitfile の絶対パスが壊れる。`git worktree move` を使うか、移動後に `git worktree repair` を実行する
-6. **共有 hooks の挙動を見落とす** — pre-commit など hook が走るリポジトリで複数 worktree を並列に使う場合、`gitleaks` 等が同じ `.git/hooks/` を参照する点を意識する
+1. **Deleting a worktree with `rm -rf`** — the admin entry under `.git/worktrees/<name>/` remains even after the working directory is gone. Always use `git worktree remove`, or run `git worktree prune` after deleting it manually
+2. **Trying to check out the same branch in two places and failing** — Git prohibits this. Create a different branch, or open one side with `--detach`
+3. **Trusting `pwd` inside a worktree and running `git -C .`** — most commands work fine in a linked worktree, but scripts that assume `.git` is a directory (rather than a file) will break
+4. **Getting the argument order wrong for `git worktree add`** — the form is `add [<options>] <path> [<commit-ish>]`. Passing a branch name in the `<path>` position will create a directory with that name
+5. **Forgetting to run `repair` after moving a worktree** — moving with `mv` breaks the gitfile's absolute path. Use `git worktree move`, or run `git worktree repair` after moving
+6. **Overlooking shared hook behavior** — when using multiple worktrees in parallel in a repository where hooks such as pre-commit run, be aware that tools like `gitleaks` reference the same `.git/hooks/`
 
-## トラブルシュート
+## Troubleshooting
 
 ### `fatal: '<path>' already exists`
 
-`add` の `<path>` が空でないと作れない。別パスを使うか、不要なら削除する。
+`add` cannot create a worktree if `<path>` is non-empty. Use a different path, or delete it if it's not needed.
 
 ### `fatal: '<branch>' is already checked out at '<path>'`
 
-別の worktree でチェックアウト中。当該 worktree を `remove` するか、新しいブランチを切る。
+The branch is already checked out in another worktree. Either `remove` that worktree, or create a new branch.
 
-### `worktree list` に幽霊エントリが残る
+### Ghost entries remain in `worktree list`
 
-ディレクトリだけ消した場合に発生:
+Occurs when only the directory was deleted:
 
 ```bash
-git worktree prune --dry-run     # 何が消えるか確認
+git worktree prune --dry-run     # check what will be removed
 git worktree prune
 ```
 
-### worktree を別ホスト・別パスにコピーした後に動かない
+### Worktree doesn't work after being copied to a different host/path
 
 ```bash
 git worktree repair
 ```
 
-または最初から `git config --global worktree.useRelativePaths true` を有効にしておく。
+Or enable `git config --global worktree.useRelativePaths true` from the start.
 
-## 参考
+## References
 
 - [git-worktree - Git Documentation](https://git-scm.com/docs/git-worktree)
 - [Git 2.5 Release Notes](https://github.com/git/git/blob/main/Documentation/RelNotes/2.5.0.txt)

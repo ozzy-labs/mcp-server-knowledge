@@ -6,53 +6,53 @@ stability: beta
 
 # GitHub Spec Kit
 
-GitHub が公式に提供する OSS の SDD オーケストレータ。Python 製の CLI `specify` と、エージェント向け slash command / Agent Skill のテンプレート群を配布する。40+ の AI コーディングエージェント（Claude Code, Codex, Cursor, Copilot, Gemini CLI, Windsurf, Antigravity, OpenCode, Kiro CLI, Forge, Goose, Junie 等。公式 integrations reference 基準で 40。README は依然 30+ 表記）に対して**同一の SDD ワークフロー**をインストールできる agent-agnostic な orchestrator。
+An officially GitHub-provided OSS SDD orchestrator. Distributes a Python-based CLI, `specify`, along with a set of slash command / Agent Skill templates for agents. An agent-agnostic orchestrator that can install the **same SDD workflow** across 40+ AI coding agents (Claude Code, Codex, Cursor, Copilot, Gemini CLI, Windsurf, Antigravity, OpenCode, Kiro CLI, Forge, Goose, Junie, etc. — 40 per the official integrations reference; the README still says 30+).
 
-公式: [github.com/github/spec-kit](https://github.com/github/spec-kit) / Docs: [github.github.io/spec-kit](https://github.github.io/spec-kit/) / Releases: [Releases](https://github.com/github/spec-kit/releases)
+Official: [github.com/github/spec-kit](https://github.com/github/spec-kit) / Docs: [github.github.io/spec-kit](https://github.github.io/spec-kit/) / Releases: [Releases](https://github.com/github/spec-kit/releases)
 
-SDD 概念全体は `ai/practice/spec-driven-development.md` を参照。Kiro / cc-sdd との比較は `ai/workflow/kiro.md` / `ai/workflow/cc-sdd.md`。
+For the overall SDD concept, see `ai/practice/spec-driven-development.md`. For comparison with Kiro / cc-sdd, see `ai/workflow/kiro.md` / `ai/workflow/cc-sdd.md`.
 
-## インストール
+## Installation
 
-> **重要**: PyPI に同名パッケージがあるが**公式ではない**。必ず GitHub から直接インストールする。
+> **Important**: There is a same-named package on PyPI, but it is **not official**. Always install directly from GitHub.
 
-### 永続インストール（推奨）
+### Persistent install (recommended)
 
 ```bash
-# 安定版（vX.Y.Z は最新タグで置換）
+# Stable release (replace vX.Y.Z with the latest tag)
 uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@vX.Y.Z
 
-# pipx でも可
+# pipx also works
 pipx install git+https://github.com/github/spec-kit.git@vX.Y.Z
 
-# main HEAD を入れる（unreleased 変更を含む）
+# Install main HEAD (includes unreleased changes)
 uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
 ```
 
-### 一時実行
+### Ephemeral run
 
 ```bash
 uvx --from git+https://github.com/github/spec-kit.git@vX.Y.Z specify init <PROJECT_NAME>
 ```
 
-確認: `specify version` / `specify check`。
+Verify with: `specify version` / `specify check`.
 
-エンタープライズ / air-gapped 環境向けインストールは [docs/installation.md](https://github.com/github/spec-kit/blob/main/docs/installation.md#enterprise--air-gapped-installation) 参照。
+For enterprise / air-gapped installation, see [docs/installation.md](https://github.com/github/spec-kit/blob/main/docs/installation.md#enterprise--air-gapped-installation).
 
-## 基本コマンド
+## Basic commands
 
 ```bash
-# 新規プロジェクト初期化
+# Initialize a new project
 specify init <PROJECT_NAME>
 
-# 既存プロジェクトに追加
-specify init . --integration copilot         # GitHub Copilot 統合
+# Add to an existing project
+specify init . --integration copilot         # GitHub Copilot integration
 specify init --here --integration copilot
 
-# Skills mode（slash command の代わりに Agent Skill を入れる）
+# Skills mode (install Agent Skills instead of slash commands)
 specify init . --integration <agent> --integration-options="--skills"
 
-# 統合可能エージェント一覧
+# List integrable agents
 specify integration list
 
 # Extension / Preset
@@ -61,115 +61,115 @@ specify extension add <name>
 specify preset search
 specify preset add <name>
 
-# CLI 自己管理（インストール済み specify を更新）
-specify self check                 # 新リリースの有無を確認（read-only）
-specify self upgrade --dry-run     # 実行内容をプレビュー
-specify self upgrade               # 最新安定版へその場で更新（uv tool / pipx を自動判別）
-specify self upgrade --tag vX.Y.Z  # 特定タグへ固定更新
+# CLI self-management (update the installed specify)
+specify self check                 # Check for a new release (read-only)
+specify self upgrade --dry-run     # Preview what would happen
+specify self upgrade               # Update in place to the latest stable (auto-detects uv tool / pipx)
+specify self upgrade --tag vX.Y.Z  # Pin update to a specific tag
 ```
 
-## SDD ワークフロー
+## SDD workflow
 
-エージェント側に slash command（または Agent Skill）が登録される。コマンド名は `/speckit.*`（Codex CLI の skills mode は `$speckit-*`）。
+Slash commands (or Agent Skills) get registered on the agent side. Command names use `/speckit.*` (Codex CLI's skills mode uses `$speckit-*`).
 
 ### Core Commands
 
-| Command | Skill 名 | 役割 |
+| Command | Skill name | Role |
 |---|---|---|
-| `/speckit.constitution` | `speckit-constitution` | プロジェクトの普遍的な原則を `constitution` として記述 |
-| `/speckit.specify` | `speckit-specify` | 何を作るか（要件 + ユーザーストーリー）を定義 |
-| `/speckit.plan` | `speckit-plan` | tech stack を含む技術設計プラン |
-| `/speckit.tasks` | `speckit-tasks` | plan を actionable なタスクリストに分解 |
-| `/speckit.taskstoissues` | `speckit-taskstoissues` | タスクを GitHub Issues に変換 |
-| `/speckit.implement` | `speckit-implement` | タスクを実行して実装 |
+| `/speckit.constitution` | `speckit-constitution` | Write the project's universal principles as a `constitution` |
+| `/speckit.specify` | `speckit-specify` | Define what to build (requirements + user stories) |
+| `/speckit.plan` | `speckit-plan` | Technical design plan including tech stack |
+| `/speckit.tasks` | `speckit-tasks` | Break the plan down into an actionable task list |
+| `/speckit.taskstoissues` | `speckit-taskstoissues` | Convert tasks into GitHub Issues |
+| `/speckit.implement` | `speckit-implement` | Execute tasks to implement |
 
 ### Optional Commands
 
-| Command | 役割 |
+| Command | Role |
 |---|---|
-| `/speckit.clarify` | 曖昧な spec 領域を質問形式で詰める（旧 `/quizme`） |
-| `/speckit.analyze` | spec / plan / tasks の整合性チェック |
-| `/speckit.checklist` | 「英語の単体テスト」相当の品質 checklist 生成 |
+| `/speckit.clarify` | Resolve ambiguous spec areas via a question format (formerly `/quizme`) |
+| `/speckit.analyze` | Consistency check across spec / plan / tasks |
+| `/speckit.checklist` | Generate a quality checklist equivalent to "unit tests in English" |
 
-### 推奨フロー
+### Recommended flow
 
 ```text
-/speckit.constitution  ← 一度だけ
+/speckit.constitution  ← once only
 ↓
-/speckit.specify       ← 機能ごと
+/speckit.specify       ← per feature
 ↓
-/speckit.clarify       ← 任意（推奨）
+/speckit.clarify       ← optional (recommended)
 ↓
 /speckit.plan
 ↓
 /speckit.tasks
 ↓
-/speckit.analyze       ← 任意（推奨）
-/speckit.checklist     ← 任意
+/speckit.analyze       ← optional (recommended)
+/speckit.checklist     ← optional
 ↓
 /speckit.implement
 ```
 
-## ディレクトリ構造
+## Directory structure
 
-`specify init` で `.specify/` 配下に templates / extensions / presets / scripts が展開される。templates の優先順位:
+`specify init` expands templates / extensions / presets / scripts under `.specify/`. Template priority order:
 
-| 優先度 | コンポーネント | パス |
+| Priority | Component | Path |
 |---:|---|---|
 | ⬆ 1 | Project-Local Overrides | `.specify/templates/overrides/` |
 | 2 | Presets | `.specify/presets/templates/` |
 | 3 | Extensions | `.specify/extensions/templates/` |
 | ⬇ 4 | Spec Kit Core | `.specify/templates/` |
 
-実行時に top-down で最初にマッチした template が使われる。Extension / Preset のコマンドは install 時にエージェントの discovery ディレクトリ（例: `.claude/commands/`）にコピーされる。
+At runtime, the first match found top-down is used. Extension / Preset commands are copied into the agent's discovery directory (e.g., `.claude/commands/`) at install time.
 
-## Extension と Preset
+## Extensions and Presets
 
-| 種類 | 役割 | 主要コマンド |
+| Type | Role | Key commands |
 |---|---|---|
-| **Extension** | 新コマンド・新ワークフローを追加 | `specify extension search` / `add` / `remove` / `list` / `info` / `update` / `enable` / `disable` / `set-priority` |
-| **Preset** | 既存コマンドのテンプレート / 用語を上書き | `specify preset search` / `add` / `remove` / `list` / `info` / `enable` / `disable` / `set-priority` |
+| **Extension** | Adds new commands / new workflows | `specify extension search` / `add` / `remove` / `list` / `info` / `update` / `enable` / `disable` / `set-priority` |
+| **Preset** | Overrides templates / terminology of existing commands | `specify preset search` / `add` / `remove` / `list` / `info` / `enable` / `disable` / `set-priority` |
 
-加えて `specify extension catalog list/add/remove` で外部カタログ（コミュニティリポジトリ等）を管理できる。完全な一覧は [Extensions Reference](https://github.github.io/spec-kit/reference/extensions.html) / [Presets Reference](https://github.github.io/spec-kit/reference/presets.html) を参照。
+Additionally, `specify extension catalog list/add/remove` manages external catalogs (community repositories, etc.). For the full list, see [Extensions Reference](https://github.github.io/spec-kit/reference/extensions.html) / [Presets Reference](https://github.github.io/spec-kit/reference/presets.html).
 
-Extension の代表例: GitHub Issues 同期, Jira 連携, MAQA（Multi-Agent QA）, V-Model（test 仕様の並行生成）, Worktree Isolation, Security Review。
+Representative Extensions: GitHub Issues sync, Jira integration, MAQA (Multi-Agent QA), V-Model (concurrent generation of test specs), Worktree Isolation, Security Review.
 
-Preset の例: 規制対応の spec 様式, ドメイン固有用語, 別言語化（pirate-speak のような実例あり）。
+Preset examples: regulatory-compliant spec formats, domain-specific terminology, localization to another language (there's an actual pirate-speak example).
 
-Community catalog は [Community Extensions](https://speckit-community.github.io/extensions/) から検索可能。
+The Community catalog can be searched via [Community Extensions](https://speckit-community.github.io/extensions/).
 
-## 対応エージェント
+## Supported agents
 
-公式 integrations reference では **40 integrations** をサポート（CLI + IDE 両方。README は依然 30+ 表記）。`specify integration list` で installed バージョンの利用可能リストが見られる。代表例:
+The official integrations reference supports **40 integrations** (both CLI and IDE; the README still says 30+). `specify integration list` shows the available list for the installed version. Representative examples:
 
-- Amp, Antigravity, Auggie CLI, Claude Code, CodeBuddy CLI, Codex CLI, Cursor, Devin for Terminal, Forge, Gemini CLI, GitHub Copilot, Goose, IBM Bob, iFlow CLI, Junie, Kilo Code, Kimi Code, Kiro CLI, Lingma, Mistral Vibe, opencode, Pi Coding Agent, Qoder CLI, Qwen Code, Roo Code, SHAI, Tabnine CLI, Trae, Windsurf, Generic 等
+- Amp, Antigravity, Auggie CLI, Claude Code, CodeBuddy CLI, Codex CLI, Cursor, Devin for Terminal, Forge, Gemini CLI, GitHub Copilot, Goose, IBM Bob, iFlow CLI, Junie, Kilo Code, Kimi Code, Kiro CLI, Lingma, Mistral Vibe, opencode, Pi Coding Agent, Qoder CLI, Qwen Code, Roo Code, SHAI, Tabnine CLI, Trae, Windsurf, Generic, etc.
 
-全量と最新リストは [Supported AI Coding Agent Integrations](https://github.github.io/spec-kit/reference/integrations.html) を参照。
+For the full and latest list, see [Supported AI Coding Agent Integrations](https://github.github.io/spec-kit/reference/integrations.html).
 
-`--integration <agent>` フラグで特定エージェント向けの初期化を行う。
+Use the `--integration <agent>` flag to initialize for a specific agent.
 
-## 他ツールとの差分
+## Differences from other tools
 
 | | GitHub Spec Kit | Kiro | cc-sdd |
 |---|---|---|---|
-| 提供元 | GitHub 公式 | AWS | OSS（gotalab） |
-| 形態 | Python CLI + templates | IDE + CLI | npm package + skills |
-| エージェント数 | 40+ | (Kiro 単体) | 8 |
-| OSS | Yes (MIT) | No（商用） | Yes (MIT) |
-| 入口 | `uv tool install` / `pipx` | `curl install.sh` / Desktop | `npx cc-sdd@latest` |
-| spec 形式 | core templates 上書き可 | EARS + design + tasks | Kiro 互換（EARS + design + tasks）|
+| Provider | Official GitHub | AWS | OSS (gotalab) |
+| Form | Python CLI + templates | IDE + CLI | npm package + skills |
+| Agent count | 40+ | (Kiro standalone) | 8 |
+| OSS | Yes (MIT) | No (commercial) | Yes (MIT) |
+| Entry point | `uv tool install` / `pipx` | `curl install.sh` / Desktop | `npx cc-sdd@latest` |
+| Spec format | Core templates can be overridden | EARS + design + tasks | Kiro-compatible (EARS + design + tasks) |
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **PyPI の `specify-cli` を `pip install` する** — 公式ではない別物。必ず GitHub repo から `--from git+https://github.com/github/spec-kit.git@vX.Y.Z` でインストール
-2. **slash command 名を `/specify` と覚える** — 古い情報。現行は `/speckit.specify`（namespace `speckit.` プレフィックス）
-3. **Codex CLI で `/speckit.*` を呼ぶ** — Codex の skills mode は `$speckit-*`（`$` プレフィックス）。CLI 名で命名規則が違う
-4. **`/speckit.constitution` を機能ごとに作り直す** — constitution はプロジェクト全体に対して 1 つ。機能ごとに変えるのは `/speckit.specify`
-5. **`/speckit.tasks` の出力を手で書き直す** — 後段の `/speckit.implement` が依存解析に失敗する。修正は `/speckit.specify` / `/speckit.plan` 段階で
-6. **Extension / Preset を install しっぱなしで CI を組む** — install 時に `.claude/commands/` 等に書き込まれるが、削除しても残る。`specify extension remove` で正しく外す
-7. **`--integration copilot` だけで Claude Code でも動くと思う** — `--integration` ごとにエージェント別の出力が変わる。複数エージェント運用なら個別に init 実行
+1. **`pip install`-ing the PyPI `specify-cli`** — it's an unofficial, different package. Always install from the GitHub repo with `--from git+https://github.com/github/spec-kit.git@vX.Y.Z`
+2. **Remembering the slash command name as `/specify`** — outdated. The current name is `/speckit.specify` (with the `speckit.` namespace prefix)
+3. **Calling `/speckit.*` in Codex CLI** — Codex's skills mode uses `$speckit-*` (a `$` prefix). Naming conventions differ by CLI
+4. **Recreating `/speckit.constitution` per feature** — the constitution is one thing for the whole project. Per-feature changes belong in `/speckit.specify`
+5. **Manually rewriting the output of `/speckit.tasks`** — the downstream `/speckit.implement` will fail dependency analysis. Fix things at the `/speckit.specify` / `/speckit.plan` stage instead
+6. **Setting up CI with Extensions / Presets left installed** — install-time writes to `.claude/commands/` etc. persist even after removal attempts. Use `specify extension remove` to properly remove them
+7. **Assuming `--integration copilot` alone also works for Claude Code** — output differs per agent for each `--integration`. For multi-agent operation, run init separately for each
 
-## 参考
+## References
 
 - [github.com/github/spec-kit](https://github.com/github/spec-kit)
 - [Documentation](https://github.github.io/spec-kit/)
@@ -178,4 +178,4 @@ Community catalog は [Community Extensions](https://speckit-community.github.io
 - [Extensions Reference](https://github.github.io/spec-kit/reference/extensions.html)
 - [Presets Reference](https://github.github.io/spec-kit/reference/presets.html)
 - [Community Extensions Catalog](https://speckit-community.github.io/extensions/)
-- 関連: `ai/practice/spec-driven-development.md` / `ai/workflow/kiro.md` / `ai/workflow/cc-sdd.md` / `ai/agents/claude-code.md` / `ai/agents/github-copilot-cli.md` / `ai/agents/codex-cli.md`
+- Related: `ai/practice/spec-driven-development.md` / `ai/workflow/kiro.md` / `ai/workflow/cc-sdd.md` / `ai/agents/claude-code.md` / `ai/agents/github-copilot-cli.md` / `ai/agents/codex-cli.md`

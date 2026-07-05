@@ -5,27 +5,27 @@ tags: [data-cli, cloud-hosted, aws, python]
 
 # AWS CLI
 
-AWS の公式コマンドラインツール。`aws-cli/2.x`（v2）が現行で、v1 は新機能の backport がない（IAM Identity Center、auto-prompt 等は v2 のみ）。すべての AWS API を CLI から叩ける一方、profile / リージョン / 認証チェーン / output 形式の組み合わせで意図しない挙動を起こしやすい。AI エージェントが S3 / IAM / ECR / Logs / SSM 等を操作する基盤ツールとして頻出する。
+AWS's official command-line tool. `aws-cli/2.x` (v2) is current; v1 does not receive new-feature backports (IAM Identity Center, auto-prompt, etc. are v2-only). It can invoke every AWS API from the CLI, but the combination of profile / region / credential chain / output format makes unintended behavior easy to trigger. It's a common foundational tool for AI agents operating S3 / IAM / ECR / Logs / SSM and more.
 
-公式: [docs.aws.amazon.com/cli/latest/userguide](https://docs.aws.amazon.com/cli/latest/userguide/) / [API Reference](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/index.html)
+Official: [docs.aws.amazon.com/cli/latest/userguide](https://docs.aws.amazon.com/cli/latest/userguide/) / [API Reference](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/index.html)
 
-## v1 と v2 の違い
+## Differences between v1 and v2
 
-| 観点 | v1 | v2 |
+| Aspect | v1 | v2 |
 |---|---|---|
-| 配布 | pip / pipx / 各種パッケージマネージャ | **公式 bundled installer のみサポート** |
-| IAM Identity Center (旧 SSO) | 限定的 | フル対応（`aws configure sso`） |
-| auto-prompt | なし | あり（`--cli-auto-prompt`） |
-| YAML 出力 | なし | `--output yaml` / `yaml-stream` |
-| `aws ddb` / 他高レベルコマンド | なし | あり |
-| Python 依存 | システムの Python が必要 | バイナリに同梱 |
+| Distribution | pip / pipx / various package managers | **only the official bundled installer is supported** |
+| IAM Identity Center (formerly SSO) | Limited | Full support (`aws configure sso`) |
+| auto-prompt | None | Available (`--cli-auto-prompt`) |
+| YAML output | None | `--output yaml` / `yaml-stream` |
+| `aws ddb` / other high-level commands | None | Available |
+| Python dependency | Requires system Python | Bundled into the binary |
 
-新規プロジェクトは必ず v2。v1 は段階的に EOL。
+New projects should always use v2. v1 is being phased toward EOL.
 
-## インストール
+## Installation
 
 ```bash
-# 公式 bundled installer（推奨）
+# Official bundled installer (recommended)
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
 unzip awscliv2.zip && sudo ./aws/install
 
@@ -33,28 +33,28 @@ unzip awscliv2.zip && sudo ./aws/install
 curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o AWSCLIV2.pkg
 sudo installer -pkg AWSCLIV2.pkg -target /
 
-# mise（非公式パッケージだが実用上の取り回しが良い）
+# mise (unofficial package, but convenient in practice)
 mise use awscli
 
-# Homebrew（同上）
+# Homebrew (same caveat)
 brew install awscli
 ```
 
-> **注意**: 公式は brew / apt / yum のような OS パッケージマネージャを「unsupported」と明記している。安定性が必要な CI では bundled installer を使う。
+> **Note**: The vendor explicitly states OS package managers like brew / apt / yum are "unsupported." Use the bundled installer for CI where stability matters.
 
-`aws --version` で `aws-cli/2.x.y` を確認。
+Confirm with `aws --version`, which should show `aws-cli/2.x.y`.
 
-## 認証
+## Authentication
 
-複数の認証ソースを **明確な順位**でチェーンする:
+Multiple credential sources are chained with a **clear precedence order**:
 
-1. CLI フラグ（`--profile` / `--region`）
-2. 環境変数（`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_SESSION_TOKEN` / `AWS_PROFILE` / `AWS_REGION`）
-3. `~/.aws/credentials` の `[<profile>]`
-4. `~/.aws/config` の `[profile <profile>]` の `credential_process` / SSO 設定
-5. EC2 インスタンスメタデータ (IMDSv2) / ECS タスクロール / EKS pod identity
+1. CLI flags (`--profile` / `--region`)
+2. Environment variables (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_SESSION_TOKEN` / `AWS_PROFILE` / `AWS_REGION`)
+3. `[<profile>]` in `~/.aws/credentials`
+4. `credential_process` / SSO settings under `[profile <profile>]` in `~/.aws/config`
+5. EC2 instance metadata (IMDSv2) / ECS task role / EKS pod identity
 
-### `aws configure`（長期キーの設定）
+### `aws configure` (setting long-term keys)
 
 ```bash
 aws configure --profile dev
@@ -64,9 +64,9 @@ aws configure --profile dev
 # Default output format [json]:
 ```
 
-長期キーはローカル開発以外では避ける。
+Avoid long-term keys outside local development.
 
-### IAM Identity Center（SSO）
+### IAM Identity Center (SSO)
 
 ```bash
 aws configure sso
@@ -92,7 +92,7 @@ sso_region = us-east-1
 sso_registration_scopes = sso:account:access
 ```
 
-セッションは数時間〜十数時間で切れる。`aws sso login` で再取得。
+Sessions expire after a few to a dozen or so hours. Re-acquire with `aws sso login`.
 
 ### `assume-role`
 
@@ -103,85 +103,85 @@ source_profile = sso-dev
 mfa_serial = arn:aws:iam::123456789012:mfa/alice
 ```
 
-`source_profile` の credentials を使って `prod` の role を assume する。`mfa_serial` があれば実行時に MFA コードを聞かれる。
+Assumes the `prod` role using credentials from `source_profile`. If `mfa_serial` is set, an MFA code is prompted for at runtime.
 
 ### `credential_process`
 
-外部コマンドが credentials JSON を返す方式。aws-vault や 1Password CLI と組み合わせる:
+An approach where an external command returns credentials as JSON. Combine with aws-vault or the 1Password CLI:
 
 ```ini
 [profile vault-dev]
 credential_process = aws-vault exec dev --json
 ```
 
-長期キーをディスクに置かずに済むので推奨。
+Recommended since it avoids placing long-term keys on disk.
 
-### EC2 / ECS / EKS の自動認証
+### Automatic authentication on EC2 / ECS / EKS
 
-| 環境 | 取得元 |
+| Environment | Source |
 |---|---|
-| EC2 | IMDSv2（`http://169.254.169.254/latest/api/token`） |
+| EC2 | IMDSv2 (`http://169.254.169.254/latest/api/token`) |
 | ECS task | `AWS_CONTAINER_CREDENTIALS_RELATIVE_URI` |
 | EKS pod | `AWS_WEB_IDENTITY_TOKEN_FILE` + `AWS_ROLE_ARN` |
-| Lambda | 自動（環境変数として注入） |
+| Lambda | Automatic (injected as environment variables) |
 
-`aws sts get-caller-identity` で「いま誰として動いているか」を確認するのが最初の動作確認。
+`aws sts get-caller-identity` is the first sanity check to confirm "who am I currently acting as."
 
-## Profile / Region の優先順位
+## Profile / region precedence
 
 ```text
---profile / --region フラグ        ← 最優先
+--profile / --region flags        ← highest precedence
 ↓
-AWS_PROFILE / AWS_REGION           ← 環境変数
+AWS_PROFILE / AWS_REGION           ← environment variables
 ↓
-AWS_DEFAULT_PROFILE / AWS_DEFAULT_REGION   ← 旧名（互換）
+AWS_DEFAULT_PROFILE / AWS_DEFAULT_REGION   ← legacy names (compat)
 ↓
-~/.aws/config の [default]
+[default] in ~/.aws/config
 ```
 
-CI で `AWS_PROFILE` を設定しているのに `--profile prod` で上書きされる、といった事故は優先順位の理解で防げる。
+Incidents like "`AWS_PROFILE` is set in CI but gets overridden by `--profile prod`" are avoidable once you understand this precedence.
 
-## 出力フォーマットと `--query`
+## Output formats and `--query`
 
 ```bash
-aws ec2 describe-instances --output json     # 既定
+aws ec2 describe-instances --output json     # default
 aws ec2 describe-instances --output yaml
-aws ec2 describe-instances --output text     # tab 区切り
-aws ec2 describe-instances --output table    # 人間可読
-aws s3api head-bucket --bucket b --output off    # stdout 抑制（exit code のみ）
+aws ec2 describe-instances --output text     # tab-separated
+aws ec2 describe-instances --output table    # human-readable
+aws s3api head-bucket --bucket b --output off    # suppress stdout (exit code only)
 ```
 
-`AWS_DEFAULT_OUTPUT=json` で固定可能。
+Can be fixed with `AWS_DEFAULT_OUTPUT=json`.
 
-`--query` は JMESPath:
+`--query` uses JMESPath:
 
 ```bash
-# instance ID の配列だけ取得
+# get only the array of instance IDs
 aws ec2 describe-instances \
   --query 'Reservations[*].Instances[*].InstanceId' \
   --output text
 
-# 名前と AZ で表
+# a table of name and AZ
 aws ec2 describe-instances \
   --query 'Reservations[*].Instances[*].{Name:Tags[?Key==`Name`]|[0].Value, AZ:Placement.AvailabilityZone, Id:InstanceId}' \
   --output table
 ```
 
-`--output text` 時は **paginate ごとに `--query` が走る**ため、結果がページ境界で乱れる。安全のため `text` には `--no-paginate` か JMESPath 側で `[0]` のような絞り込みを併用する。
+With `--output text`, **`--query` runs per pagination page**, so results can be garbled across page boundaries. For safety, combine `text` with `--no-paginate`, or narrow with JMESPath (e.g. `[0]`).
 
-## ページネーション
+## Pagination
 
-| フラグ | 用途 |
+| Flag | Purpose |
 |---|---|
-| `--no-paginate` | 単一レスポンスで終了（最大件数まで） |
-| `--max-items N` | 取得上限 |
-| `--page-size N` | 1 ページのサイズ |
-| `--starting-token TOK` | 再開トークン |
-| `--no-cli-pager` | less 等の pager を起動しない |
+| `--no-paginate` | Stop after a single response (up to the max item count) |
+| `--max-items N` | Cap on items fetched |
+| `--page-size N` | Size of a single page |
+| `--starting-token TOK` | Resume token |
+| `--no-cli-pager` | Don't launch a pager like `less` |
 
-CI / スクリプトでは **`--no-cli-pager`** をデフォルト化（`AWS_PAGER=""` でも可）。pager が起動して固まる事故が頻発する。
+Default to **`--no-cli-pager`** in CI / scripts (or `AWS_PAGER=""`). A launched pager hanging the process is a frequent incident.
 
-## よく使うサービスコマンド
+## Commonly used service commands
 
 ### S3
 
@@ -191,12 +191,12 @@ aws s3 cp file.tar.gz s3://my-bucket/
 aws s3 sync ./dist s3://my-bucket/dist/ --delete
 aws s3 rm s3://my-bucket/file.tar.gz
 
-# 低レベル API（細かい制御）
+# low-level API (fine-grained control)
 aws s3api put-object --bucket my-bucket --key file --body file
 aws s3api list-objects-v2 --bucket my-bucket --prefix logs/
 ```
 
-`aws s3` は高レベル（並列・進捗表示・差分転送）、`aws s3api` は API 1:1。**用途で使い分ける**。
+`aws s3` is high-level (parallelism, progress display, delta transfer), `aws s3api` maps 1:1 to the API. **Choose based on the use case**.
 
 ### IAM / STS
 
@@ -210,7 +210,7 @@ aws iam simulate-principal-policy --policy-source-arn <arn> --action-names s3:Pu
 ### Secrets Manager / SSM Parameter Store
 
 ```bash
-# 秘密値の取得
+# retrieve a secret value
 aws secretsmanager get-secret-value --secret-id prod/db --query SecretString --output text
 
 # Parameter Store
@@ -221,10 +221,10 @@ aws ssm put-parameter --name /app/version --value "1.2.3" --type String --overwr
 ### CloudWatch Logs
 
 ```bash
-# tail（v2 のみ）
+# tail (v2 only)
 aws logs tail /aws/lambda/my-fn --follow --since 10m --format short
 
-# フィルタ
+# filter
 aws logs filter-log-events --log-group-name /aws/lambda/my-fn --filter-pattern '?ERROR ?WARN'
 ```
 
@@ -245,7 +245,7 @@ aws ecs update-service --cluster c --service s --force-new-deployment
 aws ecs execute-command --cluster c --task <task-id> --container app --interactive --command bash
 ```
 
-## CI でのパターン
+## Patterns in CI
 
 ```yaml
 - uses: aws-actions/configure-aws-credentials@v4
@@ -259,29 +259,29 @@ aws ecs execute-command --cluster c --task <task-id> --container app --interacti
     aws s3 sync ./dist s3://my-bucket/
 ```
 
-`aws-actions/configure-aws-credentials` は **OIDC** で短命 credentials を取得（`role-to-assume` + `permissions: id-token: write`）。`NPM_TOKEN` 並みに「**長期キーを CI に置かない**」が現代の作法（`standards/npm-trusted-publishers.md` と同思想）。
+`aws-actions/configure-aws-credentials` obtains short-lived credentials via **OIDC** (`role-to-assume` + `permissions: id-token: write`). "**Don't put long-term keys in CI**" is the modern practice, on par with `NPM_TOKEN` (the same philosophy as `standards/npm-trusted-publishers.md`).
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **`AWS_DEFAULT_REGION` 未設定で意図しないリージョン** — `~/.aws/config` の default を信頼すると環境差が出る。CI では明示
-2. **`--profile` と `AWS_PROFILE` の優先順位を忘れる** — フラグが勝つ。逆に環境変数で固定したい時は `unset AWS_PROFILE` 等で整理
-3. **`aws sso login` 切れに気づかず操作続行** — 401 / `ExpiredToken` エラーで頻発。CI なら `aws sts get-caller-identity` を最初のステップで呼ぶ
-4. **`aws s3 cp` と `aws s3api` の使い分けミス** — ディレクトリ同期は `aws s3 sync`、メタデータ細かく触るなら `s3api put-object` 系
-5. **`--query` の JMESPath 配列インデックス** — `[0]` の位置で結果が変わる。`Reservations[*].Instances[*]` と `Reservations[].Instances[]` の挙動差を試す
-6. **`--output text` で `--query` がページ境界で壊れる** — `--no-paginate` または JSON で受けて `jq` で処理
-7. **CI で `aws s3 ls` が pager で詰まる** — `AWS_PAGER=""` か `--no-cli-pager`
-8. **長期キーをコミット** — `git secrets` / `gitleaks` で防御。Trusted Publishers / OIDC / aws-vault に移行
-9. **`assume-role` のチェーンが長すぎてセッション切れ** — `duration_seconds` を明示、または source profile を中間に置かない設計に
-10. **`--no-verify-ssl` を本番で常用** — プロキシ用の一時回避は許容、本番では証明書バンドル設定 (`AWS_CA_BUNDLE`)
+1. **Unintended region due to missing `AWS_DEFAULT_REGION`** — relying on the default in `~/.aws/config` causes environment drift. Set it explicitly in CI
+2. **Forgetting the precedence between `--profile` and `AWS_PROFILE`** — the flag wins. Conversely, to pin via environment variable, clean up with `unset AWS_PROFILE` etc.
+3. **Continuing operations without noticing `aws sso login` expired** — frequently manifests as 401 / `ExpiredToken` errors. In CI, call `aws sts get-caller-identity` as the first step
+4. **Mixing up `aws s3 cp` and `aws s3api`** — use `aws s3 sync` for directory sync, `s3api put-object` family for fine-grained metadata control
+5. **`--query` JMESPath array indexing** — results change depending on where `[0]` is placed. Test the behavioral difference between `Reservations[*].Instances[*]` and `Reservations[].Instances[]`
+6. **`--output text` breaking `--query` across page boundaries** — use `--no-paginate`, or receive JSON and process with `jq`
+7. **`aws s3 ls` hanging on a pager in CI** — use `AWS_PAGER=""` or `--no-cli-pager`
+8. **Committing long-term keys** — guard with `git secrets` / `gitleaks`. Migrate to Trusted Publishers / OIDC / aws-vault
+9. **`assume-role` chains too long, causing session expiry** — set `duration_seconds` explicitly, or avoid designs that place a source profile in the middle of a long chain
+10. **Routinely using `--no-verify-ssl` in production** — a temporary workaround for proxies is acceptable, but production should configure a certificate bundle (`AWS_CA_BUNDLE`)
 
-## 関連
+## Related
 
-- [`tools/jq.md`](../../tools/jq.md) — `--output json` の後処理
-- [`tools/yq.md`](../../tools/yq.md) — `--output yaml` の後処理
-- [`standards/npm-trusted-publishers.md`](../../standards/npm-trusted-publishers.md) — OIDC 短命 credentials の同思想
-- [`platforms/github/github-actions.md`](../github/github-actions.md) — `configure-aws-credentials` の使い方
+- [`tools/jq.md`](../../tools/jq.md) — post-processing `--output json`
+- [`tools/yq.md`](../../tools/yq.md) — post-processing `--output yaml`
+- [`standards/npm-trusted-publishers.md`](../../standards/npm-trusted-publishers.md) — same philosophy of short-lived OIDC credentials
+- [`platforms/github/github-actions.md`](../github/github-actions.md) — how to use `configure-aws-credentials`
 
-## 参考
+## References
 
 - [AWS CLI v2 User Guide](https://docs.aws.amazon.com/cli/latest/userguide/)
 - [AWS CLI Command Reference](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/index.html)

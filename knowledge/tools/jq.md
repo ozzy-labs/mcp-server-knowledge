@@ -5,13 +5,13 @@ tags: [data-cli, json, fast]
 
 # jq
 
-JSON を処理するコマンドラインフィルタ。`grep` / `sed` / `awk` の JSON 版。API 応答の整形、設定ファイルの抽出、CI スクリプトでの値取り出しに必須。C 製の単一バイナリ。
+A command-line filter for processing JSON. The JSON equivalent of `grep` / `sed` / `awk`. Essential for formatting API responses, extracting values from config files, and pulling values in CI scripts. A single binary written in C.
 
-公式: [jqlang.org](https://jqlang.org/) / [manual](https://jqlang.org/manual/)
+Official: [jqlang.org](https://jqlang.org/) / [manual](https://jqlang.org/manual/)
 
-最新版は **1.8.1**（2025-07-01）。1.8.0（2025-06-01）でメジャー更新があり、`trim/0` などの新関数・複数のセキュリティ修正・一部 breaking change（`indices/1` / `index/1` / `rindex/1` が code point ベースに変更など）が入った。
+The latest version is **1.8.1** (2025-07-01). 1.8.0 (2025-06-01) brought a major update: new functions like `trim/0`, several security fixes, and some breaking changes (e.g. `indices/1` / `index/1` / `rindex/1` switched to code-point-based indexing).
 
-## インストール
+## Installation
 
 ```bash
 # Homebrew
@@ -27,124 +27,124 @@ mise use aqua:jqlang/jq@latest
 winget install jqlang.jq
 ```
 
-## 基本的な使い方
+## Basic usage
 
 ```bash
-# 整形（pretty print）
+# Pretty print
 echo '{"a":1,"b":2}' | jq
 # → {
 #     "a": 1,
 #     "b": 2
 #   }
 
-# 単一フィールド抽出
+# Extract a single field
 echo '{"name":"alice","age":30}' | jq '.name'
 # → "alice"
 
-# 文字列として抽出（クオートなし）
+# Extract as a string (no quotes)
 echo '{"name":"alice"}' | jq -r '.name'
 # → alice
 ```
 
-## フィルタ構文の基礎
+## Filter syntax basics
 
-| フィルタ | 意味 |
+| Filter | Meaning |
 |---|---|
-| `.` | 入力全体 |
-| `.foo` | フィールド `foo` |
-| `.foo.bar` | ネスト |
-| `.[0]` | 配列の 0 番目 |
-| `.[0:3]` | スライス |
-| `.[]` | 配列を展開（各要素にパイプ） |
-| `.foo // "default"` | 値が null なら代替 |
-| `.foo?` | エラーを null に（optional access） |
-| `length` | 長さ |
-| `keys` / `values` | オブジェクトのキー/値 |
-| `map(f)` | 配列の各要素に `f` を適用 |
-| `select(cond)` | 条件で絞り込み |
-| `sort` / `sort_by(.x)` | ソート |
-| `group_by(.x)` | グルーピング |
-| `unique` / `unique_by(.x)` | 重複除去 |
-| `min` / `max` / `min_by(.x)` | 最小・最大 |
-| `add` | 配列の要素を結合（数値なら合計、文字列なら連結） |
+| `.` | The whole input |
+| `.foo` | Field `foo` |
+| `.foo.bar` | Nesting |
+| `.[0]` | Index 0 of an array |
+| `.[0:3]` | Slice |
+| `.[]` | Expand an array (pipe each element) |
+| `.foo // "default"` | Fallback if the value is null |
+| `.foo?` | Turn errors into null (optional access) |
+| `length` | Length |
+| `keys` / `values` | Object keys / values |
+| `map(f)` | Apply `f` to each array element |
+| `select(cond)` | Filter by condition |
+| `sort` / `sort_by(.x)` | Sort |
+| `group_by(.x)` | Grouping |
+| `unique` / `unique_by(.x)` | Deduplicate |
+| `min` / `max` / `min_by(.x)` | Min / max |
+| `add` | Combine array elements (sum for numbers, concatenation for strings) |
 
-## 典型的なパイプライン
+## Typical pipelines
 
 ```bash
-# 配列から name だけ抽出
+# Extract only name from an array
 echo '[{"name":"a"},{"name":"b"}]' | jq -r '.[].name'
 
-# 同上（map 版）
+# Same, using map
 echo '[{"name":"a"},{"name":"b"}]' | jq -r 'map(.name) | .[]'
 
-# オブジェクトを再構築
+# Rebuild an object
 echo '{"a":1,"b":2,"c":3}' | jq '{x: .a, y: .b}'
 
-# 条件で絞り込み
+# Filter by condition
 echo '[{"n":1},{"n":5},{"n":3}]' | jq '.[] | select(.n > 2)'
 
-# 集計
+# Aggregation
 echo '[{"type":"a","v":10},{"type":"b","v":20},{"type":"a","v":30}]' \
   | jq 'group_by(.type) | map({type: .[0].type, sum: map(.v) | add})'
 ```
 
-## よく使う例
+## Common examples
 
-### gh CLI との組み合わせ
+### Combining with the gh CLI
 
 ```bash
-# オープン PR のタイトル一覧
+# List titles of open PRs
 gh pr list --json number,title --jq '.[] | "\(.number) \(.title)"'
 
-# レビュー未完了 PR の数
+# Count PRs with an incomplete review
 gh pr list --json reviewDecision \
   | jq '[.[] | select(.reviewDecision != "APPROVED")] | length'
 
-# 指定ラベル付き Issue を CSV で
+# Issues with a given label, as CSV
 gh issue list --label bug --json number,title \
   | jq -r '.[] | [.number, .title] | @csv'
 ```
 
-### package.json から依存一覧
+### List dependencies from package.json
 
 ```bash
 jq -r '.dependencies | keys[]' package.json
 ```
 
-### 環境変数置換 + ファイル更新
+### Env var substitution + file update
 
 ```bash
 jq '.version = "1.2.3"' package.json > tmp.json && mv tmp.json package.json
 ```
 
-### 配列の結合とフラット化
+### Joining and flattening arrays
 
 ```bash
 echo '[[1,2],[3,4]]' | jq 'add'                  # → [1,2,3,4]
 echo '[1,[2,[3]]]' | jq '[.. | numbers]'          # → [1,2,3]
 ```
 
-## 文字列操作
+## String manipulation
 
 ```bash
 echo '"hello"' | jq 'length'             # → 5
 echo '"hello"' | jq 'ascii_upcase'       # → "HELLO"
 echo '"a,b,c"' | jq 'split(",")'         # → ["a","b","c"]
 echo '["a","b"]' | jq 'join("-")'        # → "a-b"
-echo '"  x  "' | jq 'trim'                            # → "x"（jq 1.8+）
-echo '"  x  "' | jq 'ltrimstr(" ") | rtrimstr(" ")'   # 旧来の書き方
+echo '"  x  "' | jq 'trim'                            # → "x" (jq 1.8+)
+echo '"  x  "' | jq 'ltrimstr(" ") | rtrimstr(" ")'   # older-style approach
 ```
 
-## フォーマット変換
+## Format conversion
 
 ```bash
-# CSV 出力
+# CSV output
 echo '[{"a":1,"b":2},{"a":3,"b":4}]' | jq -r '.[] | [.a, .b] | @csv'
 
 # TSV
 echo '[{"a":1,"b":2}]' | jq -r '.[] | [.a, .b] | @tsv'
 
-# raw文字列（クオート除去、エスケープ解除）
+# Raw string (quotes removed, escapes resolved)
 echo '"hello\nworld"' | jq -r '.'
 
 # URL encode
@@ -154,37 +154,37 @@ echo '"hello world"' | jq -r '@uri'
 echo '"hello"' | jq -r '@base64'
 ```
 
-## エラー処理
+## Error handling
 
 ```bash
-# キーが存在しないとエラー: jq '.missing'
-# → null が返る（`-e` 付きなら非 0 終了）
+# A missing key does not error: jq '.missing'
+# → returns null (with `-e`, exits non-zero)
 
 # optional
 echo '{}' | jq '.foo?'                   # → null
-echo '{}' | jq 'try .foo catch "err"'    # → null (存在するので try 成功)
+echo '{}' | jq 'try .foo catch "err"'    # → null (succeeds since the key doesn't exist)
 
-# -e（exit code）
+# -e (exit code)
 jq -e '.success' response.json >/dev/null || exit 1
 ```
 
-## 変数とバインディング
+## Variables and bindings
 
 ```bash
-# 外部変数
+# External variables
 echo '{"a":1}' | jq --arg name "alice" '. + {name: $name}'
 echo '{"a":1}' | jq --argjson n 42 '.a = $n'
 
-# 内部バインディング
+# Internal binding
 echo '[1,2,3]' | jq '. as $arr | $arr | length'
 ```
 
-## 条件分岐
+## Conditionals
 
 ```bash
 echo '5' | jq 'if . > 3 then "big" else "small" end'
 
-# パターン的
+# Pattern-like matching
 echo '{"t":"a","v":1}' | jq '
   if .t == "a" then .v * 2
   elif .t == "b" then .v + 10
@@ -193,65 +193,65 @@ echo '{"t":"a","v":1}' | jq '
 '
 ```
 
-## 関数定義
+## Function definitions
 
 ```bash
-# 単発
+# Inline
 echo '5' | jq 'def double: . * 2; double'
 
-# ファイル読み込み
+# Loading from a file
 jq -f script.jq data.json
 ```
 
-## Claude Code / MCP との関連
+## Relation to Claude Code / MCP
 
-- Claude Code の **statusline script** 例で jq を使って `.model.display_name` / `.context_window.used_percentage` を抽出（`ai/agents/claude-code.md` 参照）
-- `gh <cmd> --json ...` の結果処理で頻出
-- MCP サーバーのデバッグで `npx @modelcontextprotocol/inspector` の出力整形にも
+- Used in Claude Code **statusline script** examples to extract `.model.display_name` / `.context_window.used_percentage` (see `ai/agents/claude-code.md`)
+- Frequently used to process the output of `gh <cmd> --json ...`
+- Also used to format output when debugging MCP servers with `npx @modelcontextprotocol/inspector`
 
-## トラブルシュート
+## Troubleshooting
 
-### `-r` を忘れてクオート付きで出た
+### Forgot `-r` and got quoted output
 
 ```bash
-# 付け忘れ
+# Forgot to add it
 echo '{"x":"hello"}' | jq '.x'     # → "hello"
 # raw
 echo '{"x":"hello"}' | jq -r '.x'  # → hello
 ```
 
-シェル変数に取り込む場合は `-r` 必須。
+`-r` is required when capturing into a shell variable.
 
-### ネストの Null で落ちる
+### Crashes on nested null
 
 ```bash
-# .a.b.c のどこかが null だと Cannot index null with ...
-# → `?` を付ける
+# If any part of .a.b.c is null: Cannot index null with ...
+# → add `?`
 jq '.a?.b?.c?'
-# または // で fallback
+# or use // for a fallback
 jq '(.a.b.c) // "default"'
 ```
 
-### 大量データで遅い
+### Slow on large data
 
-jq 1.7 / 1.8 でパフォーマンス改善あり（`bsearch/1`、`unique/0`、文字列繰り返しなど）。`--stream` モードで逐次処理も可能（巨大 JSON 向け）:
+jq 1.7 / 1.8 include performance improvements (`bsearch/1`, `unique/0`, string repetition, etc.). `--stream` mode also enables incremental processing (for huge JSON):
 
 ```bash
 jq --stream 'select(.[0][0] == "users") | .[1]' huge.json
 ```
 
-### Windows で動作が違う
+### Behaves differently on Windows
 
-シングルクオートがコマンドプロンプトで解釈されない。PowerShell か WSL を使う、または `-f script.jq` でファイル化。
+Single quotes aren't interpreted by Command Prompt. Use PowerShell or WSL, or put the filter in a file with `-f script.jq`.
 
-## 他ツールとの比較
+## Comparison with other tools
 
-| 観点 | jq | yq (mikefarah) | gron |
+| Aspect | jq | yq (mikefarah) | gron |
 |---|---|---|---|
-| 対象 | JSON | YAML/JSON/XML | JSON → grep 可能な形式 |
-| 言語 | C | Go | Go |
-| 速度 | 速い | 速い | 速い |
-| 学習コスト | 中 | jq 互換 | 低 |
-| ファイル更新 | コピー経由 | `-i` で in-place | — |
+| Target | JSON | YAML/JSON/XML | JSON → grep-able form |
+| Language | C | Go | Go |
+| Speed | Fast | Fast | Fast |
+| Learning cost | Medium | jq-compatible | Low |
+| File update | Via copy | In-place with `-i` | — |
 
-YAML を扱うなら `yq`（`mikefarah/yq` が主流、jq 互換構文）。grep 連携が欲しいときは gron（JSON をドット記法で列挙）。
+For YAML, use `yq` (`mikefarah/yq` is the mainstream choice, with jq-compatible syntax). For grep-friendly output, use gron (enumerates JSON in dot notation).

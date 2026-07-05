@@ -3,36 +3,36 @@ reviewed: 2026-05-03
 tags: [methodology]
 ---
 
-# 複数リポジトリ間の設定同期
+# Config sync across multiple repositories
 
-`.editorconfig` / `lefthook` / `biome.json` / `.github/workflows/` / エージェント設定 / Dev Container 等を**複数リポジトリで揃えたい**ときの設計指針。1 リポジトリ内のマルチエージェント対応は `ai/practice/multi-agent-repo.md` を参照。
+Design guidance for when you want to keep `.editorconfig` / `lefthook` / `biome.json` / `.github/workflows/` / agent config / Dev Container etc. **aligned across multiple repositories**. For multi-agent support within a single repository, see `ai/practice/multi-agent-repo.md`.
 
-## 解きたい問題
+## The problem to solve
 
-- 各 repo に同じ設定をコピペする → 改善が伝播しない
-- 中央 repo を `git submodule` する → ローカルカスタマイズが難しい・採用障壁が高い
-- monorepo にまとめる → 巨大化して所有権・公開範囲・CI 時間が破綻する
+- Copy-pasting the same config into each repo → improvements don't propagate
+- `git submodule` of a central repo → local customization is hard, high adoption barrier
+- Consolidating into a monorepo → grows too large, breaks down on ownership / visibility / CI time
 
-「**各 repo は独立を保ちつつ、共通設定だけ同期する**」モデルが必要。
+You need a model where "**each repo stays independent, but only the shared config is kept in sync**."
 
-## 設計の選択肢
+## Design options
 
-| アプローチ | 同期方法 | カスタマイズ | 反映タイミング |
+| Approach | Sync method | Customization | Propagation timing |
 |---|---|---|---|
-| 手動コピペ | 人間が周期的にコピー | 自由 | 不定（劣化する） |
-| `git submodule` | サブツリーとして埋め込み | 制限あり | `submodule update` 都度 |
-| `git subtree` | スカッシュマージで取り込み | 自由 | 手動 pull |
-| **中央 repo + sync スクリプト + pin リスト** | 中央 → 受信側を一方向同期、`pinned` で意図的乖離 | ファイル単位で自由 | scheduled workflow + Renovate |
-| Cookiecutter / Yeoman | 初期生成のみ | 自由 | 同期できない |
-| Renovate config preset | preset 拡張だけ | preset の範囲 | Renovate スケジュールに追従 |
+| Manual copy-paste | Human copies periodically | Free | Irregular (degrades over time) |
+| `git submodule` | Embedded as a subtree | Limited | Every `submodule update` |
+| `git subtree` | Pulled in via squash merge | Free | Manual pull |
+| **Central repo + sync script + pin list** | One-way sync from central to receiving repo, intentional divergence via `pinned` | Free at the file level | Scheduled workflow + Renovate |
+| Cookiecutter / Yeoman | Initial generation only | Free | Cannot sync |
+| Renovate config preset | Preset extension only | Limited to the preset's scope | Follows Renovate's schedule |
 
-中央 repo + sync スクリプトのアプローチが、**継続的な反映**と**ローカル裁量**の両立で最もバランスが良い。本記事ではこれを「**commons パターン**」と呼んで詳述する。
+The central repo + sync script approach best balances **continuous propagation** and **local discretion**. This article details it as the "**commons pattern**."
 
-## commons パターンの構成要素
+## Components of the commons pattern
 
 ```text
-[ commons リポジトリ ]
-├── dist/                  ← 配布対象（同期される）
+[ commons repository ]
+├── dist/                  ← distribution targets (synced)
 │   ├── .editorconfig
 │   ├── biome.json
 │   ├── lefthook-base.yaml
@@ -40,20 +40,20 @@ tags: [methodology]
 │   ├── .claude/
 │   ├── .gemini/
 │   └── .devcontainer/
-├── templates/             ← 初期化時に一度だけコピー（同期対象外）
+├── templates/             ← copied once at init time (not synced)
 │   ├── AGENTS.md
 │   └── CLAUDE.md
-├── sync.sh                ← 受信側にコピーして使うスクリプト
+├── sync.sh                ← script copied to and used by receiving repos
 └── commons-sync.json      ← Renovate preset
 
-[ 受信リポジトリ ]
+[ receiving repository ]
 ├── .commons/
-│   └── sync.yaml          ← 同期メタデータ
-├── sync.sh                ← commons から取得済み
-└── ...                    ← 同期されたファイル群
+│   └── sync.yaml          ← sync metadata
+├── sync.sh                ← obtained from commons
+└── ...                    ← synced files
 ```
 
-### `.commons/sync.yaml`（同期メタデータ）
+### `.commons/sync.yaml` (sync metadata)
 
 ```yaml
 commit: a32c498f106b8684e2419ab7861e95e1bbef5445
@@ -64,35 +64,35 @@ pinned:
   - .gitignore
 ```
 
-| キー | 意味 |
+| Key | Meaning |
 |---|---|
-| `commit` | 最後に同期した commons の HEAD SHA |
-| `synced_at` | 同期実施時刻（ISO 8601） |
-| `pinned` | **意図的に commons と乖離させているファイル**のリスト。同期時にスキップされる |
+| `commit` | HEAD SHA of commons at the last sync |
+| `synced_at` | Time the sync was performed (ISO 8601) |
+| `pinned` | List of files **intentionally diverging from commons**. Skipped during sync |
 
-`pinned` の存在が肝。「全部上書き」ではなく「**ローカル都合で外したいものは明示的に宣言**」という運用にすると、受信側が躊躇なく同期を回せる。
+The `pinned` list is the crux. Instead of an "overwrite everything" policy, adopting "**explicitly declare what you want to exclude for local reasons**" lets receiving repos run sync without hesitation.
 
-### `sync.sh` のモード
+### `sync.sh` modes
 
-| モード | 用途 |
+| Mode | Purpose |
 |---|---|
-| 対話モード（既定） | 差分表示 → 各ファイルで `[y/N/pin/all]` を選ぶ |
-| `--yes` / `-y` | 非対話。`pinned` 以外を全て上書き |
-| `--dry-run` | 適用せず差分のみ表示 |
-| `--check` | 差分があれば exit 1（CI でドリフト検知） |
+| Interactive (default) | Show diffs → choose `[y/N/pin/all]` for each file |
+| `--yes` / `-y` | Non-interactive. Overwrite everything except `pinned` |
+| `--dry-run` | Show diffs only, no apply |
+| `--check` | Exit 1 if there is a diff (drift detection in CI) |
 
-`pin` を選ぶと `.commons/sync.yaml` の `pinned` にファイル名が追記される。手書きで管理するより事故が少ない。
+Choosing `pin` appends the filename to `pinned` in `.commons/sync.yaml`. Less error-prone than managing it by hand.
 
-## 反映の自動化
+## Automating propagation
 
-2 経路を併用すると劣化が止まる:
+Combining two paths stops degradation:
 
-### 1. 受信リポの scheduled workflow
+### 1. Scheduled workflow in the receiving repo
 
 ```yaml
 # .github/workflows/sync-commons.yaml
 on:
-  schedule: [{ cron: '0 0 * * 1' }]    # 毎週月曜
+  schedule: [{ cron: '0 0 * * 1' }]    # every Monday
   workflow_dispatch: {}
 
 jobs:
@@ -116,12 +116,12 @@ jobs:
           commit-message: 'chore(commons): sync to latest'
 ```
 
-PR を作るだけで auto-merge はしない。レビュー機会を残す。
+It only opens a PR — no auto-merge. This preserves a review opportunity.
 
 ### 2. Renovate preset
 
 ```json
-// commons-sync.json（commons リポジトリ側）
+// commons-sync.json (in the commons repository)
 {
   "customManagers": [
     {
@@ -137,87 +137,87 @@ PR を作るだけで auto-merge はしない。レビュー機会を残す。
 ```
 
 ```json
-// 受信リポの renovate.json
+// renovate.json in the receiving repo
 {
   "extends": ["github>your-org/commons:commons-sync"]
 }
 ```
 
-Renovate が `.commons/sync.yaml` の `commit:` 行を新しい SHA に書き換える PR を作る。マージすると次回の scheduled workflow（または `workflow_dispatch`）が同期を実行する。**Renovate と workflow の責任分離**:
+Renovate opens a PR that rewrites the `commit:` line in `.commons/sync.yaml` to the new SHA. Once merged, the next scheduled workflow run (or `workflow_dispatch`) performs the actual sync. **Separation of concerns between Renovate and the workflow**:
 
-- Renovate: SHA 更新の意思決定（依存更新の文脈に乗る）
-- workflow: 実際のファイル同期（差分が大きい場合の検証付き）
+- Renovate: decides on the SHA update (rides along with the dependency-update context)
+- workflow: performs the actual file sync (with verification when diffs are large)
 
-これで「週次待ち」が「数時間以内」に短縮される。
+This shortens the "wait until next week" turnaround to "within a few hours."
 
-## 配布物と初期化物の分離
+## Separating distribution artifacts from init artifacts
 
-| 種別 | 場所 | 初回 | 継続同期 |
+| Type | Location | Initial | Ongoing sync |
 |---|---|---|---|
-| 配布物 | `commons/dist/` | sync で取得 | sync で更新 |
-| 初期化物 | `commons/templates/` | 手動コピー | **同期しない** |
+| Distribution artifact | `commons/dist/` | Obtained via sync | Updated via sync |
+| Init artifact | `commons/templates/` | Copied manually | **Not synced** |
 
-`templates/` は「最初の 1 回だけ参考にしてプロジェクト固有にカスタマイズする」もの。`AGENTS.md` / `CLAUDE.md` のような**指示ファイル**が代表。これを `dist/` に入れると、せっかくのカスタマイズが上書きされる。
+`templates/` files are meant to be "referenced once at the start, then customized for the specific project." **Instruction files** like `AGENTS.md` / `CLAUDE.md` are the representative case. Putting these in `dist/` would overwrite hard-won customizations.
 
-## 受信リポの初期化フロー
+## Receiving repo init flow
 
 ```bash
-# setup-repo.sh が GitHub リポ作成 + Branch Protection 等を自動設定
+# setup-repo.sh auto-configures GitHub repo creation + Branch Protection etc.
 gh repo create my-org/my-app --private
 ./setup-repo.sh my-org/my-app
 
-# commons の初期化
+# initialize commons
 mkdir .commons
 echo 'commit: <main SHA>' > .commons/sync.yaml
 curl -fsSL https://raw.githubusercontent.com/<org>/commons/main/sync.sh > sync.sh
 chmod +x sync.sh
 ./sync.sh --yes
 
-# 初期ファイルをコピー
+# copy initial files
 curl -fsSL .../templates/AGENTS.md > AGENTS.md
 curl -fsSL .../templates/CLAUDE.md > CLAUDE.md
 
 git add . && git commit -m "chore: initialize from commons"
 ```
 
-これを `setup-repo.sh` の中で完結させると、新規 repo を 1 コマンドで「commons 同期済み・Branch Protection 済み」にできる。
+Wrapping this inside `setup-repo.sh` lets you bring a new repo to "commons-synced, Branch-Protection-configured" state with a single command.
 
-## どこで使い分けるか
+## Where to draw the line
 
-| ファイル | dist にすべきか |
+| File | Should it be dist? |
 |---|---|
-| `.editorconfig` / `biome.json` / `lefthook-base.yaml` | **dist**（全 repo で同じが望ましい） |
-| `.github/workflows/` の汎用 workflow | dist |
-| `lefthook.yaml`（プロジェクト固有 hook 追加） | **pin 候補**（dist の `lefthook-base.yaml` を継承する形） |
-| `.gitignore` | プロジェクト固有 → pin |
-| `AGENTS.md` / `CLAUDE.md` | **templates**（初期コピーのみ） |
-| `package.json` / `pyproject.toml` | dist にしない（プロジェクト固有） |
+| `.editorconfig` / `biome.json` / `lefthook-base.yaml` | **dist** (should be identical across all repos) |
+| Generic workflows under `.github/workflows/` | dist |
+| `lefthook.yaml` (project-specific hook additions) | **pin candidate** (should extend the `lefthook-base.yaml` in dist) |
+| `.gitignore` | Project-specific → pin |
+| `AGENTS.md` / `CLAUDE.md` | **templates** (initial copy only) |
+| `package.json` / `pyproject.toml` | Not dist (project-specific) |
 
-迷ったら **dist に入れる + pin で逃げ道を作る**。pin が増えすぎたらその dist ファイルを廃止する材料になる。
+When in doubt, **put it in dist and give yourself an escape hatch via pin**. If too many pins accumulate, that's a signal to retire the dist file.
 
-## アンチパターン
+## Anti-patterns
 
-1. **commons を submodule にする** — 受信側が `git pull` で更新を意識する必要があり、CI も submodule 対応が必要。リジェクトされる
-2. **同期を auto-merge する** — レビューの機会が消える。設定ミスが全 repo に波及するリスクが大きい
-3. **`pinned` を `.gitignore` のように長く持つ** — pin が増える → 同期の意義が薄れる → 廃止判断のシグナル
-4. **commons に「全社の慣習」を詰め込む** — `dist/` は最小公倍数。チーム / 言語 / プロジェクト分類で必要なら sub-repo に分割する
-5. **`templates/` を `dist/` に混ぜる** — 上書きされる。明確に分ける
-6. **commons を public、受信側を private にして workflow がトークン不足** — fine-grained PAT または GitHub App でアクセスを設計する
+1. **Making commons a submodule** — receiving repos must remember to `git pull` for updates, and CI needs submodule support too. Gets rejected
+2. **Auto-merging sync** — eliminates the review opportunity. High risk of a config mistake propagating to every repo
+3. **Keeping `pinned` around indefinitely like a `.gitignore`** — pins accumulating → sync's value erodes → signal to retire it
+4. **Packing "company-wide conventions" into commons** — `dist/` should be the least common denominator. Split into sub-repos by team / language / project category if needed
+5. **Mixing `templates/` into `dist/`** — gets overwritten. Keep them clearly separate
+6. **Making commons public while the receiving repo is private, causing the workflow to lack a token** — design access via a fine-grained PAT or a GitHub App
 
-## AI エージェントへの含意
+## Implications for AI agents
 
-- 受信リポで `.commons/sync.yaml` を見ると「どの中央 repo に追従しているか」が分かる。設定ファイルを変更するなら、まずそれが pinned に入っているか確認する
-- pinned に入っていない設定ファイルを変更すると、次の同期で**上書き**される。設定変更は commons に PR を出すか、受信側で pin する
-- `lefthook-base.yaml` のような **base** ファイルは継承対象。`lefthook.yaml` の `extends:` で取り込まれている前提で読む
+- Checking `.commons/sync.yaml` in a receiving repo tells you "which central repo it tracks." Before changing a config file, first check whether it's in pinned
+- Changing a config file that is not in pinned will be **overwritten** on the next sync. Config changes should either go as a PR to commons, or be pinned in the receiving repo
+- **base** files like `lefthook-base.yaml` are meant to be inherited. Read them assuming they're pulled in via `extends:` in `lefthook.yaml`
 
-## 関連
+## Related
 
-- [`ai/practice/multi-agent-repo.md`](../ai/practice/multi-agent-repo.md) — 1 リポジトリ内で複数 AI エージェントを共存させる設計（commons パターンと組み合わせて使う）
-- [`tools/renovate.md`](../tools/renovate.md) — preset / customManager の詳細
-- [`tools/lefthook.md`](../tools/lefthook.md) — `extends` で base 設定を継承するモデル
+- [`ai/practice/multi-agent-repo.md`](../ai/practice/multi-agent-repo.md) — design for coexisting multiple AI agents within a single repository (used in combination with the commons pattern)
+- [`tools/renovate.md`](../tools/renovate.md) — details on presets / customManagers
+- [`tools/lefthook.md`](../tools/lefthook.md) — model for inheriting base config via `extends`
 - [`platforms/github/github-actions.md`](../platforms/github/github-actions.md) — scheduled workflow / `peter-evans/create-pull-request`
 
-## 参考
+## References
 
 - [Renovate custom managers](https://docs.renovatebot.com/modules/manager/regex/)
 - [peter-evans/create-pull-request](https://github.com/peter-evans/create-pull-request)

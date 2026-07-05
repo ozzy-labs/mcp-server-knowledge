@@ -6,146 +6,146 @@ stability: beta
 
 # cc-sdd
 
-OSS の SDD オーケストレータ（gotalab/cc-sdd）。npm パッケージとして配布され、`npx cc-sdd@latest` 一発で **17 個の Agent Skill**（discovery / spec / impl / steering 等）を 8 種類の AI コーディングエージェントに対してインストールする。「Kiro-inspired」を明言しており、Kiro の spec 形式（EARS + design + tasks）と互換。
+An OSS SDD orchestrator (gotalab/cc-sdd). Distributed as an npm package; `npx cc-sdd@latest` installs **17 Agent Skills** (discovery / spec / impl / steering, etc.) into 8 kinds of AI coding agents in one shot. Explicitly "Kiro-inspired" and compatible with Kiro's spec format (EARS + design + tasks).
 
-公式: [github.com/gotalab/cc-sdd](https://github.com/gotalab/cc-sdd) / npm: [cc-sdd](https://www.npmjs.com/package/cc-sdd)
+Official: [github.com/gotalab/cc-sdd](https://github.com/gotalab/cc-sdd) / npm: [cc-sdd](https://www.npmjs.com/package/cc-sdd)
 
-SDD 概念全体は `ai/practice/spec-driven-development.md` を参照。同領域の比較は `ai/workflow/kiro.md` / `ai/workflow/github-spec-kit.md`。
+For the overall SDD concept, see `ai/practice/spec-driven-development.md`. For comparisons in the same space, see `ai/workflow/kiro.md` / `ai/workflow/github-spec-kit.md`.
 
-## インストール
+## Installation
 
 ```bash
 cd your-project
 npx cc-sdd@latest
 ```
 
-デフォルトは Claude Code skills + 英語ドキュメント。エージェント・言語の切替:
+Default is Claude Code skills + English docs. To switch agent/language:
 
 ```bash
-npx cc-sdd@latest --codex-skills --lang ja          # Codex CLI / 日本語
-npx cc-sdd@latest --cursor-skills --lang zh-TW       # Cursor IDE / 繁体字
+npx cc-sdd@latest --codex-skills --lang ja          # Codex CLI / Japanese
+npx cc-sdd@latest --cursor-skills --lang zh-TW       # Cursor IDE / Traditional Chinese
 npx cc-sdd@latest --gemini-skills                    # Gemini CLI
 npx cc-sdd@latest --copilot-skills                   # GitHub Copilot
 npx cc-sdd@latest --windsurf-skills                  # Windsurf IDE
 npx cc-sdd@latest --opencode-skills                  # OpenCode
-npx cc-sdd@latest --antigravity                      # Antigravity（experimental）
+npx cc-sdd@latest --antigravity                      # Antigravity (experimental)
 ```
 
-13 言語に対応（`--lang ja`, `zh-TW`, `en` ほか）。
+Supports 13 languages (`--lang ja`, `zh-TW`, `en`, and others).
 
-## 動作モデル
+## Operating model
 
-- **Agent Skills として配布**: 17 skill が `SKILL.md` 経由で progressive disclosure ロード。詳細は `ai/platform/agent-extensions.md`
-- **Kiro 互換 spec**: `requirements.md`（EARS）/ `design.md`（File Structure Plan 含む）/ `tasks.md`（`_Boundary:_` + `_Depends:_`）
-- **per-task subagent**: `/kiro-impl` の各タスクで fresh implementer + 独立 reviewer + auto-debug を spawn
-- **TDD 強制**: implementer は RED → GREEN サイクル、feature flag 後ろで実装
-- **boundary-first**: design.md の File Structure Plan からタスク境界を決め、reviewer は境界違反を検出
+- **Distributed as Agent Skills**: 17 skills loaded via progressive disclosure through `SKILL.md`. See `ai/platform/agent-extensions.md` for details
+- **Kiro-compatible spec**: `requirements.md` (EARS) / `design.md` (includes File Structure Plan) / `tasks.md` (`_Boundary:_` + `_Depends:_`)
+- **Per-task subagent**: each task in `/kiro-impl` spawns a fresh implementer + an independent reviewer + auto-debug
+- **TDD enforced**: the implementer follows a RED → GREEN cycle, implementing behind a feature flag
+- **Boundary-first**: task boundaries are determined from the File Structure Plan in design.md; the reviewer detects boundary violations
 
-## SDD ワークフロー（v3 Skills mode）
+## SDD workflow (v3 Skills mode)
 
-エージェント側に `/kiro-*` slash command が登録される。
+`/kiro-*` slash commands are registered on the agent side.
 
-### 主要 slash commands
+### Primary slash commands
 
-| Command | 役割 |
+| Command | Role |
 |---|---|
-| `/kiro-discovery` | エントリポイント。新規 work を分類（既存 spec 拡張 / spec なし直接実装 / 新規 spec / 複数 spec 分割 / 混合）。`brief.md` と必要なら `roadmap.md` を生成 |
-| `/kiro-spec-init` | 単一 spec の初期化 |
-| `/kiro-spec-requirements` | EARS 記法で要件定義 |
-| `/kiro-spec-design` | アーキテクチャ + Mermaid 図 + File Structure Plan |
-| `/kiro-spec-tasks` | 境界・依存 annotation 付きタスクリスト |
-| `/kiro-spec-batch` | roadmap から複数 spec を並列生成 + cross-spec review |
-| `/kiro-impl` | 実装実行。task 引数なし = autonomous mode（per-task subagent trio）/ task 引数あり = manual mode（main context で TDD + review gate） |
-| `/kiro-validate-impl` | feature レベルの統合検証。tasks 横断で requirements coverage / design alignment / full-suite evidence を確認し `GO` / `NO-GO` / `MANUAL_VERIFY_REQUIRED` を返す |
-| `/kiro-steering` | プロジェクト全体に効くガイダンスファイル更新 |
+| `/kiro-discovery` | Entry point. Classifies new work (extend an existing spec / implement directly with no spec / new spec / split into multiple specs / mixed). Generates `brief.md` and, if needed, `roadmap.md` |
+| `/kiro-spec-init` | Initializes a single spec |
+| `/kiro-spec-requirements` | Defines requirements in EARS notation |
+| `/kiro-spec-design` | Architecture + Mermaid diagrams + File Structure Plan |
+| `/kiro-spec-tasks` | Task list with boundary/dependency annotations |
+| `/kiro-spec-batch` | Generates multiple specs in parallel from a roadmap + cross-spec review |
+| `/kiro-impl` | Executes implementation. No task argument = autonomous mode (per-task subagent trio) / with a task argument = manual mode (TDD + review gate in the main context) |
+| `/kiro-validate-impl` | Feature-level integration verification. Checks requirements coverage / design alignment / full-suite evidence across tasks and returns `GO` / `NO-GO` / `MANUAL_VERIFY_REQUIRED` |
+| `/kiro-steering` | Updates guidance files that apply project-wide |
 
-### Supporting Skills（`/kiro-impl` の内部から呼ばれる）
+### Supporting Skills (called internally from `/kiro-impl`)
 
-| Skill | 役割 |
+| Skill | Role |
 |---|---|
-| `kiro-review` | adversarial review protocol。spec 準拠 / 境界 / mechanical verification / RED phase evidence をチェック |
-| `kiro-debug` | root-cause-first 解析。`ROOT_CAUSE` / `CATEGORY` / `FIX_PLAN` / `NEXT_ACTION` を返す（最大 2 round） |
-| `kiro-verify-completion` | fresh-evidence gate。`VERIFIED` / `NOT_VERIFIED` / `MANUAL_VERIFY_REQUIRED` を返す |
+| `kiro-review` | Adversarial review protocol. Checks spec compliance / boundaries / mechanical verification / RED phase evidence |
+| `kiro-debug` | Root-cause-first analysis. Returns `ROOT_CAUSE` / `CATEGORY` / `FIX_PLAN` / `NEXT_ACTION` (max 2 rounds) |
+| `kiro-verify-completion` | Fresh-evidence gate. Returns `VERIFIED` / `NOT_VERIFIED` / `MANUAL_VERIFY_REQUIRED` |
 
-### 推奨フロー
+### Recommended flows
 
-| シナリオ | フロー |
+| Scenario | Flow |
 |---|---|
-| 新機能 / 製品サイズの企画 | `kiro-discovery` → `kiro-spec-init` → `kiro-spec-requirements` → `kiro-spec-design` → `kiro-spec-tasks` → `kiro-impl` → `kiro-validate-impl` |
-| 既存システム拡張 | `kiro-steering` → `kiro-discovery` or `kiro-spec-init` → `kiro-validate-gap`（任意・既存コードとの差分検証） → `kiro-spec-design` → `kiro-spec-tasks` → `kiro-impl` → `kiro-validate-impl` |
-| 大型施策の分解 | `kiro-discovery` → `kiro-spec-batch` |
-| spec 不要な小変更 | `kiro-discovery` → 直接実装 |
+| New feature / product-sized planning | `kiro-discovery` → `kiro-spec-init` → `kiro-spec-requirements` → `kiro-spec-design` → `kiro-spec-tasks` → `kiro-impl` → `kiro-validate-impl` |
+| Extending an existing system | `kiro-steering` → `kiro-discovery` or `kiro-spec-init` → `kiro-validate-gap` (optional, diff verification against existing code) → `kiro-spec-design` → `kiro-spec-tasks` → `kiro-impl` → `kiro-validate-impl` |
+| Decomposing a large initiative | `kiro-discovery` → `kiro-spec-batch` |
+| Small change that doesn't need a spec | `kiro-discovery` → direct implementation |
 
-### `/kiro-impl` の内部
+### Inside `/kiro-impl`
 
-`task 引数なし` で呼ぶと **autonomous mode**: 各タスクで以下を独立 subagent として spawn（実体は上記 Supporting Skills にマップ）:
+Calling it with **no task argument** triggers **autonomous mode**: for each task, the following are spawned as independent subagents (each maps to the Supporting Skills above):
 
-1. **Implementer**: TDD（RED → GREEN）で feature flag 後ろに実装
-2. **Reviewer** (`kiro-review`): 独立した文脈で review。境界違反 / 仕様逸脱を検出
-3. **Auto-debug** (`kiro-debug`): implementer が詰まる or reviewer が 2 回 reject した時、clean context で root cause 調査
+1. **Implementer**: implements behind a feature flag using TDD (RED → GREEN)
+2. **Reviewer** (`kiro-review`): reviews in an independent context; detects boundary violations / spec deviations
+3. **Auto-debug** (`kiro-debug`): investigates root cause in a clean context when the implementer gets stuck or the reviewer rejects twice
 
-`task 引数あり` で呼ぶと **manual mode**: メインコンテキスト内で TDD を回し、review gate のみ走らせる。
+Calling it **with a task argument** triggers **manual mode**: TDD runs in the main context, and only the review gate runs.
 
-学びは `tasks.md` 内の `## Implementation Notes` を介して後続タスクに伝播。1 task / 1 iteration、中断後の再実行が安全。
+Learnings propagate to subsequent tasks via the `## Implementation Notes` section in `tasks.md`. Designed as 1 task per iteration, safe to resume after interruption.
 
-## 対応エージェント（v3 Skills mode）
+## Supported agents (v3 Skills mode)
 
-| エージェント | install フラグ | 安定度 |
+| Agent | Install flag | Stability |
 |---|---|---|
-| **Claude Code** | `--claude-skills`（デフォルト） | Stable |
+| **Claude Code** | `--claude-skills` (default) | Stable |
 | **Codex** | `--codex-skills` | Stable |
 | **Cursor IDE** | `--cursor-skills` | Beta |
 | **GitHub Copilot** | `--copilot-skills` | Beta |
 | **Windsurf IDE** | `--windsurf-skills` | Beta |
 | **OpenCode** | `--opencode-skills` | Beta |
 | **Gemini CLI** | `--gemini-skills` | Beta |
-| **Antigravity** | `--antigravity` | Beta（experimental） |
-| **Qwen Code** | `--qwen` | Legacy（commands mode のみ） |
+| **Antigravity** | `--antigravity` | Beta (experimental) |
+| **Qwen Code** | `--qwen` | Legacy (commands mode only) |
 
-8 つの Skills variants は**同じ 17 skill セットを共有**。「Beta」は機能差ではなく platform integration の実運用量の差。
+All 8 Skills variants **share the same set of 17 skills**. "Beta" reflects differences in real-world platform integration usage, not feature gaps.
 
-レガシーモード（slash command 直配置の `--claude` / `--claude-agent` / `--cursor` / `--copilot` / `--windsurf` / `--opencode` / `--opencode-agent` / `--gemini`）は v3 で **deprecated**（次バージョンで削除予定だが現時点では動作する）。`--codex`（prompts mode）のみ **blocked**（インストール時にエラー）。`/kiro:*` 命名は legacy で、現行は `/kiro-*`（コロンなし）。
+Legacy mode (slash commands placed directly: `--claude` / `--claude-agent` / `--cursor` / `--copilot` / `--windsurf` / `--opencode` / `--opencode-agent` / `--gemini`) is **deprecated** in v3 (scheduled for removal in a future version, but still works today). Only `--codex` (prompts mode) is **blocked** (errors at install time). The `/kiro:*` naming is legacy; the current naming is `/kiro-*` (no colon).
 
-## 哲学
+## Philosophy
 
-> spec は「エージェントへの命令書」ではなく「コードの部分間の契約」として扱う。コードが真実、spec は境界を明示するもの。
+> Treat a spec not as "instructions to the agent" but as "a contract between parts of the code." The code is truth; the spec makes boundaries explicit.
 
-cc-sdd は spec を contract として位置づけ、人間は phase gate（spec 確定時）で承認、エージェントは contract の内側を自由に動く、という分業を狙う。
+cc-sdd positions the spec as a contract, aiming for a division of labor where humans approve at phase gates (when the spec is finalized) and agents move freely inside the contract.
 
-詳細: [Why cc-sdd?](https://github.com/gotalab/cc-sdd/blob/main/docs/guides/why-cc-sdd.md)
+Details: [Why cc-sdd?](https://github.com/gotalab/cc-sdd/blob/main/docs/guides/why-cc-sdd.md)
 
-## 他ツールとの差分
+## Differences from other tools
 
 | | cc-sdd | Kiro | GitHub Spec Kit |
 |---|---|---|---|
-| 提供元 | OSS（gotalab） | AWS | GitHub 公式 |
-| 形態 | npm package | IDE + CLI | Python CLI |
-| 入口 | `npx cc-sdd@latest` | `curl install.sh` / Desktop | `uv tool install` |
-| エージェント数 | 8 | 1（Kiro 単体） | 30+ |
-| spec 形式 | Kiro 互換（EARS） | EARS native | core templates 上書き可 |
-| autonomous impl | あり（`/kiro-impl` per-task subagent + reviewer + auto-debug） | あり（IDE 内） | あり（`/speckit.implement`） |
-| TDD 強制 | あり（RED → GREEN + feature flag） | あり | extension 経由 |
-| boundary annotation | あり（`_Boundary:_` / `_Depends:_`） | なし | extension 経由 |
-| ライセンス | MIT | 商用 | MIT |
+| Provider | OSS (gotalab) | AWS | GitHub official |
+| Form | npm package | IDE + CLI | Python CLI |
+| Entry point | `npx cc-sdd@latest` | `curl install.sh` / Desktop | `uv tool install` |
+| Number of agents | 8 | 1 (Kiro only) | 30+ |
+| Spec format | Kiro-compatible (EARS) | EARS native | Core templates overridable |
+| Autonomous impl | Yes (`/kiro-impl` per-task subagent + reviewer + auto-debug) | Yes (in-IDE) | Yes (`/speckit.implement`) |
+| TDD enforcement | Yes (RED → GREEN + feature flag) | Yes | Via extension |
+| Boundary annotation | Yes (`_Boundary:_` / `_Depends:_`) | No | Via extension |
+| License | MIT | Commercial | MIT |
 
-cc-sdd は **「Kiro の spec 形式を Kiro 以外でも使う」**用途と **「より厳格な per-task subagent + boundary discipline」**を求める用途に向く。
+cc-sdd suits use cases that want **"Kiro's spec format outside of Kiro"** and **"stricter per-task subagent + boundary discipline."**
 
-## AI エージェントがよくやるミス
+## Common AI agent mistakes
 
-1. **`/kiro:*`（コロン付き）を使う** — v2.x までの命名。v3 Skills mode は `/kiro-*`（ハイフン）。Migration Guide 参照
-2. **`--claude` / `--cursor` 等の legacy mode で install** — 現行は `--*-skills`。legacy フラグは deprecated（次バージョンで削除予定）。`--codex` のみ blocked（インストール時にエラー）
-3. **デフォルト install で全エージェント分が入ると思う** — 1 回の `npx cc-sdd@latest` で**1 つのエージェント**しか install されない。複数エージェントには複数回実行が必要
-4. **`/kiro-impl` を 1 セッションで全タスク消化させようとする** — 各タスクは別 subagent で走る設計。並行 / 中断・再開可能だが、メインセッションで全部待つとコンテキスト窓を消費する
-5. **`requirements.md` を箇条書きで書く** — Kiro 互換の EARS 記法が前提。`/kiro-spec-requirements` 経由で生成しないと後段の reviewer が境界違反を誤検出
-6. **`design.md` の File Structure Plan を省略** — `tasks.md` の `_Boundary:_` annotation の元になる。これを省くと per-task subagent が境界外を触り、reviewer が reject ループに入る
-7. **`/kiro-discovery` を skip して `/kiro-spec-init` から始める** — discovery は work の routing（既存 spec 拡張か新規か等）を行う。skip すると spec の重複・矛盾が発生
-8. **legacy `/kiro:*` 命名のドキュメントを参考にする** — v3 Migration Guide で破壊的変更が多数。executive summary だけでも目を通す
+1. **Using `/kiro:*` (with colon)** — naming used up through v2.x. v3 Skills mode uses `/kiro-*` (hyphen). See the Migration Guide
+2. **Installing with legacy mode (`--claude` / `--cursor` etc.)** — current flags are `--*-skills`. Legacy flags are deprecated (scheduled for removal in a future version). Only `--codex` is blocked (errors at install time)
+3. **Assuming the default install covers all agents** — a single `npx cc-sdd@latest` installs for **one agent only**. Multiple agents require multiple runs
+4. **Trying to make `/kiro-impl` consume all tasks in one session** — each task is designed to run in a separate subagent. It can run concurrently / be paused and resumed, but waiting for everything in the main session consumes the context window
+5. **Writing `requirements.md` as plain bullet points** — assumes Kiro-compatible EARS notation. If not generated via `/kiro-spec-requirements`, the downstream reviewer may misdetect boundary violations
+6. **Omitting the File Structure Plan in `design.md`** — this is the source of the `_Boundary:_` annotations in `tasks.md`. Omitting it lets the per-task subagent touch out-of-boundary code, and the reviewer enters a reject loop
+7. **Skipping `/kiro-discovery` and starting from `/kiro-spec-init`** — discovery routes the work (extend an existing spec vs. new, etc.). Skipping it causes duplicate/conflicting specs
+8. **Referencing docs using the legacy `/kiro:*` naming** — the v3 Migration Guide has many breaking changes. At least skim the executive summary
 
-## 参考
+## References
 
 - [github.com/gotalab/cc-sdd](https://github.com/gotalab/cc-sdd)
 - [npm: cc-sdd](https://www.npmjs.com/package/cc-sdd)
 - [Skill Reference](https://github.com/gotalab/cc-sdd/blob/main/docs/guides/skill-reference.md)
 - [Migration Guide (v2.x → v3.0)](https://github.com/gotalab/cc-sdd/blob/main/docs/guides/migration-guide.md#5-v2x-to-v30)
 - [Why cc-sdd? A philosophy note](https://github.com/gotalab/cc-sdd/blob/main/docs/guides/why-cc-sdd.md)
-- 関連: `ai/practice/spec-driven-development.md` / `ai/workflow/kiro.md` / `ai/workflow/github-spec-kit.md` / `ai/agents/claude-code.md` / `ai/agents/codex-cli.md` / `ai/platform/agent-extensions.md`
+- Related: `ai/practice/spec-driven-development.md` / `ai/workflow/kiro.md` / `ai/workflow/github-spec-kit.md` / `ai/agents/claude-code.md` / `ai/agents/codex-cli.md` / `ai/platform/agent-extensions.md`

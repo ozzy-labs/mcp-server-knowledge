@@ -6,106 +6,106 @@ aliases: [vscode-ext]
 
 # VS Code Extensions
 
-Visual Studio Code (VS Code) の機能を拡張するための仕組み。TypeScript/JavaScript を使用して、エディタの UI、言語サポート、デバッグ、ツール統合などを追加できる。
+A mechanism for extending the functionality of Visual Studio Code (VS Code). Using TypeScript/JavaScript, you can add editor UI, language support, debugging, tool integrations, and more.
 
-公式: [code.visualstudio.com/api](https://code.visualstudio.com/api)
+Official: [code.visualstudio.com/api](https://code.visualstudio.com/api)
 
-## 基本コンセプト
+## Basic Concepts
 
-VS Code 拡張機能は以下の 3 つの主要な構成要素で成り立つ。
+A VS Code extension consists of three main components.
 
 ### 1. Activation Events
 
-拡張機能がいつメモリにロードされ、有効化されるかを定義する（`package.json` の `activationEvents`）。
+Defines when an extension is loaded into memory and activated (`activationEvents` in `package.json`).
 
-- `onCommand:commandId` — コマンド実行時
-- `onLanguage:languageId` — 特定言語のファイルを開いた時
-- `onFileSystem:scheme` — 特定のファイルシステム（例: `sftp`）アクセス時
-- `*` — VS Code 起動時に常に有効化（パフォーマンス低下に注意）
+- `onCommand:commandId` — when a command is executed
+- `onLanguage:languageId` — when a file of a specific language is opened
+- `onFileSystem:scheme` — when accessing a specific file system (e.g. `sftp`)
+- `*` — always activated at VS Code startup (be careful of performance degradation)
 
 ### 2. Contribution Points
 
-VS Code の UI や機能に何を追加するかを静的に宣言する（`package.json` の `contributes`）。
+Statically declares what the extension adds to the VS Code UI or functionality (`contributes` in `package.json`).
 
-- `commands` — コマンドパレット等に表示されるコマンド
-- `menus` — 右クリックメニューやエディタタイトルのメニュー
-- `keybindings` — ショートカットキー
-- `languages` — 新規言語の定義（拡張子、アイコン、文法など）
-- `viewsContainers` / `views` — サイドバーやパネルへのビュー追加
+- `commands` — commands displayed in the command palette, etc.
+- `menus` — right-click menus, editor title menus
+- `keybindings` — keyboard shortcuts
+- `languages` — new language definitions (file extensions, icons, grammar, etc.)
+- `viewsContainers` / `views` — adding views to the sidebar or panels
 
 ### 3. VS Code API
 
-実際のロジックを記述するための API。
+The API for writing the actual logic.
 
-- `vscode.window` — メッセージ表示、Webview、TreeView などの UI 操作
-- `vscode.workspace` — ファイル操作、設定管理、ドキュメントのライフサイクル
-- `vscode.commands` — コマンドの登録と実行
-- `vscode.languages` — 補完 (IntelliSense)、定義ジャンプ、ホバー等の言語機能
+- `vscode.window` — UI operations such as message display, Webview, TreeView
+- `vscode.workspace` — file operations, configuration management, document lifecycle
+- `vscode.commands` — registering and executing commands
+- `vscode.languages` — language features such as completion (IntelliSense), go-to-definition, hover
 
-## 開発の始め方
+## Getting Started with Development
 
-### 1. プロジェクトの生成
+### 1. Generating a Project
 
-公式の Yeoman ジェネレーターを使用する。
+Use the official Yeoman generator.
 
 ```bash
 npx --package yo --package generator-code -- yo code
 ```
 
-- `New Extension (TypeScript)` を選択するのが推奨。
-- 必要なファイル群（`package.json`, `src/extension.ts`, `tsconfig.json` 等）が生成される。
+- It is recommended to select `New Extension (TypeScript)`.
+- The necessary files (`package.json`, `src/extension.ts`, `tsconfig.json`, etc.) are generated.
 
-### 2. 実行とデバッグ
+### 2. Running and Debugging
 
-1. 生成されたプロジェクトを VS Code で開く。
-2. `F5` キーを押す。
-3. **拡張機能開発ホスト (Extension Development Host)** ウィンドウが起動し、開発中の拡張機能がロードされる。
-4. `Ctrl+Shift+P` でコマンドパレットを開き、`Hello World` を実行して動作を確認する。
+1. Open the generated project in VS Code.
+2. Press `F5`.
+3. The **Extension Development Host** window launches, loading the extension under development.
+4. Open the command palette with `Ctrl+Shift+P` and run `Hello World` to verify it works.
 
-## 主要ツール
+## Key Tools
 
 ### vsce (Visual Studio Code Extensions)
 
-拡張機能のパッケージ化と公開のためのコマンドラインツール。
+A command-line tool for packaging and publishing extensions.
 
 ```bash
-# インストール
+# Install
 npm install -g @vscode/vsce
 
-# パッケージ化 (.vsix ファイルの生成)
+# Package (generate a .vsix file)
 vsce package
 
-# 公開
+# Publish
 vsce publish
 ```
 
-## テスト
+## Testing
 
-VS Code 拡張機能のテストは、実際の VS Code インスタンスを背後で起動して実行される。
+Tests for VS Code extensions run by launching an actual VS Code instance in the background.
 
-- **統合テスト**: `@vscode/test-electron` を使用し、VS Code API が期待通り動作するかを検証する。
-- **ユニットテスト**: API に依存しない純粋なロジックは、Mocha 等の標準的なテストランナーで実行可能。
+- **Integration tests**: Use `@vscode/test-electron` to verify that the VS Code API behaves as expected.
+- **Unit tests**: Pure logic that does not depend on the API can be run with a standard test runner such as Mocha.
 
 ```bash
-# 生成されたプロジェクトでのテスト実行
+# Run tests in the generated project
 npm test
 ```
 
-## 公開手順
+## Publishing Steps
 
-1. **パブリッシャーの作成**: [Visual Studio Marketplace](https://marketplace.visualstudio.com/manage) でアカウントを作成。
-2. **Personal Access Token (PAT) の取得**: Azure DevOps で `Marketplace (Publish)` スコープのトークンを作成。
-3. **ログイン**: `vsce login <publisher>`
-4. **公開**: `vsce publish`
+1. **Create a publisher**: Create an account on the [Visual Studio Marketplace](https://marketplace.visualstudio.com/manage).
+2. **Obtain a Personal Access Token (PAT)**: Create a token with `Marketplace (Publish)` scope in Azure DevOps.
+3. **Log in**: `vsce login <publisher>`
+4. **Publish**: `vsce publish`
 
-## ベストプラクティス
+## Best Practices
 
-- **パフォーマンス**: `activationEvents` を可能な限り絞り、起動時間を短縮する。
-- **UX ガイドライン**: [UX Guidelines](https://code.visualstudio.com/api/ux-guidelines) に従い、ネイティブな外観を維持する。
-- **Webview の制限**: Webview は強力だが、セキュリティとパフォーマンスのコストが高いため、可能な限りネイティブ UI (TreeView, QuickPick) を優先する。
-- **セキュリティ**: API キーや秘密情報は `vscode.SecretStorage` を使用して安全に保存する。
+- **Performance**: Narrow down `activationEvents` as much as possible to reduce startup time.
+- **UX guidelines**: Follow the [UX Guidelines](https://code.visualstudio.com/api/ux-guidelines) to maintain a native look and feel.
+- **Webview constraints**: Webviews are powerful but carry high security and performance costs, so prefer native UI (TreeView, QuickPick) whenever possible.
+- **Security**: Store API keys and secrets safely using `vscode.SecretStorage`.
 
-## 参考
+## References
 
 - [Extension API Overview](https://code.visualstudio.com/api/get-started/extension-capabilities)
 - [Extension Samples (GitHub)](https://github.com/microsoft/vscode-extension-samples)

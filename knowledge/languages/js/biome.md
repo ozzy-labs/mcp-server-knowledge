@@ -5,39 +5,39 @@ tags: [lint, format, javascript, typescript, json, rust, fast]
 
 # Biome
 
-Rust で書かれた高速な JavaScript / TypeScript / JSON / CSS / GraphQL のフォーマッタ + リンタ。ESLint + Prettier を単一ツールで置き換えることを目標とする。
+A fast JavaScript / TypeScript / JSON / CSS / GraphQL formatter + linter written in Rust. Aims to replace ESLint + Prettier with a single tool.
 
-公式: [biomejs.dev](https://biomejs.dev/)
+Official site: [biomejs.dev](https://biomejs.dev/)
 
-## インストール
+## Installation
 
 ```bash
-# プロジェクトローカル（推奨）
+# Project-local (recommended)
 pnpm add -D -E @biomejs/biome
 
-# グローバル or バージョン管理
+# Global or version-managed
 mise use biome@2
 
 # Homebrew
 brew install biome
 ```
 
-`-E`（exact version）を付けるのが公式推奨。マイナー更新でルールが変わることがあるため。
+Using `-E` (exact version) is officially recommended, since minor updates can change rules.
 
-## 基本コマンド
+## Basic commands
 
-| コマンド | 用途 |
+| Command | Purpose |
 |---|---|
-| `biome check` | lint + format チェック（デフォルト、読み取り専用） |
-| `biome check --write` | 自動修正を書き込む |
-| `biome check --write --unsafe` | 破壊的変更を含む修正 |
-| `biome format` | フォーマットのみ |
-| `biome lint` | lint のみ |
-| `biome ci` | CI 専用（失敗で非 0 終了） |
-| `biome migrate eslint` | ESLint 設定を Biome に変換 |
-| `biome migrate prettier` | Prettier 設定を Biome に変換 |
+| `biome check` | lint + format check (default, read-only) |
+| `biome check --write` | Write auto-fixes |
+| `biome check --write --unsafe` | Fixes that may include breaking changes |
+| `biome format` | Format only |
+| `biome lint` | Lint only |
+| `biome ci` | CI-only mode (exits non-zero on failure) |
+| `biome migrate eslint` | Convert an ESLint config to Biome |
+| `biome migrate prettier` | Convert a Prettier config to Biome |
 
-## 設定ファイル `biome.json`
+## Config file `biome.json`
 
 ```json
 {
@@ -70,26 +70,26 @@ brew install biome
 }
 ```
 
-### 主要フィールド
+### Key fields
 
-| セクション | 説明 |
+| Section | Description |
 |---|---|
-| `files.includes` | 対象パターン（glob）。`!` で除外 |
-| `files.ignoreUnknown` | 未知の拡張子を無視 |
-| `formatter` | 全言語共通のフォーマット設定 |
-| `javascript` / `typescript` / `json` / `css` | 言語別の上書き |
-| `linter.rules` | ルール有効化。`recommended: true` で推奨セット適用 |
-| `assist.actions.source.organizeImports` | import 整列（v2 で `organizeImports` から `assist` 配下に移動。`biome migrate` で自動変換可） |
+| `files.includes` | Target patterns (glob). Prefix with `!` to exclude |
+| `files.ignoreUnknown` | Ignore unknown extensions |
+| `formatter` | Format settings shared across all languages |
+| `javascript` / `typescript` / `json` / `css` | Per-language overrides |
+| `linter.rules` | Rule enablement. `recommended: true` applies the recommended set |
+| `assist.actions.source.organizeImports` | Import sorting (moved from `organizeImports` under `assist` in v2; `biome migrate` converts automatically) |
 
-### ルールの severity
+### Rule severity
 
 ```json
 { "noConsole": "error" | "warn" | "info" | "off" }
 ```
 
-`recommended` のルールはすべて `error`。個別に弱める場合はキーで上書き。
+All `recommended` rules are `error`. Override individual keys to weaken them.
 
-### 個別ファイル / ブロックの抑止
+### Suppressing per-file / per-block
 
 ```ts
 // biome-ignore lint/suspicious/noExplicitAny: legacy API
@@ -98,33 +98,33 @@ function foo(x: any) {}
 // biome-ignore-all lint/style/useConst: this file intentionally uses let
 ```
 
-## フォーマッタの特徴
+## Formatter characteristics
 
-- Prettier 風だが高速（Rust、並列処理）
-- `lineWidth` デフォルト 80 → 本リポジトリは 100
-- JSX / TSX 対応
+- Prettier-like but fast (Rust, parallel processing)
+- `lineWidth` default is 80 → this repository uses 100
+- Supports JSX / TSX
 - `quoteStyle`: `"single"` / `"double"`
 - `trailingCommas`: `"all"` / `"es5"` / `"none"`
 - `semicolons`: `"always"` / `"asNeeded"`
 
-## lint ルール体系
+## Lint rule categories
 
-大分類:
+Major categories:
 
-| 分類 | 内容 |
+| Category | Content |
 |---|---|
-| `correctness` | バグの可能性（未使用変数、構文の誤用） |
-| `suspicious` | 怪しいが必ずしも間違いではない |
-| `style` | コーディングスタイル |
-| `complexity` | 複雑度（不要な async、重複条件等） |
-| `performance` | パフォーマンス（無駄な allocation 等） |
-| `security` | セキュリティ（dangerouslySetInnerHTML 等） |
-| `a11y` | アクセシビリティ（JSX 向け） |
-| `nursery` | 実験的ルール（安定前） |
+| `correctness` | Potential bugs (unused variables, syntax misuse) |
+| `suspicious` | Suspicious but not necessarily wrong |
+| `style` | Coding style |
+| `complexity` | Complexity (unnecessary async, duplicate conditions, etc.) |
+| `performance` | Performance (wasted allocations, etc.) |
+| `security` | Security (dangerouslySetInnerHTML, etc.) |
+| `a11y` | Accessibility (for JSX) |
+| `nursery` | Experimental rules (not yet stable) |
 
-## VS Code 連携
+## VS Code integration
 
-[Biome 拡張](https://marketplace.visualstudio.com/items?itemName=biomejs.biome) をインストール + `.vscode/settings.json`:
+Install the [Biome extension](https://marketplace.visualstudio.com/items?itemName=biomejs.biome) + `.vscode/settings.json`:
 
 ```json
 {
@@ -137,7 +137,7 @@ function foo(x: any) {}
 }
 ```
 
-## lefthook / pre-commit 連携
+## lefthook / pre-commit integration
 
 ```yaml
 pre-commit:
@@ -148,39 +148,39 @@ pre-commit:
       stage_fixed: true
 ```
 
-`stage_fixed: true` で自動修正後のファイルを再ステージ。
+`stage_fixed: true` re-stages files after auto-fixing.
 
-## CI での使い方
+## Using in CI
 
 ```yaml
 - run: pnpm biome ci
 ```
 
-`biome ci` は自動修正せず、違反があれば非 0 で失敗する。GitHub Actions の `reporter` フォーマット出力もサポート。
+`biome ci` does not auto-fix; it fails with a non-zero exit code if there are violations. It also supports GitHub Actions `reporter` format output.
 
-## ESLint / Prettier との比較
+## Comparison with ESLint / Prettier
 
-| 観点 | Biome | ESLint + Prettier |
+| Aspect | Biome | ESLint + Prettier |
 |---|---|---|
-| 速度 | 〜10x 高速（Rust） | 普通 |
-| 設定 | 単一ファイル | 2 ツール分 |
-| プラグイン | なし（内蔵ルールのみ） | 豊富 |
-| TypeScript | ネイティブ | `@typescript-eslint` 必要 |
-| JSX | 対応 | 対応 |
-| マイグレーション | `biome migrate` で自動変換 | — |
+| Speed | ~10x faster (Rust) | Normal |
+| Configuration | Single file | Two tools' worth |
+| Plugins | None (built-in rules only) | Abundant |
+| TypeScript | Native | Requires `@typescript-eslint` |
+| JSX | Supported | Supported |
+| Migration | Automatic via `biome migrate` | — |
 
-**Biome の弱点**: ESLint のサードパーティプラグインが使えない（例: `eslint-plugin-react-hooks`、`eslint-plugin-import` の細かい規則）。相当ルールが Biome 内蔵で揃っているか確認必須。
+**Biome's weakness**: Cannot use ESLint third-party plugins (e.g., `eslint-plugin-react-hooks`, the finer rules of `eslint-plugin-import`). You must check whether Biome's built-in rules cover equivalent functionality.
 
-## トラブルシュート
+## Troubleshooting
 
-### `biome check` が何も出ない
+### `biome check` produces no output
 
-`files.includes` のパターンにマッチしていない可能性。`biome check --diagnostic-level=info src/` のようにパス明示で確認。
+The pattern in `files.includes` may not be matching. Verify by specifying a path explicitly, e.g. `biome check --diagnostic-level=info src/`.
 
-### 既存コードのフォーマット差分が巨大
+### Huge formatting diff on existing code
 
-初回適用時は別ブランチで一括実行 → `docs: apply biome format` 等の単独コミットにする。`.git-blame-ignore-revs` に commit hash を書いて `git blame` から除外。
+For the first application, run it in bulk on a separate branch → make it a standalone commit such as `docs: apply biome format`. Add the commit hash to `.git-blame-ignore-revs` to exclude it from `git blame`.
 
-### Prettier との併用は避ける
+### Avoid using alongside Prettier
 
-矛盾する整形ルールがあり、保存時の往復が発生する。`biome migrate prettier` で移行しきる。
+Conflicting formatting rules cause repeated round-trips on save. Fully migrate using `biome migrate prettier`.

@@ -5,45 +5,45 @@ tags: [data-cli, python, markdown]
 
 # MarkItDown
 
-Microsoft 製の Python ユーティリティ。PDF / Office / 画像 / 音声 / HTML / CSV / JSON / XML / ZIP / EPub / YouTube URL などを Markdown に変換する。LLM への取り込み（RAG・コンテキストウィンドウ投入）を主目的に設計されており、トークン効率とドキュメント構造保持を両立する。AI エージェントが「PDF を読ませたい」「画像の中の文字を渡したい」場面で第一候補になる。
+A Python utility from Microsoft that converts PDF / Office / images / audio / HTML / CSV / JSON / XML / ZIP / EPub / YouTube URLs into Markdown. It is designed primarily for ingestion into LLMs (RAG, context window insertion), balancing token efficiency with preservation of document structure. It's the go-to choice for AI agents when facing "I want to feed a PDF" or "I want to pass text from inside an image" scenarios.
 
-公式: [microsoft/markitdown](https://github.com/microsoft/markitdown)
+Official: [microsoft/markitdown](https://github.com/microsoft/markitdown)
 
-## インストール
+## Installation
 
-> Python 3.10 以上が必要 (`requires-python = ">=3.10"`)。
+> Requires Python 3.10 or higher (`requires-python = ">=3.10"`).
 
 ```bash
-# 全フォーマット対応（推奨）
+# Support for all formats (recommended)
 pip install 'markitdown[all]'
 
-# サブセット
+# Subset
 pip install 'markitdown[pdf,docx,pptx]'
 
-# uv 経由（隔離・PATH 自動）
+# Via uv (isolated, auto PATH)
 uv tool install 'markitdown[all]'
-uvx markitdown file.pdf      # ワンショット実行
+uvx markitdown file.pdf      # one-shot execution
 
 # pipx
 pipx install 'markitdown[all]'
 ```
 
-`[all]` は依存が多い（OCR の `tesseract`、音声書き起こしの `whisper` 等）。CI で軽くしたいなら必要な extras だけ入れる。
+`[all]` pulls in many dependencies (`tesseract` for OCR, `whisper` for audio transcription, etc.). Install only the extras you need if you want to keep CI lightweight.
 
-### extras 一覧
+### Extras list
 
-| extras | 対応フォーマット |
+| Extra | Supported format |
 |---|---|
 | `pdf` | PDF |
 | `docx` | Word |
 | `pptx` | PowerPoint |
 | `xlsx` / `xls` | Excel |
 | `outlook` | Outlook .msg |
-| `audio-transcription` | 音声 → テキスト（whisper） |
-| `youtube-transcription` | YouTube 字幕取得 |
-| `az-doc-intel` | Azure Document Intelligence 統合 |
+| `audio-transcription` | Audio → text (whisper) |
+| `youtube-transcription` | YouTube caption retrieval |
+| `az-doc-intel` | Azure Document Intelligence integration |
 
-## CLI 使用
+## CLI usage
 
 ```bash
 markitdown report.pdf > report.md
@@ -51,14 +51,14 @@ markitdown deck.pptx -o deck.md
 markitdown image.png > image.md           # OCR + EXIF
 markitdown https://youtu.be/<id> > video.md
 
-# プラグイン有効化
+# Enable plugins
 markitdown --use-plugins file.docx
 
 # Azure Document Intelligence
 markitdown -d -e https://<endpoint>.cognitiveservices.azure.com/ scan.pdf
 ```
 
-stdin / stdout でパイプ可能なので、AI エージェントのツールチェインに組み込みやすい。
+It can be piped via stdin/stdout, making it easy to embed in an AI agent's toolchain.
 
 ## Python API
 
@@ -67,11 +67,11 @@ from markitdown import MarkItDown
 
 md = MarkItDown(enable_plugins=False)
 result = md.convert("report.pdf")
-print(result.text_content)        # Markdown 本体
-print(result.title)               # 抽出タイトル（あれば）
+print(result.text_content)        # Markdown body
+print(result.title)               # extracted title (if any)
 ```
 
-LLM で画像説明を生成したい場合:
+To have an LLM generate image descriptions:
 
 ```python
 from openai import OpenAI
@@ -79,87 +79,87 @@ from markitdown import MarkItDown
 
 client = OpenAI()
 md = MarkItDown(llm_client=client, llm_model="gpt-4o")
-result = md.convert("diagram.png")    # 画像の説明文を Markdown に含める
+result = md.convert("diagram.png")    # include the image description in the Markdown
 ```
 
-OpenAI 互換クライアント（OpenAI / Azure OpenAI / OpenRouter / Ollama 等）を渡せば、画像認識を任意モデルに委譲できる。
+By passing an OpenAI-compatible client (OpenAI / Azure OpenAI / OpenRouter / Ollama, etc.), you can delegate image recognition to any model.
 
-## 対応フォーマット
+## Supported formats
 
-| 種別 | 入力 | 抽出される内容 |
+| Type | Input | Extracted content |
 |---|---|---|
-| PDF | `.pdf` | 本文 / 表 / メタデータ。Azure Doc Intel 連携で複雑レイアウト対応 |
-| Word | `.docx` | 見出し / 表 / リスト / コメント |
-| PowerPoint | `.pptx` | スライドテキスト / ノート / 表 |
-| Excel | `.xlsx` / `.xls` | 各シートを Markdown 表として |
-| 画像 | `.png` / `.jpg` / `.tiff` | EXIF + OCR（tesseract）+ LLM による説明 |
-| 音声 | `.mp3` / `.wav` / `.m4a` | 書き起こし（whisper） |
-| HTML | `.html` / `.htm` | 構造保持して Markdown 化 |
-| 表形式 | `.csv` / `.tsv` | Markdown 表 |
-| 構造化 | `.json` / `.xml` | コードブロック内に整形 |
-| アーカイブ | `.zip` / `.epub` | 中身を再帰的に変換 |
-| Web | YouTube URL | 字幕 + メタデータ |
-| Outlook | `.msg` | 件名・本文・添付情報 |
+| PDF | `.pdf` | Body text / tables / metadata. Complex layouts supported via Azure Doc Intel integration |
+| Word | `.docx` | Headings / tables / lists / comments |
+| PowerPoint | `.pptx` | Slide text / notes / tables |
+| Excel | `.xlsx` / `.xls` | Each sheet as a Markdown table |
+| Image | `.png` / `.jpg` / `.tiff` | EXIF + OCR (tesseract) + LLM-generated description |
+| Audio | `.mp3` / `.wav` / `.m4a` | Transcription (whisper) |
+| HTML | `.html` / `.htm` | Converted to Markdown while preserving structure |
+| Tabular | `.csv` / `.tsv` | Markdown table |
+| Structured | `.json` / `.xml` | Formatted inside a code block |
+| Archive | `.zip` / `.epub` | Contents converted recursively |
+| Web | YouTube URL | Captions + metadata |
+| Outlook | `.msg` | Subject, body, attachment info |
 
-## OCR を伴う画像処理
+## Image processing with OCR
 
 ```bash
-# tesseract 必須
+# tesseract required
 brew install tesseract tesseract-lang     # macOS
 sudo apt-get install tesseract-ocr tesseract-ocr-jpn   # Ubuntu
 
 markitdown scan.png > scan.md
 ```
 
-日本語 OCR は `tesseract-ocr-jpn` が必要。bootstrap が同梱しているのはこの理由。
+Japanese OCR requires `tesseract-ocr-jpn`. This is why bootstrap bundles it.
 
-## Azure Document Intelligence 連携
+## Azure Document Intelligence integration
 
-ローカル `pdfminer` ベースだと崩れる「複数段組 PDF」「画像内の表」は Azure Document Intelligence で精度が大きく上がる:
+For cases where a local `pdfminer`-based approach breaks down — "multi-column PDFs" or "tables embedded in images" — Azure Document Intelligence significantly improves accuracy:
 
 ```bash
 markitdown -d -e "https://<name>.cognitiveservices.azure.com/" scan.pdf > scan.md
 ```
 
-API 課金が発生するため CI で全 PDF に当てるのは避ける。LLM への投入精度が問題になったときに切り替える運用が現実的。
+Since this incurs API charges, avoid applying it to every PDF in CI. A more realistic approach is to switch to it when LLM ingestion accuracy becomes an issue.
 
-## プラグイン
+## Plugins
 
 ```bash
-# 例: PowerPoint の埋め込み画像を全部抽出するプラグイン（仮）
+# Example: a plugin (hypothetical) that extracts all embedded images from a PowerPoint file
 pip install markitdown-plugin-pptx-images
 markitdown --use-plugins deck.pptx
 ```
 
-`markitdown_plugin` という entry point group で実装する。社内独自フォーマット対応に有効。
+Implemented via an entry point group called `markitdown_plugin`. Useful for supporting proprietary internal formats.
 
-## RAG / AI エージェント用途での使い分け
+## Choosing an approach for RAG / AI agent use cases
 
-| 状況 | 推奨 |
+| Situation | Recommendation |
 |---|---|
-| PDF / Office を 1 度きりで取り込みたい | `markitdown` CLI で十分 |
-| 大量ドキュメントを継続インデックス化 | LangChain / LlamaIndex の document loader と並列化 |
-| 表構造を厳密に維持 | Azure Doc Intel + markitdown |
-| 機密文書 | LLM 連携をオフ（`llm_client` 渡さない）+ ローカル OCR |
-| Claude Code / Codex CLI に直接渡したい | `markitdown file.pdf \| head -c 100000` で先頭だけ送るパターン |
+| One-off ingestion of a PDF / Office document | The `markitdown` CLI is sufficient |
+| Continuous indexing of large volumes of documents | Parallelize with a LangChain / LlamaIndex document loader |
+| Strict preservation of table structure | Azure Doc Intel + markitdown |
+| Confidential documents | Turn off LLM integration (don't pass `llm_client`) + local OCR |
+| Passing directly to Claude Code / Codex CLI | Pattern of sending only the head with `markitdown file.pdf \| head -c 100000` |
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **`pip install markitdown` だけで extras を入れない** — PDF / DOCX が読めず「対応外フォーマット」エラー。`[all]` または該当 extras を指定
-2. **画像 OCR で日本語が文字化け** — `tesseract-ocr-jpn` が未インストール。OS パッケージで追加
-3. **`llm_client` に API キーを渡さず画像説明が空** — OpenAI クライアント未設定。`OPENAI_API_KEY` を環境変数に設定
-4. **巨大 PDF を丸ごと LLM コンテキストに投入** — 数百ページの PDF は数百万トークンになる。チャンク化 / 抜粋を挟む
-5. **stdout のバイナリ取り扱い** — Markdown は通常テキストだが、画像埋め込み Markdown を出すプラグイン使用時はバイナリ混入注意
-6. **`--use-plugins` を忘れる** — プラグインインストール済みでもデフォルト無効
-7. **`whisper` で 1 時間音声を 1 ファイルで処理** — メモリ枯渇。事前に `ffmpeg` で分割
+1. **Running `pip install markitdown` alone, without extras** — PDF / DOCX can't be read, causing an "unsupported format" error. Specify `[all]` or the relevant extras
+2. **Japanese text becomes garbled during image OCR** — `tesseract-ocr-jpn` isn't installed. Add it via the OS package manager
+3. **Image descriptions come back empty because no API key was passed to `llm_client`** — the OpenAI client isn't configured. Set `OPENAI_API_KEY` as an environment variable
+4. **Feeding an entire huge PDF into the LLM context** — a several-hundred-page PDF can amount to millions of tokens. Insert chunking / excerpting
+5. **Handling of binary data on stdout** — Markdown output is normally text, but watch for binary content mixed in when using plugins that emit Markdown with embedded images
+6. **Forgetting `--use-plugins`** — plugins are disabled by default even when installed
+7. **Processing a 1-hour audio file with `whisper` as a single file** — leads to memory exhaustion. Split it beforehand with `ffmpeg`
 
-## 関連
+## Related
 
-- [`languages/python/python.md`](../languages/python/python.md) — 実行環境
-- [`languages/python/uv.md`](../languages/python/uv.md) — `uv tool install` で隔離インストール
-- [`platforms/docker/docker.md`](../platforms/docker/docker.md) — tesseract / whisper を含むイメージで再現性確保
+- [`languages/python/python.md`](../languages/python/python.md) — runtime environment
+- [`languages/python/uv.md`](../languages/python/uv.md) — isolated installation via `uv tool install`
+- [`platforms/docker/docker.md`](../platforms/docker/docker.md) — ensuring reproducibility with an image that includes tesseract / whisper
 
-## 参考
+## References
 
 - [microsoft/markitdown](https://github.com/microsoft/markitdown)
 - [Azure Document Intelligence](https://learn.microsoft.com/azure/ai-services/document-intelligence/)

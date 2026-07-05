@@ -5,43 +5,43 @@ tags: [github, ci]
 
 # GitHub Environments
 
-GitHub Actions の **Environments** は、デプロイ先（`production`, `staging` 等）ごとに secrets / variables / 承認ゲートを分離する仕組み。`environment:` を job に付けることで保護ルールが適用される。
+GitHub Actions' **Environments** is a mechanism for separating secrets / variables / approval gates per deployment target (`production`, `staging`, etc.). Attaching `environment:` to a job applies its protection rules.
 
-公式: [Managing environments for deployment](https://docs.github.com/en/actions/deployment/targeting-different-environments/managing-environments-for-deployment)
+Official: [Managing environments for deployment](https://docs.github.com/en/actions/deployment/targeting-different-environments/managing-environments-for-deployment)
 
-関連記事:
+Related articles:
 
 - [`platforms/github/github-actions.md`](github-actions.md)
-- [`standards/npm-trusted-publishers.md`](../../standards/npm-trusted-publishers.md)（OIDC で `environment:` を必須化する典型例）
+- [`standards/npm-trusted-publishers.md`](../../standards/npm-trusted-publishers.md) (a typical example of requiring `environment:` with OIDC)
 
-## 何が解決できるか
+## What it solves
 
-| 課題 | Environments で解決 |
+| Problem | Solved by Environments |
 |---|---|
-| production 用 secret を全 job から見える状態にしたくない | environment-scoped secret として、対象 job にのみ露出 |
-| production デプロイは人間承認を挟みたい | Required reviewers |
-| `main` ブランチ以外からの production デプロイを禁じたい | Deployment branch policy |
-| 本番デプロイ時に 5 分の猶予を入れたい（ロールバック対応） | Wait timer |
-| npm publish の OIDC trust policy を環境名で絞りたい | `sub` claim に `environment:production` が含まれる |
+| Don't want production secrets visible to all jobs | Expose as environment-scoped secrets, only to targeted jobs |
+| Want a human approval gate before production deploy | Required reviewers |
+| Want to forbid production deploy from branches other than `main` | Deployment branch policy |
+| Want a 5-minute grace period before production deploy (for rollback) | Wait timer |
+| Want to scope npm publish OIDC trust policy by environment name | `sub` claim includes `environment:production` |
 
-## 作成
+## Creating an environment
 
-`Settings > Environments > New environment` から作成。名前は 255 文字以内、case-insensitive、リポジトリ内でユニーク。
+Create it from `Settings > Environments > New environment`. Name must be 255 characters or fewer, case-insensitive, and unique within the repository.
 
-## Workflow からの利用
+## Using it from a workflow
 
 ```yaml
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: production           # シンプル形式
+    environment: production           # simple form
     steps:
       - run: ./deploy.sh
         env:
-          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}    # production の secret が解決される
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}    # resolves the production secret
 ```
 
-URL を持たせる形式（デプロイ先 URL を Job Summary に表示）:
+Form with a URL (shows the deployment target URL in the Job Summary):
 
 ```yaml
 environment:
@@ -49,7 +49,7 @@ environment:
   url: https://app.example.com
 ```
 
-複数 environment を順に通すデプロイは、job を分けて `needs:` で繋ぐ:
+For a deployment that passes through multiple environments in sequence, split into separate jobs chained with `needs:`:
 
 ```yaml
 jobs:
@@ -62,18 +62,18 @@ jobs:
     steps: [...]
 ```
 
-## 保護ルール
+## Protection rules
 
 ### Required reviewers
 
-最大 6 人（または 6 チーム）まで指定。指定者の少なくとも 1 名（または設定した数）が approve するまで job が waiting 状態になる。
+Specify up to 6 people (or 6 teams). The job stays in a waiting state until at least one (or the configured number) of the specified reviewers approves.
 
-- **Self-review の禁止**: workflow を起動した本人が approve できないよう設定可能
-- 承認待ち中も他の job は走る（`needs:` で連鎖していなければ）
+- **Self-review prevention**: can be configured so the person who triggered the workflow cannot approve it
+- Other jobs continue to run while approval is pending (unless chained via `needs:`)
 
 ### Wait timer
 
-最大 43,200 分（30 日）。job 開始前に必ず指定時間待機する。「approve 後 5 分の猶予でロールバックの最終確認」等。
+Up to 43,200 minutes (30 days). The job always waits the specified time before starting. E.g. "a 5-minute grace period after approval for a final rollback check."
 
 ### Deployment branch / tag policies
 
@@ -84,35 +84,35 @@ jobs:
   - tags: v*
 ```
 
-ワイルドカード（fnmatch）で指定。`Protected branches only` を選ぶと branch protection で保護されているブランチのみが許可される。
+Specified with wildcards (fnmatch). Choosing `Protected branches only` allows only branches protected by branch protection.
 
 ### Custom deployment protection rules
 
-GitHub App ベースの拡張保護（外部承認システム連携、変更管理ツール連携等）。サードパーティ App を install して有効化。
+GitHub App-based extended protection (integration with external approval systems, change management tools, etc.). Enabled by installing a third-party App.
 
 ### Admin bypass
 
-リポジトリ管理者が保護ルールをスキップできるかのトグル。production では原則 OFF。
+A toggle for whether repository admins can skip protection rules. Should be OFF for production as a rule.
 
 ## Environment secrets / variables
 
-| スコープ | 参照 | 用途 |
+| Scope | Reference | Use |
 |---|---|---|
-| Repository | `${{ secrets.X }}` / `${{ vars.X }}` | 全 job から見える |
-| Environment | `${{ secrets.X }}` / `${{ vars.X }}`（環境内 job のみ） | デプロイ先別 |
-| Organization | `${{ secrets.X }}` | 複数リポジトリ共通 |
+| Repository | `${{ secrets.X }}` / `${{ vars.X }}` | Visible from all jobs |
+| Environment | `${{ secrets.X }}` / `${{ vars.X }}` (only jobs within the environment) | Per deployment target |
+| Organization | `${{ secrets.X }}` | Shared across multiple repositories |
 
-優先順位: **Environment > Repository > Organization**。同名の場合 environment が勝つ。
+Precedence: **Environment > Repository > Organization**. When names collide, the environment value wins.
 
-## OIDC との組み合わせ
+## Combining with OIDC
 
-OIDC の `sub` claim に environment 名が含まれる:
+The OIDC `sub` claim includes the environment name:
 
 ```text
 repo:your-org/my-app:environment:production
 ```
 
-クラウド側 trust policy で `environment:production` を含む sub のみ許可することで、staging job が production リソースに触れない設計になる:
+By having the cloud-side trust policy allow only subs containing `environment:production`, you get a design where staging jobs cannot touch production resources:
 
 ```json
 {
@@ -125,34 +125,34 @@ repo:your-org/my-app:environment:production
 }
 ```
 
-npm の Trusted Publishers でも `environment:` を必須化できる。詳細は [`standards/npm-trusted-publishers.md`](../../standards/npm-trusted-publishers.md)。
+npm Trusted Publishers can also require `environment:`. See [`standards/npm-trusted-publishers.md`](../../standards/npm-trusted-publishers.md) for details.
 
-## デプロイ履歴
+## Deployment history
 
-GitHub UI の `Deployments` タブで environment 別の履歴を閲覧可能。各 deployment は Active / Inactive 状態を持ち、API でロールバック相当の操作ができる。
+Per-environment history can be viewed in the `Deployments` tab of the GitHub UI. Each deployment has an Active / Inactive state, and rollback-equivalent operations can be done via the API.
 
 ## API
 
 ```bash
-# environment 一覧
+# list environments
 gh api repos/:owner/:repo/environments
 
-# protection rules 取得
+# get protection rules
 gh api repos/:owner/:repo/environments/production
 
-# secrets 設定
+# set secrets
 gh secret set DEPLOY_KEY --env production
 ```
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **`environment:` を付け忘れて environment secret が見えないと混乱する** — secret 名を repository scope と思い込みがち。`Settings > Environments > <name> > Environment secrets` で実体を確認
-2. **production deploy を `needs:` 抜きで staging と並列実行する** — 段階デプロイの意味が消える。`needs:` で順序を強制
-3. **Required reviewers を「全員」にする** — 1 人でも approve できれば進むため、複数指定 = OR の挙動になる。AND が欲しい場合は app ベースの custom rule
-4. **OIDC trust policy で environment 名を絞らない** — staging の workflow から production リソースに到達できてしまう
-5. **`environment.url` に secret を含む URL を埋め込む** — Job Summary に出るので情報漏洩のリスク
+1. **Forgetting to attach `environment:` and getting confused when environment secrets aren't visible** — tends to assume the secret is at repository scope. Check the actual entry at `Settings > Environments > <name> > Environment secrets`
+2. **Running a production deploy in parallel with staging without `needs:`** — this defeats the purpose of staged deployment. Enforce ordering with `needs:`
+3. **Setting Required reviewers to "everyone"** — since the job proceeds once even one person approves, specifying multiple reviewers behaves as OR. If you want AND, use an App-based custom rule
+4. **Not scoping the environment name in the OIDC trust policy** — allows a staging workflow to reach production resources
+5. **Embedding a URL containing secrets in `environment.url`** — this appears in the Job Summary, risking information leakage
 
-## 参考
+## References
 
 - [About environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/managing-environments-for-deployment)
 - [Configuring OpenID Connect](https://docs.github.com/en/actions/concepts/security/openid-connect)

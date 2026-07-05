@@ -3,112 +3,112 @@ reviewed: 2026-06-28
 tags: [ai-workflow, methodology, practice]
 ---
 
-# AI エージェントの評価（Agent Evaluation / eval）
+# AI Agent Evaluation (Agent Evaluation / eval)
 
-AI エージェントが**タスクを正しく・信頼性高く遂行できているかを定量的に判定する**営み。[オブザーバビリティ](agentic-observability.md) が「本番で何が起きたかを観測する」のに対し、評価は「観測した挙動の良し悪しを判定し、改善に回す」オフライン側を担う。両者は「本番トレース → 失敗の eval データセット化 → 回帰テスト」という閉ループでつながる。
+The practice of **quantitatively judging whether an AI agent performs a task correctly and reliably**. Whereas [observability](agentic-observability.md) is about "observing what happens in production," evaluation is the offline side that "judges the quality of observed behavior and feeds it back into improvement." The two connect in a closed loop: "production traces → turning failures into an eval dataset → regression testing."
 
-エージェント評価は単一の LLM 出力の採点とは質的に異なり、Anthropic は「（1 回の応答の採点ではなく）**ワークフローの監査**であり、モデルをエージェントとして動かすハーネス／スキャフォールド込みで評価する」と表現する。
+Agent evaluation differs qualitatively from scoring a single LLM output. Anthropic describes it as "an **audit of the workflow** (rather than scoring a single response), evaluated together with the harness/scaffolding that runs the model as an agent."
 
-## 単純な LLM 出力評価との違い
+## Difference from evaluating a single LLM output
 
-| | 単一 LLM 評価 | エージェント評価 |
+| | Single LLM evaluation | Agent evaluation |
 |---|---|---|
-| 対象 | 1 回の入出力 | マルチステップの実行履歴（ツール・推論・リトライ） |
-| 観点 | 出力の質 | **outcome（最終的な環境状態）** と **trajectory（軌道）** の両方 |
-| 性質 | 比較的決定的 | 非決定的 — 同じタスクでも結果がばらつく |
+| Target | One input/output pair | A multi-step execution history (tools, reasoning, retries) |
+| Perspective | Output quality | Both **outcome** (final environment state) and **trajectory** |
+| Nature | Relatively deterministic | Non-deterministic — results vary even for the same task |
 
-### outcome 評価 vs trajectory 評価
+### Outcome evaluation vs trajectory evaluation
 
-- **outcome（最終状態）**: 「予約しました」という発話ではなく、**環境側（DB 等）に予約レコードが実在するか**で判定する。ビジネスゴール検証に向く
-- **trajectory（軌道 / プロセス）**: ツール呼び出し・推論・ハンドオフの過程を見る。デバッグと改善に向く
-- outcome だけだと「不正な経路で偶然正解に達する（corrupt success）」を見逃す。**両方を同時に評価する**のが現在の合意
+- **Outcome (final state)**: judged not by an utterance like "I made the reservation" but by **whether a reservation record actually exists on the environment side (e.g., the DB)**. Suited to verifying business goals
+- **Trajectory (process)**: looks at the process of tool calls, reasoning, and handoffs. Suited to debugging and improvement
+- Outcome alone can miss "corrupt success" — reaching the correct result by accident via an invalid path. The current consensus is to **evaluate both simultaneously**
 
-## 評価手法（3 種の grader）
+## Evaluation methods (3 types of grader)
 
-Anthropic は採点器を 3 種に分類する。3 層を組み合わせて費用対効果を最適化するのが定石:
+Anthropic classifies graders into three types. The standard approach is to combine all three layers to optimize cost-effectiveness:
 
-| grader | 内容 | 長所 / 短所 |
+| Grader | Description | Pros / cons |
 |---|---|---|
-| **code-based / programmatic** | ユニットテスト・exact match・静的解析 | 高速・再現可能 / 正しいバリエーションに脆い |
-| **model-based（LLM-as-judge）** | ルーブリック採点・pairwise 比較 | 主観的タスクを扱える / 人間判断とのキャリブレーション必須 |
-| **human** | 専門家レビュー・A/B テスト | ゴールド基準 / 高コスト・低速 |
+| **Code-based / programmatic** | Unit tests, exact match, static analysis | Fast and reproducible / brittle to correct variations |
+| **Model-based (LLM-as-judge)** | Rubric scoring, pairwise comparison | Handles subjective tasks / requires calibration against human judgment |
+| **Human** | Expert review, A/B testing | Gold standard / high cost, low speed |
 
-> Anthropic は「**transcript を実際に読まないと grader が正しく動いているか分からない**」と強調する。自動採点器そのものを人手で検証し続けることが要。
+> Anthropic emphasizes that "**you can't tell whether a grader is working correctly without actually reading the transcript**." Continuously verifying the automated graders themselves by hand is essential.
 
-### LLM-as-judge のバイアスと緩和
+### LLM-as-judge bias and mitigation
 
-主なバイアス: position（位置）/ verbosity（冗長性）/ self-preference（自己選好）/ format / calibration drift。
+Main biases: position / verbosity / self-preference / format / calibration drift.
 
-- **位置バイアス**: pairwise で毎回**順序をランダム化**し、両順序で評価して順序依存の判定はタイ扱いにする（swap-and-average）と大幅に低減する
-- pointwise（絶対スコア）と pairwise（相対比較）を使い分ける。single-turn / multi-turn、reference-based / reference-free も区別する
+- **Position bias**: in pairwise comparisons, **randomize the order every time**, evaluate both orderings, and treat order-dependent judgments as a tie (swap-and-average) — this substantially reduces the bias
+- Use pointwise (absolute score) and pairwise (relative comparison) appropriately, and also distinguish single-turn/multi-turn and reference-based/reference-free
 
-## メトリクス設計：pass@k と pass^k
+## Metric design: pass@k and pass^k
 
-非決定性ゆえ、単発の正解率では不十分。2 つの指標は**正反対の物語**を語る:
+Because of non-determinism, a single-run accuracy rate is insufficient. The two metrics tell **opposite stories**:
 
-- **pass@k** — k 回中 1 回でも成功する確率。**能力（できる可能性）**を測る
-- **pass^k** — k 回すべて成功する確率。**一貫性 / 信頼性**を測る
+- **pass@k** — the probability of succeeding at least once in k attempts. Measures **capability (what's possible)**
+- **pass^k** — the probability of succeeding in all k attempts. Measures **consistency / reliability**
 
-τ-bench では、pass@k がほぼ 100% でも pass^k が大きく落ちる（例: GPT-4o が τ-retail で pass^8 < 25%）。本番要件（1 回でも解ければよいのか、毎回成功が必要か）に応じて使い分ける。outcome 指標（ゴール検証）と trajectory 指標（デバッグ）も併用する。
+In τ-bench, pass@k can be nearly 100% while pass^k drops sharply (e.g., GPT-4o scores pass^8 < 25% on τ-retail). Choose the metric based on production requirements (is solving it once enough, or must it succeed every time?). Also use outcome metrics (goal verification) and trajectory metrics (debugging) together.
 
-## オフライン eval ⇄ オンライン監視の閉ループ
+## The closed loop between offline eval and online monitoring
 
 ```text
-本番トレース ─▶ 失敗を注釈 ─▶ eval データセット化 ─▶ eval で prompt/ツール改善 ─▶ 回帰テスト
+Production trace ─▶ Annotate failure ─▶ Build eval dataset ─▶ Improve prompt/tools via eval ─▶ Regression test
       ▲                                                                          │
-      └──────────────────────── 改善が新たなトレースを生む ◀────────────────────┘
+      └──────────────────────── Improvement generates new traces ◀────────────────────┘
 ```
 
-問題トレースを「ワンクリックで eval データセットへ追加」し、**本番失敗を恒久的な回帰テストに変換**する運用が一般化している。ローンチ前の自動 eval による高速反復と、本番監視による実世界の失敗検知は**どちらか一方では不十分**で、組み合わせて使う。
+It has become common practice to add problematic traces to an eval dataset "with one click," **turning production failures into permanent regression tests**. Fast iteration via automated eval before launch and real-world failure detection via production monitoring are **each insufficient alone** — combine them.
 
-## 主要ベンチマーク
+## Major benchmarks
 
-測るものが異なり、単一ランキングに統合すべきでない:
+They measure different things and should not be collapsed into a single ranking:
 
-| ベンチマーク | 何を測るか |
+| Benchmark | What it measures |
 |---|---|
-| **SWE-bench / SWE-bench Verified** | 実 GitHub issue を解くパッチ生成。リポジトリのテストで検証。Verified は人手検証済み 500 件サブセット |
-| **τ-bench（tau-bench）** | retail / airline のカスタマーサポート。会話終了時の DB 状態をゴールと比較。pass^k で信頼性を測る |
-| **GAIA** | 複数ツール + マルチステップ推論の汎用アシスタント。人間には簡単・LLM には難しい設計 |
-| **WebArena** | 実機能を再現した web サイト上のブラウザ操作タスク（長期ホライズン自律性） |
-| **AgentBench** | OS / DB / 知識グラフ / ゲーム等 8 環境でのエージェント能力 |
-| **BFCL（Berkeley Function Calling Leaderboard）** | 関数（ツール）呼び出し精度。版進化で v4 は agentic 評価・irrelevance 検出も対象 |
+| **SWE-bench / SWE-bench Verified** | Generating patches that solve real GitHub issues. Verified against the repository's own tests. Verified is a human-verified 500-task subset |
+| **τ-bench (tau-bench)** | Retail / airline customer support. Compares the DB state at conversation end against the goal. Uses pass^k to measure reliability |
+| **GAIA** | A general-purpose assistant using multiple tools plus multi-step reasoning. Designed to be easy for humans and hard for LLMs |
+| **WebArena** | Browser-operation tasks on websites that reproduce real functionality (long-horizon autonomy) |
+| **AgentBench** | Agent capability across 8 environments including OS / DB / knowledge graph / games |
+| **BFCL (Berkeley Function Calling Leaderboard)** | Function (tool) calling accuracy. As the version evolves, v4 also covers agentic evaluation and irrelevance detection |
 
-> 公開ベンチは**学習データ汚染（contamination）**のリスクがある。本番品質の担保には自社固有の eval データセットが重要。
+> Public benchmarks carry a risk of **training-data contamination**. A company-specific eval dataset is important for guaranteeing production quality.
 
-## 評価ツール／フレームワーク
+## Evaluation tools / frameworks
 
-実務は「**CI/CD ゲート用の軽量フレームワーク**」+「**人手アノテーション・回帰追跡・ダッシュボード用プラットフォーム**」の 2 本立てに収束する傾向:
+Practice tends to converge on a two-pronged setup: "**lightweight frameworks for CI/CD gates**" plus "**platforms for human annotation, regression tracking, and dashboards**":
 
-| ツール | 種別 | 特徴 |
+| Tool | Type | Characteristics |
 |---|---|---|
-| **OpenAI Evals** | OSS | リファレンス eval ハーネス + レジストリ |
-| **DeepEval**（Confident AI）| OSS（Apache-2.0）| 50+ メトリクス、pytest 統合、CI/CD ゲート向け |
-| **Ragas** | OSS（Apache-2.0）| RAG 評価の標準（faithfulness / context precision・recall）|
-| **Promptfoo** | OSS | 軽量 CI ゲート |
-| **LangSmith** | SaaS | トレース + eval、マルチターン全会話評価 |
-| **Braintrust** / **Arize Phoenix** / **Langfuse** | SaaS / OSS | 回帰追跡・人手アノテーション・[observability](agentic-observability.md) 統合 |
+| **OpenAI Evals** | OSS | Reference eval harness + registry |
+| **DeepEval** (Confident AI) | OSS (Apache-2.0) | 50+ metrics, pytest integration, geared toward CI/CD gates |
+| **Ragas** | OSS (Apache-2.0) | Standard for RAG evaluation (faithfulness / context precision & recall) |
+| **Promptfoo** | OSS | Lightweight CI gate |
+| **LangSmith** | SaaS | Traces + eval, full multi-turn conversation evaluation |
+| **Braintrust** / **Arize Phoenix** / **Langfuse** | SaaS / OSS | Regression tracking, human annotation, [observability](agentic-observability.md) integration |
 
-## ベストプラクティス
+## Best practices
 
-- **小さく始める** — 包括的スイートを待たず、**実際の失敗から 20〜50 タスク**で開始。手動テストをそのままテストケース化する
-- **曖昧さのない reference を作る** — 専門家が同じ判定に至る正解付きタスクにする
-- **正例 / 負例をバランス** — 片側最適化を防ぐ
-- **grader を人間判断にキャリブレートし続ける** — transcript を必ず人手で読み、自動採点器自体を検証する
-- **「有能なエージェントなら実際に解けるタスク」か確認する** — 解けない/壊れたタスクは信号にならない
-- **自社固有 eval で汚染を回避** — 公開ベンチのスコアを過信しない
+- **Start small** — don't wait for a comprehensive suite; start with **20-50 tasks drawn from real failures**. Turn manual tests directly into test cases
+- **Create unambiguous references** — tasks with correct answers that experts would reach identically
+- **Balance positive / negative examples** — prevents one-sided optimization
+- **Keep calibrating graders against human judgment** — always read transcripts by hand and verify the automated graders themselves
+- **Confirm the task is one "a competent agent could actually solve"** — unsolvable or broken tasks provide no signal
+- **Avoid contamination with company-specific evals** — don't over-trust public benchmark scores
 
-## アンチパターン
+## Anti-patterns
 
-- **最終出力だけ採点する** — corrupt success を見逃す。trajectory も見る
-- **単発の正解率で判断する** — 非決定性を無視。pass^k で信頼性を測る
-- **LLM-as-judge を素で信じる** — 位置・冗長性バイアスを緩和せず、人手検証もしない
-- **本番監視と eval を分断する** — 失敗トレースを回帰テストに回さず、同じバグが再発する
+- **Scoring only the final output** — misses corrupt success. Also look at trajectory
+- **Judging by single-run accuracy** — ignores non-determinism. Measure reliability with pass^k
+- **Trusting LLM-as-judge at face value** — without mitigating position/verbosity bias or doing human verification
+- **Separating production monitoring from eval** — failure traces never become regression tests, so the same bug recurs
 
-## 参考
+## References
 
-- Anthropic: [Demystifying evals for AI agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)（outcome vs transcript、3 種 grader、pass@k / pass^k）
-- Anthropic: [Writing effective tools for AI agents](https://www.anthropic.com/engineering/writing-tools-for-agents) / [Bloom（behavioral evaluation OSS）](https://www.anthropic.com/research/bloom)
-- [SWE-bench Verified（OpenAI）](https://openai.com/index/introducing-swe-bench-verified/) / [τ-bench 論文 arXiv:2406.12045](https://arxiv.org/pdf/2406.12045) / [Berkeley Function Calling Leaderboard](https://gorilla.cs.berkeley.edu/leaderboard.html)
-- ツール: [OpenAI Evals](https://github.com/openai/evals) / [DeepEval](https://deepeval.com/) / [Ragas](https://docs.ragas.io/) / [LangChain: Agent Observability](https://www.langchain.com/resources/agent-observability)
-- 関連: [AI エージェントのオブザーバビリティ](agentic-observability.md), [ループエンジニアリング](loop-engineering.md), [Agentic Workflow Patterns](agentic-workflow-patterns.md), [Human-in-the-Loop](human-in-the-loop.md)
+- Anthropic: [Demystifying evals for AI agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents) (outcome vs transcript, the 3 grader types, pass@k / pass^k)
+- Anthropic: [Writing effective tools for AI agents](https://www.anthropic.com/engineering/writing-tools-for-agents) / [Bloom (behavioral evaluation OSS)](https://www.anthropic.com/research/bloom)
+- [SWE-bench Verified (OpenAI)](https://openai.com/index/introducing-swe-bench-verified/) / [τ-bench paper arXiv:2406.12045](https://arxiv.org/pdf/2406.12045) / [Berkeley Function Calling Leaderboard](https://gorilla.cs.berkeley.edu/leaderboard.html)
+- Tools: [OpenAI Evals](https://github.com/openai/evals) / [DeepEval](https://deepeval.com/) / [Ragas](https://docs.ragas.io/) / [LangChain: Agent Observability](https://www.langchain.com/resources/agent-observability)
+- Related: [AI Agent Observability](agentic-observability.md), [Loop Engineering](loop-engineering.md), [Agentic Workflow Patterns](agentic-workflow-patterns.md), [Human-in-the-Loop](human-in-the-loop.md)

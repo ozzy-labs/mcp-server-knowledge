@@ -5,21 +5,21 @@ tags: [methodology, dockerfile]
 
 # Dev Containers
 
-OCI コンテナ内で開発環境を定義する仕様。`.devcontainer/devcontainer.json` をリポジトリ直下に置くと VS Code / GitHub Codespaces / JetBrains / `devcontainer` CLI 等のツールが**同一の隔離環境**を起動できる。マシン依存のセットアップを排除し、AI エージェント（Claude Code / Codex CLI / Gemini CLI / Copilot CLI）も Dev Container 内に常駐させる運用が広がっている。1 リポ内のマルチエージェント構成は `ai/practice/multi-agent-repo.md`、複数リポへの設定配布は `standards/multi-repo-config-sync.md` を参照。
+A specification for defining a development environment inside an OCI container. Placing `.devcontainer/devcontainer.json` at the repository root lets tools such as VS Code, GitHub Codespaces, JetBrains, and the `devcontainer` CLI spin up **the same isolated environment**. It eliminates machine-dependent setup, and it's increasingly common to keep AI agents (Claude Code / Codex CLI / Gemini CLI / Copilot CLI) resident inside the Dev Container too. See `ai/practice/multi-agent-repo.md` for multi-agent setups within a single repo, and `standards/multi-repo-config-sync.md` for distributing config across multiple repos.
 
-公式: [containers.dev](https://containers.dev/) / [Reference](https://containers.dev/implementors/json_reference/)
+Official: [containers.dev](https://containers.dev/) / [Reference](https://containers.dev/implementors/json_reference/)
 
-## なぜ使うか
+## Why use it
 
-| 課題 | Dev Container での解決 |
+| Problem | How Dev Containers solve it |
 |---|---|
-| マシンごとに toolchain が違う | コンテナイメージで統一 |
-| 「動かない」issue がローカル環境差で発生 | コンテナ内で再現 |
-| 新メンバの onboarding に半日 | clone → reopen in container |
-| AI エージェントが CI と違う動作 | CI と同じイメージで開発 |
-| 複数言語が混在 | features で組み合わせる |
+| Toolchains differ per machine | Unified via container image |
+| "It doesn't work" issues from local environment drift | Reproduced inside the container |
+| Onboarding a new member takes half a day | clone → reopen in container |
+| AI agent behaves differently from CI | Develop with the same image as CI |
+| Multiple languages mixed together | Combine via features |
 
-## 最小例
+## Minimal example
 
 ```jsonc
 // .devcontainer/devcontainer.json
@@ -35,62 +35,62 @@ OCI コンテナ内で開発環境を定義する仕様。`.devcontainer/devcont
 }
 ```
 
-これだけで `Reopen in Container` で**Node 24 + gh CLI + 依存インストール済み**の隔離環境が立ち上がる。
+Just this is enough for `Reopen in Container` to bring up an isolated environment with **Node 24 + gh CLI + dependencies already installed**.
 
-## 主要フィールド
+## Key fields
 
-| フィールド | 用途 |
+| Field | Purpose |
 |---|---|
-| `name` | 表示名 |
-| `image` | ベースイメージ（registry 指定） |
-| `build.dockerfile` / `build.context` / `build.args` | カスタム Dockerfile を使う場合 |
-| `features` | Dev Container Feature の追加（後述） |
-| `customizations.vscode.extensions` | VS Code 拡張の自動インストール |
-| `customizations.vscode.settings` | エディタ設定 |
-| `forwardPorts` | コンテナ → ホストへ転送する port |
-| `portsAttributes` | port のラベル・protocol |
-| `mounts` | bind / volume の追加 |
-| `runArgs` | `docker run` への追加引数 (`--gpus=all` 等) |
-| `remoteUser` | コンテナ内のユーザ（既定は `vscode` 等） |
-| `workspaceFolder` | コンテナ内のワークスペースパス |
-| `workspaceMount` | ホスト→コンテナの mount 仕様 |
-| `containerEnv` / `remoteEnv` | コンテナ / ツールサブプロセスの環境変数 |
-| `hostRequirements` | 必要 CPU / メモリ / ストレージ / GPU |
-| `shutdownAction` | コンテナ停止時の挙動 (`none` / `stopContainer` / `stopCompose`) |
+| `name` | Display name |
+| `image` | Base image (registry reference) |
+| `build.dockerfile` / `build.context` / `build.args` | When using a custom Dockerfile |
+| `features` | Add Dev Container Features (see below) |
+| `customizations.vscode.extensions` | Auto-install VS Code extensions |
+| `customizations.vscode.settings` | Editor settings |
+| `forwardPorts` | Ports forwarded from container → host |
+| `portsAttributes` | Port labels / protocol |
+| `mounts` | Additional bind / volume mounts |
+| `runArgs` | Extra args passed to `docker run` (e.g. `--gpus=all`) |
+| `remoteUser` | User inside the container (defaults to e.g. `vscode`) |
+| `workspaceFolder` | Workspace path inside the container |
+| `workspaceMount` | Host → container mount spec |
+| `containerEnv` / `remoteEnv` | Environment variables for the container / tool subprocesses |
+| `hostRequirements` | Required CPU / memory / storage / GPU |
+| `shutdownAction` | Behavior on container stop (`none` / `stopContainer` / `stopCompose`) |
 
-## ライフサイクルコマンド
+## Lifecycle commands
 
-実行順序は固定:
+Execution order is fixed:
 
 ```text
-initializeCommand     ← ホストで実行（Docker 起動前）
+initializeCommand     ← runs on the host (before Docker starts)
        ↓
-[ コンテナビルド・起動 ]
+[ container build / start ]
        ↓
-onCreateCommand       ← 初回コンテナ作成時 1 回
-updateContentCommand  ← prebuild 時に走る（差分更新）
-postCreateCommand     ← 作成最終ステップ
+onCreateCommand       ← runs once, on first container creation
+updateContentCommand  ← runs during prebuild (incremental update)
+postCreateCommand     ← final step of creation
        ↓
-[ 起動完了 ]
+[ startup complete ]
        ↓
-postStartCommand      ← 起動のたび
-postAttachCommand     ← クライアントが attach するたび
+postStartCommand      ← runs on every start
+postAttachCommand     ← runs every time a client attaches
 ```
 
-| コマンド | 典型用途 |
+| Command | Typical use |
 |---|---|
-| `initializeCommand` | ホスト側の鍵生成、`.env` 作成 |
-| `onCreateCommand` | 言語ランタイムのキャッシュ warm-up |
-| `updateContentCommand` | `pnpm install` / `uv sync`（prebuild で走る） |
-| `postCreateCommand` | DB の初期マイグレーション |
-| `postStartCommand` | サービス起動（`docker compose up -d` 等） |
-| `postAttachCommand` | プロンプト・welcome メッセージ |
+| `initializeCommand` | Generating keys on the host, creating `.env` |
+| `onCreateCommand` | Warming up language runtime caches |
+| `updateContentCommand` | `pnpm install` / `uv sync` (runs during prebuild) |
+| `postCreateCommand` | Initial DB migration |
+| `postStartCommand` | Starting services (e.g. `docker compose up -d`) |
+| `postAttachCommand` | Prompt / welcome message |
 
-`updateContentCommand` と `postCreateCommand` の使い分けが Codespaces の **prebuild** で重要（後述）。
+Distinguishing between `updateContentCommand` and `postCreateCommand` matters for Codespaces **prebuild** (see below).
 
-## Features エコシステム
+## Features ecosystem
 
-Features は「**追加 toolchain の宣言的インストール**」。`ghcr.io/<owner>/features/<name>:<version>` の形で参照する:
+Features are "**declarative installation of additional toolchains**." Reference them as `ghcr.io/<owner>/features/<name>:<version>`:
 
 ```jsonc
 {
@@ -106,16 +106,16 @@ Features は「**追加 toolchain の宣言的インストール**」。`ghcr.io
 }
 ```
 
-| カテゴリ | 例 |
+| Category | Examples |
 |---|---|
-| 言語 | `node` / `python` / `go` / `rust` / `java` / `ruby` |
-| ランタイム | `docker-in-docker` / `docker-outside-of-docker` / `kubectl-helm-minikube` |
-| CLI | `github-cli` / `aws-cli` / `azure-cli` / `terraform` |
+| Languages | `node` / `python` / `go` / `rust` / `java` / `ruby` |
+| Runtimes | `docker-in-docker` / `docker-outside-of-docker` / `kubectl-helm-minikube` |
+| CLIs | `github-cli` / `aws-cli` / `azure-cli` / `terraform` |
 | OS | `common-utils` (zsh, oh-my-zsh, sudo, locale) |
 
-**バージョンは必ず major で pin する**（`:2` → `2.x.y` を取る）。`:latest` は再現性を破壊する。コミュニティ Features 一覧は [containers.dev/features](https://containers.dev/features) で検索できる。
+**Always pin versions by major** (`:2` → takes `2.x.y`). `:latest` breaks reproducibility. Browse community Features at [containers.dev/features](https://containers.dev/features).
 
-## Multi-container（Compose）
+## Multi-container (Compose)
 
 ```jsonc
 {
@@ -127,11 +127,11 @@ Features は「**追加 toolchain の宣言的インストール**」。`ghcr.io
 }
 ```
 
-`service` で attach 先を指定。DB / cache 等は別サービスとして同時起動できる。`shutdownAction: stopCompose` でクライアント終了時に全サービスを止める。
+`service` specifies the attach target. DBs, caches, etc. can be started simultaneously as separate services. `shutdownAction: stopCompose` stops all services when the client exits.
 
-## カスタマイゼーション
+## Customizations
 
-VS Code 固有設定:
+VS Code-specific settings:
 
 ```jsonc
 {
@@ -154,20 +154,20 @@ VS Code 固有設定:
 }
 ```
 
-エージェント別の MCP 設定（`.claude.json` / `.codex/config.toml` / 等）は**コンテナ内のホームに撒く**形で運用する。features または `postCreateCommand` で配布する。
+Per-agent MCP configuration (`.claude.json` / `.codex/config.toml` / etc.) is typically managed by dropping it into the **home directory inside the container**, distributed via features or `postCreateCommand`.
 
-## Codespaces 固有: prebuild
+## Codespaces-specific: prebuild
 
-GitHub Codespaces では「prebuild」で起動時間を 1-2 分から数秒に短縮できる:
+In GitHub Codespaces, "prebuild" shortens startup time from 1-2 minutes to a few seconds:
 
-- `updateContentCommand` までを定期 / push 時にビルドしてキャッシュ
-- 利用者が Codespace を起動すると、すでに warm 状態のスナップショットから起動
+- Everything up to `updateContentCommand` is built and cached periodically / on push
+- When a user starts a Codespace, it boots from an already-warm snapshot
 
-`postCreateCommand` は prebuild に乗らない（インスタンス固有のセットアップを残すため）ので、依存インストール等の重い処理は `updateContentCommand` に置く。
+`postCreateCommand` is not included in prebuild (to leave room for instance-specific setup), so heavy work like dependency installation should go into `updateContentCommand`.
 
-## `devcontainer` CLI
+## The `devcontainer` CLI
 
-VS Code / Codespaces を使わずに Dev Container を起動する公式 CLI:
+The official CLI for launching Dev Containers without VS Code / Codespaces:
 
 ```bash
 npm install -g @devcontainers/cli
@@ -178,20 +178,20 @@ devcontainer build --workspace-folder .
 devcontainer run-user-commands --workspace-folder .
 ```
 
-CI で「Dev Container と同じ環境でテストを回す」用途、または GitHub Actions の `devcontainers/ci` アクションで利用される。
+Used for "running tests in the same environment as the Dev Container" in CI, or via the GitHub Actions `devcontainers/ci` action.
 
-## サポート状況
+## Support status
 
-| クライアント | サポート |
+| Client | Support |
 |---|---|
-| VS Code (Dev Containers 拡張) | フル |
-| GitHub Codespaces | フル + prebuild |
-| JetBrains IDEs | フル（一部 features に制約） |
-| `devcontainer` CLI | フル（CI 用途中心） |
-| Cursor | VS Code 互換 |
-| Vim / Neovim | サードパーティプラグイン経由 |
+| VS Code (Dev Containers extension) | Full |
+| GitHub Codespaces | Full + prebuild |
+| JetBrains IDEs | Full (some feature constraints) |
+| `devcontainer` CLI | Full (mainly CI use cases) |
+| Cursor | VS Code-compatible |
+| Vim / Neovim | Via third-party plugins |
 
-## AI エージェントを常駐させるパターン
+## Pattern for keeping an AI agent resident
 
 ```jsonc
 {
@@ -206,28 +206,28 @@ CI で「Dev Container と同じ環境でテストを回す」用途、または
 }
 ```
 
-- `remoteEnv` でホストの環境変数を中継（`localEnv:VAR` 構文）
-- MCP 設定は `postCreateCommand` で再現
-- 鍵類は volume mount または OS のキーストア経由（イメージに焼き付けない）
+- Relay host environment variables via `remoteEnv` (using the `localEnv:VAR` syntax)
+- Reproduce MCP configuration via `postCreateCommand`
+- Keys and secrets go through a volume mount or the OS keystore (never baked into the image)
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **`postCreateCommand` と `postStartCommand` の混同** — 重い処理を `postStartCommand` に書くと毎回起動が遅い。1 回でよい依存インストールは `postCreateCommand` か `updateContentCommand`
-2. **features を `:latest` で参照** — 再現性が崩れる。`:2` のように major で pin
-3. **`workspaceMount` と `workspaceFolder` の不一致** — ホストパスとコンテナパスがずれてエディタが workspace を見失う
-4. **prebuild なしで Codespaces を運用** — `pnpm install` / `uv sync` を毎起動 = 30 秒〜2 分のロス。`updateContentCommand` に寄せると prebuild が効く
-5. **`remoteUser: root` のまま開発** — bind mount したファイルの所有者が root になり、ホスト側で編集権限が壊れる。`updateRemoteUserUID: true` を併用
-6. **Dockerfile 内に直接 pip / npm install を書いて features を使わない** — 共有・更新が困難。features を優先する
-7. **`forwardPorts` を使わずアプリが見えない** — 0.0.0.0 で listen しない、または port が `forwardPorts` に含まれない
-8. **シークレットを `containerEnv` に直書き** — ファイルにコミットされる。`localEnv:` 経由か Codespaces secrets を使う
+1. **Confusing `postCreateCommand` with `postStartCommand`** — putting heavy work in `postStartCommand` slows every startup. One-time dependency installs belong in `postCreateCommand` or `updateContentCommand`
+2. **Referencing features with `:latest`** — breaks reproducibility. Pin by major, e.g. `:2`
+3. **Mismatch between `workspaceMount` and `workspaceFolder`** — host and container paths get out of sync and the editor loses track of the workspace
+4. **Running Codespaces without prebuild** — running `pnpm install` / `uv sync` on every startup costs 30 seconds to 2 minutes. Moving it into `updateContentCommand` lets prebuild take effect
+5. **Staying on `remoteUser: root`** — bind-mounted files end up owned by root, breaking edit permissions on the host side. Combine with `updateRemoteUserUID: true`
+6. **Running pip / npm install directly in the Dockerfile instead of using features** — hard to share and update. Prefer features
+7. **App not reachable because `forwardPorts` isn't used** — not listening on 0.0.0.0, or the port is missing from `forwardPorts`
+8. **Hardcoding secrets in `containerEnv`** — gets committed to the file. Use `localEnv:` or Codespaces secrets instead
 
-## 関連
+## Related
 
-- [`platforms/docker/docker.md`](../platforms/docker/docker.md) — 基盤コンテナ知識
-- [`ai/practice/multi-agent-repo.md`](../ai/practice/multi-agent-repo.md) — 1 リポ内のマルチエージェント構成
-- [`standards/multi-repo-config-sync.md`](multi-repo-config-sync.md) — 複数リポへの `.devcontainer/` 配布
+- [`platforms/docker/docker.md`](../platforms/docker/docker.md) — Foundational container knowledge
+- [`ai/practice/multi-agent-repo.md`](../ai/practice/multi-agent-repo.md) — Multi-agent setups within a single repo
+- [`standards/multi-repo-config-sync.md`](multi-repo-config-sync.md) — Distributing `.devcontainer/` across multiple repos
 
-## 参考
+## References
 
 - [Development Containers Specification](https://containers.dev/)
 - [devcontainer.json reference](https://containers.dev/implementors/json_reference/)

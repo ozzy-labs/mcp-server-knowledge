@@ -5,11 +5,11 @@ tags: [task-runner, rust]
 
 # just
 
-プロジェクト固有のコマンドを `justfile` に集約して実行するコマンドランナー。**ビルドシステムではない**ので make の依存解決・タイムスタンプ追跡を持たず、その分シンプル。`.PHONY` 不要、引数・デフォルト値・属性が宣言的に書ける。AI エージェントが Makefile 風に書いて落とし穴に嵌まりやすい領域なので、make との差分を押さえることが重要。
+A command runner that gathers project-specific commands into a `justfile`. It's **not a build system**, so it has no dependency resolution or timestamp tracking like make, which makes it simpler. No `.PHONY` needed, and arguments/defaults/attributes can be declared declaratively. AI agents often trip up by writing it like a Makefile, so it's important to understand the differences from make.
 
-公式: [just.systems](https://just.systems/) / [just.systems/man/en](https://just.systems/man/en/)
+Official: [just.systems](https://just.systems/) / [just.systems/man/en](https://just.systems/man/en/)
 
-## インストール
+## Installation
 
 ```bash
 # Homebrew
@@ -21,33 +21,33 @@ mise use just
 # cargo
 cargo install just
 
-# 公式インストールスクリプト
+# Official install script
 curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
 
 # WinGet
 winget install --id Casey.Just -e
 ```
 
-## 基本
+## Basics
 
 ```bash
-just                # 既定レシピを実行（justfile の最初）
-just <recipe>       # 指定レシピを実行
-just -l             # レシピ一覧
-just --evaluate     # 変数を評価して表示
-just --fmt          # justfile を整形（1.50.0 で安定化）
-just --choose       # 対話的にレシピを選択
-just --dry-run -n   # 実行せず内容だけ表示
+just                # Run the default recipe (first one in the justfile)
+just <recipe>       # Run the specified recipe
+just -l             # List recipes
+just --evaluate     # Evaluate and display variables
+just --fmt          # Format the justfile (stabilized in 1.50.0)
+just --choose       # Choose a recipe interactively
+just --dry-run -n   # Show what would run without running it
 ```
 
-`justfile` はカレント、その親、**親ディレクトリを再帰的に**探索される。サブディレクトリから実行しても動く。
+The `justfile` is searched for in the current directory, its parents, and **recursively up parent directories**. It works even when run from a subdirectory.
 
-## `justfile` の最小例
+## Minimal `justfile` example
 
 ```just
 # justfile
 
-default: build test    # 最初のレシピが既定。複数の依存を並べる
+default: build test    # The first recipe is the default. Multiple dependencies can be listed
 
 build:
     cargo build
@@ -55,7 +55,7 @@ build:
 test:
     cargo test
 
-# パラメータと既定値
+# Parameters with default values
 release version="dev":
     cargo build --release
     git tag v{{version}}
@@ -63,17 +63,17 @@ release version="dev":
 
 ```bash
 just                # build → test
-just release        # version=dev で実行
+just release        # runs with version=dev
 just release 1.2.0  # version=1.2.0
 ```
 
-### 依存・引数の渡し方
+### Dependencies and passing arguments
 
 ```just
 fmt: clean
     cargo fmt
 
-# 依存にも引数を渡せる
+# Arguments can also be passed to dependencies
 deploy env: (build env) (test env)
     ./scripts/deploy.sh {{env}}
 
@@ -81,37 +81,37 @@ build env:
     cargo build --release --features {{env}}
 ```
 
-`(recipe args)` 形式で依存先のレシピに引数を渡す。
+Use the `(recipe args)` form to pass arguments to a dependency recipe.
 
-### 可変長引数
+### Variadic arguments
 
 ```just
-# 0 個以上
+# Zero or more
 run *args:
     cargo run -- {{args}}
 
-# 1 個以上
+# One or more
 push +files:
     git add {{files}}
     git commit -m "update"
 ```
 
-## 変数と式
+## Variables and expressions
 
 ```just
 project := "myapp"
 version := "1.0.0"
-target_dir := justfile_directory() / "target"     # 関数 + パス連結
-hash := `git rev-parse --short HEAD`              # backtick でシェル実行
+target_dir := justfile_directory() / "target"     # function + path join
+hash := `git rev-parse --short HEAD`              # backticks run a shell command
 
 build:
     @echo "Building {{project}} v{{version}} ({{hash}})"
     cargo build --target-dir {{target_dir}}
 ```
 
-主要な組み込み関数: `justfile_directory()` / `invocation_directory()` / `env_var("KEY")` / `env_var_or_default("KEY", "fallback")` / `os()` / `arch()` / `uppercase()` / `lowercase()` / `clean()`。
+Key built-in functions: `justfile_directory()` / `invocation_directory()` / `env_var("KEY")` / `env_var_or_default("KEY", "fallback")` / `os()` / `arch()` / `uppercase()` / `lowercase()` / `clean()`.
 
-## レシピ属性
+## Recipe attributes
 
 ```just
 [private]
@@ -122,7 +122,7 @@ _helper:
 unit:
     cargo test --lib
 
-[confirm("本当に削除する？")]
+[confirm("Are you sure you want to delete?")]
 nuke:
     rm -rf target
 
@@ -137,7 +137,7 @@ deps:
 
 [no-cd]
 sibling:
-    pwd                    # justfile のあるディレクトリに cd しない
+    pwd                    # do not cd into the justfile's directory
 
 [working-directory: 'src']
 build:
@@ -146,105 +146,105 @@ build:
 [script("python3")]
 analyze:
     import csv
-    print("python から実行")
+    print("run from python")
 
-[doc("リリースの実行")]
+[doc("Run the release")]
 release:
     ./release.sh
 ```
 
-| 属性 | 用途 |
+| Attribute | Purpose |
 |---|---|
-| `[private]` | `just -l` から隠し、`just` 直接呼びを禁止 |
-| `[group('name')]` | 一覧でグループ化 |
-| `[confirm("msg")]` | 実行前に確認プロンプト |
-| `[no-cd]` | デフォルトの「justfile のあるディレクトリに cd」を無効化 |
-| `[linux]` / `[macos]` / `[windows]` / `[unix]` / `[openbsd]` / `[freebsd]` / `[netbsd]` / `[dragonfly]` / `[android]` | OS フィルタ |
-| `[env('NAME', 'VALUE')]` | レシピ単位の環境変数を設定 (1.47.0+) |
-| `[working-directory: '<path>']` | レシピ単位の作業ディレクトリ |
-| `[script("interpreter")]` | レシピ本体を別言語のスクリプトとして実行 |
-| `[doc("...")]` | `just -l` の説明テキスト |
-| `[positional-arguments]` | 引数を `$1` `$2` で受け取る（`{{var}}` ではなく） |
-| `[no-exit-message]` | 失敗時の `error: Recipe ...` を抑制 |
+| `[private]` | Hides from `just -l` and disallows calling it directly via `just` |
+| `[group('name')]` | Groups recipes in the listing |
+| `[confirm("msg")]` | Prompts for confirmation before running |
+| `[no-cd]` | Disables the default behavior of cd'ing into the justfile's directory |
+| `[linux]` / `[macos]` / `[windows]` / `[unix]` / `[openbsd]` / `[freebsd]` / `[netbsd]` / `[dragonfly]` / `[android]` | OS filter |
+| `[env('NAME', 'VALUE')]` | Sets a per-recipe environment variable (1.47.0+) |
+| `[working-directory: '<path>']` | Per-recipe working directory |
+| `[script("interpreter")]` | Runs the recipe body as a script in another language |
+| `[doc("...")]` | Description text shown in `just -l` |
+| `[positional-arguments]` | Receive arguments as `$1` `$2` (instead of `{{var}}`) |
+| `[no-exit-message]` | Suppresses the `error: Recipe ...` message on failure |
 
-## 設定 (`set`)
+## Settings (`set`)
 
 ```just
-set shell := ["bash", "-uc"]                # シェルを bash に固定
+set shell := ["bash", "-uc"]                # pin the shell to bash
 set windows-shell := ["powershell.exe"]
-set dotenv-load := true                     # .env を読む
-set dotenv-required := true                 # .env が無いとエラー
-set positional-arguments := true            # $1, $2, ... で引数受け取り
-set export := true                          # 全変数を環境変数に export
-set fallback := true                        # 親ディレクトリの justfile も探す
+set dotenv-load := true                     # load .env
+set dotenv-required := true                 # error if .env is missing
+set positional-arguments := true            # receive arguments as $1, $2, ...
+set export := true                          # export all variables as environment variables
+set fallback := true                        # also search parent directories for a justfile
 set working-directory := "subproject"
 ```
 
-| 設定 | 用途 |
+| Setting | Purpose |
 |---|---|
-| `shell` | レシピと backtick 実行に使うシェル |
-| `windows-shell` | Windows での同上 |
-| `dotenv-load` | `.env` を自動ロード |
-| `dotenv-filename` | `.env` 以外のファイル名 |
-| `dotenv-path` | 任意パス |
-| `dotenv-override` | 既存環境変数を `.env` で上書き |
-| `dotenv-required` | `.env` 必須 |
-| `export` | 変数を環境変数に export |
-| `positional-arguments` | レシピで `$1` `$2` を有効化 |
-| `fallback` | 親 `justfile` をフォールバック |
-| `allow-duplicate-recipes` | 後勝ちで上書き許容 |
-| `ignore-comments` | `#` 行をスキップ |
+| `shell` | Shell used for recipes and backtick execution |
+| `windows-shell` | Same, for Windows |
+| `dotenv-load` | Auto-load `.env` |
+| `dotenv-filename` | Use a filename other than `.env` |
+| `dotenv-path` | Arbitrary path |
+| `dotenv-override` | Override existing environment variables with `.env` |
+| `dotenv-required` | Require `.env` to exist |
+| `export` | Export variables as environment variables |
+| `positional-arguments` | Enable `$1` `$2` in recipes |
+| `fallback` | Fall back to a parent `justfile` |
+| `allow-duplicate-recipes` | Allow duplicates, last one wins |
+| `ignore-comments` | Skip `#` lines |
 
-## 別言語をレシピに書く
+## Writing recipes in other languages
 
 ```just
-# Python レシピ
+# Python recipe
 analyze:
     #!/usr/bin/env python3
     import json, sys
     data = json.load(open("data.json"))
     print(len(data))
 
-# Node.js レシピ
+# Node.js recipe
 gen:
     #!/usr/bin/env node
     console.log(process.argv);
 ```
 
-shebang から始まると `just` はレシピを単一スクリプトとして実行する。複数行を 1 プロセスで処理したいときに使う（既定では各行が独立した bash プロセス）。
+When a recipe starts with a shebang, `just` executes it as a single script. Use this when you want multiple lines to run in one process (by default, each line runs as an independent bash process).
 
-## make との違い
+## Differences from make
 
-| 観点 | just | make |
+| Aspect | just | make |
 |---|---|---|
-| ビルド差分 | **なし**（毎回実行） | タイムスタンプで差分判定 |
-| `.PHONY` | 不要 | 必須（さもないとファイル名と衝突） |
-| 引数 | レシピの第一級機能 | `target=value` で渡す（読みづらい） |
-| OS 切替 | 属性で宣言的 | `ifeq` で分岐 |
-| エラー表示 | 行番号 + 失敗レシピ名 | 暗号的 |
-| 既定タブ | スペース可 | **タブ強制** |
-| 並列実行 | しない | `-j` で可 |
+| Build diffing | **None** (always runs) | Determined by timestamps |
+| `.PHONY` | Not needed | Required (otherwise conflicts with filenames) |
+| Arguments | First-class recipe feature | Passed via `target=value` (hard to read) |
+| OS switching | Declarative via attributes | Branches via `ifeq` |
+| Error display | Line number + failed recipe name | Cryptic |
+| Default indentation | Spaces allowed | **Tabs required** |
+| Parallel execution | Not built in | Available via `-j` |
 
-`just` は**ビルドではなくコマンドランナー**。`Makefile` で増分ビルドを使っているなら `just` への置き換えはむしろ機能ダウン。`package.json` の `scripts` の自然な進化形と捉えるとよい。
+`just` is a **command runner, not a build tool**. If a `Makefile` relies on incremental builds, replacing it with `just` is actually a functional downgrade. It's best thought of as a natural evolution of `package.json`'s `scripts`.
 
-## AI エージェントがよくやるミス
+## Common AI agent mistakes
 
-1. **`.PHONY` を書く** — `just` には不要。書くと正体不明のレシピ扱いになる
-2. **タブを強制すると思い込む** — スペースインデント可。タブを混ぜると `error: Inconsistent leading whitespace` になる
-3. **`$VAR` をレシピ内で使う** — 既定では `{{var}}` の二重ブレース。`$VAR` はシェル変数として展開される（`set positional-arguments` 時のみ `$1` `$2` が有効）
-4. **依存にもコマンドラインフラグを書こうとする** — 依存は `(recipe args)` で引数を渡す。`build --release` のような書き方は属性ではなくレシピ呼び出し
-5. **make の `@` をそのまま流用してエコーが変わらない** — `just` でも先頭 `@` で「コマンド非表示」になるが、`@` の挙動はやや異なる。`set quiet` で全体抑制が無難
-6. **`set shell := ["bash", "-c"]` だけ書く** — `-u` `-e` `-o pipefail` を併記しないと bash の既定で失敗を見逃す
-7. **`.env` を期待しているのに `set dotenv-load := true` を忘れる** — 既定はオフ
-8. **`just` 単体で並列実行を期待する** — 並列実行は無い。並列にしたいレシピ内で `&` または `xargs -P` を使う
+1. **Writing `.PHONY`** — Not needed in `just`. Doing so treats it as an unrecognized recipe
+2. **Assuming tabs are required** — Space indentation is fine. Mixing tabs causes `error: Inconsistent leading whitespace`
+3. **Using `$VAR` inside a recipe** — By default, variables use double braces `{{var}}`. `$VAR` expands as a shell variable (`$1` `$2` only work with `set positional-arguments`)
+4. **Trying to write command-line flags in a dependency** — Dependencies pass arguments via `(recipe args)`. Something like `build --release` is a recipe call, not an attribute
+5. **Reusing make's `@` and expecting the same echoing behavior** — `just` also uses a leading `@` to suppress command echoing, but the behavior differs slightly. Using `set quiet` for blanket suppression is safer
+6. **Writing only `set shell := ["bash", "-c"]`** — Without also adding `-u` `-e` `-o pipefail`, bash's defaults let failures go unnoticed
+7. **Expecting `.env` but forgetting `set dotenv-load := true`** — This is off by default
+8. **Expecting `just` alone to run things in parallel** — There's no built-in parallelism. Use `&` or `xargs -P` inside a recipe if you want parallel execution
 
-## 関連
+## Related
 
-- [`tools/mise.md`](mise.md) — mise の `tasks` も類似機能を持つ。プロジェクトで両用するならどちらに寄せるか決める
-- [`tools/lefthook.md`](lefthook.md) — Git フック専用ツールとは責務が分かれる
-- [`languages/bash/bash.md`](../languages/bash/bash.md) — レシピ本文を bash で書く前提知識
+- [`tools/mise.md`](mise.md) — mise's `tasks` provide similar functionality. If a project uses both, decide which one to standardize on
+- [`tools/lefthook.md`](lefthook.md) — A dedicated Git hooks tool has separate responsibilities
+- [`languages/bash/bash.md`](../languages/bash/bash.md) — Background knowledge for writing recipe bodies in bash
 
-## 参考
+## References
 
 - [Just Programmer's Manual](https://just.systems/man/en/)
 - [casey/just (GitHub)](https://github.com/casey/just)

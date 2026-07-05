@@ -5,76 +5,76 @@ tags: [go, security, ci]
 
 # govulncheck
 
-Go セキュリティチームが開発する **公式の脆弱性検出 CLI**。`go.sum` の依存にある CVE を機械的に列挙するのではなく、**コールグラフ追跡で実際に到達する脆弱関数のみ** Affected として報告するため、汎用 CVE スキャナよりも誤検出が劇的に少ない。
+The **official vulnerability detection CLI** developed by the Go Security team. Instead of mechanically listing CVEs found among `go.sum` dependencies, it reports only vulnerable functions that are **actually reachable via call-graph tracing** as Affected, resulting in dramatically fewer false positives than generic CVE scanners.
 
-公式: [go.dev/security/vuln](https://go.dev/security/vuln/) / [pkg.go.dev/golang.org/x/vuln/cmd/govulncheck](https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck) / [GitHub](https://github.com/golang/vuln)
+Official: [go.dev/security/vuln](https://go.dev/security/vuln/) / [pkg.go.dev/golang.org/x/vuln/cmd/govulncheck](https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck) / [GitHub](https://github.com/golang/vuln)
 
-データソースは [vuln.go.dev](https://vuln.go.dev/)（Go vulnerability database）。GitHub Advisory / NVD / Go パッケージメンテナからの直接報告を Go チームがトリアージし、OSV 形式で配信する。Go チームは **severity ラベルを付けない方針**（文脈依存と判断）。
+The data source is [vuln.go.dev](https://vuln.go.dev/) (the Go vulnerability database). The Go team triages reports from GitHub Advisory / NVD / direct reports from Go package maintainers and distributes them in OSV format. The Go team follows a **policy of not attaching severity labels** (judged to be context-dependent).
 
-## インストール
+## Installation
 
 ```bash
 go install golang.org/x/vuln/cmd/govulncheck@latest
 ```
 
-Module mode 必須（GOPATH 非対応）。
+Module mode is required (GOPATH is not supported).
 
-## 基本コマンド
+## Basic commands
 
 ```bash
-# カレントモジュールをソースモードで再帰スキャン
+# Recursively scan the current module in source mode
 govulncheck ./...
 
-# テストファイルも対象に含める
+# Include test files in the scan
 govulncheck -test ./...
 
-# 詳細出力（コールスタック含む）
+# Verbose output (including call stacks)
 govulncheck -show=traces,verbose,color ./...
 
-# JSON / SARIF / OpenVEX 出力
+# JSON / SARIF / OpenVEX output
 govulncheck -format=json ./...
 govulncheck -format=sarif ./... > report.sarif
 govulncheck -format=openvex ./...
 
-# コンパイル済みバイナリのスキャン
+# Scan a compiled binary
 govulncheck -mode=binary ./bin/myapp
 
-# スキャン精度（symbol / package / module）
+# Scan precision (symbol / package / module)
 govulncheck -scan=symbol ./...
 
-# 別の DB を使う
+# Use an alternative DB
 govulncheck -db=https://internal-vuln.example.com ./...
 ```
 
-### 主要フラグ
+### Key flags
 
-| フラグ | 役割 |
+| Flag | Role |
 |---|---|
-| `-mode source\|binary\|extract` | スキャン対象。`extract` はバイナリの最小情報 blob を抽出 |
-| `-scan symbol\|package\|module` | 解析の精度。symbol が最高精度（既定相当） |
-| `-show traces,verbose,color` | カンマ区切り。`traces` で完全コールスタック |
-| `-format text\|json\|sarif\|openvex` | 出力形式 |
-| `-test` | テストコードも対象 |
-| `-tags` | カンマ区切りビルドタグ |
-| `-C <dir>` | 作業ディレクトリ変更 |
-| `-db <url>` | カスタム DB（OSV スキーマ準拠） |
+| `-mode source\|binary\|extract` | Scan target. `extract` extracts a minimal information blob from a binary |
+| `-scan symbol\|package\|module` | Analysis precision. `symbol` is the highest precision (roughly the default) |
+| `-show traces,verbose,color` | Comma-separated. `traces` shows the full call stack |
+| `-format text\|json\|sarif\|openvex` | Output format |
+| `-test` | Include test code |
+| `-tags` | Comma-separated build tags |
+| `-C <dir>` | Change working directory |
+| `-db <url>` | Custom DB (must conform to the OSV schema) |
 
-### Exit code の罠
+### Exit code pitfall
 
-テキスト出力では脆弱性 1 件以上で非 0 終了。**`-format=json` / `-format=sarif` / `-format=openvex` 使用時は脆弱性検出有無に関わらず 0 を返す**。CI で fail させたい場合は別途 jq 等で判定が必要。
+In text output, the exit code is non-zero when one or more vulnerabilities are found. **When using `-format=json` / `-format=sarif` / `-format=openvex`, the exit code is always 0 regardless of whether vulnerabilities were detected.** If you want CI to fail on findings, you need separate logic (e.g. `jq`) to make that determination.
 
-## ソースモード vs バイナリモード
+## Source mode vs binary mode
 
-| 項目 | ソース（既定） | バイナリ |
+| Item | Source (default) | Binary |
 |---|---|---|
-| 入力 | Go ソース | コンパイル済みバイナリ |
-| コールグラフ | あり | なし |
-| 精度 | 高（実到達のみ報告） | 低（依存全列挙になりがち） |
-| 用途 | 開発・CI | 配布物の事後チェック |
+| Input | Go source | Compiled binary |
+| Call graph | Yes | No |
+| Precision | High (reports only actual reachability) | Low (tends to enumerate all dependencies) |
+| Use case | Development / CI | Post-hoc check of distributed artifacts |
 
-**ソースモードを優先**。バイナリモードは「ソースが手元にない配布バイナリ」の場合のみ。
+**Prefer source mode.** Use binary mode only when you have a distributed binary without the source available.
 
-## 出力フォーマット
+## Output format
 
 ```text
 Vulnerability #1: GO-2021-0113
@@ -87,13 +87,13 @@ Vulnerability #1: GO-2021-0113
       main.go:12:29: vuln.tutorial.main calls golang.org/x/text/language.Parse
 ```
 
-ID 体系は `GO-YYYY-NNNN`、詳細 URL は `https://pkg.go.dev/vuln/<ID>`。
+The ID scheme is `GO-YYYY-NNNN`, and detail URLs follow `https://pkg.go.dev/vuln/<ID>`.
 
-`=== Informational ===` 区切りで「import はしているがコールスタック無し」の脆弱性を別出し（exit code に影響しない）。
+An `=== Informational ===` section separately lists vulnerabilities that are "imported but have no call stack" (does not affect the exit code).
 
-## CI 統合（GitHub Actions）
+## CI integration (GitHub Actions)
 
-### 公式 Action
+### Official Action
 
 ```yaml
 - uses: golang/govulncheck-action@v1
@@ -102,11 +102,11 @@ ID 体系は `GO-YYYY-NNNN`、詳細 URL は `https://pkg.go.dev/vuln/<ID>`。
     go-package: ./...
 ```
 
-主要 input: `go-version-input` / `go-version-file` / `go-package` / `output-format` / `output-file` / `repo-checkout`。
+Key inputs: `go-version-input` / `go-version-file` / `go-package` / `output-format` / `output-file` / `repo-checkout`.
 
-> **注意**: `output-format` を `json` / `sarif` にすると **脆弱性があっても success を返す**（公式 README 明記）。Code Scanning へ流す場合は別ステップで `github/codeql-action/upload-sarif` を呼ぶ運用が標準。
+> **Note**: Setting `output-format` to `json` / `sarif` causes the action to **return success even when vulnerabilities exist** (explicitly documented in the official README). When feeding results into Code Scanning, the standard practice is to call `github/codeql-action/upload-sarif` in a separate step.
 
-### SARIF → Code Scanning 連携
+### SARIF → Code Scanning integration
 
 ```yaml
 - name: Run govulncheck
@@ -118,25 +118,25 @@ ID 体系は `GO-YYYY-NNNN`、詳細 URL は `https://pkg.go.dev/vuln/<ID>`。
     sarif_file: results.sarif
 ```
 
-**重要**: SARIF を Code Scanning に流す際は `-mode=source`（ソースモード）で実行すること。バイナリモードはソース行番号がなく SARIF 表示が破綻する。
+**Important**: When feeding SARIF into Code Scanning, run in `-mode=source` (source mode). Binary mode has no source line numbers, which breaks SARIF display.
 
-### 直接 fail させる素朴なパターン
+### Naive pattern for failing directly
 
 ```yaml
 - name: govulncheck
   run: |
     go install golang.org/x/vuln/cmd/govulncheck@latest
-    govulncheck ./...        # text モードなので脆弱性検出で非 0 終了
+    govulncheck ./...        # text mode, so exits non-zero on detected vulnerabilities
 ```
 
-## VS Code 統合（Go 拡張）
+## VS Code integration (Go extension)
 
-設定キー `go.diagnostic.vulncheck` に 2 値:
+The `go.diagnostic.vulncheck` setting has 2 values:
 
-- `"Imports"`: gopls が import グラフ全体を `go.mod` 上で診断（軽量だが偽陽性あり）
-- `"Off"`: 無効
+- `"Imports"`: gopls diagnoses the entire import graph against `go.mod` (lightweight but prone to false positives)
+- `"Off"`: Disabled
 
-加えて `gopls.ui.codelenses.run_govulncheck: true` で `go.mod` に「Run govulncheck」コードレンズが現れ、フル解析を on-demand 実行できる。コマンドパレット **`Go: Toggle Vulncheck`** でも切替可。
+Additionally, `gopls.ui.codelenses.run_govulncheck: true` adds a "Run govulncheck" code lens on `go.mod`, letting you run the full analysis on demand. It can also be toggled via the **`Go: Toggle Vulncheck`** command palette entry.
 
 ```jsonc
 "go.diagnostic.vulncheck": "Imports",
@@ -147,34 +147,34 @@ ID 体系は `GO-YYYY-NNNN`、詳細 URL は `https://pkg.go.dev/vuln/<ID>`。
 }
 ```
 
-## 制限・落とし穴
+## Limitations and pitfalls
 
-- **`reflect` 経由の呼び出しは解析対象外**（false negative の可能性）
-- 関数ポインタ・interface 経由の呼び出しは保守的に解析（false positive の可能性）
-- **GOPATH モード非対応** — Go modules 必須
-- バイナリモードは精度低・依存全列挙になりがち
-- 直接依存に CVE があってもコールスタックが無ければ Informational 扱い（テキストモードで非 0 にならない）
-- 個別の発見を「無視（silence）」する公式機能は**無い**
-- DB へのリクエストには **既知の module path のみ送信**、コードは送信されない（[privacy](https://vuln.go.dev/privacy.html)）
+- **Calls made via `reflect` are outside the scope of analysis** (potential false negatives)
+- Calls via function pointers / interfaces are analyzed conservatively (potential false positives)
+- **GOPATH mode is not supported** — Go modules are required
+- Binary mode has lower precision and tends to enumerate all dependencies
+- Even if a direct dependency has a CVE, if there's no call stack it's treated as Informational (does not cause non-zero exit in text mode)
+- There is **no official feature** to "silence" individual findings
+- Only **known module paths** are sent in requests to the DB; code is never sent ([privacy](https://vuln.go.dev/privacy.html))
 
-## 直近の変更
+## Recent changes
 
-- **v1.1.1 (2024-05)**: SARIF 出力 `-format=sarif`
-- **v1.1.2 (2024-06)**: OpenVEX 出力 `-format=openvex`
-- **v1.1.3 (2024-07)**: Go 1.18 未満バイナリの標準ライブラリ脆弱性チェック対応
-- **v1.1.4 (2025-01)**: 大規模プログラムで最大 15% 高速化、JSON に SBOM メッセージ追加
-- **v1.2.0 / v1.3.0 (2026-04)**: Go directive を 1.25 に引き上げ、依存更新中心（GitHub Release ノート未作成）
+- **v1.1.1 (2024-05)**: SARIF output `-format=sarif`
+- **v1.1.2 (2024-06)**: OpenVEX output `-format=openvex`
+- **v1.1.3 (2024-07)**: Support for standard-library vulnerability checks on binaries built with Go < 1.18
+- **v1.1.4 (2025-01)**: Up to 15% speedup on large programs, added SBOM message to JSON
+- **v1.2.0 / v1.3.0 (2026-04)**: Raised the Go directive to 1.25, mostly dependency updates (no GitHub Release notes created)
 
-## AI エージェントがよくやるミス
+## Common AI agent mistakes
 
-1. **`-format=json` で fail を期待** — JSON / SARIF / OpenVEX は脆弱性ありでも exit 0。CI で必ず fail させたいなら text モードか jq での判定が必要
-2. **`-mode=binary` で SARIF 出力** — ソース行番号が無く Code Scanning 表示が壊れる。SARIF は `-mode=source` 必須
-3. **`go.sum` の CVE 一覧と混同** — govulncheck は実際に到達するもののみ Affected として報告。Informational セクションを「すべて修正必須」と誤解しない
-4. **silence 機能を探す** — 公式には無い。誤検出を回避したい場合は `reflect` 経由などのコメントで根拠を残し、PR で議論する
-5. **GOPATH モードで実行** — エラー終了。Module mode で実行する
-6. **`golang/govulncheck-action` のメンテ状況を信頼しすぎる** — 公式 Action だが更新頻度は低い。手動セットアップ（`go install` + 直接実行）が現場では確実
+1. **Expecting failure with `-format=json`** — JSON / SARIF / OpenVEX all exit 0 even when vulnerabilities exist. If you need CI to always fail, use text mode or judge via `jq`
+2. **Using `-mode=binary` with SARIF output** — no source line numbers, which breaks Code Scanning display. SARIF requires `-mode=source`
+3. **Confusing it with a `go.sum` CVE list** — govulncheck reports as Affected only what is actually reachable. Don't mistakenly assume everything in the Informational section "must be fixed"
+4. **Looking for a silence feature** — none exists officially. If you want to avoid a false positive, leave a comment explaining the rationale (e.g. reachable only via `reflect`) and discuss it in the PR
+5. **Running in GOPATH mode** — exits with an error. Run in Module mode
+6. **Over-trusting the maintenance status of `golang/govulncheck-action`** — it's the official Action, but update frequency is low. Manual setup (`go install` + direct execution) is more reliable in practice
 
-## 参考
+## References
 
 - [Go vulnerability management](https://go.dev/security/vuln/)
 - [govulncheck CLI reference](https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck)

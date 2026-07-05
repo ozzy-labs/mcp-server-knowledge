@@ -5,42 +5,42 @@ tags: [dockerfile, oci]
 
 # Docker
 
-アプリケーションをコンテナ（軽量な隔離環境）として配布・実行するプラットフォーム。OCI (Open Container Initiative) 仕様準拠の runtime + CLI + イメージレジストリ + Compose のエコシステム。
+A platform for distributing and running applications as containers (lightweight isolated environments). An ecosystem of an OCI (Open Container Initiative) compliant runtime + CLI + image registry + Compose.
 
-公式: [docs.docker.com](https://docs.docker.com/)
+Official: [docs.docker.com](https://docs.docker.com/)
 
-## インストール
+## Installation
 
 ```bash
 # Docker Desktop (macOS / Windows / Linux)
-# → https://www.docker.com/products/docker-desktop/ からダウンロード
+# → Download from https://www.docker.com/products/docker-desktop/
 
-# Linux（Docker Engine のみ、Desktop なし）
+# Linux (Docker Engine only, no Desktop)
 curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER           # sudo なしで docker 実行
+sudo usermod -aG docker $USER           # run docker without sudo
 newgrp docker
 
-# Homebrew（Docker Desktop）
+# Homebrew (Docker Desktop)
 brew install --cask docker
 
-# 代替: Podman / Colima / OrbStack
-brew install colima docker              # Colima + CLI のみ
+# Alternatives: Podman / Colima / OrbStack
+brew install colima docker              # Colima + CLI only
 colima start
 ```
 
-## 基本的な概念
+## Basic concepts
 
-| 用語 | 意味 |
+| Term | Meaning |
 |---|---|
-| **Image** | 読み取り専用のアプリケーションテンプレート（layer スタック） |
-| **Container** | Image を起動した動的インスタンス |
-| **Dockerfile** | Image のビルド手順スクリプト |
-| **Registry** | Image の配布先（Docker Hub / GHCR / ECR / GCR 等） |
-| **Volume** | 永続化ストレージ（コンテナ外に保存） |
-| **Network** | コンテナ間通信の論理ネットワーク |
-| **Compose** | 複数コンテナの宣言的管理 |
+| **Image** | Read-only application template (stack of layers) |
+| **Container** | Running instance of an image |
+| **Dockerfile** | Script of build instructions for an image |
+| **Registry** | Distribution destination for images (Docker Hub / GHCR / ECR / GCR, etc.) |
+| **Volume** | Persistent storage (stored outside the container) |
+| **Network** | Logical network for inter-container communication |
+| **Compose** | Declarative management of multiple containers |
 
-## Dockerfile 最小例
+## Minimal Dockerfile example
 
 ```dockerfile
 # syntax=docker/dockerfile:1
@@ -61,45 +61,45 @@ EXPOSE 3000
 CMD ["node", "dist/index.js"]
 ```
 
-### 主要命令
+### Key instructions
 
-| 命令 | 用途 |
+| Instruction | Purpose |
 |---|---|
-| `FROM` | ベースイメージ（必須） |
-| `WORKDIR` | 作業ディレクトリ |
-| `COPY` / `ADD` | ファイル追加（`ADD` は URL + 展開も可、`COPY` 推奨） |
-| `RUN` | ビルド時のコマンド実行 |
-| `CMD` | コンテナ起動時のデフォルトコマンド |
-| `ENTRYPOINT` | 必ず実行されるコマンド（CMD は引数扱い） |
-| `EXPOSE` | ドキュメンテーション用のポート宣言（実際の公開は `-p`） |
-| `ENV` | 環境変数 |
-| `ARG` | ビルド時の引数（`docker build --build-arg`） |
-| `USER` | 実行ユーザー（root 以外推奨） |
-| `HEALTHCHECK` | ヘルスチェックコマンド |
-| `VOLUME` | マウントポイント |
+| `FROM` | Base image (required) |
+| `WORKDIR` | Working directory |
+| `COPY` / `ADD` | Add files (`ADD` also supports URLs + extraction; `COPY` is recommended) |
+| `RUN` | Run a command at build time |
+| `CMD` | Default command when the container starts |
+| `ENTRYPOINT` | Command that always runs (CMD is treated as its arguments) |
+| `EXPOSE` | Documentation-only port declaration (actual publishing is via `-p`) |
+| `ENV` | Environment variables |
+| `ARG` | Build-time argument (`docker build --build-arg`) |
+| `USER` | User to run as (non-root recommended) |
+| `HEALTHCHECK` | Health check command |
+| `VOLUME` | Mount point |
 
-## build の基本
+## Build basics
 
 ```bash
-# ビルド
+# Build
 docker build -t myapp:latest .
 
-# タグ付け
+# Tag
 docker tag myapp:latest ghcr.io/org/myapp:1.0.0
 
-# ビルド引数
+# Build args
 docker build --build-arg NODE_ENV=production -t myapp .
 
-# キャッシュ無効化
+# Disable cache
 docker build --no-cache -t myapp .
 
-# プラットフォーム指定（クロスビルド）
+# Specify platform (cross-build)
 docker build --platform linux/amd64,linux/arm64 -t myapp .
 ```
 
 ### BuildKit + buildx
 
-Docker Engine 23 以降は BuildKit がデフォルト（現行は v29 系）。マルチプラットフォームビルドは `docker buildx`:
+BuildKit is the default from Docker Engine 23 onward (currently v29.x). For multi-platform builds use `docker buildx`:
 
 ```bash
 docker buildx create --use --name mybuilder
@@ -107,62 +107,62 @@ docker buildx build --platform linux/amd64,linux/arm64 \
   -t ghcr.io/org/myapp:latest --push .
 ```
 
-## run の基本
+## Run basics
 
 ```bash
-# 最小
+# Minimal
 docker run --rm -it ubuntu:24.04 bash
 
-# デーモン起動 + ポート公開
+# Run as daemon + publish port
 docker run -d -p 3000:3000 --name myapp myapp:latest
 
-# 環境変数
+# Environment variables
 docker run -e DATABASE_URL="postgres://..." myapp
 
-# Volume マウント
+# Volume mount
 docker run -v $(pwd)/data:/app/data myapp               # bind mount
 docker run -v mydata:/app/data myapp                     # named volume
 
-# ネットワーク指定
+# Specify network
 docker run --network mynet myapp
 
-# リソース制限
+# Resource limits
 docker run --cpus 2 --memory 512m myapp
 ```
 
-### よく使うフラグ
+### Common flags
 
-| フラグ | 意味 |
+| Flag | Meaning |
 |---|---|
-| `-d` | デタッチ（バックグラウンド） |
-| `-it` | インタラクティブ + TTY |
-| `--rm` | 停止後に自動削除 |
-| `--name <n>` | コンテナ名 |
-| `-p host:ctr` | ポートマッピング |
-| `-v src:dst` | ボリュームマウント |
-| `-e KEY=VAL` | 環境変数 |
-| `--env-file <f>` | 環境変数ファイル |
-| `--network <n>` | ネットワーク |
-| `--restart <policy>` | 再起動ポリシー（`no` / `on-failure` / `always` / `unless-stopped`） |
+| `-d` | Detached (background) |
+| `-it` | Interactive + TTY |
+| `--rm` | Auto-remove after stop |
+| `--name <n>` | Container name |
+| `-p host:ctr` | Port mapping |
+| `-v src:dst` | Volume mount |
+| `-e KEY=VAL` | Environment variable |
+| `--env-file <f>` | Environment variable file |
+| `--network <n>` | Network |
+| `--restart <policy>` | Restart policy (`no` / `on-failure` / `always` / `unless-stopped`) |
 
-## 状態管理
+## State management
 
 ```bash
-docker ps                       # 実行中コンテナ
-docker ps -a                    # 全コンテナ
-docker images                   # イメージ一覧
-docker logs <container>         # ログ
-docker logs -f <container>      # 追従
-docker exec -it <container> sh  # シェル接続
+docker ps                       # running containers
+docker ps -a                    # all containers
+docker images                   # list images
+docker logs <container>         # logs
+docker logs -f <container>      # follow
+docker exec -it <container> sh  # attach a shell
 docker stop <container>
 docker rm <container>
 docker rmi <image>
-docker system prune -a          # 未使用リソース一括削除
+docker system prune -a          # bulk-remove unused resources
 ```
 
 ## Docker Compose
 
-複数コンテナをまとめて定義。`docker-compose.yaml`（または `compose.yaml`）:
+Define multiple containers together. `docker-compose.yaml` (or `compose.yaml`):
 
 ```yaml
 services:
@@ -197,34 +197,34 @@ volumes:
 ```
 
 ```bash
-docker compose up              # 起動（フォアグラウンド）
-docker compose up -d           # バックグラウンド
-docker compose up --build      # 再ビルド
-docker compose logs -f app     # ログ追従
-docker compose exec app sh     # コンテナに入る
-docker compose down            # 停止・削除
-docker compose down -v         # volume も削除
-docker compose watch           # 変更検知 + 同期（開発用）
+docker compose up              # start (foreground)
+docker compose up -d           # background
+docker compose up --build      # rebuild
+docker compose logs -f app     # follow logs
+docker compose exec app sh     # enter the container
+docker compose down            # stop and remove
+docker compose down -v         # also remove volumes
+docker compose watch           # detect changes + sync (for development)
 ```
 
-## マルチステージビルド
+## Multi-stage builds
 
-ビルド専用ステージと実行ステージを分けて最終イメージを小さくする。上の Dockerfile 例がまさにそれ。効果:
+Separate build-only stages from the runtime stage to shrink the final image. The Dockerfile example above does exactly this. Effects:
 
-- ビルドツール（TypeScript コンパイラ等）を本番イメージから除外
-- イメージサイズが 1/5〜1/10 になることも
-- 攻撃面が減る
+- Excludes build tools (e.g. TypeScript compiler) from the production image
+- Image size can shrink to 1/5–1/10
+- Reduces the attack surface
 
-## イメージサイズ最適化
+## Image size optimization
 
-| 手法 | 効果 |
+| Technique | Effect |
 |---|---|
-| Alpine / distroless ベース | 数 MB〜十数 MB |
-| マルチステージ | ビルド成果物だけ残す |
-| `.dockerignore` | 不要ファイル除外（`node_modules`, `.git`, `dist`） |
-| 依存インストール順序 | 変更頻度の低い `package.json` を先に COPY |
-| `--frozen-lockfile` | 再現性 + キャッシュヒット向上 |
-| `docker buildx build --cache-from` | CI キャッシュ |
+| Alpine / distroless base | A few MB to a few dozen MB |
+| Multi-stage | Keeps only build artifacts |
+| `.dockerignore` | Excludes unneeded files (`node_modules`, `.git`, `dist`) |
+| Dependency install ordering | COPY the rarely-changing `package.json` first |
+| `--frozen-lockfile` | Better reproducibility + cache hits |
+| `docker buildx build --cache-from` | CI cache |
 
 ### `.dockerignore`
 
@@ -240,17 +240,17 @@ dist
 .claude
 ```
 
-## セキュリティベストプラクティス
+## Security best practices
 
-1. **non-root で実行**: `USER node` など
-2. **最新のベースイメージ**: `node:24-alpine` のように固定し Renovate で追随
-3. **SHA ピン留め**: `FROM node:24-alpine@sha256:...` で改ざん防止
-4. **Trivy スキャン**: `trivy image myapp:latest` を CI に組み込む
-5. **secrets はビルド時に焼き込まない**: 環境変数 or volume で runtime 注入
-6. **HEALTHCHECK 設定**: オーケストレータがコンテナの異常を検知できる
-7. **最小権限**: read-only filesystem (`--read-only`)、capability drop (`--cap-drop=ALL`)
+1. **Run as non-root**: e.g. `USER node`
+2. **Pin base image versions**: e.g. `node:24-alpine`, and keep it updated with Renovate
+3. **SHA pinning**: `FROM node:24-alpine@sha256:...` to prevent tampering
+4. **Trivy scanning**: integrate `trivy image myapp:latest` into CI
+5. **Don't bake secrets into the build**: inject at runtime via environment variables or a volume
+6. **Configure HEALTHCHECK**: lets the orchestrator detect container failures
+7. **Least privilege**: read-only filesystem (`--read-only`), capability drop (`--cap-drop=ALL`)
 
-## CI での使い方（GitHub Actions）
+## Usage in CI (GitHub Actions)
 
 ```yaml
 jobs:
@@ -277,58 +277,58 @@ jobs:
           cache-to: type=gha,mode=max
 ```
 
-## Claude Code / MCP との関連
+## Relation to Claude Code / MCP
 
-- MCP サーバーを Docker イメージとして配布する場合、stdio トランスポートはコンテナに閉じるため通常は向かない（子プロセスとして起動される前提）
-- Streamable HTTP トランスポートの MCP サーバーなら Docker 配布が自然
-- 開発サンドボックス（エージェントにシェル実行させる）として Docker を使うパターンも一般的（Codex CLI の `sandbox = "docker"` 等）
+- When distributing an MCP server as a Docker image, the stdio transport doesn't usually fit well since it's confined inside the container (it assumes being launched as a child process)
+- An MCP server using the Streamable HTTP transport is a natural fit for Docker distribution
+- Using Docker as a development sandbox (letting an agent run a shell) is also a common pattern (e.g. Codex CLI's `sandbox = "docker"`)
 
-## トラブルシュート
+## Troubleshooting
 
 ### `Cannot connect to the Docker daemon`
 
-- Docker Desktop が起動していない → 起動
-- Linux でユーザーが `docker` グループに未参加 → `sudo usermod -aG docker $USER`、再ログイン
-- `DOCKER_HOST` の設定ミス
+- Docker Desktop isn't running → start it
+- On Linux, the user isn't in the `docker` group → `sudo usermod -aG docker $USER`, then re-login
+- Misconfigured `DOCKER_HOST`
 
 ### `no space left on device`
 
 ```bash
-docker system df                # 使用量確認
-docker system prune -a --volumes # 全削除（注意）
+docker system df                # check usage
+docker system prune -a --volumes # remove everything (caution)
 ```
 
-Docker Desktop は仮想ディスク容量を別途設定（GUI の「Resources」）。
+Docker Desktop has a separate virtual disk size setting (GUI "Resources").
 
-### Apple Silicon で `exec format error`
+### `exec format error` on Apple Silicon
 
-イメージが `linux/amd64` のみ。`--platform linux/amd64` で明示（Rosetta 経由で遅いが動く）、または multi-arch イメージを使う。
+The image is `linux/amd64` only. Specify `--platform linux/amd64` explicitly (works via Rosetta but slower), or use a multi-arch image.
 
-### ビルドキャッシュが効かない
+### Build cache not working
 
-- COPY 順序が悪い（`package.json` を先に COPY していない）
-- BuildKit が無効化されている（Engine 23+ はデフォルト有効、明示的に切る場合のみ `DOCKER_BUILDKIT=0`）
-- CI でキャッシュ保存先未指定 → GitHub Actions なら `cache-from/to: type=gha`
+- Bad COPY ordering (`package.json` not copied first)
+- BuildKit disabled (enabled by default on Engine 23+; only disable explicitly via `DOCKER_BUILDKIT=0`)
+- No cache destination configured in CI → for GitHub Actions use `cache-from/to: type=gha`
 
-### ファイル権限問題（Linux）
+### File permission issues (Linux)
 
-`USER node` で起動したコンテナが bind mount したディレクトリに書き込めない。UID を合わせる（`--user $(id -u):$(id -g)`）か、`chown` を事前に。
+A container started with `USER node` can't write to a bind-mounted directory. Match the UID (`--user $(id -u):$(id -g)`) or `chown` beforehand.
 
-## 他ツールとの比較
+## Comparison with other tools
 
-| 観点 | Docker Desktop | Colima | OrbStack | Podman |
+| Aspect | Docker Desktop | Colima | OrbStack | Podman |
 |---|---|---|---|---|
-| ライセンス | 大企業は有償 | OSS | 個人 free / 商用有償 | OSS |
-| OS | mac/Win/Linux | mac/Linux | mac のみ | Linux（mac/Win は実験的） |
-| 速度 | 普通 | 速い | 最速 | 速い |
-| Kubernetes | 内蔵 | k3s option | 内蔵 | minikube など |
-| daemonless | いいえ | いいえ | いいえ | はい |
+| License | Paid for large enterprises | OSS | Free for personal use / paid for commercial | OSS |
+| OS | mac/Win/Linux | mac/Linux | mac only | Linux (mac/Win experimental) |
+| Speed | Normal | Fast | Fastest | Fast |
+| Kubernetes | Built-in | k3s option | Built-in | minikube, etc. |
+| Daemonless | No | No | No | Yes |
 
-個人利用や OSS なら Docker Desktop / Colima / OrbStack。ライセンス制約を避けたいなら Colima / Podman。
+For personal use or OSS, Docker Desktop / Colima / OrbStack. To avoid license constraints, Colima / Podman.
 
-## 参考
+## References
 
 - [Dockerfile best practices](https://docs.docker.com/build/building/best-practices/)
 - [Compose specification](https://compose-spec.io/)
-- [Trivy による脆弱性スキャン](../../tools/trivy.md)
-- [GitHub Actions での build-push-action](../github/github-actions.md)
+- [Vulnerability scanning with Trivy](../../tools/trivy.md)
+- [build-push-action in GitHub Actions](../github/github-actions.md)

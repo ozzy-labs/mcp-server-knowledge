@@ -5,26 +5,26 @@ tags: [github, package, security]
 
 # Dependabot
 
-GitHub ネイティブの依存追随ツール。`dependabot.yaml` を置くだけで脆弱性アラートとバージョン更新 PR を自動化する。zero-config・GitHub 統合が強み。Renovate と比べ表現力では劣るが、設定の手軽さで選ばれる。
+GitHub-native dependency-tracking tool. Just drop a `dependabot.yaml` to automate vulnerability alerts and version-update PRs. Its strengths are zero-config setup and tight GitHub integration. It's less expressive than Renovate, but is chosen for its setup simplicity.
 
-公式: [About Dependabot](https://docs.github.com/en/code-security/dependabot)
+Official: [About Dependabot](https://docs.github.com/en/code-security/dependabot)
 
-関連記事:
+Related articles:
 
-- [`tools/renovate.md`](../../tools/renovate.md)（高機能な代替）
-- [`platforms/github/github-actions.md`](github-actions.md)（GitHub Actions の依存も Dependabot で更新できる）
+- [`tools/renovate.md`](../../tools/renovate.md) (a more feature-rich alternative)
+- [`platforms/github/github-actions.md`](github-actions.md) (Dependabot can also update GitHub Actions dependencies)
 
-## 3 種類の Dependabot
+## Three types of Dependabot
 
-| 名称 | 何をする | 設定 |
+| Name | What it does | Setup |
 |---|---|---|
-| **Dependabot alerts** | 既知脆弱性のあるパッケージを検知して通知 | リポジトリ設定で有効化（無料） |
-| **Dependabot security updates** | alerts に基づき脆弱性修正 PR を自動作成 | 同上 |
-| **Dependabot version updates** | 通常のバージョン追随 PR を作成 | `.github/dependabot.yaml` が必要 |
+| **Dependabot alerts** | Detects and notifies about packages with known vulnerabilities | Enable in repository settings (free) |
+| **Dependabot security updates** | Automatically creates vulnerability-fix PRs based on alerts | Same as above |
+| **Dependabot version updates** | Creates regular version-tracking PRs | Requires `.github/dependabot.yaml` |
 
-最初の 2 つは設定ファイル不要（`Settings > Code security` でスイッチ ON）。3 つ目（version updates）が `dependabot.yaml` のスコープ。
+The first two need no config file (toggle ON under `Settings > Code security`). The third (version updates) is what `dependabot.yaml` scopes.
 
-## 最小設定
+## Minimal configuration
 
 ```yaml
 # .github/dependabot.yaml
@@ -40,29 +40,29 @@ updates:
       interval: weekly
 ```
 
-`github-actions` ecosystem を**必ず追加する**。workflow の `uses:` ピンを追随しないと、3 で言及したセキュリティ運用が崩れる。
+**Always add** the `github-actions` ecosystem. If you don't track `uses:` pins in workflows, the security posture mentioned above breaks down.
 
-## サポート ecosystem（抜粋）
+## Supported ecosystems (excerpt)
 
-| `package-ecosystem` | 対象 |
+| `package-ecosystem` | Target |
 |---|---|
 | `npm` | npm / pnpm / yarn |
-| `pip` | Python（requirements.txt, pyproject.toml） |
-| `uv` | uv の lock |
+| `pip` | Python (requirements.txt, pyproject.toml) |
+| `uv` | uv lock |
 | `cargo` | Rust |
 | `gomod` | Go |
 | `gradle` / `maven` | JVM |
 | `composer` | PHP |
 | `bundler` | Ruby |
 | `docker` | Dockerfile |
-| `github-actions` | `.github/workflows/*.yaml`、composite action |
+| `github-actions` | `.github/workflows/*.yaml`, composite actions |
 | `terraform` | Terraform |
 | `devcontainers` | dev container |
 | `mix` | Elixir |
 | `nuget` | .NET |
 | `swift` | Swift |
 
-## 主要オプション
+## Key options
 
 ```yaml
 version: 2
@@ -74,25 +74,25 @@ updates:
       day: monday
       time: "09:00"
       timezone: Asia/Tokyo
-    open-pull-requests-limit: 10        # 同時 PR 数（デフォルト 5）
-    target-branch: develop              # マージ先（デフォルト: default branch）
-    versioning-strategy: increase       # 制約の更新方法
+    open-pull-requests-limit: 10        # concurrent PR count (default 5)
+    target-branch: develop              # merge target (default: default branch)
+    versioning-strategy: increase       # how constraints are updated
     labels: [dependencies]
     reviewers: [your-org/maintainers]
     assignees: [your-username]
     commit-message:
       prefix: chore                     # Conventional Commits prefix
-      include: scope                    # scope に依存名を含める
+      include: scope                    # include dependency name as scope
     cooldown:
-      default-days: 7                   # 公開後 7 日経過まで待つ
+      default-days: 7                   # wait 7 days after release before updating
     ignore:
       - dependency-name: react
-        versions: ["19.x"]              # 19 系を無視
+        versions: ["19.x"]              # ignore the 19.x line
       - dependency-name: "@types/*"
-        update-types: [version-update:semver-major]    # 型定義は major 更新を無視
+        update-types: [version-update:semver-major]    # ignore major updates for type defs
     allow:
-      - dependency-type: production     # production のみ
-    groups:                             # 関連 dep をまとめて 1 PR に
+      - dependency-type: production     # production only
+    groups:                             # bundle related deps into one PR
       types:
         patterns: ["@types/*"]
         update-types: [minor, patch]
@@ -100,21 +100,21 @@ updates:
         patterns: ["eslint", "eslint-*", "@typescript-eslint/*"]
 ```
 
-## グループ化（複数 dep を 1 PR にまとめる）
+## Grouping (bundling multiple deps into one PR)
 
-PR ノイズが多すぎる場合の主要対策。`groups:` で論理グループ単位の PR にまとめる:
+The main countermeasure when PR noise is excessive. Use `groups:` to bundle logical groups into a single PR:
 
 ```yaml
 groups:
   minor-and-patch:
-    update-types: [minor, patch]      # major は個別 PR、minor/patch はまとめて
+    update-types: [minor, patch]      # major stays as individual PRs; minor/patch get bundled
   testing:
     patterns: ["vitest", "@vitest/*", "playwright*"]
 ```
 
-## `cooldown`（公開直後の更新を遅らせる）
+## `cooldown` (delaying updates right after release)
 
-新リリース直後は隠れた regression が混入しがち。`cooldown` で N 日置く:
+Hidden regressions are more likely right after a new release. Use `cooldown` to add an N-day buffer:
 
 ```yaml
 cooldown:
@@ -124,37 +124,37 @@ cooldown:
   semver-patch-days: 3
 ```
 
-## Conventional Commits 連携
+## Conventional Commits integration
 
 ```yaml
 commit-message:
   prefix: chore
-  prefix-development: chore           # devDependencies は別 prefix も可
-  include: scope                      # → "chore(deps): bump react from 19.0.0 to 19.0.1"
+  prefix-development: chore           # devDependencies can use a different prefix
+  include: scope                      # -> "chore(deps): bump react from 19.0.0 to 19.0.1"
 ```
 
-`commitlint` と組み合わせる場合、prefix が type と一致するように設定する（[`tools/commitlint.md`](../../tools/commitlint.md)）。
+When combining with `commitlint`, configure the prefix to match a valid type ([`tools/commitlint.md`](../../tools/commitlint.md)).
 
-## Renovate との比較
+## Comparison with Renovate
 
-| 観点 | Dependabot | Renovate |
+| Aspect | Dependabot | Renovate |
 |---|---|---|
-| 設定 | `dependabot.yaml`（GitHub native） | `renovate.json`（self-hosted or GitHub App） |
-| 設定表現力 | 中 | **高**（regex manager, packageRules, presets） |
-| グループ化 | あり（`groups:`） | あり（より柔軟） |
-| 自動マージ | なし（GitHub Auto-merge と組み合わせ） | あり（`automerge: true`） |
-| Lock file maintenance | 限定的 | あり |
-| 利用料 | 無料 | 無料（OSS）/ 有料 SaaS |
-| 適性 | GitHub に閉じた小〜中規模 | マルチエコシステム・複雑な戦略 |
+| Configuration | `dependabot.yaml` (GitHub native) | `renovate.json` (self-hosted or GitHub App) |
+| Configuration expressiveness | Medium | **High** (regex manager, packageRules, presets) |
+| Grouping | Yes (`groups:`) | Yes (more flexible) |
+| Auto-merge | None (combine with GitHub Auto-merge) | Yes (`automerge: true`) |
+| Lock file maintenance | Limited | Yes |
+| Cost | Free | Free (OSS) / paid SaaS |
+| Best fit | Small-to-medium, GitHub-only | Multi-ecosystem, complex strategies |
 
-両方走らせない（PR が二重になる）。一般的には:
+Don't run both (PRs get duplicated). Generally:
 
-- **シンプル運用 / GitHub native 嗜好** → Dependabot
-- **モノレポ / 高度な戦略 / 自動マージ** → Renovate
+- **Simple operations / GitHub-native preference** -> Dependabot
+- **Monorepo / advanced strategies / auto-merge** -> Renovate
 
-## Auto-merge と組み合わせる
+## Combining with Auto-merge
 
-Dependabot 自体は auto-merge 機能を持たない。GitHub の Auto-merge + workflow で実現する:
+Dependabot itself has no auto-merge feature. Achieve it with GitHub's Auto-merge + a workflow:
 
 ```yaml
 # .github/workflows/dependabot-automerge.yaml
@@ -179,17 +179,17 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-`update-type` で patch のみ自動マージするのが安全な落としどころ。
+Auto-merging only patch updates via `update-type` is the safe compromise.
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **`github-actions` ecosystem を入れ忘れる** — workflow の SHA pin が古いまま放置される
-2. **`open-pull-requests-limit` を上げすぎて PR 爆発させる** — レビュー追従不能。デフォルト 5 か `groups:` で集約
-3. **`ignore:` で major 全体を無視するつもりが書式ミスで効かない** — `versions: [">=19"]` のように semver 範囲で書く
-4. **Dependabot の commit が commitlint で reject される** — `commit-message.prefix` を Conventional Commits の type に合わせる
-5. **Renovate と Dependabot を同時に走らせる** — 同一 dep に対して 2 つの PR が立つ。片方を必ず無効化
+1. **Forgetting to add the `github-actions` ecosystem** — workflow SHA pins stay stale
+2. **Setting `open-pull-requests-limit` too high, causing a PR explosion** — reviews can't keep up. Keep the default of 5, or consolidate with `groups:`
+3. **Intending to ignore all majors via `ignore:` but the syntax doesn't work** — write it as a semver range like `versions: [">=19"]`
+4. **Dependabot commits get rejected by commitlint** — align `commit-message.prefix` with a valid Conventional Commits type
+5. **Running Renovate and Dependabot simultaneously** — two PRs get opened for the same dependency. Always disable one of them
 
-## 参考
+## References
 
 - [About Dependabot](https://docs.github.com/en/code-security/dependabot)
 - [Configuration options for the dependabot.yml file](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file)

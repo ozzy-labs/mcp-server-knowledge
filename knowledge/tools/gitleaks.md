@@ -5,11 +5,11 @@ tags: [security, git-hook, go]
 
 # Gitleaks
 
-Git リポジトリに誤コミットされたシークレット（API キー、トークン、秘密鍵）を検出する CLI。pre-commit や CI で実行する想定。Go 製の単一バイナリ。
+A CLI that detects secrets (API keys, tokens, private keys) accidentally committed to a Git repository. Intended for use in pre-commit or CI. A single Go binary.
 
-公式: [github.com/gitleaks/gitleaks](https://github.com/gitleaks/gitleaks)
+Official: [github.com/gitleaks/gitleaks](https://github.com/gitleaks/gitleaks)
 
-## インストール
+## Installation
 
 ```bash
 # mise
@@ -25,60 +25,60 @@ go install github.com/gitleaks/gitleaks/v8@latest
 docker run --rm -v "$PWD":/path zricethezav/gitleaks:latest detect --source /path
 ```
 
-## 主要サブコマンド
+## Main subcommands
 
-| コマンド | 用途 |
+| Command | Purpose |
 |---|---|
-| `gitleaks git` | Git リポジトリ（履歴 / ステージ）をスキャン |
-| `gitleaks dir` | Git 以外のディレクトリ・ファイルをスキャン |
-| `gitleaks stdin` | 標準入力をスキャン |
+| `gitleaks git` | Scan a Git repository (history / staged) |
+| `gitleaks dir` | Scan a non-Git directory or files |
+| `gitleaks stdin` | Scan standard input |
 
-> v8.19.0 で `detect` / `protect` は非推奨化された（`--help` から非表示・後方互換あり）。新規導入では `git` / `dir` / `stdin` を使う。
+> As of v8.19.0, `detect` / `protect` are deprecated (hidden from `--help`, but still backward compatible). For new setups, use `git` / `dir` / `stdin`.
 
-## 基本的な使い方
+## Basic usage
 
 ```bash
-# 履歴全体
+# Entire history
 gitleaks git --no-banner
 
-# 現在のコミット以降のみ
+# Only from the current commit onward
 gitleaks git --no-banner --log-opts="HEAD~10..HEAD"
 
-# ステージ中のファイル（pre-commit）
+# Staged files only (pre-commit)
 gitleaks git --pre-commit --staged --no-banner
 
-# 終了コードで CI 判定
+# Use exit code for CI judgment
 gitleaks git --exit-code 1
 ```
 
-### 主要フラグ
+### Main flags
 
-| フラグ | 意味 |
+| Flag | Meaning |
 |---|---|
-| `--no-banner` | ロゴ省略 |
-| `--verbose` | 詳細出力 |
-| `--redact` | 検出値を `***` に置換してログ漏洩防止 |
-| `--report-format <json\|csv\|sarif>` | 出力形式 |
-| `--report-path <path>` | ファイル出力 |
-| `--config <path>` | カスタム設定 |
-| `--baseline-path <path>` | 既知の検出を無視（差分のみ報告） |
-| `--log-opts "<git-log-args>"` | スキャン範囲を `git log` 構文で指定 |
+| `--no-banner` | Suppress logo |
+| `--verbose` | Verbose output |
+| `--redact` | Replace detected values with `***` to prevent log leakage |
+| `--report-format <json\|csv\|sarif>` | Output format |
+| `--report-path <path>` | Output to file |
+| `--config <path>` | Custom config |
+| `--baseline-path <path>` | Ignore known findings (report only diffs) |
+| `--log-opts "<git-log-args>"` | Specify scan range using `git log` syntax |
 
-## 内蔵ルール
+## Built-in rules
 
-[デフォルトルール](https://github.com/gitleaks/gitleaks/blob/master/config/gitleaks.toml) に 150+ パターン:
+The [default rules](https://github.com/gitleaks/gitleaks/blob/master/config/gitleaks.toml) cover 150+ patterns:
 
-- AWS / GCP / Azure アクセスキー
-- GitHub / GitLab PAT、App Token、OAuth トークン
-- Slack / Stripe / SendGrid / Twilio / DigitalOcean 等の主要 SaaS API キー
-- RSA / PGP 秘密鍵、SSH 秘密鍵
-- JWT、パスワード付き DB URL
+- AWS / GCP / Azure access keys
+- GitHub / GitLab PATs, App Tokens, OAuth tokens
+- Major SaaS API keys such as Slack / Stripe / SendGrid / Twilio / DigitalOcean
+- RSA / PGP private keys, SSH private keys
+- JWTs, DB URLs with embedded passwords
 
-## カスタム設定 `.gitleaks.toml`
+## Custom config `.gitleaks.toml`
 
 ```toml
 [extend]
-# デフォルトを継承（推奨）
+# Inherit defaults (recommended)
 useDefault = true
 
 [[rules]]
@@ -93,36 +93,36 @@ regex = '''postgres://[^\s]+:[^\s]+@[^\s/]+/'''
 entropy = 3.5
 
 [allowlist]
-# 誤検出の除外
+# Exclude false positives
 paths = [
   '''(.*?)(jpg|gif|doc|pdf|bin|lock)$''',
   '''tests/fixtures/.*''',
 ]
 regexes = [
-  '''AKIA[0-9A-Z]{16}''',  # テスト用ダミー
+  '''AKIA[0-9A-Z]{16}''',  # dummy for testing
 ]
-commits = ["abc123def..."]  # 特定コミットを除外
+commits = ["abc123def..."]  # exclude specific commits
 ```
 
-## 検出値の取り扱い
+## Handling detected values
 
-**絶対にしてはいけない**:
+**Absolutely never**:
 
-- 検出された値を GitHub Issue / PR / Slack にそのまま貼る
-- CI ログに平文で残す
-- 「重要ではない」として放置する
+- Paste the detected value verbatim into a GitHub Issue / PR / Slack
+- Leave it in CI logs in plaintext
+- Ignore it as "not important"
 
-**正しい対応**:
+**Correct response**:
 
-1. その場でキーを**ローテーション**（新キー発行 → 旧キー無効化）
-2. Git 履歴から除去（`git filter-repo`、BFG Repo-Cleaner）
-3. force push で全ブランチを更新
-4. チームに共有（他の人が pull して lost 状態を防ぐ）
-5. なぜ検出をすり抜けて commit されたかを振り返る
+1. **Rotate** the key immediately (issue a new key → invalidate the old one)
+2. Remove it from Git history (`git filter-repo`, BFG Repo-Cleaner)
+3. Force push to update all branches
+4. Notify the team (to prevent others from ending up in a lost-commit state after pulling)
+5. Review why it slipped past detection and got committed
 
-**Git 履歴から消しても安全ではない**（push 済みならミラー・GitHub の reflog に残る可能性）。ローテーションが最優先。
+**Removing it from Git history is not sufficient by itself** (if already pushed, it may remain in mirrors or GitHub's reflog). Rotation is the top priority.
 
-## pre-commit 連携（lefthook）
+## pre-commit integration (lefthook)
 
 ```yaml
 pre-commit:
@@ -131,9 +131,9 @@ pre-commit:
       run: gitleaks git --pre-commit --staged --no-banner
 ```
 
-`gitleaks git --pre-commit --staged` はステージ中のファイルのみを対象にする高速モード。
+`gitleaks git --pre-commit --staged` is a fast mode that only targets staged files.
 
-## CI での使い方
+## Usage in CI
 
 ### GitHub Actions
 
@@ -141,10 +141,10 @@ pre-commit:
 - uses: gitleaks/gitleaks-action@v2
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}  # 組織利用は有償
+    GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}  # paid for organization use
 ```
 
-### 生コマンド
+### Raw command
 
 ```yaml
 - run: gitleaks git --no-banner --redact --report-format sarif --report-path gitleaks.sarif
@@ -154,12 +154,12 @@ pre-commit:
     sarif_file: gitleaks.sarif
 ```
 
-## Git 履歴のクリーンアップ
+## Cleaning up Git history
 
-検出された場合の履歴書き換え:
+Rewriting history once a leak is detected:
 
 ```bash
-# git filter-repo（推奨、BFG より正確）
+# git filter-repo (recommended, more accurate than BFG)
 pip install git-filter-repo
 git filter-repo --path <leaked-file> --invert-paths
 
@@ -167,52 +167,52 @@ git filter-repo --path <leaked-file> --invert-paths
 bfg --delete-files <leaked-file>
 git reflog expire --expire=now --all && git gc --prune=now --aggressive
 
-# push（全ブランチ force push）
+# push (force push all branches)
 git push --force --all
 git push --force --tags
 ```
 
-これは**破壊的操作**。他のコラボレーターがクローン済みの場合は事前通知が必須。
+This is a **destructive operation**. If other collaborators have already cloned the repo, advance notice is essential.
 
-## false positive の抑制
+## Suppressing false positives
 
-優先度順:
+In order of priority:
 
-1. `.gitleaks.toml` の `allowlist.regexes` に追加（パターンで除外）
-2. `allowlist.paths` でディレクトリ除外（`tests/fixtures/`）
-3. インラインコメント `gitleaks:allow` を該当行末に付与（例: `apiKey := "AKIA0000000000000000" // gitleaks:allow`）
-4. 最終手段として `allowlist.commits` で特定コミット除外
+1. Add to `allowlist.regexes` in `.gitleaks.toml` (exclude by pattern)
+2. Exclude a directory with `allowlist.paths` (e.g. `tests/fixtures/`)
+3. Add an inline comment `gitleaks:allow` at the end of the relevant line (e.g. `apiKey := "AKIA0000000000000000" // gitleaks:allow`)
+4. As a last resort, exclude specific commits with `allowlist.commits`
 
-## トラブルシュート
+## Troubleshooting
 
-### `gitleaks git` が遅い
+### `gitleaks git` is slow
 
-リポジトリが巨大だと Git 履歴全走査で時間がかかる。`--log-opts` で範囲を絞る:
+For large repositories, scanning the entire Git history takes time. Narrow the range with `--log-opts`:
 
 ```bash
 gitleaks git --log-opts="--since='1 month ago'"
 ```
 
-### CI で検出したが個人環境で通る
+### CI detects a leak but it passes locally
 
-`--pre-commit --staged`（ステージのみ）と `gitleaks git`（履歴全走査）はスコープが異なる。既存のコミット履歴に含まれる漏洩は履歴全走査のみが拾う。
+`--pre-commit --staged` (staged only) and `gitleaks git` (full history scan) have different scopes. Leaks present in existing commit history are only caught by a full history scan.
 
-### `gitleaks-action` が有料エラー
+### `gitleaks-action` throws a paid-tier error
 
-組織アカウントでは `GITLEAKS_LICENSE` が必要（無料枠は個人のみ）。セルフホストランナー + 生コマンドで迂回可能。
+Organization accounts require `GITLEAKS_LICENSE` (the free tier is for individuals only). This can be worked around with a self-hosted runner plus the raw command.
 
-### Git 以外のディレクトリをスキャンしたい
+### Want to scan a non-Git directory
 
-`gitleaks dir <path>` を使う（Git 履歴なし）。
+Use `gitleaks dir <path>` (no Git history involved).
 
-## 他ツールとの比較
+## Comparison with other tools
 
-| 観点 | Gitleaks | TruffleHog | detect-secrets | Trivy (secret) |
+| Aspect | Gitleaks | TruffleHog | detect-secrets | Trivy (secret) |
 |---|---|---|---|---|
-| 検出精度 | 高（150+ パターン） | 非常に高（API 検証付き） | 中 | 中 |
-| 速度 | 速い（Go） | 中 | 遅い（Python） | 速い |
-| history scan | あり | あり | 限定的 | あり |
-| pre-commit | あり | あり | 専用 | あり |
-| ライセンス | MIT（組織 CI は有償） | AGPL + 有償 | Apache 2.0 | Apache 2.0 |
+| Detection accuracy | High (150+ patterns) | Very high (with API verification) | Medium | Medium |
+| Speed | Fast (Go) | Medium | Slow (Python) | Fast |
+| History scan | Yes | Yes | Limited | Yes |
+| pre-commit | Yes | Yes | Dedicated | Yes |
+| License | MIT (paid for org CI) | AGPL + paid | Apache 2.0 | Apache 2.0 |
 
-本リポジトリは Gitleaks + Trivy (secret) の二段構え。Gitleaks が pre-commit で弾き、Trivy が CI で最終チェック。
+This repository uses a two-stage setup of Gitleaks + Trivy (secret). Gitleaks blocks at pre-commit, and Trivy performs the final check in CI.

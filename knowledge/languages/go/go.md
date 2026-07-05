@@ -5,77 +5,77 @@ tags: [go, language]
 
 # Go
 
-Google 発のシステムプログラミング言語。並行処理（goroutine / channel）、シンプルな型システム、強力な標準ライブラリ、静的バイナリ単一ファイル配布で知られる。CLI / サーバー / 分散システム / DevOps ツールチェーンで広く採用される。
+A systems programming language from Google. Known for concurrency (goroutines / channels), a simple type system, a powerful standard library, and single-binary static distribution. Widely adopted for CLIs, servers, distributed systems, and DevOps toolchains.
 
-公式: [go.dev](https://go.dev/) / [Specification](https://go.dev/ref/spec) / [Modules Reference](https://go.dev/ref/mod) / [Standard library](https://pkg.go.dev/std)
+Official: [go.dev](https://go.dev/) / [Specification](https://go.dev/ref/spec) / [Modules Reference](https://go.dev/ref/mod) / [Standard library](https://pkg.go.dev/std)
 
-## バージョン状況（2026-05 時点）
+## Version status (as of 2026-05)
 
-- 最新安定版: **Go 1.26.0**（2026-02 リリース）
-- サポート対象: 「最新 2 リリース」のみ → **1.25 と 1.26**
-- リリースサイクル: 約 6 か月ごと
+- Latest stable: **Go 1.26.0** (released 2026-02)
+- Supported: "latest 2 releases" only → **1.25 and 1.26**
+- Release cycle: roughly every 6 months
 
-`go` バイナリは公式インストーラ / Homebrew / mise（aqua 経由）/ apt 等で導入可能。複数バージョンを切り替えるなら mise / asdf を推奨。
+The `go` binary can be installed via the official installer / Homebrew / mise (via aqua) / apt, etc. If you need to switch between multiple versions, mise / asdf is recommended.
 
-## モジュール（go.mod / go.sum / go.work）
+## Modules (go.mod / go.sum / go.work)
 
-### 主要ディレクティブ
+### Key directives
 
-| ディレクティブ | 役割 |
+| Directive | Role |
 |---|---|
-| `module <path>` | モジュールパス（必須・1 つのみ） |
-| `go <version>` | **最小必須** Go バージョン（1.21+ で厳密化） |
-| `toolchain go<version>` | 推奨ツールチェーン（go 行より新しい場合のみ有効） |
-| `require <mod> <ver>` | 依存。`// indirect` は間接依存 |
-| `replace <a> => <b>` | 置換（メインモジュールのみ）。ローカルパスも可 |
-| `exclude <mod> <ver>` | バージョン除外 |
-| `retract <ver>` | 公開済みバージョンの取消し宣言 |
-| `tool <pkg>` | (1.24+) ツール依存。`tools.go` の blank import 不要に |
-| `ignore <dir>` | (1.25+) 特定ディレクトリ無視 |
+| `module <path>` | Module path (required, exactly one) |
+| `go <version>` | **Minimum required** Go version (strictly enforced since 1.21+) |
+| `toolchain go<version>` | Preferred toolchain (only effective if newer than the `go` line) |
+| `require <mod> <ver>` | Dependency. `// indirect` marks an indirect dependency |
+| `replace <a> => <b>` | Replacement (main module only). Local paths allowed |
+| `exclude <mod> <ver>` | Version exclusion |
+| `retract <ver>` | Declares retraction of a published version |
+| `tool <pkg>` | (1.24+) Tool dependency. No longer needs a blank import in `tools.go` |
+| `ignore <dir>` | (1.25+) Ignore a specific directory |
 
-### 主要コマンド
+### Key commands
 
 ```bash
 go mod init example.com/myapp
-go mod tidy                    # 不要依存削除＋不足追加（最頻用）
-go mod download                # キャッシュへプリフェッチ
-go mod why example.com/x       # なぜ必要か説明
-go mod graph                   # 依存グラフ
-go mod verify                  # チェックサム検証
-go mod vendor                  # vendor/ 生成
+go mod tidy                    # Remove unused deps + add missing ones (most common)
+go mod download                # Prefetch into cache
+go mod why example.com/x       # Explain why it's needed
+go mod graph                   # Dependency graph
+go mod verify                  # Verify checksums
+go mod vendor                  # Generate vendor/
 ```
 
-### Toolchain ディレクティブ（1.21+）
+### Toolchain directive (1.21+)
 
-`go.mod` に `go 1.21.0` と `toolchain go1.24.0` を 2 段で書く。`GOTOOLCHAIN` で挙動を制御:
+Write `go 1.21.0` and `toolchain go1.24.0` in `go.mod` as two separate lines. Controlled via `GOTOOLCHAIN`:
 
-| 値 | 挙動 |
+| Value | Behavior |
 |---|---|
-| `auto`（既定） | ローカル版で開始 → go.mod の要求が上ならダウンロード |
-| `local` | バンドル版を強制 |
-| `path` | PATH 検索のみ（ダウンロードなし） |
+| `auto` (default) | Start with the local version → download if go.mod requires newer |
+| `local` | Force the bundled version |
+| `path` | PATH lookup only (no download) |
 
-`go get go@1.24.0 toolchain@go1.24.5` で更新。`go get toolchain@none` で行削除。
+Update with `go get go@1.24.0 toolchain@go1.24.5`. Remove the line with `go get toolchain@none`.
 
-### Workspace（go.work）
+### Workspace (go.work)
 
-ローカル multi-module 開発用。`go work init` / `go work use ./mod-a ./mod-b`。**CI にはコミットしないのが慣例**（`GOWORK=off` で無効化）。
+For local multi-module development. `go work init` / `go work use ./mod-a ./mod-b`. **Convention is to not commit it to CI** (disable with `GOWORK=off`).
 
-### モジュール関連環境変数
+### Module-related environment variables
 
-| 変数 | 役割 |
+| Variable | Role |
 |---|---|
-| `GOPROXY` | モジュール取得プロキシ（既定: `https://proxy.golang.org,direct`） |
-| `GOSUMDB` | チェックサム DB（既定: `sum.golang.org`、`off` で無効） |
-| `GOPRIVATE` | プライベートモジュールパターン（GOPROXY と GOSUMDB 双方をスキップ） |
-| `GONOPROXY` / `GONOSUMDB` | 個別スキップ |
-| `GO111MODULE` | `on`（既定 1.16+） |
-| `GOWORK` | go.work のパス、`off` で無効 |
-| `GOAUTH` (1.24+) | プライベート GOPROXY 認証プロバイダ |
+| `GOPROXY` | Module fetch proxy (default: `https://proxy.golang.org,direct`) |
+| `GOSUMDB` | Checksum DB (default: `sum.golang.org`, `off` to disable) |
+| `GOPRIVATE` | Private module patterns (skips both GOPROXY and GOSUMDB) |
+| `GONOPROXY` / `GONOSUMDB` | Individual skip overrides |
+| `GO111MODULE` | `on` (default since 1.16+) |
+| `GOWORK` | Path to go.work, `off` to disable |
+| `GOAUTH` (1.24+) | Auth provider for private GOPROXY |
 
-### Major version path（v2+）
+### Major version path (v2+)
 
-メジャー v2 以降はモジュールパス末尾に `/v2`, `/v3` 必須:
+For major version 2 and above, the module path must end with `/v2`, `/v3`:
 
 ```go
 // go.mod
@@ -85,63 +85,63 @@ module example.com/x/v2
 import "example.com/x/v2/sub"
 ```
 
-タグは `vX.Y.Z` 形式（leading `v` 必須）。Pseudo-version: `v0.0.0-YYYYMMDDhhmmss-commit`。
+Tags use the `vX.Y.Z` format (leading `v` required). Pseudo-version: `v0.0.0-YYYYMMDDhhmmss-commit`.
 
-## 言語の直近主要追加
+## Recent major language additions
 
-### Go 1.22（2024-02）
+### Go 1.22 (2024-02)
 
-- **`for` ループ変数の per-iteration スコープ化**（最重要セマンティクス変更）。goroutine ループ閉包の罠を解消
+- **Per-iteration scoping of `for` loop variables** (the most significant semantic change). Eliminates the goroutine-loop-closure pitfall
 - **`for i := range 10`**: range over int
-- `math/rand/v2` — 標準ライブラリ初の v2
-- `net/http.ServeMux` のパターン強化: `mux.HandleFunc("GET /items/{id}", h)`、`r.PathValue("id")`
+- `math/rand/v2` — the standard library's first v2
+- Enhanced `net/http.ServeMux` patterns: `mux.HandleFunc("GET /items/{id}", h)`, `r.PathValue("id")`
 
-### Go 1.23（2024-08）
+### Go 1.23 (2024-08)
 
-- **range-over-func**: `func(yield func(K, V) bool)` 形式のイテレータを `for k, v := range iter {}` で消費
-- 新パッケージ: `iter`, `unique`, `structs`
-- `slices`/`maps` にイテレータ系（`All`, `Values`, `Backward`, `Collect`, `Sorted`, `Chunk`）
+- **range-over-func**: consume iterators of the form `func(yield func(K, V) bool)` via `for k, v := range iter {}`
+- New packages: `iter`, `unique`, `structs`
+- Iterator-related additions to `slices`/`maps` (`All`, `Values`, `Backward`, `Collect`, `Sorted`, `Chunk`)
 
-### Go 1.24（2025-02）
+### Go 1.24 (2025-02)
 
-- **ジェネリック型エイリアス**: `type MyMap[K, V any] = map[K]V`
-- `go.mod` の **`tool` ディレクティブ**: `tools.go` の blank import 不要に
-- `os.Root` / `os.OpenRoot`: ディレクトリ脱出を防ぐ FS アクセス
-- `runtime.AddCleanup`（`SetFinalizer` の改善版）
-- `testing.B.Loop` — ベンチマーク新標準
-- JSON `omitzero` タグ
-- Swiss Tables ベースの新 map 実装
-- TLS で X25519MLKEM768（ポスト量子）デフォルト有効
+- **Generic type aliases**: `type MyMap[K, V any] = map[K]V`
+- **`tool` directive** in `go.mod`: no longer needs a blank import in `tools.go`
+- `os.Root` / `os.OpenRoot`: FS access that prevents directory escape
+- `runtime.AddCleanup` (an improved version of `SetFinalizer`)
+- `testing.B.Loop` — new standard for benchmarks
+- JSON `omitzero` tag
+- New Swiss Tables–based map implementation
+- X25519MLKEM768 (post-quantum) enabled by default for TLS
 - `crypto/mlkem`, `crypto/hkdf`, `crypto/pbkdf2`, `crypto/sha3`
 
-### Go 1.25（2025-08）
+### Go 1.25 (2025-08)
 
-- `testing/synctest` 正式公開（仮想時間テスト）
-- `encoding/json/v2` 実験的（`GOEXPERIMENT=jsonv2`）
-- `sync.WaitGroup.Go(func())` 追加
-- Linux cgroup CPU 制限を検出して `GOMAXPROCS` 自動設定
-- `go vet` に `waitgroup` / `hostport` アナライザー
-- `go.mod` に `ignore` ディレクティブ
-- DWARF5 デフォルト
+- `testing/synctest` reaches stable release (virtual-time testing)
+- `encoding/json/v2` experimental (`GOEXPERIMENT=jsonv2`)
+- `sync.WaitGroup.Go(func())` added
+- Detects Linux cgroup CPU limits and auto-sets `GOMAXPROCS`
+- `waitgroup` / `hostport` analyzers added to `go vet`
+- `ignore` directive added to `go.mod`
+- DWARF5 by default
 
-## エラーハンドリング
+## Error handling
 
 ```go
-// 生成
+// Creation
 err := errors.New("not found")
-err := fmt.Errorf("read %s: %w", path, cause)  // %w でラップ
+err := fmt.Errorf("read %s: %w", path, cause)  // wrap with %w
 
-// 検査
-errors.Is(err, fs.ErrNotExist)         // sentinel 比較（ツリー深掘り）
+// Inspection
+errors.Is(err, fs.ErrNotExist)         // sentinel comparison (walks the tree)
 var pe *fs.PathError
-errors.As(err, &pe)                    // 型抽出（target は **T）
+errors.As(err, &pe)                    // type extraction (target is **T)
 errors.Unwrap(err)
 
-// 結合（1.20+）
+// Combining (1.20+)
 errors.Join(err1, err2)
 ```
 
-### sentinel error vs typed error
+### Sentinel error vs typed error
 
 ```go
 // sentinel
@@ -154,9 +154,9 @@ func (e *PathError) Error() string { return e.Op + " " + e.Path + ": " + e.Err.E
 func (e *PathError) Unwrap() error { return e.Err }
 ```
 
-panic / recover はライブラリ境界では使わない。**初期化時の不変条件違反**や HTTP ハンドラ内の防御に限定。
+Don't use panic / recover at library boundaries. Reserve them for **invariant violations at initialization time** or as a defensive measure inside HTTP handlers.
 
-## ジェネリクス（1.18+）
+## Generics (1.18+)
 
 ```go
 func Map[S ~[]E1, E1, E2 any](s S, f func(E1) E2) []E2 {
@@ -169,19 +169,19 @@ type Set[T comparable] map[T]struct{}
 func (s Set[T]) Add(v T) { s[v] = struct{}{} }
 ```
 
-### 型制約
+### Type constraints
 
-| 構文 | 意味 |
+| Syntax | Meaning |
 |---|---|
-| `any` | `interface{}` のエイリアス |
-| `comparable` | `==`/`!=` 可能な型 |
-| `int \| string` | 型 union |
-| `~int` | 基底型が int の全名前付き型 |
-| `cmp.Ordered` (1.21+) | `<` 等で順序付け可能（`constraints.Ordered` の標準版） |
+| `any` | Alias for `interface{}` |
+| `comparable` | Types supporting `==`/`!=` |
+| `int \| string` | Type union |
+| `~int` | All named types whose underlying type is int |
+| `cmp.Ordered` (1.21+) | Orderable via `<` etc. (standard version of `constraints.Ordered`) |
 
-## 同期・並行
+## Synchronization and concurrency
 
-### sync の主要型
+### Key sync types
 
 ```go
 var mu sync.Mutex            // Lock / Unlock / TryLock(1.18+)
@@ -191,12 +191,12 @@ var wg sync.WaitGroup        // Add / Done / Wait / Go(1.25+)
 var pool = sync.Pool{New: func() any { return new(bytes.Buffer) }}
 var m sync.Map               // Load / Store / Range / Clear(1.23+)
 
-// Once 系ヘルパ（1.21+）
+// Once helpers (1.21+)
 init := sync.OnceValue(func() *Config { return loadConfig() })
 cfg := init()
 ```
 
-### errgroup（`golang.org/x/sync/errgroup`）
+### errgroup (`golang.org/x/sync/errgroup`)
 
 ```go
 g, ctx := errgroup.WithContext(ctx)
@@ -208,41 +208,41 @@ for _, u := range urls {
 if err := g.Wait(); err != nil { return err }
 ```
 
-最初のエラーで ctx をキャンセル、`Wait()` が最初のエラーを返す。
+Cancels the ctx on the first error; `Wait()` returns the first error.
 
 ### context.Context
 
 ```go
 ctx, cancel := context.WithTimeout(parent, 5*time.Second)
-defer cancel()                              // 必須
+defer cancel()                              // required
 
 ctx, cancel := context.WithCancelCause(parent)
 cancel(errors.New("custom reason"))
-context.Cause(ctx)                          // 取り出し
+context.Cause(ctx)                          // retrieve it
 
 ctx2 := context.WithoutCancel(parent)       // 1.21+
 stop := context.AfterFunc(ctx, cleanup)     // 1.21+
 ```
 
-ベストプラクティス:
+Best practices:
 
-- 第 1 引数で受け取り、構造体に格納しない
-- `nil` を渡さず `context.TODO()`
-- `WithValue` はリクエストスコープのデータのみ（オプション引数禁止）
+- Accept it as the first parameter; don't store it in a struct
+- Never pass `nil`; use `context.TODO()`
+- Use `WithValue` only for request-scoped data (never for optional arguments)
 
-### channel パターン
+### Channel patterns
 
-- **unbuffered** (`make(chan T)`): 送受同期、ハンドオフ
-- **buffered** (`make(chan T, n)`): n 件まで非同期
-- `close(ch)` + `v, ok := <-ch` で完了検知
-- `select { case v := <-c1: ... case <-ctx.Done(): ... }` でキャンセル統合
-- 単方向: `chan<- T` / `<-chan T` で API 制約
+- **unbuffered** (`make(chan T)`): synchronous send/receive, handoff
+- **buffered** (`make(chan T, n)`): asynchronous up to n items
+- Detect completion with `close(ch)` + `v, ok := <-ch`
+- Integrate cancellation with `select { case v := <-c1: ... case <-ctx.Done(): ... }`
+- Unidirectional: `chan<- T` / `<-chan T` for API constraints
 
-`go test -race` で data race 検出（CI で必須）。
+Use `go test -race` to detect data races (mandatory in CI).
 
-## テスト
+## Testing
 
-### 標準パターン（テーブルドリブン + サブテスト + Parallel）
+### Standard pattern (table-driven + subtests + Parallel)
 
 ```go
 func TestFoo(t *testing.T) {
@@ -260,28 +260,28 @@ func TestFoo(t *testing.T) {
 }
 ```
 
-### ヘルパー
+### Helpers
 
-| API | 用途 |
+| API | Purpose |
 |---|---|
-| `t.Run(name, f)` | サブテスト |
-| `t.Parallel()` | 並列化（`Setenv`/`Chdir` と併用不可） |
-| `t.Helper()` | スタックの当該フレームをスキップ |
-| `t.Cleanup(f)` | LIFO で後始末 |
-| `t.TempDir()` | 自動削除される一時ディレクトリ |
-| `t.Setenv(k, v)` | テスト後に元に戻る環境変数 |
+| `t.Run(name, f)` | Subtest |
+| `t.Parallel()` | Parallelize (not usable with `Setenv`/`Chdir`) |
+| `t.Helper()` | Skip this frame in the stack trace |
+| `t.Cleanup(f)` | LIFO cleanup |
+| `t.TempDir()` | Auto-deleted temp directory |
+| `t.Setenv(k, v)` | Environment variable restored after the test |
 
-### ベンチマーク（1.24+ 推奨形）
+### Benchmarks (recommended form since 1.24+)
 
 ```go
 func BenchmarkX(b *testing.B) {
-    for b.Loop() {  // タイマー自動制御＋最適化抑止
+    for b.Loop() {  // automatic timer control + prevents optimization
         Work()
     }
 }
 ```
 
-### Fuzzing（1.18+）
+### Fuzzing (1.18+)
 
 ```go
 func FuzzReverse(f *testing.F) {
@@ -292,51 +292,51 @@ func FuzzReverse(f *testing.F) {
 }
 ```
 
-### `go test` 主要フラグ
+### Key `go test` flags
 
-| フラグ | 用途 |
+| Flag | Purpose |
 |---|---|
-| `-run <regexp>` | テスト名フィルタ |
-| `-v` | 詳細出力 |
-| `-race` | データ競合検出 |
-| `-cover` / `-coverprofile=c.out` | カバレッジ |
-| `-count N` | 繰返し（キャッシュ無効化に `-count=1`） |
-| `-bench <regexp>` / `-benchmem` / `-benchtime=10s` | ベンチマーク |
-| `-fuzz <regexp>` / `-fuzztime=10s` | ファジング |
-| `-shuffle on` | 順序シャッフル |
-| `-failfast` | 最初の失敗で停止 |
-| `-json` | machine-readable |
+| `-run <regexp>` | Filter by test name |
+| `-v` | Verbose output |
+| `-race` | Data race detection |
+| `-cover` / `-coverprofile=c.out` | Coverage |
+| `-count N` | Repeat (use `-count=1` to disable caching) |
+| `-bench <regexp>` / `-benchmem` / `-benchtime=10s` | Benchmarking |
+| `-fuzz <regexp>` / `-fuzztime=10s` | Fuzzing |
+| `-shuffle on` | Shuffle order |
+| `-failfast` | Stop on first failure |
+| `-json` | Machine-readable output |
 
-## 周辺ツール（記事リンク）
+## Related tooling (article links)
 
-| ツール | 用途 | 記事 |
+| Tool | Purpose | Article |
 |---|---|---|
-| gopls | 公式 Language Server | [`languages/go/gopls.md`](gopls.md) |
-| golangci-lint | linter aggregator | [`languages/go/golangci-lint.md`](golangci-lint.md) |
-| govulncheck | 公式脆弱性スキャナ | [`languages/go/govulncheck.md`](govulncheck.md) |
-| GoReleaser | クロスコンパイル + リリース自動化 | [`languages/go/goreleaser.md`](goreleaser.md) |
-| Cobra | CLI フレームワーク | [`languages/go/cobra.md`](cobra.md) |
-| Buf | Protobuf / gRPC ツールチェーン | [`tools/buf.md`](../../tools/buf.md) |
+| gopls | Official Language Server | [`languages/go/gopls.md`](gopls.md) |
+| golangci-lint | Linter aggregator | [`languages/go/golangci-lint.md`](golangci-lint.md) |
+| govulncheck | Official vulnerability scanner | [`languages/go/govulncheck.md`](govulncheck.md) |
+| GoReleaser | Cross-compilation + release automation | [`languages/go/goreleaser.md`](goreleaser.md) |
+| Cobra | CLI framework | [`languages/go/cobra.md`](cobra.md) |
+| Buf | Protobuf / gRPC toolchain | [`tools/buf.md`](../../tools/buf.md) |
 
-## トレンド（2025-2026）
+## Trends (2025-2026)
 
-- **構造化ログは `log/slog` がデファクト**: 新規プロジェクトの標準採用が増加。`zap` は `slog.Handler` ブリッジを公開
-- **依存最小化志向**: `gorilla/mux` → `net/http.ServeMux`(1.22+)、`logrus` → `slog`、testify を避けて `testing` + `go-cmp` 派が増加
-- **イテレータ**: 1.23 の range-over-func で関数チェーン的な書き方が広がる
-- **PGO**: 1.21 デフォルト有効化以降、`default.pgo` を置くだけで最適化される
-- **FIPS 140-3 / ポスト量子暗号**: 1.24 で標準対応、規制業界の Go 採用が拡大
+- **Structured logging: `log/slog` is now the de facto standard**: increasingly the default choice for new projects. `zap` exposes a `slog.Handler` bridge
+- **Dependency minimization**: `gorilla/mux` → `net/http.ServeMux` (1.22+), `logrus` → `slog`, and a growing preference for `testing` + `go-cmp` over testify
+- **Iterators**: range-over-func in 1.23 is spreading function-chain-style code
+- **PGO**: since becoming enabled by default in 1.21, simply dropping in `default.pgo` yields optimization
+- **FIPS 140-3 / post-quantum cryptography**: standard support since 1.24, driving broader Go adoption in regulated industries
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **`go.mod` の `go` 行を勝手に上げる** — 最小必須バージョンの宣言なので、CI / 配布先の Go 互換を壊す可能性。`toolchain` 行で済むなら `go` 行は触らない
-2. **`for` ループ変数を `tt := tt` でシャドウ** — 1.22+ では不要。古い Go との互換維持目的でなければ削除する
-3. **`context.Background()` を関数内で生成** — 第 1 引数で受け取って伝播するのが原則。HTTP ハンドラなら `r.Context()`
-4. **`errors.Is/As` を使わず `==` で比較** — ラップされた error を見落とす。`%w` でラップしたら必ず `Is` / `As` で検査
-5. **`defer cancel()` 忘れ** — `WithTimeout` / `WithCancel` の戻り値 cancel を呼ばないと goroutine リーク
-6. **`go test` をキャッシュなしで回したがる** — 既定でファイル変更が無ければスキップされる。強制したいときだけ `-count=1`
-7. **goroutine の起動だけして待たない** — `sync.WaitGroup` / `errgroup` / channel で必ず join
+1. **Bumping the `go` line in `go.mod` without being asked** — it declares the minimum required version, and doing so can break Go compatibility with CI / distribution targets. Don't touch the `go` line if the `toolchain` line would suffice
+2. **Shadowing the `for` loop variable with `tt := tt`** — unnecessary since 1.22+. Remove it unless compatibility with older Go is a deliberate goal
+3. **Creating `context.Background()` inside a function** — the principle is to accept it as the first parameter and propagate it. For HTTP handlers, use `r.Context()`
+4. **Comparing errors with `==` instead of `errors.Is/As`** — this misses wrapped errors. Always inspect with `Is` / `As` when wrapping with `%w`
+5. **Forgetting `defer cancel()`** — failing to call the cancel function returned by `WithTimeout` / `WithCancel` leaks goroutines
+6. **Wanting to run `go test` without caching** — by default, tests are skipped when no files changed. Only force it with `-count=1` when actually needed
+7. **Starting goroutines without waiting on them** — always join with `sync.WaitGroup` / `errgroup` / a channel
 
-## 参考
+## References
 
 - [Effective Go](https://go.dev/doc/effective_go)
 - [Go Specification](https://go.dev/ref/spec)

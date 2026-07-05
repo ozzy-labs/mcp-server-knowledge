@@ -5,70 +5,70 @@ tags: [specification, testing]
 
 # Chrome DevTools Protocol (CDP)
 
-Chromium / Chrome / Edge など Blink 系ブラウザを instrument・inspect・debug・profile するための JSON-RPC プロトコル。Chrome DevTools の front-end / backend 境界として始まり、現在は Puppeteer・Playwright・Lighthouse・Selenium・各種ヘッドレス自動化・AI ブラウザエージェントの共通基盤になっている。クロスブラウザ後継として **WebDriver BiDi** が W3C で策定中だが、Chromium 系では CDP が依然主流の低レベル API。
+A JSON-RPC protocol for instrumenting, inspecting, debugging, and profiling Blink-based browsers such as Chromium / Chrome / Edge. It started as the front-end/backend boundary of Chrome DevTools and is now the common foundation for Puppeteer, Playwright, Lighthouse, Selenium, various headless automation tools, and AI browser agents. **WebDriver BiDi** is being standardized at the W3C as a cross-browser successor, but CDP remains the dominant low-level API for Chromium-based browsers.
 
-公式: [chromedevtools.github.io/devtools-protocol](https://chromedevtools.github.io/devtools-protocol/) / ソース: [ChromeDevTools/devtools-protocol](https://github.com/ChromeDevTools/devtools-protocol)
+Official: [chromedevtools.github.io/devtools-protocol](https://chromedevtools.github.io/devtools-protocol/) / Source: [ChromeDevTools/devtools-protocol](https://github.com/ChromeDevTools/devtools-protocol)
 
-## バージョン
+## Versions
 
-| バージョン | 位置付け |
+| Version | Positioning |
 |---|---|
-| **stable 1.3** | Chrome 64 以降の安定版。フルプロトコルの部分集合で API 変更を避ける |
-| **tip-of-tree (tot)** | Chromium 開発版に追従。互換性保証なし |
-| **v8-inspector** | Node.js デバッグで使われる V8 側プロトコル |
+| **stable 1.3** | The stable version since Chrome 64. A subset of the full protocol that avoids API changes |
+| **tip-of-tree (tot)** | Tracks the Chromium development version. No compatibility guarantee |
+| **v8-inspector** | The V8-side protocol used for Node.js debugging |
 
-型定義は npm の [`devtools-protocol`](https://www.npmjs.com/package/devtools-protocol) パッケージが Chromium に追従して継続更新される。
+Type definitions are continuously updated to track Chromium via the npm [`devtools-protocol`](https://www.npmjs.com/package/devtools-protocol) package.
 
-## アーキテクチャ
+## Architecture
 
-- **WebSocket 上の JSON-RPC**。クライアントは `{ id, method, params }` を送り、`{ id, result }` / `{ method, params }`（イベント）を受ける
-- ブラウザは複数の **target**（page, iframe, dedicated/shared/service worker, browser）を持ち、各 target が個別の inspector エンドポイントを公開する
-- `Target.attachToTarget` で **sessionId** を取得し、以降のメッセージに `sessionId` を付けてルーティング
-- **Flatten mode**（`Target.attachToTarget({ flatten: true })`）が現代の推奨。`Target.sendMessageToTarget` で envelope する旧方式ではなく、トップレベル接続上で `sessionId` をメッセージ自体に付ける。Puppeteer / Playwright 双方が採用
+- **JSON-RPC over WebSocket**. Clients send `{ id, method, params }` and receive `{ id, result }` / `{ method, params }` (events)
+- A browser has multiple **targets** (page, iframe, dedicated/shared/service worker, browser), and each target exposes its own inspector endpoint
+- `Target.attachToTarget` obtains a **sessionId**, which is attached to subsequent messages for routing
+- **Flatten mode** (`Target.attachToTarget({ flatten: true })`) is the modern recommendation. Instead of the older approach of wrapping messages via `Target.sendMessageToTarget`, the `sessionId` is attached directly to messages on the top-level connection. Both Puppeteer and Playwright adopt this
 
-## 接続方式
+## Connection methods
 
-| 方式 | 起動オプション | 性質 |
+| Method | Launch option | Characteristics |
 |---|---|---|
-| **TCP / WebSocket** | `--remote-debugging-port=<port>`（`0` でランダム） | HTTP 探索エンドポイント付き。ネットワーク公開のリスクあり |
-| **stdio パイプ** | `--remote-debugging-pipe` | FD 3 読み / FD 4 書き。ポートを開かないため安全。Puppeteer の `pipe: true` |
+| **TCP / WebSocket** | `--remote-debugging-port=<port>` (`0` for a random port) | Comes with an HTTP discovery endpoint. Risk of network exposure |
+| **stdio pipe** | `--remote-debugging-pipe` | Read on FD 3 / write on FD 4. Safer since no port is opened. Puppeteer's `pipe: true` |
 
-### HTTP 探索エンドポイント（port 経由のときのみ）
+### HTTP discovery endpoints (port-based connections only)
 
-| パス | 内容 |
+| Path | Content |
 |---|---|
-| `GET /json/version` | ブラウザ・プロトコル・ブラウザレベル `webSocketDebuggerUrl` |
-| `GET /json` / `GET /json/list` | target 一覧。各 target に `webSocketDebuggerUrl` |
-| `PUT /json/new?<url>` | 新規 target 作成。**Chrome 127 以降は GET ではなく PUT** |
-| `GET /json/protocol` | 当該ビルドが公開する protocol 定義 JSON |
+| `GET /json/version` | Browser and protocol info, plus the browser-level `webSocketDebuggerUrl` |
+| `GET /json` / `GET /json/list` | List of targets. Each target includes a `webSocketDebuggerUrl` |
+| `PUT /json/new?<url>` | Create a new target. **From Chrome 127, PUT is required instead of GET** |
+| `GET /json/protocol` | The protocol definition JSON exposed by that build |
 
-### Chrome 136 のセキュリティ変更
+### Chrome 136 security change
 
-Chrome 136 (2025) 以降、`--remote-debugging-port` / `--remote-debugging-pipe` は **デフォルトのユーザーデータディレクトリでは無効化**される。デバッグ目的で起動するときは **`--user-data-dir=<別ディレクトリ>` を必ず併用**する。既存ユーザーの Cookie / セッション搾取を防ぐためのトレードオフ。
+From Chrome 136 (2025) onward, `--remote-debugging-port` / `--remote-debugging-pipe` are **disabled by default when using the default user data directory**. When launching for debugging purposes, **always also pass `--user-data-dir=<separate directory>`**. This is a tradeoff to prevent exfiltration of existing users' cookies/sessions.
 
-## 主要 Domain
+## Key domains
 
-| Domain | 用途 |
+| Domain | Purpose |
 |---|---|
-| `Page` | ライフサイクル・ナビゲーション・スクリーンショット・PDF |
-| `Runtime` | JS 式評価、コンソール、Promise、Exception |
-| `DOM` | DOM ツリー取得・操作 |
-| `Network` | リクエスト/レスポンス・ヘッダ・タイミング監視 |
-| `Fetch` | リクエストの intercept / modify / fulfill（ネットワーク改竄） |
-| `Target` | target ライフサイクルと attach |
-| `Browser` | ウィンドウ・ダウンロード・パーミッション制御 |
-| `Input` | マウス・キーボード・タッチのシミュレーション |
-| `Debugger` | JS デバッガ（breakpoint, step） |
-| `Performance` | Web Vitals / メトリクス取得 |
-| `Tracing` | chrome://tracing 形式の trace 取得（Perfetto / Lighthouse 入力） |
-| `Emulation` | デバイス・ジオロケーション・locale エミュレーション |
-| `Storage` | Cookie / IndexedDB / Cache |
-| `Security` | 証明書・mixed content |
+| `Page` | Lifecycle, navigation, screenshots, PDF |
+| `Runtime` | JS expression evaluation, console, promises, exceptions |
+| `DOM` | DOM tree retrieval/manipulation |
+| `Network` | Monitoring requests/responses, headers, timing |
+| `Fetch` | Intercepting/modifying/fulfilling requests (network tampering) |
+| `Target` | Target lifecycle and attach |
+| `Browser` | Window, download, and permission control |
+| `Input` | Mouse, keyboard, and touch simulation |
+| `Debugger` | JS debugger (breakpoints, stepping) |
+| `Performance` | Retrieving Web Vitals / metrics |
+| `Tracing` | Capturing traces in chrome://tracing format (input for Perfetto / Lighthouse) |
+| `Emulation` | Emulating devices, geolocation, locale |
+| `Storage` | Cookies / IndexedDB / Cache |
+| `Security` | Certificates, mixed content |
 
-## 最小利用例（Node.js + chrome-remote-interface）
+## Minimal usage example (Node.js + chrome-remote-interface)
 
 ```bash
-# 別プロファイルでデバッグ起動
+# Launch for debugging with a separate profile
 google-chrome \
   --headless=new \
   --remote-debugging-port=9222 \
@@ -99,11 +99,11 @@ console.log('rootNodeId =', root.nodeId);
 await client.close();
 ```
 
-[`chrome-remote-interface`](https://github.com/cyrus-and/chrome-remote-interface) は Node.js 製の薄い低レベル wrapper。`devtools-protocol` 型定義 npm を併用すると Domain メソッドに型が付く。
+[`chrome-remote-interface`](https://github.com/cyrus-and/chrome-remote-interface) is a thin, low-level Node.js wrapper. Combining it with the `devtools-protocol` type-definition npm package adds types to domain methods.
 
-### Playwright からの escape hatch
+### Escape hatch from Playwright
 
-Playwright は独自プロトコルが中心だが、Chromium 上では `CDPSession` で生 CDP を呼び出せる:
+Playwright is centered on its own protocol, but on Chromium you can call raw CDP via `CDPSession`:
 
 ```ts
 const session = await context.newCDPSession(page);
@@ -111,34 +111,34 @@ await session.send('Network.enable');
 session.on('Network.requestWillBeSent', (e) => console.log(e.request.url));
 ```
 
-## 代表的なクライアント
+## Representative clients
 
-| クライアント | 関係 |
+| Client | Relationship |
 |---|---|
-| **Chrome DevTools** | フロントエンド自体が CDP クライアント。front-end / backend の境界が CDP |
-| **Puppeteer** | デフォルトは CDP。v23+ で WebDriver BiDi も production-ready、**v24+ で BiDi がデフォルト** |
-| **Playwright** | 独自プロトコル中心。Chromium では `newCDPSession` で生 CDP に降りられる |
-| **Lighthouse** | Tracing / Performance / Network / Emulation を組み合わせて監査 |
-| **Selenium 4** | W3C WebDriver Classic + BiDi。**4.29.0+ で CDP 直接サポートを廃止**、BiDi へ統一 |
-| **chromedp** (Go) / **PyChromeDevTools / pychrome** (Python) | 多言語実装あり |
-| **AI ブラウザエージェント** | browser-use, Anthropic Computer Use の browser tool, Steel.dev / Browserbase などのリモートブラウザは内部で Puppeteer / Playwright / 生 CDP を利用 |
+| **Chrome DevTools** | The front-end itself is a CDP client. CDP is the boundary between front-end and backend |
+| **Puppeteer** | CDP by default. WebDriver BiDi became production-ready in v23+, and **BiDi became the default in v24+** |
+| **Playwright** | Centered on its own protocol. On Chromium, you can drop down to raw CDP via `newCDPSession` |
+| **Lighthouse** | Audits by combining Tracing / Performance / Network / Emulation |
+| **Selenium 4** | W3C WebDriver Classic + BiDi. **Direct CDP support was removed in 4.29.0+**, unifying on BiDi |
+| **chromedp** (Go) / **PyChromeDevTools / pychrome** (Python) | Implementations exist in multiple languages |
+| **AI browser agents** | browser-use, Anthropic's Computer Use browser tool, and remote browsers such as Steel.dev / Browserbase internally use Puppeteer, Playwright, or raw CDP |
 
-npm では `chrome-remote-interface`（低レベル）/ `puppeteer-core`（高レベル）/ `devtools-protocol`（型定義）の組み合わせが一般的。
+In the npm ecosystem, the common combination is `chrome-remote-interface` (low-level) / `puppeteer-core` (high-level) / `devtools-protocol` (type definitions).
 
-## WebDriver BiDi との関係
+## Relationship with WebDriver BiDi
 
-| 観点 | 状況（2026-06 時点） |
+| Aspect | Status (as of 2026-06) |
 |---|---|
-| 標準化 | W3C Browser Testing and Tools WG の Editor's Draft。Recommendation 化はまだ |
-| Chrome / Edge | ChromeDriver 106（2022）から実装。漸進拡張中。**起動時のデフォルトは依然 CDP**（BiDi 未カバー機能があるため） |
-| Firefox | 129 で production-ready。**141（2025-07-22）で experimental CDP を完全削除**、BiDi のみに |
-| Safari (WebKit) | 未対応 |
-| Puppeteer | v23+ で Firefox BiDi production-ready、v24+ で **BiDi がデフォルト** |
-| Selenium | 4.29.0+ で BiDi に統一、CDP 直接サポートは廃止 |
+| Standardization | Editor's Draft at the W3C Browser Testing and Tools WG. Not yet a Recommendation |
+| Chrome / Edge | Implemented since ChromeDriver 106 (2022). Being incrementally extended. **CDP remains the default at launch** (because some features aren't yet covered by BiDi) |
+| Firefox | Production-ready in 129. **Experimental CDP was fully removed in 141 (2025-07-22)**, leaving only BiDi |
+| Safari (WebKit) | Not supported |
+| Puppeteer | Firefox BiDi became production-ready in v23+, and **BiDi became the default in v24+** |
+| Selenium | Unified on BiDi in 4.29.0+; direct CDP support removed |
 
-整理: **Chromium 系の自動化では CDP が当面主流**。クロスブラウザ自動化は BiDi へ移行が進行中で、Firefox を扱うなら BiDi 一択。CDP の Chromium 側廃止予定はアナウンスされていない。
+Summary: **CDP remains dominant for Chromium-based automation for the foreseeable future**. Cross-browser automation is progressively migrating to BiDi, and BiDi is the only option if you need to handle Firefox. No deprecation of CDP on the Chromium side has been announced.
 
-## トレース・パフォーマンス計測
+## Tracing / performance measurement
 
 ```js
 await Tracing.start({
@@ -148,50 +148,50 @@ await Tracing.start({
 await Page.navigate({ url: 'https://example.com' });
 await Page.loadEventFired();
 const { stream } = await Tracing.end();
-// IO.read で stream を chunk 読み出し、Perfetto / DevTools Performance に投入
+// Read the stream in chunks with IO.read, then feed it into Perfetto / DevTools Performance
 ```
 
-Lighthouse は Page / Network / Runtime / Performance / Tracing / Emulation を統合して使う代表例。DevTools Performance パネルや Perfetto に読み込んで分析する。
+Lighthouse is a representative example that combines Page / Network / Runtime / Performance / Tracing / Emulation. Load the results into the DevTools Performance panel or Perfetto for analysis.
 
-## Headless モードとの関係
+## Relationship with headless mode
 
-- Chrome 112+ で「新ヘッドレス」（`--headless=new`）が安定化、現在の `--headless` は新ヘッドレスを指す
-- Chrome 132+ で **旧 headless（headless shell）は `chrome-headless-shell` という別バイナリ**に分離。Puppeteer は `headless: 'shell'`（旧）/ `headless: true`（新 = `--headless=new` 相当）で切り替え
-- 新ヘッドレスは「通常 Chrome をウィンドウ非表示で起動」する実装で、機能パリティが取れている。CDP の挙動も通常起動と原則同じ
+- "New headless" (`--headless=new`) stabilized in Chrome 112+; the current `--headless` refers to new headless
+- From Chrome 132+, **old headless (headless shell) is split into a separate binary called `chrome-headless-shell`**. Puppeteer switches between them with `headless: 'shell'` (old) / `headless: true` (new, equivalent to `--headless=new`)
+- New headless is implemented as "launching normal Chrome with the window hidden," achieving feature parity. CDP behavior is, in principle, the same as a normal launch
 
-## セキュリティ上の注意
+## Security notes
 
-リモートデバッグポートを開いたブラウザは、そのポートに到達できるプロセスから **任意 JS 実行 / Cookie 読み取り / 任意ファイル参照に近い権限**を奪える。
+A browser with an open remote-debugging port grants any process that can reach that port near-**arbitrary JS execution / cookie reading / arbitrary file access** privileges.
 
-- **`--remote-debugging-port` は必ず localhost バインド**。`0.0.0.0` や Docker での `9222` 公開は厳禁
-- 可能なら **`--remote-debugging-pipe` を選ぶ**。ポートを開かず stdio で親プロセスとだけ通信。Puppeteer の `pipe: true`、sandbox（gVisor / Firecracker）でも動く
-- **`--user-data-dir=<使い捨て>` を必ず付ける**。Chrome 136+ ではデフォルトプロファイルでデバッグスイッチが無効化されるので、別ディレクトリは事実上必須
-- Chromium M113+ ではホスト名検証が追加され、外部公開ホストへの誘導が抑止されているが、信頼境界を超えて晒さない原則は変わらない
+- **Always bind `--remote-debugging-port` to localhost**. Exposing `0.0.0.0` or publishing `9222` in Docker is strictly forbidden
+- Prefer **`--remote-debugging-pipe` where possible**. It doesn't open a port and communicates with the parent process only via stdio. This is Puppeteer's `pipe: true`, and it also works in sandboxes (gVisor / Firecracker)
+- **Always add `--user-data-dir=<disposable>`**. Since Chrome 136+ disables the debugging switch for the default profile, a separate directory is effectively mandatory
+- Chromium M113+ added hostname validation, which discourages redirection to externally exposed hosts, but the principle of never exposing this across a trust boundary still applies
 
-## AI エージェントがよくやるミス
+## Common mistakes made by AI agents
 
-1. **デフォルトプロファイルで `--remote-debugging-port` を付ける** — Chrome 136+ ではデバッグスイッチが無視され、`/json/version` が 404 になる。`--user-data-dir=/tmp/<unique>` を毎回付ける
-2. **`/json/new?<url>` を GET で叩く** — Chrome 127+ で `PUT` 必須に変わっている。フェッチライブラリのデフォルトを `PUT` に変更する
-3. **Flatten 無しで attach する** — 古い `Target.sendMessageToTarget` 経由は envelope の解釈が必要で、sessionId のルーティングを自前で書く羽目になる。`flatten: true` を使う
-4. **`Network.enable` を忘れて intercept しようとする** — `Fetch.enable` / `Network.enable` を attach 直後に呼ばないとイベントが流れない。Domain ごとに enable が要る
-5. **Firefox を CDP で操ろうとする** — Firefox 141（2025-07-22）以降は CDP サポートを完全削除。クロスブラウザは BiDi 経由で書く（または Puppeteer v24+ の BiDi デフォルトに乗る）
-6. **9222 を Docker で `-p 9222:9222` 公開する** — ホスト上の任意プロセスから操作可能になる。`127.0.0.1:9222:9222` バインドか pipe モードに変更する
-7. **生 CDP と Puppeteer / Playwright を混ぜて状態が壊れる** — 高レベル API が張った listener / state と競合する。Playwright なら `newCDPSession`、Puppeteer なら `page.target().createCDPSession()` を使い、勝手に raw WebSocket を開かない
+1. **Adding `--remote-debugging-port` with the default profile** — On Chrome 136+, the debugging switch is ignored and `/json/version` returns 404. Always add `--user-data-dir=/tmp/<unique>`
+2. **Calling `/json/new?<url>` with GET** — From Chrome 127+, `PUT` is required. Change your fetch library's default to `PUT`
+3. **Attaching without Flatten** — Going through the older `Target.sendMessageToTarget` requires interpreting envelopes, forcing you to write your own sessionId routing. Use `flatten: true`
+4. **Trying to intercept without calling `Network.enable`** — Events won't flow unless you call `Fetch.enable` / `Network.enable` immediately after attaching. Each domain needs its own enable call
+5. **Trying to drive Firefox with CDP** — From Firefox 141 (2025-07-22) onward, CDP support has been completely removed. Write cross-browser code via BiDi (or ride on Puppeteer v24+'s BiDi default)
+6. **Exposing 9222 in Docker via `-p 9222:9222`** — This makes it operable from any process on the host. Change to a `127.0.0.1:9222:9222` bind or pipe mode instead
+7. **Mixing raw CDP with Puppeteer / Playwright, breaking state** — This conflicts with listeners/state set up by the high-level API. Use `newCDPSession` for Playwright or `page.target().createCDPSession()` for Puppeteer, and don't open a raw WebSocket yourself
 
-## 関連
+## Related
 
-- [`languages/js/nodejs.md`](../languages/js/nodejs.md) — `chrome-remote-interface` / `puppeteer-core` の実行環境
-- [`ai/platform/mcp-protocol.md`](../ai/platform/mcp-protocol.md) — 同様の JSON-RPC ベースプロトコル設計の比較対象
+- [`languages/js/nodejs.md`](../languages/js/nodejs.md) — Runtime environment for `chrome-remote-interface` / `puppeteer-core`
+- [`ai/platform/mcp-protocol.md`](../ai/platform/mcp-protocol.md) — A comparable JSON-RPC-based protocol design
 
-## 参考
+## References
 
-- [Chrome DevTools Protocol（公式 viewer）](https://chromedevtools.github.io/devtools-protocol/)
-- [ChromeDevTools/devtools-protocol（仕様リポジトリ）](https://github.com/ChromeDevTools/devtools-protocol)
-- [chrome-remote-interface（Node.js クライアント）](https://github.com/cyrus-and/chrome-remote-interface)
-- [WebDriver BiDi（W3C Editor's Draft）](https://w3c.github.io/webdriver-bidi/)
+- [Chrome DevTools Protocol (official viewer)](https://chromedevtools.github.io/devtools-protocol/)
+- [ChromeDevTools/devtools-protocol (specification repository)](https://github.com/ChromeDevTools/devtools-protocol)
+- [chrome-remote-interface (Node.js client)](https://github.com/cyrus-and/chrome-remote-interface)
+- [WebDriver BiDi (W3C Editor's Draft)](https://w3c.github.io/webdriver-bidi/)
 - [Changes to remote debugging switches to improve security (Chrome 136)](https://developer.chrome.com/blog/remote-debugging-port)
 - [WebDriver BiDi is now production-ready in Firefox, Chrome, and Puppeteer](https://developer.chrome.com/blog/firefox-support-in-puppeteer-with-webdriver-bidi)
-- [Deprecating CDP support in Firefox（Mozilla）](https://fxdx.dev/deprecating-cdp-support-in-firefox-embracing-the-future-with-webdriver-bidi/)
-- [Chrome headless mode（新 headless）](https://developer.chrome.com/docs/chromium/new-headless)
+- [Deprecating CDP support in Firefox (Mozilla)](https://fxdx.dev/deprecating-cdp-support-in-firefox-embracing-the-future-with-webdriver-bidi/)
+- [Chrome headless mode (new headless)](https://developer.chrome.com/docs/chromium/new-headless)
 - [Playwright CDPSession](https://playwright.dev/docs/api/class-cdpsession)
 - [Puppeteer WebDriver BiDi](https://pptr.dev/webdriver-bidi)

@@ -5,11 +5,11 @@ tags: [format, bash, go]
 
 # shfmt
 
-Go 製のシェルスクリプトフォーマッタ。bash / mksh / POSIX sh / zsh のパース + 整形を一貫して行う（zsh は v3.13.0 から）。shellcheck と並んで shell スクリプト運用のデファクトツール。
+A shell script formatter written in Go. Parses and formats bash / mksh / POSIX sh / zsh consistently (zsh support since v3.13.0). Along with shellcheck, it's the de facto tool for shell script operations.
 
-公式: [github.com/mvdan/sh](https://github.com/mvdan/sh)
+Official: [github.com/mvdan/sh](https://github.com/mvdan/sh)
 
-## インストール
+## Installation
 
 ```bash
 # mise
@@ -25,47 +25,47 @@ go install mvdan.cc/sh/v3/cmd/shfmt@latest
 docker run --rm -v "$PWD:/mnt" mvdan/shfmt:latest -w /mnt
 ```
 
-## 基本的な使い方
+## Basic usage
 
 ```bash
-# 差分表示（変更しない）
+# Show diff (no changes made)
 shfmt -d script.sh
 
-# 標準出力に整形結果
+# Formatted result to stdout
 shfmt script.sh
 
-# ファイルに書き戻し
+# Write back to file
 shfmt -w script.sh
 
-# 再帰ディレクトリ
+# Recursive directory
 shfmt -w .
 
-# 特定 shell 方言指定
+# Specify shell dialect
 shfmt -ln bash script.sh   # bash
 shfmt -ln posix script.sh  # POSIX sh
 shfmt -ln mksh script.sh   # mksh
-shfmt -ln zsh script.sh    # zsh（v3.13.0+）
+shfmt -ln zsh script.sh    # zsh (v3.13.0+)
 ```
 
-## 主要フラグ
+## Key flags
 
-| フラグ | 意味 | デフォルト |
+| Flag | Meaning | Default |
 |---|---|---|
-| `-w` | ファイルに書き戻し | — |
-| `-d` | diff 表示 | — |
-| `-l` | 変更が必要なファイル名のみ表示 | — |
-| `-i <N>` | インデント幅（スペース数、0 でタブ） | 0（タブ） |
-| `-bn` | `&&` / `\|\|` 等を行頭に置く | false |
-| `-ci` | `case` の `)` を字下げ | false |
-| `-sr` | リダイレクト前にスペース | false |
-| `-kp` | 余分な空行を保持 | false |
-| `-fn` | 関数の開き `{` を次行に | false |
-| `-ln <variant>` | shell 方言 | shebang から自動 |
-| `-s` | 簡略化（`[ ... ]` → `[[ ... ]]` 等） | false |
+| `-w` | Write back to file | — |
+| `-d` | Show diff | — |
+| `-l` | List only filenames that need changes | — |
+| `-i <N>` | Indent width (spaces; 0 for tabs) | 0 (tabs) |
+| `-bn` | Put `&&` / `\|\|` etc. at the start of the line | false |
+| `-ci` | Indent `case` `)` | false |
+| `-sr` | Space before redirects | false |
+| `-kp` | Keep extra blank lines | false |
+| `-fn` | Put function opening `{` on next line | false |
+| `-ln <variant>` | Shell dialect | Auto from shebang |
+| `-s` | Simplify (e.g. `[ ... ]` → `[[ ... ]]`) | false |
 
-## 設定 `.editorconfig`
+## `.editorconfig` configuration
 
-shfmt は `.editorconfig` を自動読み込み（`[*.sh]` セクション）:
+shfmt automatically reads `.editorconfig` (the `[*.sh]` section):
 
 ```ini
 [*.sh]
@@ -76,9 +76,9 @@ switch_case_indent = true
 space_redirects = true
 ```
 
-v3.13.1 から `[[zsh]]` セクションも認識し、`.zshrc` / `.bash_profile` 等のファイル名から方言を自動推定する。EditorConfig 経由で統一すると、他ツール（エディタ、prettier 等）と一貫できる。
+Since v3.13.1 it also recognizes the `[[zsh]]` section, auto-inferring dialect from filenames like `.zshrc` / `.bash_profile`. Standardizing via EditorConfig keeps it consistent with other tools (editors, prettier, etc.).
 
-## フォーマット例
+## Formatting example
 
 ```bash
 # Before
@@ -87,31 +87,31 @@ then
     echo "foo"
 fi
 
-# After（デフォルト）
+# After (default)
 if [[ $x = "foo" ]]; then
  echo "foo"
 fi
 
-# With -s（simplify）
+# With -s (simplify)
 if [[ $x == "foo" ]]; then
  echo "foo"
 fi
 ```
 
-## shebang と方言の自動検出
+## Shebang and automatic dialect detection
 
-shfmt は shebang を見て方言を決定:
+shfmt looks at the shebang to determine the dialect:
 
 ```bash
 #!/bin/bash       → bash
 #!/bin/sh         → POSIX sh
 #!/usr/bin/env bash → bash
-#!/bin/zsh        → zsh（v3.13.0+）
+#!/bin/zsh        → zsh (v3.13.0+)
 ```
 
-shebang がない場合は `-ln` で明示。`.zshrc` / `.bash_profile` などのファイル名は v3.13.1 以降自動で方言が決まる。
+If there's no shebang, specify explicitly with `-ln`. Filenames like `.zshrc` / `.bash_profile` have their dialect auto-determined since v3.13.1.
 
-## pre-commit 連携（lefthook）
+## pre-commit integration (lefthook)
 
 ```yaml
 pre-commit:
@@ -122,15 +122,15 @@ pre-commit:
       stage_fixed: true
 ```
 
-`shfmt -w` でフォーマット → `shellcheck` で意味チェック → `stage_fixed` で再ステージ。この順が推奨。
+Format with `shfmt -w` → semantic check with `shellcheck` → re-stage with `stage_fixed`. This order is recommended.
 
-## CI での使い方
+## Usage in CI
 
 ```bash
-# フォーマット準拠チェック（書き戻さない）
+# Check format compliance (no write-back)
 shfmt -d -l .
 
-# 非 0 終了でチェック失敗
+# Fail check with non-zero exit
 if [ -n "$(shfmt -l .)" ]; then
   echo "Format issues:"
   shfmt -d .
@@ -138,29 +138,29 @@ if [ -n "$(shfmt -l .)" ]; then
 fi
 ```
 
-## エディタ統合
+## Editor integration
 
-- **VS Code**: [shell-format 拡張](https://marketplace.visualstudio.com/items?itemName=foxundermoon.shell-format)。`editor.defaultFormatter` を指定
+- **VS Code**: [shell-format extension](https://marketplace.visualstudio.com/items?itemName=foxundermoon.shell-format). Specify `editor.defaultFormatter`
 - **Neovim**: null-ls / conform.nvim
-- **IntelliJ / GoLand**: plugin あり
+- **IntelliJ / GoLand**: plugin available
 
-保存時自動フォーマットが開発体験上の正解。
+Format-on-save is the right call for developer experience.
 
-## よくある誤解
+## Common misconceptions
 
-- **shfmt は意味チェックしない** — 純粋にフォーマッタ。バグ検出は shellcheck の役目
-- **タブデフォルト** — `-i 2` を明示しないと実インデントはタブ。EditorConfig で統一推奨
-- **`-s` は破壊的に見えて安全** — `[ ]` → `[[ ]]` 等の変換は意味同等（bash 限定）
-- **shebang の有無で出力が変わる** — 無シェバン bash スクリプトは `-ln bash` を付けるか shebang を付ける
+- **shfmt does not do semantic checks** — it's purely a formatter. Bug detection is shellcheck's job
+- **Tabs are the default** — without explicit `-i 2`, the actual indent is tabs. Standardizing via EditorConfig is recommended
+- **`-s` looks destructive but is safe** — conversions like `[ ]` → `[[ ]]` are semantically equivalent (bash only)
+- **Output changes depending on presence of shebang** — for shebang-less bash scripts, add `-ln bash` or add a shebang
 
-## 他ツールとの比較
+## Comparison with other tools
 
-| 観点 | shfmt | beautysh | bashate |
+| Aspect | shfmt | beautysh | bashate |
 |---|---|---|---|
-| 言語 | Go | Python | Python |
-| 速度 | 速い | 遅い | 遅い |
-| 対応方言 | bash/sh/mksh | bash | bash |
-| フォーマット精度 | 高 | 中 | なし（lint のみ） |
-| メンテ | 活発 | 緩やか | 緩やか |
+| Language | Go | Python | Python |
+| Speed | Fast | Slow | Slow |
+| Supported dialects | bash/sh/mksh | bash | bash |
+| Formatting accuracy | High | Medium | None (lint only) |
+| Maintenance | Active | Moderate | Moderate |
 
-shellcheck（lint）+ shfmt（format）の二段構えが現代のシェルスクリプト運用標準。
+shellcheck (lint) + shfmt (format) as a two-stage combo is the modern standard for shell script operations.

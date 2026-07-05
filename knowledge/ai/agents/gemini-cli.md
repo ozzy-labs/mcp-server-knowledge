@@ -5,197 +5,197 @@ tags: [ai-workflow, commercial, gcp]
 
 # Gemini CLI
 
-Google が提供するオープンソースの AI エージェント CLI。ReAct（Reason and Act）ループにより、複雑なコーディングタスク・デバッグ・自動化をターミナルから実行する。
+An open-source AI agent CLI provided by Google. Uses a ReAct (Reason and Act) loop to run complex coding tasks, debugging, and automation from the terminal.
 
-## インストール
+## Installation
 
 ```bash
-# npm（Node.js 20+ 必要）
+# npm (requires Node.js 20+)
 npm install -g @google/gemini-cli
 
-# npx（インストール不要）
+# npx (no install needed)
 npx @google/gemini-cli
 
 # MacPorts
 sudo port install gemini-cli
 ```
 
-Google Cloud Shell にはプリインストール済み。
+Pre-installed on Google Cloud Shell.
 
-## 認証
+## Authentication
 
-3 つの認証方式:
+Three authentication methods:
 
-- **Sign in with Google (OAuth)** — 個人 Google アカウント
-- **Gemini API key** — `GEMINI_API_KEY` 環境変数（[AI Studio](https://aistudio.google.com/) で取得）
-- **Vertex AI** — エンタープライズ / 組織アカウント用
+- **Sign in with Google (OAuth)** — personal Google account
+- **Gemini API key** — `GEMINI_API_KEY` environment variable (obtain from [AI Studio](https://aistudio.google.com/))
+- **Vertex AI** — for enterprise / organization accounts
 
-`/auth` コマンドで対話的に変更可能。組織アカウントや Code Assist ライセンスを使う場合は `GOOGLE_CLOUD_PROJECT` 設定が必須。Headless 用途では API Key または Vertex AI 推奨。
+Can be changed interactively with the `/auth` command. `GOOGLE_CLOUD_PROJECT` must be set when using an organization account or a Code Assist license. For headless use, API Key or Vertex AI is recommended.
 
-## 基本コマンド
+## Basic Commands
 
 ```bash
-gemini                   # インタラクティブセッション開始
-gemini --version         # バージョン表示
-gemini --help            # ヘルプ表示
-gemini update            # CLI を最新版に更新
+gemini                   # Start an interactive session
+gemini --version         # Show version
+gemini --help            # Show help
+gemini update            # Update CLI to the latest version
 ```
 
-## セッション内コマンド（主要抜粋）
+## In-Session Commands (Key Excerpts)
 
-| コマンド | 説明 |
+| Command | Description |
 |---|---|
-| `/about` | バージョン情報表示 |
-| `/auth` | 認証方式の対話的変更 |
-| `/memory` | メモリ管理（list / refresh / show）。v0.42 で Auto Memory inbox フローを追加したが、memoryV2 移行に伴い公式 commands リファレンスのサブコマンドは list / refresh / show に整理された |
-| `/model` | 使用モデルの変更 |
-| `/agents` | サブエージェント管理（list / reload / enable / disable / config） |
-| `/plan` | Plan Mode への切替 |
-| `/chat` `/clear` `/compress` | 会話操作・コンテキスト圧縮 |
-| `/commands` | カスタムコマンド管理（list / reload、list は v0.42 新規） |
-| `/extensions` | Extensions 管理（install / uninstall / list / update / enable / disable / link / new / validate / delete-alias） |
-| `/skills` | Skills 管理（list / link / disable / enable / reload） |
-| `/hooks` | Hooks 管理（list / panel / enable / disable / enable-all / disable-all） |
-| `/mcp` | MCP サーバー管理 |
-| `/ide` | IDE 連携 |
-| `/init` `/resume` `/quit` `/exit --delete` | 初期化 / 再開 / 終了 |
+| `/about` | Show version info |
+| `/auth` | Interactively change authentication method |
+| `/memory` | Memory management (list / refresh / show). v0.42 added the Auto Memory inbox flow, but with the migration to memoryV2, the official commands reference now lists the subcommands as list / refresh / show |
+| `/model` | Change the model in use |
+| `/agents` | Subagent management (list / reload / enable / disable / config) |
+| `/plan` | Switch to Plan Mode |
+| `/chat` `/clear` `/compress` | Conversation operations / context compression |
+| `/commands` | Custom command management (list / reload; list is new in v0.42) |
+| `/extensions` | Extension management (install / uninstall / list / update / enable / disable / link / new / validate / delete-alias) |
+| `/skills` | Skill management (list / link / disable / enable / reload) |
+| `/hooks` | Hook management (list / panel / enable / disable / enable-all / disable-all) |
+| `/mcp` | MCP server management |
+| `/ide` | IDE integration |
+| `/init` `/resume` `/quit` `/exit --delete` | Init / resume / exit |
 
-公式の全量は `gh api repos/google-gemini/gemini-cli/contents/docs/reference/commands.md` または [docs](https://github.com/google-gemini/gemini-cli/blob/main/docs/reference/commands.md) を参照。
+See `gh api repos/google-gemini/gemini-cli/contents/docs/reference/commands.md` or the [docs](https://github.com/google-gemini/gemini-cli/blob/main/docs/reference/commands.md) for the full official list.
 
-## 主要機能
+## Key Features
 
-- **ReAct ループ**: 推論と行動を交互に繰り返す自律型アーキテクチャ
-- **リアルタイム音声モード (v0.41+)**: 音声入出力対応。v0.42 で UX 改善（マイク表示・wave animation・Gemini Live バックエンドのプライバシー警告・カーソル位置への transcription 挿入）
-- **Auto Memory inbox (v0.42)**: canonical-patch contract で会話からメモリを自動キャプチャ
-- **ワークスペース・トラスト**: 自動化スクリプト実行時の信頼済みフォルダ管理
-- **オフライン検索**: `ripgrep` がバンドルされ、高速なローカル検索が可能
-- **4 層メモリ管理システム**: プロンプト駆動型の高度な記憶保持機能
-- **MCP 統合**: Model Context Protocol サーバーとの連携
+- **ReAct loop**: An autonomous architecture that alternates between reasoning and action
+- **Real-time voice mode (v0.41+)**: Supports voice input/output. v0.42 improved UX (mic indicator, wave animation, privacy warning for the Gemini Live backend, transcription insertion at the cursor position)
+- **Auto Memory inbox (v0.42)**: Automatically captures memories from the conversation via a canonical-patch contract
+- **Workspace trust**: Manages trusted folders when running automation scripts
+- **Offline search**: Bundles `ripgrep` for fast local search
+- **Four-tier memory management system**: Advanced prompt-driven memory retention
+- **MCP integration**: Integration with Model Context Protocol servers
 
-## 選択可能なモデル（v0.49 時点）
+## Selectable Models (as of v0.49)
 
-`--model` フラグ（または `/model` ダイアログ）でエイリアス指定。
+Specify via alias with the `--model` flag (or the `/model` dialog).
 
-| エイリアス | 解決先 |
+| Alias | Resolves to |
 |---|---|
-| `auto` | Auto (Gemini 3) → `gemini-3-pro-preview` / `gemini-3-flash-preview`、Auto (Gemini 2.5) → `gemini-2.5-pro` / `gemini-2.5-flash` |
+| `auto` | Auto (Gemini 3) → `gemini-3-pro-preview` / `gemini-3-flash-preview`; Auto (Gemini 2.5) → `gemini-2.5-pro` / `gemini-2.5-flash` |
 | `pro` | `gemini-2.5-pro` |
 | `flash` | `gemini-2.5-flash` |
 | `flash-lite` | `gemini-2.5-flash-lite` |
 
-Gemini 3.1 系（`gemini-3.1-pro-preview` 等）は `/model` Manual または `-m gemini-3.1-pro-preview` で直接指定可能（順次ロールアウト中）。
+Gemini 3.1 series models (e.g. `gemini-3.1-pro-preview`) can be specified directly via `/model` Manual or `-m gemini-3.1-pro-preview` (rollout in progress).
 
-**Gemma 4**: v0.41 で実験追加、v0.42 で Gemini API 経由のデフォルト有効化（#26307）。現行 stable は v0.49 系（v0.49.0）。
+**Gemma 4**: Added experimentally in v0.41, enabled by default via the Gemini API in v0.42 (#26307). The current stable release is the v0.49 series (v0.49.0).
 
-フォールバック: Gemini 3 Pro が上限到達時は Gemini 2.5 Pro → 2.5 Flash に自動降格。
+Fallback: when Gemini 3 Pro hits its limit, it automatically downgrades to Gemini 2.5 Pro → 2.5 Flash.
 
-## 承認モード
+## Approval Modes
 
-`default`（確認あり）/ `auto_edit`（編集自動）/ `plan`（計画のみ）/ `yolo`（全アクション自動承認）の 4 モード。`--approval-mode` フラグまたは `settings.json` の `general.defaultApprovalMode` で指定する。`yolo` はコマンドラインからのみ有効化可能（`--yolo` / `-y` は deprecated、`--approval-mode=yolo` を推奨）。`security.disableYoloMode` で無効化できる。
+Four modes: `default` (confirm each action), `auto_edit` (auto-approve edits), `plan` (planning only), `yolo` (auto-approve all actions). Set via the `--approval-mode` flag or `general.defaultApprovalMode` in `settings.json`. `yolo` can only be enabled from the command line (`--yolo` / `-y` are deprecated; `--approval-mode=yolo` is recommended). Can be disabled with `security.disableYoloMode`.
 
-## サンドボックス
+## Sandbox
 
-Docker / Podman / OS ネイティブサンドボックスに対応。`settings.json` で詳細設定可能。
+Supports Docker, Podman, and native OS sandboxes. Configurable in detail via `settings.json`.
 
 ## Skills
 
-2026-03 頃に追加された新機能。`Agent Skills` オープン標準準拠。
+A newer feature added around 2026-03. Conforms to the `Agent Skills` open standard.
 
-**探索ディレクトリ**（precedence: 低 → 高、後勝ち）:
+**Discovery directories** (precedence: low → high, later wins):
 
 1. Built-in
 2. Extension bundled
-3. User: `~/.gemini/skills/` または `~/.agents/skills/`
-4. Workspace: `.gemini/skills/` または `.agents/skills/`
+3. User: `~/.gemini/skills/` or `~/.agents/skills/`
+4. Workspace: `.gemini/skills/` or `.agents/skills/`
 
-`.agents/skills/` のほうが `.gemini/skills/` より優先される（他 CLI との相互運用のため）。
+`.agents/skills/` takes precedence over `.gemini/skills/` (for interoperability with other CLIs).
 
-**管理**: `/skills list | link | disable | enable | reload` および `gemini skills install`。`/skills disable` `/skills enable` のデフォルトスコープは user、`--scope workspace` で workspace に変更可能。アクティベーション時は `activate_skill` ツール経由でユーザー確認後、SKILL.md の本文とディレクトリ構造が会話履歴に注入される。
+**Management**: `/skills list | link | disable | enable | reload` and `gemini skills install`. The default scope for `/skills disable` / `/skills enable` is user; use `--scope workspace` to change to workspace. On activation, after user confirmation via the `activate_skill` tool, the SKILL.md body and directory structure are injected into the conversation history.
 
-## サブエージェント
+## Subagents
 
-`.gemini/agents/`（project）または `~/.gemini/agents/`（user）に定義。
+Defined in `.gemini/agents/` (project) or `~/.gemini/agents/` (user).
 
-**frontmatter**:
+**Frontmatter**:
 
-| フィールド | 必須 | 説明 |
+| Field | Required | Description |
 |---|---|---|
 | `name` | Yes | slug |
-| `description` | Yes | 用途 |
+| `description` | Yes | purpose |
 | `kind` | - | `local` / `remote` |
-| `tools` | - | ワイルドカード `*`, `mcp_*`, `mcp_server_*` 対応 |
-| `mcpServers` | - | inline 定義 |
-| `model` | - | `inherit` 可 |
+| `tools` | - | supports wildcards `*`, `mcp_*`, `mcp_server_*` |
+| `mcpServers` | - | inline definition |
+| `model` | - | can be `inherit` |
 | `temperature` | - | 0.0-2.0 |
-| `max_turns` | - | デフォルト 30 |
-| `timeout_mins` | - | デフォルト 10 |
+| `max_turns` | - | default 30 |
+| `timeout_mins` | - | default 10 |
 
-**ビルトイン**: `generalist` / `cli_help` / `codebase_investigator` / `browser_agent`（experimental、Chrome 144+ 必要）。
+**Built-in**: `generalist` / `cli_help` / `codebase_investigator` / `browser_agent` (experimental, requires Chrome 144+).
 
-**呼び出し**: 自動委譲、または `@subagent-name` で強制呼び出し。**再帰不可**（subagent から subagent を呼べない）。
+**Invocation**: automatic delegation, or force invocation with `@subagent-name`. **Non-recursive** (a subagent cannot call another subagent).
 
-## カスタムコマンド
+## Custom Commands
 
-`.gemini/commands/*.toml` に TOML 形式で定義。サブディレクトリでネームスペース: `git/commit.toml` → `/git:commit`。
+Defined in TOML format under `.gemini/commands/*.toml`. Subdirectories create namespaces: `git/commit.toml` → `/git:commit`.
 
 ```toml
-prompt = "以下のコミット: {{args}}\n\n!{git diff --staged}\n\n@{README.md}"
-description = "ステージ済み変更のコミットメッセージを提案"
+prompt = "Commit the following: {{args}}\n\n!{git diff --staged}\n\n@{README.md}"
+description = "Suggest a commit message for staged changes"
 ```
 
-**プレースホルダ**:
+**Placeholders**:
 
-- `{{args}}` — コマンド引数
-- `!{shell command}` — シェルコマンドの実行結果を埋め込み
-- `@{file}` — ファイル内容を埋め込み
+- `{{args}}` — command arguments
+- `!{shell command}` — embeds the output of a shell command
+- `@{file}` — embeds file contents
 
-**優先度**: Project `.gemini/commands/` > User `~/.gemini/commands/` > Extensions（同名衝突時に `<extension>.<command>` にプレフィックス）。
+**Priority**: Project `.gemini/commands/` > User `~/.gemini/commands/` > Extensions (on a name collision, prefixed as `<extension>.<command>`).
 
 ## Hooks
 
-2025 年末〜2026 年初頭に追加。`settings.json` の `hooks` セクション。
+Added in late 2025 / early 2026. Configured under the `hooks` section of `settings.json`.
 
-**対応イベント（11 種類）**:
+**Supported events (11 types)**:
 
-| カテゴリ | イベント |
+| Category | Events |
 |---|---|
-| セッション | `SessionStart`, `SessionEnd` |
-| エージェント | `BeforeAgent`, `AfterAgent` |
-| モデル | `BeforeModel`, `AfterModel` |
-| ツール | `BeforeToolSelection`, `BeforeTool`, `AfterTool` |
-| コンテキスト | `PreCompress` |
-| その他 | `Notification` |
+| Session | `SessionStart`, `SessionEnd` |
+| Agent | `BeforeAgent`, `AfterAgent` |
+| Model | `BeforeModel`, `AfterModel` |
+| Tool | `BeforeToolSelection`, `BeforeTool`, `AfterTool` |
+| Context | `PreCompress` |
+| Other | `Notification` |
 
-exit 0 = success（ブロック含む全ロジックで推奨）、exit 2 = システムブロック（アクション中断）、その他 = 警告（続行）。Hook には JSON で `session_id` / `transcript_path` / `cwd` / `hook_event_name` / `timestamp` 等のフィールドが渡される。
+exit 0 = success (recommended for all logic, including blocking), exit 2 = system block (aborts the action), any other code = warning (continues). Hooks receive JSON fields such as `session_id` / `transcript_path` / `cwd` / `hook_event_name` / `timestamp`.
 
-Hook 定義のフィールド: `type` / `command` / `name` / `timeout`（デフォルト 60000ms） / `description` / `sequential`（並列/直列制御） / `matcher`。
+Hook definition fields: `type` / `command` / `name` / `timeout` (default 60000ms) / `description` / `sequential` (parallel/serial control) / `matcher`.
 
-**管理コマンド**: `/hooks panel`, `/hooks enable-all` など。
+**Management commands**: `/hooks panel`, `/hooks enable-all`, etc.
 
-**セキュリティ**: プロジェクト hooks はフィンガープリントされ、変更時に警告が出る。
+**Security**: project hooks are fingerprinted, and a warning is shown when they change.
 
 ## Extensions
 
-`gemini-extension.json` で定義するパッケージ。含められるもの: `commands/`, `hooks/hooks.json`, `skills/`, `agents/`, `policies/`, `themes/`, `mcpServers`, `contextFileName`, `excludeTools`, `settings`。
+Packages defined via `gemini-extension.json`. Can include: `commands/`, `hooks/hooks.json`, `skills/`, `agents/`, `policies/`, `themes/`, `mcpServers`, `contextFileName`, `excludeTools`, `settings`.
 
 ```bash
 gemini extensions install <github-url>
-gemini extensions uninstall <name>   # v0.42 で `delete` エイリアス追加
+gemini extensions uninstall <name>   # `delete` alias added in v0.42
 gemini extensions list
 gemini extensions update <name>
 gemini extensions enable|disable <name>
 gemini extensions link|new|validate <path>
 ```
 
-## エージェント統合
+## Agent Integration
 
-### 指示ファイル
+### Instruction Files
 
-`AGENTS.md` をプロジェクトルートに配置。Gemini CLI が自動で読み込む。追加で `GEMINI.md` や `CONTEXT.md` もコンテキストとして読み込み可能。
+Place `AGENTS.md` at the project root; Gemini CLI reads it automatically. `GEMINI.md` and `CONTEXT.md` can also be read as additional context.
 
-### MCP サーバー登録
+### Registering MCP Servers
 
-`.gemini/settings.json`（プロジェクト単位）または `~/.gemini/settings.json`（グローバル）:
+In `.gemini/settings.json` (per-project) or `~/.gemini/settings.json` (global):
 
 ```json
 {
@@ -210,36 +210,36 @@ gemini extensions link|new|validate <path>
 }
 ```
 
-MCP サーバー固有の設定:
+MCP server-specific settings:
 
-| フィールド | 説明 |
+| Field | Description |
 |---|---|
-| `command` | 起動コマンド |
-| `args` | コマンド引数 |
-| `env` | 環境変数 |
-| `cwd` | 作業ディレクトリ |
-| `url` | SSE ベースサーバーの URL |
-| `timeout` | タイムアウト（ミリ秒） |
-| `trust` | true にするとツール呼び出し確認をスキップ |
-| `includeTools` | 使用するツールのホワイトリスト |
-| `excludeTools` | 除外するツールのブラックリスト |
+| `command` | startup command |
+| `args` | command arguments |
+| `env` | environment variables |
+| `cwd` | working directory |
+| `url` | URL for an SSE-based server |
+| `timeout` | timeout (milliseconds) |
+| `trust` | if true, skips tool call confirmation |
+| `includeTools` | whitelist of tools to use |
+| `excludeTools` | blacklist of tools to exclude |
 
-## 無料枠
+## Free Tier
 
-個人 Google アカウントで利用可能。無料枠のリクエスト制限あり（認証方式により異なる）。
+Available with a personal Google account. Free tier has request limits (varying by authentication method).
 
-有料オプション:
+Paid options:
 
-- **Google AI Pro / AI Ultra**: 個人向け、固定価格で上限拡大
-- **Vertex AI**: エンタープライズ向け、従量課金
+- **Google AI Pro / AI Ultra**: for individuals, higher limits at a fixed price
+- **Vertex AI**: for enterprises, pay-as-you-go
 
-## 制限事項
+## Limitations
 
-- Node.js 20+ が必須
-- Google Cloud アカウントの無料枠有効化に問題がある場合は `GOOGLE_CLOUD_PROJECT` の設定が必要
+- Requires Node.js 20+
+- If there are issues activating the free tier on a Google Cloud account, `GOOGLE_CLOUD_PROJECT` must be set
 
-## システム要件
+## System Requirements
 
 - macOS, Linux, Windows
 - Node.js 20+
-- RAM: 4 GB 以上推奨
+- RAM: 4 GB or more recommended

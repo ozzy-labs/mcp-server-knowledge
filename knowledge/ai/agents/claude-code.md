@@ -6,111 +6,111 @@ aliases: [cc]
 
 # Claude Code
 
-Anthropic が提供する AI コーディングエージェント CLI。ターミナル上でコードベースの理解・編集・Git 操作・コマンド実行をエージェントが自律的に行う。
+An AI coding agent CLI from Anthropic. In the terminal, the agent autonomously understands and edits the codebase, performs Git operations, and runs commands.
 
-## インストール
+## Installation
 
 ```bash
-# ネイティブインストーラー（推奨・自動アップデート対応・Node.js 不要）
+# Native installer (recommended - auto-update support, no Node.js required)
 curl -fsSL https://claude.ai/install.sh | bash    # macOS / Linux / WSL
 irm https://claude.ai/install.ps1 | iex           # Windows PowerShell
 curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del install.cmd  # Windows CMD
 
-# Homebrew（自動アップデートなし）
-brew install --cask claude-code          # stable チャンネル
-brew install --cask claude-code@latest  # latest チャンネル（v2.1.195 時点）
+# Homebrew (no auto-update)
+brew install --cask claude-code          # stable channel
+brew install --cask claude-code@latest  # latest channel (as of v2.1.195)
 
 # WinGet
 winget install Anthropic.ClaudeCode
 
-# npm（非推奨）
+# npm (deprecated)
 npm install -g @anthropic-ai/claude-code
 ```
 
-## 認証
+## Authentication
 
-初回起動時にブラウザで OAuth 認証。2026-05-06 以降、全有料プランで 5 時間あたりのメッセージ制限が **2 倍** に引き上げられた。
+OAuth authentication in the browser on first launch. As of 2026-05-06, the 5-hour message limit was **doubled** for all paid plans.
 
 - Claude Pro / Max / Team / Enterprise
-- API Console（API キー課金）
+- API Console (API key billing)
 
-## 基本コマンド
+## Basic commands
 
 ```bash
-claude                    # インタラクティブセッション開始
-claude "プロンプト"        # ワンショット実行
-claude --help             # ヘルプ表示
-claude update             # CLI を最新版に更新
+claude                    # Start an interactive session
+claude "prompt"           # One-shot execution
+claude --help             # Show help
+claude update             # Update the CLI to the latest version
 ```
 
-## セッション内コマンド
+## In-session commands
 
-| コマンド | 説明 |
+| Command | Description |
 |---|---|
-| `/help` | ヘルプ表示 |
-| `/clear` | コンテキストクリア |
-| `/compact` | コンテキスト圧縮 |
-| `/model` | モデル切り替え |
-| `/usage` | セッションコスト・プラン使用量・統計を表示。`/cost` と `/stats` は統合済み |
-| `/agents` | サブエージェントの管理 |
-| `/goal` | 永続ゴール設定（v2.1.139+） |
-| `/plugins` | プラグインマネージャ UI |
-| `/color` | セッションごとにランダムな UI 色を割り当て |
+| `/help` | Show help |
+| `/clear` | Clear context |
+| `/compact` | Compact context |
+| `/model` | Switch model |
+| `/usage` | Show session cost, plan usage, and stats. `/cost` and `/stats` have been merged into this |
+| `/agents` | Manage subagents |
+| `/goal` | Set a persistent goal (v2.1.139+) |
+| `/plugins` | Plugin manager UI |
+| `/color` | Assign a random UI color per session |
 
-`claude agents`（CLI 直叩き、v2.1.139+ Research Preview）で agent view を起動できる。
+`claude agents` (direct CLI invocation, v2.1.139+ Research Preview) launches the agent view.
 
-カスタムコマンドは `.claude/commands/` に Markdown ファイルとして定義可能。
+Custom commands can be defined as Markdown files in `.claude/commands/`.
 
-## 設定ファイル
+## Configuration files
 
-| パス | 用途 | Git 管理 |
+| Path | Purpose | Git managed |
 |---|---|---|
-| `~/.claude.json` | ユーザースコープ設定 | - |
-| `CLAUDE.md` | プロジェクト固有の指示 | Yes |
-| `.claude/settings.json` | プロジェクト固有の設定 | Yes |
-| `.claude/rules/` | 追加ルールファイル | Yes |
-| `.claude/commands/` | カスタムスラッシュコマンド | Yes |
-| `.claude/agents/` | サブエージェント定義 | Yes |
+| `~/.claude.json` | User-scoped settings | - |
+| `CLAUDE.md` | Project-specific instructions | Yes |
+| `.claude/settings.json` | Project-specific settings | Yes |
+| `.claude/rules/` | Additional rule files | Yes |
+| `.claude/commands/` | Custom slash commands | Yes |
+| `.claude/agents/` | Subagent definitions | Yes |
 
-### 環境変数
+### Environment variables
 
-- `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN=1` — フルスクリーンモードを無効化し、ネイティブスクロールを維持。
-- `CLAUDE_CODE_SESSION_ID` — セッション ID を参照可能（フック用）。
+- `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN=1` - Disables fullscreen mode, keeping native scrolling.
+- `CLAUDE_CODE_SESSION_ID` - Exposes the session ID for reference (for hooks).
 
-### 主要機能
+### Key features
 
-- **エディタ統合**: VS Code や Cursor ターミナルでの動作最適化。拡張機能開発の基礎は [`platforms/vscode/vscode-extensions.md`](../../platforms/vscode/vscode-extensions.md) を参照。
-- **ファイル編集**: コードの読み取り・編集・新規作成
-- **コマンド実行**: シェルコマンドの実行と結果の解釈
-- **Git 操作**: コミット・ブランチ・PR 作成を自然言語で
-- **Routines (v2.1.130+)**: 非同期で PR 修正や定期タスクを実行する高次プロンプト（→ [`claude-code-routines.md`](claude-code-routines.md)）。
-- **Claude Code on Desktop (2026-05 発表)**: GUI ベースで画像やリッチな出力を確認できるデスクトップ版。自律エージェント機能は [`claude-cowork.md`](claude-cowork.md) を参照。
+- **Editor integration**: Optimized behavior in VS Code and Cursor terminals. See [`platforms/vscode/vscode-extensions.md`](../../platforms/vscode/vscode-extensions.md) for extension-development basics.
+- **File editing**: Read, edit, and create code
+- **Command execution**: Run shell commands and interpret results
+- **Git operations**: Commits, branches, and PR creation via natural language
+- **Routines (v2.1.130+)**: Higher-order prompts that run PR fixes or periodic tasks asynchronously (see [`claude-code-routines.md`](claude-code-routines.md)).
+- **Claude Code on Desktop (announced 2026-05)**: A desktop GUI version for viewing images and rich output. See [`claude-cowork.md`](claude-cowork.md) for autonomous agent features.
 
-### 拡張機構
+### Extension mechanisms
 
-- **MCP 統合**: Model Context Protocol サーバーとの連携
-- **サブエージェント**: 専門タスク用の独立コンテキストエージェント（`.claude/agents/`）
-- **スキル**: プロンプト + コンテキストのバンドル（`.claude/skills/`）
-- **プラグイン**: コマンド・エージェント・スキル等をバンドル配布。`--plugin-url` で外部読み込み可能。
+- **MCP integration**: Integration with Model Context Protocol servers
+- **Subagents**: Independent-context agents for specialized tasks (`.claude/agents/`)
+- **Skills**: Bundles of prompt + context (`.claude/skills/`)
+- **Plugins**: Bundle and distribute commands, agents, skills, etc. Can be loaded externally with `--plugin-url`.
 
-### 体験カスタマイズ
+### Experience customization
 
-- **出力スタイル**: 応答のトーンと形式をプロジェクト単位で切り替え（`.claude/output-styles/`）
-- **ステータスライン**: モデル・コスト・コンテキスト使用率などをターミナル下部に常時表示
+- **Output styles**: Switch response tone and format per project (`.claude/output-styles/`)
+- **Status line**: Persistently display model, cost, context usage, etc. at the bottom of the terminal
 
-### 運用
+### Operations
 
-- **スケジュール実行**: Anthropic インフラ上で定期実行
+- **Scheduled execution**: Periodic execution on Anthropic infrastructure
 
-## 権限モード
+## Permission modes
 
-| モード | 説明 |
+| Mode | Description |
 |---|---|
-| Ask | すべてのツール呼び出しを確認 |
-| Auto-edit | ファイル編集は自動、コマンド実行は確認 |
-| Full auto | すべて自動実行（allowlist で制御可能） |
+| Ask | Confirm every tool call |
+| Auto-edit | File edits are automatic, command execution requires confirmation |
+| Full auto | Everything runs automatically (controllable via allowlist) |
 
-`settings.json` の `permissions` で詳細制御:
+Fine-grained control via `permissions` in `settings.json`:
 
 ```json
 {
@@ -122,21 +122,21 @@ claude update             # CLI を最新版に更新
 }
 ```
 
-## フックシステム
+## Hook system
 
-ツール実行やセッションイベントの前後に自動処理を挟む仕組み。ハンドラ種別は `command`（シェル実行）/ `prompt`（LLM 評価）/ `http`（HTTP POST）/ `agent`（サブエージェント呼び出し）/ `mcp_tool`（MCP ツール直接呼び出し、v2.1.118 追加）の 5 種類。
+A mechanism for inserting automated processing before/after tool execution or session events. There are 5 handler types: `command` (shell execution), `prompt` (LLM evaluation), `http` (HTTP POST), `agent` (subagent invocation), and `mcp_tool` (direct MCP tool invocation, added v2.1.118).
 
-**主要イベント**（30 種前後）:
+**Key events** (around 30):
 
-| カテゴリ | イベント |
+| Category | Events |
 |---|---|
-| セッション | `SessionStart`, `Setup`（`--init-only`）, `SessionEnd` |
-| ターン | `UserPromptSubmit`, `UserPromptExpansion`, `Stop`, `StopFailure` |
-| ツール | `PreToolUse`, `PermissionRequest`, `PermissionDenied`, `PostToolUse`, `PostToolBatch`, `PostToolUseFailure` |
-| サブエージェント | `SubagentStart`, `SubagentStop` |
-| タスク | `TeammateIdle`, `TaskCreated`, `TaskCompleted` |
-| 非同期 | `Notification`, `CwdChanged`, `FileChanged`, `InstructionsLoaded`, `ConfigChange` |
-| コンテキスト | `PreCompact`, `PostCompact` |
+| Session | `SessionStart`, `Setup` (`--init-only`), `SessionEnd` |
+| Turn | `UserPromptSubmit`, `UserPromptExpansion`, `Stop`, `StopFailure` |
+| Tool | `PreToolUse`, `PermissionRequest`, `PermissionDenied`, `PostToolUse`, `PostToolBatch`, `PostToolUseFailure` |
+| Subagent | `SubagentStart`, `SubagentStop` |
+| Task | `TeammateIdle`, `TaskCreated`, `TaskCompleted` |
+| Async | `Notification`, `CwdChanged`, `FileChanged`, `InstructionsLoaded`, `ConfigChange` |
+| Context | `PreCompact`, `PostCompact` |
 | MCP / worktree | `Elicitation`, `ElicitationResult`, `WorktreeCreate`, `WorktreeRemove` |
 
 ```json
@@ -156,11 +156,11 @@ claude update             # CLI を最新版に更新
 }
 ```
 
-**応答**: exit 0 = 許可、exit 2 = 拒否（stderr がエラーメッセージとしてフィードバック）。PreToolUse では `hookSpecificOutput.permissionDecision` で `allow` / `deny` / `ask` / `defer`（2025 年末追加）を返してより細かく制御できる。`async`, `asyncRewake`, `statusMessage`, `once`, `shell`, `args`（exec form, シェル経由なし、v2.1.139）フィールドあり。`conditional` の `if` フィールドでパーミッションルール構文（例: `Bash(git *)`）を使い、フックが発火する条件を絞り込める（v2.1.85）。PostToolUse フックは `hookSpecificOutput.updatedToolOutput` で全ツールの出力を差し替え可能（v2.1.121）、`continueOnBlock`（v2.1.139）で deny されても次の hook を続行可能。`terminalSequence`（v2.1.141）で OSC 9/777 等の terminal escape を出力して desktop 通知を出せる。
+**Responses**: exit 0 = allow, exit 2 = deny (stderr is fed back as the error message). In `PreToolUse`, `hookSpecificOutput.permissionDecision` allows finer control by returning `allow` / `deny` / `ask` / `defer` (added late 2025). Fields include `async`, `asyncRewake`, `statusMessage`, `once`, `shell`, `args` (exec form, no shell, v2.1.139). The `if` field under `conditional` uses permission-rule syntax (e.g. `Bash(git *)`) to narrow the conditions under which a hook fires (v2.1.85). `PostToolUse` hooks can replace any tool's output via `hookSpecificOutput.updatedToolOutput` (v2.1.121); `continueOnBlock` (v2.1.139) lets subsequent hooks continue even if one is denied. `terminalSequence` (v2.1.141) can emit terminal escapes such as OSC 9/777 to trigger desktop notifications.
 
-## サブエージェント
+## Subagents
 
-メインセッションから独立した文脈で動作する専門エージェント。`.claude/agents/<name>.md` または `~/.claude/agents/<name>.md` に定義する。
+Specialized agents that operate in a context independent from the main session. Defined in `.claude/agents/<name>.md` or `~/.claude/agents/<name>.md`.
 
 ```markdown
 ---
@@ -170,55 +170,55 @@ model: haiku
 tools: Grep Glob Read
 ---
 
-コードベースを体系的に分析してください...
+Systematically analyze the codebase...
 ```
 
-`model` は `sonnet` / `opus` / `haiku` のエイリアス、または `claude-sonnet-4-6` / `claude-opus-4-8` のような明示 ID、`inherit`（親セッション継承）を指定できる。
+`model` can be an alias such as `sonnet` / `opus` / `haiku`, an explicit ID like `claude-sonnet-4-6` / `claude-opus-4-8`, or `inherit` (inherit from the parent session).
 
-| フィールド | 説明 |
+| Field | Description |
 |---|---|
-| `name` | エージェント識別子（必須） |
-| `description` | 自動委譲の判定に使用（必須） |
-| `model` | 使用モデル（`inherit` で親セッション継承） |
-| `tools` | 許可ツール（カンマまたは空白区切り） |
-| `disallowedTools` | 拒否ツール |
+| `name` | Agent identifier (required) |
+| `description` | Used to determine automatic delegation (required) |
+| `model` | Model to use (`inherit` to inherit from the parent session) |
+| `tools` | Allowed tools (comma- or space-separated) |
+| `disallowedTools` | Denied tools |
 | `permissionMode` | `default` / `acceptEdits` / `auto` / `dontAsk` / `bypassPermissions` / `plan` |
-| `maxTurns` | 最大ターン数 |
-| `skills` | プリロードするスキル |
-| `mcpServers` | 利用可能な MCP サーバー |
-| `hooks` | このエージェント内で有効な hooks |
-| `memory` | `user` / `project` / `local` — `<scope>/agent-memory/<name>/` に永続化 |
-| `isolation` | `worktree` で Git worktree に隔離 |
-| `background` | `true` で非同期起動 |
-| `effort` | 推論の深さ |
-| `color` | UI 色分け |
-| `initialPrompt` | 起動直後に流す指示 |
+| `maxTurns` | Maximum number of turns |
+| `skills` | Skills to preload |
+| `mcpServers` | Available MCP servers |
+| `hooks` | Hooks active within this agent |
+| `memory` | `user` / `project` / `local` - persisted to `<scope>/agent-memory/<name>/` |
+| `isolation` | `worktree` isolates into a Git worktree |
+| `background` | `true` to launch asynchronously |
+| `effort` | Depth of reasoning |
+| `color` | UI color coding |
+| `initialPrompt` | Instruction sent immediately after launch |
 
-**本文は system prompt として扱われる**（`system-prompt` フィールドは存在しない）。
+**The body is treated as the system prompt** (there is no `system-prompt` field).
 
-**呼び出し方**:
+**How to invoke**:
 
-- **自動委譲**: `description` にマッチするタスクを検出して親エージェントが委譲
-- **`/agents` コマンド**: インタラクティブに選択
-- **Agent ツール経由**: スキル定義で `context: fork` + `agent: <name>` を指定した場合
+- **Automatic delegation**: The parent agent detects a task matching `description` and delegates
+- **`/agents` command**: Select interactively
+- **Via the Agent tool**: When a skill definition specifies `context: fork` + `agent: <name>`
 
-**スコープ優先**（高→低）: Managed settings > `--agents` CLI flag (JSON) > Project (`.claude/agents/`) > User (`~/.claude/agents/`) > Plugin。
+**Scope priority** (high to low): Managed settings > `--agents` CLI flag (JSON) > Project (`.claude/agents/`) > User (`~/.claude/agents/`) > Plugin.
 
-**ビルトインサブエージェント**:
+**Built-in subagents**:
 
-| 名前 | 用途 |
+| Name | Purpose |
 |---|---|
-| `Explore` | Haiku ベース。read-only の高速コード探索 |
-| `Plan` | 親モデル継承、read-only。実装計画を立てる |
-| `general-purpose` | 汎用的な委譲先 |
-| `statusline-setup` | ステータスライン設定の対話 |
-| `claude-code-guide` | Claude Code の機能に関する質問対応 |
+| `Explore` | Haiku-based. Fast, read-only code exploration |
+| `Plan` | Inherits the parent model, read-only. Builds an implementation plan |
+| `general-purpose` | General-purpose delegation target |
+| `statusline-setup` | Interactive status-line configuration |
+| `claude-code-guide` | Answers questions about Claude Code features |
 
-v2.1.63 以降、旧名 `Task` ツールは `Agent` にリネームされている（エイリアスは残存）。
+As of v2.1.63, the old `Task` tool has been renamed `Agent` (the alias remains).
 
-## スキル
+## Skills
 
-タスク特化のプロンプト + コンテキストバンドル。`.claude/skills/<name>/SKILL.md` に定義する。
+Task-specific bundles of prompt + context. Defined in `.claude/skills/<name>/SKILL.md`.
 
 ```markdown
 ---
@@ -227,41 +227,41 @@ description: Review code for best practices, security issues, and potential bugs
 allowed-tools: Read Grep Glob
 ---
 
-コードレビュー時は以下をチェック:
-- セキュリティ脆弱性
-- パフォーマンス問題
-- テストカバレッジ
+When reviewing code, check the following:
+- Security vulnerabilities
+- Performance issues
+- Test coverage
 ```
 
-| フィールド | 説明 |
+| Field | Description |
 |---|---|
-| `name` | スキル名（省略時はディレクトリ名。`/name` で呼び出し可能） |
-| `description` | **発見の鍵**。`description` + `when_to_use` 合わせて最大 1,536 文字。冒頭にユースケースを置く |
-| `when_to_use` | 追加のトリガー説明 |
-| `argument-hint` / `arguments` | `/skill-name <args>` 呼び出し時の引数説明・解析定義 |
-| `user-invocable` | `false` なら Claude のみ呼び出し可（デフォルト true） |
-| `disable-model-invocation` | `true` ならユーザーのみ呼び出し可（デフォルト false） |
-| `allowed-tools` | スキル有効中に許可確認をスキップするツール |
-| `paths` | glob で自動発火対象パスを制限 |
-| `model` | per-skill モデル上書き（`sonnet` / `opus` / `haiku` 等） |
-| `effort` | per-skill 効果レベル（`xhigh` / `high` / `medium` / `low`） |
-| `shell` | スキル内コマンドのシェル指定（`bash` / `powershell`） |
-| `hooks` | このスキル有効中だけ作用する hooks |
-| `context` | `fork` でサブエージェントコンテキストで実行 |
-| `agent` | `context: fork` 時のエージェント名（デフォルト `general-purpose`） |
+| `name` | Skill name (defaults to directory name if omitted; invocable via `/name`) |
+| `description` | **The key to discovery**. `description` + `when_to_use` combined max 1,536 characters. Put the use case up front |
+| `when_to_use` | Additional trigger description |
+| `argument-hint` / `arguments` | Argument description/parsing definition for `/skill-name <args>` invocation |
+| `user-invocable` | If `false`, only Claude can invoke it (default true) |
+| `disable-model-invocation` | If `true`, only the user can invoke it (default false) |
+| `allowed-tools` | Tools that skip the permission prompt while the skill is active |
+| `paths` | Restricts auto-trigger paths via glob |
+| `model` | Per-skill model override (`sonnet` / `opus` / `haiku`, etc.) |
+| `effort` | Per-skill effort level (`xhigh` / `high` / `medium` / `low`) |
+| `shell` | Shell to use for commands within the skill (`bash` / `powershell`) |
+| `hooks` | Hooks that act only while this skill is active |
+| `context` | `fork` to run in a subagent context |
+| `agent` | Agent name when `context: fork` (defaults to `general-purpose`) |
 
-**Progressive disclosure**: 起動時は description だけがコンテキストに載り、トリガーされた時点で本文が読み込まれる。コンテキスト節約の核。
+**Progressive disclosure**: At startup, only the description is loaded into context; the body is loaded once triggered. This is the core of context conservation.
 
-**呼び出し方**:
+**How to invoke**:
 
-- **手動**: `/skill-name [arguments]`
-- **自動**: `description` にタスクがマッチすれば Claude が自動発火
+- **Manual**: `/skill-name [arguments]`
+- **Automatic**: Claude auto-triggers it if the task matches `description`
 
-**サブエージェントとの違い**: サブエージェントは「委譲先の永続的エージェント定義」、スキルは「オンデマンドで呼び出す再利用可能なタスクプロンプト」。
+**Difference from subagents**: A subagent is a "persistent agent definition to delegate to," while a skill is a "reusable task prompt invoked on demand."
 
-## プラグイン / マーケットプレイス
+## Plugins / marketplace
 
-コマンド・サブエージェント・スキル・フック・MCP サーバーをまとめてパッケージ化・配布する仕組み。
+A mechanism for packaging and distributing commands, subagents, skills, hooks, and MCP servers together.
 
 ```text
 my-plugin/
@@ -277,53 +277,53 @@ my-plugin/
 └── .lsp.json
 ```
 
-**主要コマンド**:
+**Key commands**:
 
-| コマンド | 用途 |
+| Command | Purpose |
 |---|---|
-| `/plugin` | プラグインマネージャ UI |
-| `/plugin install <name>` | マーケットプレイスからインストール |
-| `/reload-plugins` | 開発中の再読み込み |
-| `claude --plugin-dir ./path` | ローカルプラグインをテスト起動 |
+| `/plugin` | Plugin manager UI |
+| `/plugin install <name>` | Install from a marketplace |
+| `/reload-plugins` | Reload during development |
+| `claude --plugin-dir ./path` | Launch and test a local plugin |
 
-**マーケットプレイス**:
+**Marketplaces**:
 
-- **公式**: `platform.claude.com/plugins` / `claude.ai/settings/plugins`
-- **コミュニティ**: リポジトリ / カスタムレジストリで配布
-- **チーム運用**: managed settings や team marketplace を指す
+- **Official**: `platform.claude.com/plugins` / `claude.ai/settings/plugins`
+- **Community**: Distributed via repositories / custom registries
+- **Team operations**: Refers to managed settings or a team marketplace
 
-## 出力スタイル
+## Output styles
 
-応答のトーン・形式・ロールを切り替える仕組み。知識やツールは変更しない。`.claude/output-styles/<name>.md` または `~/.claude/output-styles/<name>.md` に配置。
+A mechanism for switching response tone, format, and role. Does not change knowledge or tools. Placed at `.claude/output-styles/<name>.md` or `~/.claude/output-styles/<name>.md`.
 
 ```markdown
 ---
 name: Japanese Technical Writer
-description: 技術的な精度を保ち、フォーマルな日本語で応答
+description: Respond in formal Japanese while maintaining technical accuracy
 keep-coding-instructions: true
 ---
 
 # Japanese Technical Mode
 
-応答はすべて日本語で、ビジネス・技術文書のレジスタで書く...
+Respond entirely in Japanese, in the register of business/technical documents...
 ```
 
-| フィールド | 説明 |
+| Field | Description |
 |---|---|
-| `name` | 表示名（省略時はファイル名） |
-| `description` | `/config` の選択 UI で表示 |
-| `keep-coding-instructions` | `true` で Claude Code のデフォルトコーディング指示を残す |
+| `name` | Display name (defaults to filename if omitted) |
+| `description` | Shown in the `/config` selection UI |
+| `keep-coding-instructions` | If `true`, keeps Claude Code's default coding instructions |
 
-**選択方法**:
+**How to select**:
 
-- `/config` → Output style → メニューから選択
-- `settings.json` の `outputStyle` フィールドを編集（次セッションから有効）
+- `/config` -> Output style -> select from menu
+- Edit the `outputStyle` field in `settings.json` (effective from the next session)
 
-**組み込みスタイル**: `Default` / `Explanatory`（教育的補足） / `Learning`（`TODO(human)` マーカー併用の協調モード）。
+**Built-in styles**: `Default` / `Explanatory` (adds educational asides) / `Learning` (collaborative mode with `TODO(human)` markers).
 
-## ステータスライン
+## Status line
 
-ターミナル下部にセッション情報を常時表示するカスタマイズ機能。シェルスクリプトが JSON を stdin から受け取り、標準出力をそのまま表示する。
+A customization feature that persistently displays session info at the bottom of the terminal. A shell script receives JSON on stdin and its stdout is displayed as-is.
 
 `settings.json`:
 
@@ -338,7 +338,7 @@ keep-coding-instructions: true
 }
 ```
 
-スクリプト例:
+Example script:
 
 ```bash
 #!/bin/bash
@@ -348,49 +348,49 @@ PCT=$(echo "$input" | jq -r '.context_window.used_percentage // 0' | cut -d. -f1
 echo "[$MODEL] $PCT% context"
 ```
 
-**JSON で受け取れる主なフィールド**:
+**Key fields available in the JSON**:
 
 - `model.display_name`, `model.id`
-- `workspace.current_dir`（`cwd` エイリアス）, `workspace.project_dir`, `workspace.git_worktree`（linked worktree 内で設定）
+- `workspace.current_dir` (`cwd` alias), `workspace.project_dir`, `workspace.git_worktree` (set within a linked worktree)
 - `context_window.used_percentage`, `context_window.remaining_percentage`
 - `cost.total_cost_usd`, `cost.total_duration_ms`, `cost.total_api_duration_ms`
 - `session_id`, `session_name`
-- `rate_limits.five_hour.used_percentage`, `rate_limits.five_hour.resets_at`（Unix epoch）, `rate_limits.seven_day.used_percentage`, `rate_limits.seven_day.resets_at`
-- `effort.level`, `thinking.enabled`（v2.1.119 追加）
+- `rate_limits.five_hour.used_percentage`, `rate_limits.five_hour.resets_at` (Unix epoch), `rate_limits.seven_day.used_percentage`, `rate_limits.seven_day.resets_at`
+- `effort.level`, `thinking.enabled` (added v2.1.119)
 
-**クイック設定**: `/statusline モデル名とコンテキスト使用率を表示` と送れば Claude がスクリプトを生成して自動設定する。
+**Quick setup**: Sending `/statusline show model name and context usage` has Claude generate the script and configure it automatically.
 
-## エージェント統合
+## Agent integration
 
-### 指示ファイル
+### Instruction files
 
-`CLAUDE.md` をプロジェクトルートに配置。Claude Code が自動で読み込む。
+Place `CLAUDE.md` at the project root. Claude Code loads it automatically.
 
-### MCP サーバー登録
+### Registering MCP servers
 
-CLI コマンドで登録するのが推奨。スコープを指定してサーバーを追加する:
+Registering via the CLI command is recommended. Add a server with a specified scope:
 
 ```bash
-# ユーザースコープ（全プロジェクト共通）
+# User scope (shared across all projects)
 claude mcp add --transport stdio <name> --scope user -- <command> [args...]
 
-# プロジェクトスコープ（リポジトリで共有、.mcp.json に書き込み）
+# Project scope (shared within the repository, written to .mcp.json)
 claude mcp add --transport stdio <name> --scope project -- <command> [args...]
 
-# ローカルスコープ（このプロジェクトの自分だけ）
+# Local scope (only you, on this project)
 claude mcp add --transport stdio <name> --scope local -- <command> [args...]
 
-# 登録状態・接続確認
+# Check registration status/connectivity
 claude mcp list
 ```
 
-| スコープ | 書き込み先 | 共有範囲 |
+| Scope | Written to | Shared with |
 |---|---|---|
-| `user` | `~/.claude.json` の top-level `mcpServers` | 全プロジェクト |
-| `project` | リポジトリ直下の `.mcp.json` | Git で共有 |
-| `local` | プロジェクト固有ローカル | このマシンのみ |
+| `user` | Top-level `mcpServers` in `~/.claude.json` | All projects |
+| `project` | `.mcp.json` at the repository root | Shared via Git |
+| `local` | Project-specific local settings | This machine only |
 
-手動で設定を書くときのフォーマット:
+Format when writing the configuration manually:
 
 ```json
 {
@@ -406,29 +406,29 @@ claude mcp list
 }
 ```
 
-**スコープ優先度**: Local > Project > User（同名サーバーがあれば優先度の高いものが勝つ）。
+**Scope priority**: Local > Project > User (if servers share a name, the higher-priority one wins).
 
-### カスタムコマンド
+### Custom commands
 
-`.claude/commands/` に Markdown ファイルを配置:
+Place Markdown files in `.claude/commands/`:
 
 ```markdown
 ---
-description: コードレビュー実行
+description: Run a code review
 allowed-tools: Read, Grep, Glob
 ---
 
-以下のファイルをレビューしてください: $ARGUMENTS
+Review the following files: $ARGUMENTS
 ```
 
-## 制限事項
+## Limitations
 
-- 無料プランでは利用不可
-- レート制限到達時はプロンプト送信が一時停止
-- ネイティブインストーラー以外（npm）は非推奨
+- Not available on the free plan
+- Prompt submission pauses temporarily once the rate limit is reached
+- Anything other than the native installer (npm) is deprecated
 
-## システム要件
+## System requirements
 
-- macOS 10.15+, Ubuntu 20.04+ / Debian 10+, Windows 10+（WSL / Git Bash）
-- RAM: 4 GB 以上（8 GB 推奨）
-- シェル: Bash, Zsh, Fish
+- macOS 10.15+, Ubuntu 20.04+ / Debian 10+, Windows 10+ (WSL / Git Bash)
+- RAM: 4 GB or more (8 GB recommended)
+- Shell: Bash, Zsh, Fish

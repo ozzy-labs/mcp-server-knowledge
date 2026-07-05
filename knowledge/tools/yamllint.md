@@ -5,17 +5,17 @@ tags: [lint, yaml, python]
 
 # yamllint
 
-YAML ファイルの構文と**スタイル**を検証する Linter。Python 製。インデント、行長、コメントフォーマット、truthy 値の扱い等、YAML 特有の落とし穴を検出する。
+A linter that validates YAML syntax and **style**. Written in Python. Detects YAML-specific pitfalls such as indentation, line length, comment formatting, and truthy value handling.
 
-公式: [github.com/adrienverge/yamllint](https://github.com/adrienverge/yamllint)
+Official: [github.com/adrienverge/yamllint](https://github.com/adrienverge/yamllint)
 
-## インストール
+## Installation
 
 ```bash
 # mise + pipx
 mise use pipx:yamllint@1
 
-# pipx（推奨、他の Python 依存と隔離）
+# pipx (recommended, isolated from other Python dependencies)
 pipx install yamllint
 
 # pip
@@ -25,31 +25,31 @@ pip install yamllint
 brew install yamllint
 ```
 
-## 基本的な使い方
+## Basic Usage
 
 ```bash
-# 単一ファイル
+# Single file
 yamllint config.yaml
 
-# 再帰
+# Recursive
 yamllint .
 
-# 設定指定
+# Specify config
 yamllint -c .yamllint.yaml .
 
-# フォーマット指定
-yamllint -f parsable .         # gcc 互換（エディタ統合向け）
-yamllint -f github .           # GitHub Actions 注釈
-yamllint -f colored .          # カラー
-yamllint -f standard .         # デフォルト
+# Specify format
+yamllint -f parsable .         # gcc-compatible (for editor integration)
+yamllint -f github .           # GitHub Actions annotations
+yamllint -f colored .          # colored
+yamllint -f standard .         # default
 ```
 
-## 内蔵 preset
+## Built-in Presets
 
-| preset | 特徴 |
+| Preset | Characteristics |
 |---|---|
-| `default` | 標準ルール一式 |
-| `relaxed` | 緩め。警告のみに近い |
+| `default` | Standard rule set |
+| `relaxed` | Loose, close to warnings-only |
 
 ```yaml
 # .yamllint.yaml
@@ -60,24 +60,24 @@ rules:
     max: 120
 ```
 
-## 主要ルール
+## Key Rules
 
-| ルール | 意味 |
+| Rule | Meaning |
 |---|---|
-| `indentation` | インデント幅（spaces-consistent, sequences） |
-| `line-length` | 最大行長（デフォルト 80） |
-| `trailing-spaces` | 行末スペース禁止 |
-| `new-line-at-end-of-file` | 末尾改行必須 |
-| `truthy` | `yes`/`no`/`on`/`off` の扱い。bool として解釈されないことを警告 |
-| `key-duplicates` | 同一キー重複 |
-| `document-start` | `---` の有無 |
-| `empty-lines` | 連続空行の上限 |
-| `brackets` / `braces` | 括弧の前後スペース |
-| `comments` | `#` と本文の間のスペース |
-| `comments-indentation` | コメントのインデント |
-| `quoted-strings` | 文字列のクオート方針 |
+| `indentation` | Indentation width (spaces-consistent, sequences) |
+| `line-length` | Maximum line length (default 80) |
+| `trailing-spaces` | No trailing whitespace |
+| `new-line-at-end-of-file` | Trailing newline required |
+| `truthy` | Handling of `yes`/`no`/`on`/`off`; warns when not interpreted as bool |
+| `key-duplicates` | Duplicate keys |
+| `document-start` | Presence of `---` |
+| `empty-lines` | Limit on consecutive blank lines |
+| `brackets` / `braces` | Spacing around brackets |
+| `comments` | Spacing between `#` and comment text |
+| `comments-indentation` | Comment indentation |
+| `quoted-strings` | String quoting policy |
 
-## 設定 `.yamllint.yaml`
+## Configuration `.yamllint.yaml`
 
 ```yaml
 extends: default
@@ -87,7 +87,7 @@ rules:
     max: 120
     level: warning
   truthy:
-    check-keys: false        # GitHub Actions の `on:` 等を許容
+    check-keys: false        # allow GitHub Actions' `on:` etc.
   comments:
     min-spaces-from-content: 1
   document-start: disable
@@ -98,15 +98,15 @@ ignore: |
   .git/
 ```
 
-`.yamllintignore` にも除外パターンを書ける（.gitignore 風）。
+Exclusion patterns can also be written in `.yamllintignore` (.gitignore-style).
 
-## ルールの severity
+## Rule Severity
 
-各ルールは以下のいずれか:
+Each rule takes one of the following:
 
-- `enable` / `disable`（プリセットの値を継承）
-- `error` — 違反で非 0 終了
-- `warning` — レポートするが非 0 にしない
+- `enable` / `disable` (inherit the preset's value)
+- `error` — non-zero exit on violation
+- `warning` — reported but does not cause non-zero exit
 
 ```yaml
 rules:
@@ -115,9 +115,9 @@ rules:
     level: warning
 ```
 
-## 個別抑制
+## Inline Suppression
 
-行またはブロックで `yamllint` ディレクティブを使う:
+Use `yamllint` directives for a line or block:
 
 ```yaml
 # yamllint disable-line rule:line-length
@@ -129,7 +129,7 @@ production: no
 # yamllint enable rule:truthy
 ```
 
-## pre-commit 連携（lefthook）
+## pre-commit Integration (lefthook)
 
 ```yaml
 pre-commit:
@@ -140,21 +140,21 @@ pre-commit:
       stage_fixed: true
 ```
 
-yamlfmt で整形 → yamllint で検証の順が推奨。
+Format with yamlfmt first, then validate with yamllint — this order is recommended.
 
-## CI での使い方
+## Usage in CI
 
 ```yaml
-- run: yamllint -f github .    # GitHub Actions に注釈として表示
+- run: yamllint -f github .    # displayed as annotations in GitHub Actions
 ```
 
-SARIF 出力には対応していないため、生テキスト or `parsable` フォーマットを使う。
+SARIF output is not supported, so use raw text or the `parsable` format.
 
-## よくある問題
+## Common Issues
 
-### `truthy` ルールで GitHub Actions が警告される
+### The `truthy` rule warns on GitHub Actions
 
-GitHub Actions の `on:` は yaml として `true` に解釈される（予約語）:
+GitHub Actions' `on:` is interpreted as `true` in YAML (a reserved word):
 
 ```yaml
 on:
@@ -162,14 +162,14 @@ on:
     branches: [main]
 ```
 
-`truthy.check-keys: false` を設定で許容。
+Allow it by setting `truthy.check-keys: false`.
 
-### インデント揺れ
+### Indentation inconsistency
 
-sequence（`- item`）のインデントに流派がある:
+There are different conventions for sequence (`- item`) indentation:
 
 ```yaml
-# indent-sequences: true（推奨、デフォルト）
+# indent-sequences: true (recommended, default)
 list:
   - a
   - b
@@ -180,37 +180,37 @@ list:
 - b
 ```
 
-`.yamllint.yaml` で `indentation.indent-sequences` を統一。
+Standardize with `indentation.indent-sequences` in `.yamllint.yaml`.
 
-### 行長 80 が厳しい
+### Line length of 80 is too strict
 
-実用では 100-120 が現実的。`line-length.max` を引き上げる or `level: warning` に落とす。
+In practice, 100-120 is more realistic. Raise `line-length.max` or lower it to `level: warning`.
 
-### Helm / Ansible テンプレートで誤検知
+### False positives in Helm / Ansible templates
 
-`{{ ... }}` / `{% %}` が非 YAML 記法で壊れる。yamllint は Go template / Jinja を理解しないため、該当ディレクトリは `.yamllintignore` で除外が実務的。
+`{{ ... }}` / `{% %}` break as non-YAML syntax. Since yamllint does not understand Go templates or Jinja, excluding the relevant directories via `.yamllintignore` is the practical approach.
 
-## yamlfmt との使い分け
+## yamlfmt vs. yamllint
 
-- **yamllint**: **lint**（バリデーション）。自動修正しない
-- **yamlfmt**: **format**。自動整形
+- **yamllint**: **lint** (validation). Does not auto-fix
+- **yamlfmt**: **format**. Auto-formats
 
-両方通すのが理想。lint を通すために format が必要な指摘（trailing-spaces, new-line-at-end-of-file 等）が多いため、yamlfmt を先に走らせる。
+Ideally run both. Since many lint findings (trailing-spaces, new-line-at-end-of-file, etc.) require formatting to pass, run yamlfmt first.
 
-## エディタ統合
+## Editor Integration
 
-- **VS Code**: [YAML 拡張](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)（JSON Schema 検証とは別だが併用可）
-- **Neovim**: null-ls / efm-langserver 経由
+- **VS Code**: [YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) (separate from JSON Schema validation, but can be used together)
+- **Neovim**: via null-ls / efm-langserver
 
-保存時 lint が効くと書きながら直せる。
+Lint-on-save lets you fix issues as you write.
 
-## 他ツールとの比較
+## Comparison with Other Tools
 
-| 観点 | yamllint | Spectral | check-yaml (pre-commit) |
+| Aspect | yamllint | Spectral | check-yaml (pre-commit) |
 |---|---|---|---|
-| 検査範囲 | YAML 構文 + スタイル | JSON Schema + OpenAPI 等 | パース可否のみ |
-| 言語 | Python | Node.js | Python |
-| カスタマイズ | ルール設定 | 強力（DSL） | 限定 |
-| 用途 | 汎用 YAML | スキーマ検証 | 最小限の健全性 |
+| Scope | YAML syntax + style | JSON Schema + OpenAPI, etc. | Parseability only |
+| Language | Python | Node.js | Python |
+| Customization | Rule config | Powerful (DSL) | Limited |
+| Use case | General-purpose YAML | Schema validation | Minimal sanity check |
 
-一般的な YAML ファイル品質なら yamllint。特定スキーマ（OpenAPI、Kubernetes 等）には Spectral や JSON Schema 検証を併用。
+For general YAML file quality, use yamllint. For specific schemas (OpenAPI, Kubernetes, etc.), combine with Spectral or JSON Schema validation.

@@ -5,32 +5,32 @@ tags: [package, commercial, cloud-hosted]
 
 # Renovate
 
-依存関係を自動で最新に保つボット。PR を作って更新を提案し、CI が通れば自動マージまで可能。Dependabot より設定の自由度と対応エコシステムが広い。Mend が開発・運用。
+A bot that automatically keeps dependencies up to date. It opens PRs proposing updates and can auto-merge once CI passes. Offers more configuration flexibility and broader ecosystem support than Dependabot. Developed and operated by Mend.
 
-公式: [docs.renovatebot.com](https://docs.renovatebot.com/)
+Official: [docs.renovatebot.com](https://docs.renovatebot.com/)
 
-## 導入方法
+## Setup
 
 ### GitHub
 
-1. [Renovate GitHub App](https://github.com/apps/renovate) をインストール
-2. 対象リポジトリで有効化
-3. 初回は「Configure Renovate」Onboarding PR が作られる。マージすると運用開始
-4. リポジトリに `renovate.json` を置いて設定を調整
+1. Install the [Renovate GitHub App](https://github.com/apps/renovate)
+2. Enable it on the target repository
+3. On first run, a "Configure Renovate" onboarding PR is created. Merging it starts operation
+4. Place a `renovate.json` in the repository to adjust settings
 
-### セルフホスト
+### Self-hosted
 
 ```bash
-# GitHub Actions で定期実行
+# Run periodically via GitHub Actions
 pnpm dlx renovate
 
 # Docker
 docker run --rm -e RENOVATE_TOKEN=xxx renovate/renovate
 ```
 
-CLI / CI 実行モードもあるが、GitHub App モードが最も手軽。
+CLI / CI execution modes are also available, but the GitHub App mode is the easiest.
 
-## 設定ファイル `renovate.json`
+## Configuration file `renovate.json`
 
 ```json
 {
@@ -39,33 +39,33 @@ CLI / CI 実行モードもあるが、GitHub App モードが最も手軽。
 }
 ```
 
-最小構成は 1 行。`config:recommended` が実用的なデフォルトを提供する。
+The minimal configuration is a single line. `config:recommended` provides practical defaults.
 
-### 組織で共有
+### Sharing across an organization
 
 ```json
 { "extends": ["github>your-org/.github"] }
 ```
 
-`.github` リポジトリに `default.json` を置けば、組織全リポジトリで共通設定を共有できる。
+Placing `default.json` in the `.github` repository lets you share common settings across all repositories in the organization.
 
-## 主要フィールド
+## Key fields
 
-| フィールド | 説明 |
+| Field | Description |
 |---|---|
-| `extends` | プリセット継承（`config:recommended` / `:semanticCommits` 等） |
-| `schedule` | 実行時間帯（`["every weekend"]`, `["before 6am"]`） |
+| `extends` | Preset inheritance (`config:recommended`, `:semanticCommits`, etc.) |
+| `schedule` | Execution time window (`["every weekend"]`, `["before 6am"]`) |
 | `timezone` | `"Asia/Tokyo"` |
-| `labels` | PR に付ける GitHub ラベル |
-| `reviewers` / `assignees` | PR 受け持ち |
-| `prConcurrentLimit` | 同時オープン PR 数の上限 |
-| `prHourlyLimit` | 時間あたり PR 作成上限 |
+| `labels` | GitHub labels to attach to PRs |
+| `reviewers` / `assignees` | PR owners |
+| `prConcurrentLimit` | Max number of concurrently open PRs |
+| `prHourlyLimit` | Max PRs created per hour |
 | `rangeStrategy` | `pin` / `bump` / `replace` / `update-lockfile` |
-| `packageRules` | パッケージ別の細かい設定 |
-| `automerge` | 条件一致なら自動マージ |
-| `dependencyDashboard` | Issue ベースのダッシュボード |
+| `packageRules` | Fine-grained per-package settings |
+| `automerge` | Auto-merge when conditions match |
+| `dependencyDashboard` | Issue-based dashboard |
 
-## `packageRules` の例
+## `packageRules` example
 
 ```json
 {
@@ -93,18 +93,18 @@ CLI / CI 実行モードもあるが、GitHub App モードが最も手軽。
 }
 ```
 
-典型パターン:
+Typical patterns:
 
-- **patch / minor は自動マージ**（開発依存・型定義は特に）
-- **major は手動承認**（breaking change 可能性）
-- **0.x 系は minor も保守的に**（破壊的変更の余地）
-- **グルーピング**: 関連パッケージをまとめて 1 PR に
+- **Auto-merge patch / minor** (especially dev dependencies and type definitions)
+- **Manual approval for major** (potential breaking changes)
+- **Stay conservative even for minor on 0.x versions** (room for breaking changes)
+- **Grouping**: bundle related packages into a single PR
 
-## 対応エコシステム
+## Supported ecosystems
 
-主要なもの（抜粋）:
+Major ones (excerpt):
 
-| エコシステム | 対応ファイル |
+| Ecosystem | Supported files |
 |---|---|
 | npm / pnpm / yarn | `package.json`, lock files |
 | Go modules | `go.mod` |
@@ -115,11 +115,11 @@ CLI / CI 実行モードもあるが、GitHub App モードが最も手軽。
 | pre-commit | `.pre-commit-config.yaml` |
 | mise / asdf | `.mise.toml`, `.tool-versions` |
 | Terraform | `*.tf` |
-| Kubernetes | `*.yaml` (image 参照) |
+| Kubernetes | `*.yaml` (image references) |
 
-100 超のマネージャに対応。詳細は [公式の managers](https://docs.renovatebot.com/modules/manager/)。
+Supports 100+ managers. See the official [managers](https://docs.renovatebot.com/modules/manager/) docs for details.
 
-## 自動マージの条件設計
+## Designing auto-merge conditions
 
 ```json
 {
@@ -134,44 +134,44 @@ CLI / CI 実行モードもあるが、GitHub App モードが最も手軽。
 }
 ```
 
-- `automerge: true`: 自動マージを有効化
-- `platformAutomerge: true`: GitHub の auto-merge 機能を使う（CI 完了後に merge）
+- `automerge: true`: enables auto-merge
+- `platformAutomerge: true`: use GitHub's native auto-merge feature (merges after CI completes)
 - `automergeType`: `pr` / `branch` / `merge-commit`
 
-**必須条件**: branch protection で「Required status checks」を設定していること。CI が通らない限り自動マージされない。
+**Required condition**: branch protection must have "Required status checks" configured. Auto-merge won't happen unless CI passes.
 
-## よくあるプリセット
+## Common presets
 
-| プリセット | 内容 |
+| Preset | Content |
 |---|---|
-| `config:recommended` | 実用的なデフォルト一式 |
-| `config:base` | 旧推奨（最小限、非推奨化） |
-| `:semanticCommits` | コミットメッセージを Conventional Commits 形式に |
-| `:timezone(Asia/Tokyo)` | タイムゾーン設定 |
-| `group:monorepos` | 同じ monorepo 由来のパッケージをまとめる |
-| `group:recommended` | 推奨のグループ化セット |
-| `schedule:weekly` | 週 1 実行 |
+| `config:recommended` | A practical set of defaults |
+| `config:base` | Old recommendation (minimal, deprecated) |
+| `:semanticCommits` | Format commit messages as Conventional Commits |
+| `:timezone(Asia/Tokyo)` | Timezone setting |
+| `group:monorepos` | Group packages from the same monorepo |
+| `group:recommended` | Recommended grouping set |
+| `schedule:weekly` | Run once a week |
 
 ## Dependency Dashboard
 
-`dependencyDashboard: true` を有効にすると、リポジトリに 1 つの Issue が立ち、保留中・失敗・待機中の更新が一覧化される。
+Enabling `dependencyDashboard: true` creates a single Issue in the repository listing pending, failed, and awaiting updates.
 
 ```markdown
 ## Pending Approval
-- [ ] [react 18 -> 19](../pull/123)  # major なので承認待ち
+- [ ] [react 18 -> 19](../pull/123)  # awaiting approval since it's major
 
 ## Ignored or Blocked
 - [ ] [typescript] Failed to update due to lockfile conflict
 
 ## Detected dependencies
-<!-- 全検出依存の一覧 -->
+<!-- List of all detected dependencies -->
 ```
 
-チェックボックスを触ると Renovate に指示を送れる（再実行、優先度変更等）。
+Checking the checkboxes lets you send instructions to Renovate (re-run, change priority, etc.).
 
-## セキュリティ更新の優先度
+## Prioritizing security updates
 
-`vulnerabilityAlerts.enabled: true` で GitHub Security Advisories と連動。該当 CVE が出ると他の更新より優先して PR を作成する。
+`vulnerabilityAlerts.enabled: true` links with GitHub Security Advisories. When a matching CVE appears, Renovate creates a PR ahead of other updates.
 
 ```json
 {
@@ -182,31 +182,31 @@ CLI / CI 実行モードもあるが、GitHub App モードが最も手軽。
 }
 ```
 
-## トラブルシュート
+## Troubleshooting
 
-### PR が大量に来る
+### Too many PRs coming in
 
-- `prConcurrentLimit: 5` で同時 5 件に制限
-- `prHourlyLimit: 2` で時間あたり 2 件に制限
-- `schedule` で夜間・週末に集中
-- `packageRules` の `groupName` でまとめる
+- Limit concurrency with `prConcurrentLimit: 5`
+- Limit to 2 per hour with `prHourlyLimit: 2`
+- Concentrate runs at night/weekends with `schedule`
+- Bundle with `groupName` in `packageRules`
 
-### lockfile 更新が含まれない
+### Lockfile update isn't included
 
-`rangeStrategy: "update-lockfile"` を設定。pnpm なら `postUpdateOptions: ["pnpmDedupe"]` で重複解消も。
+Set `rangeStrategy: "update-lockfile"`. For pnpm, `postUpdateOptions: ["pnpmDedupe"]` also resolves duplicates.
 
-### monorepo で同じパッケージが複数更新される
+### The same package gets updated multiple times in a monorepo
 
-`group:monorepos` プリセットを追加、または `packageRules.matchPackageNames` + `groupName` で手動グルーピング。`matchPackageNames` の値は前後を `/` で囲むと正規表現として解釈される（例: `"/^@types\\//"` は `@types/` で始まる依存にマッチ）。
+Add the `group:monorepos` preset, or manually group with `packageRules.matchPackageNames` + `groupName`. If a `matchPackageNames` value is wrapped in `/`, it's interpreted as a regular expression (e.g., `"/^@types\\//"` matches dependencies starting with `@types/`).
 
-### 自動マージが動かない
+### Auto-merge isn't working
 
-1. branch protection の status check 要件を確認
-2. `platformAutomerge` が有効か
-3. PR 作成者（`renovate[bot]`）に write 権限があるか
-4. conflict のある PR は自動マージ不可
+1. Check the branch protection status check requirements
+2. Check whether `platformAutomerge` is enabled
+3. Check whether the PR author (`renovate[bot]`) has write permission
+4. PRs with conflicts cannot be auto-merged
 
-### 不要な更新を止める
+### Stopping unwanted updates
 
 ```json
 {
@@ -216,15 +216,15 @@ CLI / CI 実行モードもあるが、GitHub App モードが最も手軽。
 }
 ```
 
-## 他ツールとの比較
+## Comparison with other tools
 
-| 観点 | Renovate | Dependabot | RenovateCE (self-host) |
+| Aspect | Renovate | Dependabot | RenovateCE (self-host) |
 |---|---|---|---|
-| 対応エコシステム | 100+ | 30 程度 | 100+ |
-| 設定の柔軟性 | 高 | 中 | 高 |
-| 自動マージ | あり | あり（GitHub） | あり |
-| グルーピング | 自由 | 限定的 | 自由 |
-| 運用コスト | GitHub App（無料） | 無料（GitHub 標準） | 自前ホスト |
-| PR ダッシュボード | あり | なし | あり |
+| Supported ecosystems | 100+ | ~30 | 100+ |
+| Configuration flexibility | High | Medium | High |
+| Auto-merge | Yes | Yes (GitHub) | Yes |
+| Grouping | Free-form | Limited | Free-form |
+| Operating cost | GitHub App (free) | Free (native GitHub) | Self-hosted |
+| PR dashboard | Yes | No | Yes |
 
-OSS / SaaS 両方のプロジェクトで Renovate が事実上の標準。Dependabot は GitHub ネイティブだが設定の自由度で劣る。
+Renovate is the de facto standard for both OSS and SaaS projects. Dependabot is native to GitHub but falls short in configuration flexibility.

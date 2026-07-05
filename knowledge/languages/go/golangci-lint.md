@@ -5,86 +5,86 @@ tags: [go, lint, ci]
 
 # golangci-lint
 
-Go 用の **linter オーケストレータ**。100 以上の linter を 1 コマンドで並列実行し、Go build cache と独自の解析結果キャッシュを再利用するため、大規模リポでも高速に動く。事実上の Go 標準 linter。
+A **linter orchestrator** for Go. Runs 100+ linters in parallel with a single command, reusing the Go build cache and its own analysis-result cache, so it stays fast even on large repos. The de facto standard Go linter.
 
-公式: [golangci-lint.run](https://golangci-lint.run/) / [GitHub](https://github.com/golangci/golangci-lint)
+Official: [golangci-lint.run](https://golangci-lint.run/) / [GitHub](https://github.com/golangci/golangci-lint)
 
-最新版は v2 系（v1 は 2025 年以降メンテのみ）。**新規導入は v2 を選ぶ**。
+The current version line is v2 (v1 has been maintenance-only since 2025). **Choose v2 for new setups.**
 
-## インストール
+## Installation
 
 ```bash
-# 公式インストールスクリプト（バージョン固定推奨）
+# Official install script (pinning a version is recommended)
 curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh \
   | sh -s -- -b $(go env GOPATH)/bin v2.12.1
 
-# go install（v2 系のモジュールパスは /v2 が入る）
+# go install (the v2 module path includes /v2)
 go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 
-# パッケージマネージャ
+# Package managers
 brew install golangci-lint                 # macOS
 scoop install main/golangci-lint           # Windows
 mise use -g golangci-lint@v2.12.1
 ```
 
-公式は **`go install` を「動作保証なし」と明記**しており、CI はインストールスクリプトまたはバイナリ配布を推奨。
+The official docs explicitly state **`go install` is not guaranteed to work**; CI should use the install script or a binary release.
 
-## v2 移行
+## Migrating to v2
 
-v2 は 2025-03 にリリース。v1 設定からは自動移行コマンドがある:
+v2 was released in 2025-03. There's an automatic migration command for v1 configs:
 
 ```bash
-golangci-lint migrate              # .golangci.yml を v2 形式に変換
+golangci-lint migrate              # convert .golangci.yml to v2 format
 golangci-lint migrate --format yaml --skip-validation
 ```
 
-`<config>.bck.<ext>` でバックアップを生成。**コメントは移行されない**ので手動で復元する。
+Produces a backup named `<config>.bck.<ext>`. **Comments are not migrated**, so restore them manually.
 
-主な破壊的変更:
+Key breaking changes:
 
-- 設定ファイルに `version: "2"` が必須
+- Config file now requires `version: "2"`
 - `linters-settings:` → `linters.settings:` / `formatters.settings:`
-- `linters.disable-all` → `linters.default: none`、`linters.enable-all` → `linters.default: all`
+- `linters.disable-all` → `linters.default: none`, `linters.enable-all` → `linters.default: all`
 - `issues.exclude-dirs/files` → `linters.exclusions.paths`
 - `issues.exclude-rules` → `linters.exclusions.rules`
-- フォーマッタ（`gci` / `gofmt` / `gofumpt` / `goimports`）が **`formatters:` セクションへ分離**
-- 削除された linter: `deadcode`, `golint`, `interfacer`, `maligned`, `scopelint`, `structcheck`, `varcheck` 他
-- `gosimple` / `stylecheck` は `staticcheck` に統合
-- エイリアス削除: `gas` → `gosec`, `gomnd` → `mnd`, `vet` → `govet`
-- CLI: `--out-format` → `--output.<fmt>.path=...` に再構成
+- Formatters (`gci` / `gofmt` / `gofumpt` / `goimports`) are **split into their own `formatters:` section**
+- Removed linters: `deadcode`, `golint`, `interfacer`, `maligned`, `scopelint`, `structcheck`, `varcheck`, and others
+- `gosimple` / `stylecheck` merged into `staticcheck`
+- Aliases removed: `gas` → `gosec`, `gomnd` → `mnd`, `vet` → `govet`
+- CLI: `--out-format` restructured to `--output.<fmt>.path=...`
 
-## 基本コマンド
+## Basic commands
 
 ```bash
-golangci-lint run                       # カレントパッケージ
-golangci-lint run ./...                 # リポ全体
-golangci-lint run --fix                 # 自動修正
+golangci-lint run                       # current package
+golangci-lint run ./...                 # whole repo
+golangci-lint run --fix                 # auto-fix
 golangci-lint run --timeout 5m
 
-# 差分実行（PR レビューで便利）
+# Diff-based runs (handy for PR review)
 golangci-lint run --new-from-rev=HEAD~1
 golangci-lint run --new-from-merge-base=main
-golangci-lint run --whole-files         # 変更ファイル全体を表示
+golangci-lint run --whole-files         # show the entire changed file
 
-# 出力（v2 はサブキー形式）
+# Output (v2 uses sub-key form)
 golangci-lint run --output.json.path=stdout
 golangci-lint run --output.sarif.path=report.sarif
 golangci-lint run --output.checkstyle.path=cs.xml
 golangci-lint run --output.junit-xml.path=junit.xml
 
-# サブコマンド
-golangci-lint linters         # 利用可能な linter 一覧
-golangci-lint formatters      # フォーマッタ一覧（v2 新設）
-golangci-lint config verify   # JSON Schema で設定検証
-golangci-lint config path     # 使用される設定パス
+# Subcommands
+golangci-lint linters         # list available linters
+golangci-lint formatters      # list formatters (new in v2)
+golangci-lint config verify   # validate config against the JSON Schema
+golangci-lint config path     # path of the config in use
 golangci-lint cache status / cache clean
-golangci-lint fmt             # フォーマッタのみ実行（v2 新設）
+golangci-lint fmt             # run only formatters (new in v2)
 golangci-lint completion {bash|zsh|fish|powershell}
 ```
 
-設定ファイル検索順: `.golangci.yml` → `.golangci.yaml` → `.golangci.toml` → `.golangci.json`（CWD から root へ、最後に home）。
+Config file lookup order: `.golangci.yml` → `.golangci.yaml` → `.golangci.toml` → `.golangci.json` (from CWD up to root, then home).
 
-## 設定ファイル（v2 スキーマ）
+## Config file (v2 schema)
 
 ```yaml
 version: "2"
@@ -153,39 +153,39 @@ output:
       colors: true
 ```
 
-## 主要 linter
+## Key linters
 
-### デフォルト有効（`default: standard`）
+### Enabled by default (`default: standard`)
 
-`errcheck` / `govet` / `ineffassign` / `staticcheck` / `unused` の 5 つ。
+The five: `errcheck` / `govet` / `ineffassign` / `staticcheck` / `unused`.
 
-### よく追加するもの
+### Commonly added
 
-| linter | 用途 |
+| linter | purpose |
 |---|---|
-| `revive` | `golint` 後継のスタイルチェック |
-| `gocritic` | コードレビュー型の包括的チェック |
-| `gosec` | セキュリティ（G101 ハードコード資格情報など） |
-| `bodyclose` / `sqlclosecheck` | リソースリーク防止 |
-| `errorlint` | `%w` ラップ漏れ・`==` 比較を検出 |
-| `wrapcheck` | 外部 error をラップしているか |
-| `exhaustive` | switch / map の網羅性 |
-| `depguard` | import 制限（特定パッケージ禁止） |
-| `testifylint` | testify のアサーション誤用 |
-| `paralleltest` / `tparallel` | `t.Parallel()` 漏れ |
-| `mnd` | magic number 検出 |
+| `revive` | style checks, the `golint` successor |
+| `gocritic` | comprehensive code-review-style checks |
+| `gosec` | security (e.g. G101 hardcoded credentials) |
+| `bodyclose` / `sqlclosecheck` | resource-leak prevention |
+| `errorlint` | detects missing `%w` wrapping / `==` comparisons |
+| `wrapcheck` | checks whether external errors are wrapped |
+| `exhaustive` | switch / map exhaustiveness |
+| `depguard` | import restrictions (banning specific packages) |
+| `testifylint` | misuse of testify assertions |
+| `paralleltest` / `tparallel` | missing `t.Parallel()` |
+| `mnd` | magic-number detection |
 
-### フォーマッタ（v2 で `formatters:` セクション）
+### Formatters (moved to the `formatters:` section in v2)
 
-- `gofmt`（標準）
-- `goimports`（gofmt + import 整理）
-- `gofumpt`（gofmt より厳格、`gofmt` 上位互換）
-- `gci`（import グループ化、ローカル prefix サポート）
-- `golines`（行長制限）
+- `gofmt` (standard)
+- `goimports` (gofmt + import organization)
+- `gofumpt` (stricter than gofmt, a superset of `gofmt`)
+- `gci` (import grouping, supports local prefixes)
+- `golines` (line-length limiting)
 
-## CI 統合（GitHub Actions）
+## CI integration (GitHub Actions)
 
-公式 action: `golangci/golangci-lint-action`。**v2 を使うなら action は v7 以上**（v8 は `--working-directory` 絶対パス対応、v9 は Node.js 24）。
+Official action: `golangci/golangci-lint-action`. **If using v2, use action v7 or later** (v8 supports absolute `--working-directory` paths, v9 uses Node.js 24).
 
 ```yaml
 name: golangci-lint
@@ -210,9 +210,9 @@ jobs:
           only-new-issues: true
 ```
 
-主要 input: `version`, `args`, `working-directory`, `only-new-issues`, `skip-cache`, `install-mode`（`binary` / `goinstall` / `none`）, `problem-matchers`, `github-token`。`~/.cache/golangci-lint` を自動キャッシュ。
+Key inputs: `version`, `args`, `working-directory`, `only-new-issues`, `skip-cache`, `install-mode` (`binary` / `goinstall` / `none`), `problem-matchers`, `github-token`. Automatically caches `~/.cache/golangci-lint`.
 
-### SARIF → Code Scanning 連携
+### SARIF → Code Scanning integration
 
 ```yaml
 - uses: golangci/golangci-lint-action@v8
@@ -223,24 +223,24 @@ jobs:
     sarif_file: results.sarif
 ```
 
-## パフォーマンスチューニング
+## Performance tuning
 
-- `--concurrency N` / `-j N`: 使用 CPU 数
-- `--allow-parallel-runners`: 複数同時起動を許可
-- `--allow-serial-runners`: ロック直列化（CI で複数 step が同時実行する場合）
-- `--max-issues-per-linter` / `--max-same-issues`: 出力量制御
-- 大規模リポ: `linters.exclusions.paths` で `vendor`、生成コードを除外
+- `--concurrency N` / `-j N`: number of CPUs to use
+- `--allow-parallel-runners`: allow multiple concurrent invocations
+- `--allow-serial-runners`: serialize via lock (for CI where multiple steps run concurrently)
+- `--max-issues-per-linter` / `--max-same-issues`: control output volume
+- Large repos: exclude `vendor` and generated code via `linters.exclusions.paths`
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **v1 形式の `.golangci.yml` を v2 環境で使う** — `version: "2"` が無いと起動失敗。`golangci-lint migrate` で変換する
-2. **フォーマッタを `linters.enable` に書く** — v2 では `formatters.enable` に分離。`gofumpt` / `goimports` / `gci` / `gofmt` / `golines` がフォーマッタ扱い
-3. **`gosimple` / `stylecheck` を個別有効化** — v2 で `staticcheck` に統合済み。指定すると未知の linter エラー
-4. **`--out-format json` で実行** — v2 では削除。`--output.json.path=stdout` を使う
-5. **`go install` で本番投入** — 公式が動作保証していない。CI では install スクリプトかバイナリ配布
-6. **`golangci-lint-action@v3` で v2 設定を使う** — action v6 以下は v1 のみ対応。v2 設定なら action v7+ が必須
+1. **Using a v1-format `.golangci.yml` in a v2 environment** — startup fails without `version: "2"`. Convert it with `golangci-lint migrate`
+2. **Listing formatters under `linters.enable`** — in v2 they belong under `formatters.enable`. `gofumpt` / `goimports` / `gci` / `gofmt` / `golines` are formatters
+3. **Enabling `gosimple` / `stylecheck` individually** — already merged into `staticcheck` in v2. Specifying them causes an unknown-linter error
+4. **Running with `--out-format json`** — removed in v2. Use `--output.json.path=stdout`
+5. **Deploying via `go install` in production** — not guaranteed to work per the official docs. Use the install script or a binary release in CI
+6. **Using `golangci-lint-action@v3` with a v2 config** — action v6 and below only support v1. A v2 config requires action v7+
 
-## 参考
+## References
 
 - [Install (Local)](https://golangci-lint.run/docs/welcome/install/local/)
 - [Install (CI)](https://golangci-lint.run/docs/welcome/install/ci/)

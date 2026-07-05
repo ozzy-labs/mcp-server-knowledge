@@ -6,13 +6,13 @@ aliases: [gh]
 
 # gh (GitHub CLI)
 
-GitHub 公式の CLI。PR・Issue・Actions・Releases・Secrets などブラウザの UI で行う操作をターミナルから実行できる。AI エージェント運用の基盤ツール（Claude Code / Codex CLI も Git/GitHub 操作で多用）。
+GitHub's official CLI. Lets you perform operations normally done in the browser UI — PRs, Issues, Actions, Releases, Secrets, etc. — from the terminal. A foundational tool for AI-agent operations (Claude Code / Codex CLI also rely on it heavily for Git/GitHub operations).
 
-公式: [cli.github.com](https://cli.github.com/) / [docs.github.com/cli](https://cli.github.com/manual/)
+Official: [cli.github.com](https://cli.github.com/) / [docs.github.com/cli](https://cli.github.com/manual/)
 
-## インストール
+## Installation
 
-様々なパッケージマネージャーに対応している。OS ごとの推奨手法については `standards/software-distribution.md` を参照。
+Supports many package managers. See `standards/software-distribution.md` for recommended methods per OS.
 
 ```bash
 # Homebrew
@@ -28,109 +28,109 @@ sudo apt update && sudo apt install gh
 # WinGet
 winget install --id GitHub.cli
 
-# mise (aqua 経由)
+# mise (via aqua)
 mise use aqua:cli/cli@latest
 ```
 
-## 認証
+## Authentication
 
 ```bash
-# 対話（ブラウザ OAuth）
+# Interactive (browser OAuth)
 gh auth login
 
-# 非対話（Personal Access Token）
+# Non-interactive (Personal Access Token)
 echo "ghp_xxx" | gh auth login --with-token
 
 # GitHub Enterprise Server
 gh auth login --hostname ghes.example.com
 
-# 状態確認
+# Check status
 gh auth status
 
-# 切り替え
+# Switch accounts
 gh auth switch
 ```
 
-環境変数でも認証可能:
+Authentication is also possible via environment variables:
 
-- `GH_TOKEN` / `GITHUB_TOKEN` — 優先順は `GH_TOKEN` > `GITHUB_TOKEN`
-- `GH_HOST` — デフォルトホスト（GHES 用）
-- `GH_ENTERPRISE_TOKEN` — GHES 用トークン
+- `GH_TOKEN` / `GITHUB_TOKEN` — precedence order is `GH_TOKEN` > `GITHUB_TOKEN`
+- `GH_HOST` — default host (for GHES)
+- `GH_ENTERPRISE_TOKEN` — token for GHES
 
-CI では `GITHUB_TOKEN` が自動的にセットされるため、ほぼ追加設定なしで動く（`GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}` を env に渡す）。
+In CI, `GITHUB_TOKEN` is set automatically, so it works with almost no extra configuration (pass `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}` via env).
 
-## 主要サブコマンド
+## Key subcommands
 
-| コマンド | 用途 |
+| Command | Purpose |
 |---|---|
-| `gh auth` | 認証 |
-| `gh repo` | リポジトリ操作（create / clone / fork / view） |
-| `gh issue` | Issue |
-| `gh pr` | Pull Request |
-| `gh run` | Actions workflow 実行 |
-| `gh workflow` | Actions workflow 管理 |
-| `gh release` | リリース |
-| `gh gist` | Gist |
+| `gh auth` | Authentication |
+| `gh repo` | Repository operations (create / clone / fork / view) |
+| `gh issue` | Issues |
+| `gh pr` | Pull Requests |
+| `gh run` | Actions workflow runs |
+| `gh workflow` | Actions workflow management |
+| `gh release` | Releases |
+| `gh gist` | Gists |
 | `gh secret` | Actions secrets |
 | `gh variable` | Actions variables |
-| `gh label` | ラベル |
+| `gh label` | Labels |
 | `gh project` | GitHub Projects |
-| `gh api` | 任意の REST / GraphQL API 呼び出し |
-| `gh search` | 横断検索 |
-| `gh copilot` | Copilot in CLI（本体組み込み） |
-| `gh skill` | Agent Skills の探索・インストール・公開（Public Preview） |
-| `gh agent-task` | Copilot coding agent タスク操作 |
+| `gh api` | Arbitrary REST / GraphQL API calls |
+| `gh search` | Cross-repo search |
+| `gh copilot` | Copilot in CLI (built into the core binary) |
+| `gh skill` | Discover, install, and publish Agent Skills (Public Preview) |
+| `gh agent-task` | Copilot coding agent task operations |
 
-## PR 操作（最頻出）
+## PR operations (most frequently used)
 
 ```bash
-# 作成
+# Create
 gh pr create --title "feat: add foo" --body "..."
-gh pr create --fill                      # コミットメッセージから自動補完
-gh pr create --web                       # ブラウザで編集
+gh pr create --fill                      # auto-fill from commit messages
+gh pr create --web                       # edit in browser
 
-# 一覧
+# List
 gh pr list
 gh pr list --state open --author @me
 gh pr list --label bug
 
-# 詳細表示
+# View details
 gh pr view 123
 gh pr view 123 --comments
-gh pr view 123 --json state,title,files  # 機械可読
+gh pr view 123 --json state,title,files  # machine-readable
 
-# 差分
+# Diff
 gh pr diff 123
 
-# マージ
+# Merge
 gh pr merge 123 --squash --delete-branch
-gh pr merge --auto --squash              # 条件満たした時点で自動マージ
+gh pr merge --auto --squash              # auto-merge once requirements are met
 
-# レビュー・承認
+# Review / approve
 gh pr review 123 --approve
 gh pr review 123 --request-changes --body "..."
 
-# チェックアウト
+# Checkout
 gh pr checkout 123
 
-# コメント
+# Comment
 gh pr comment 123 --body "..."
 
-# 閉じる / 再開
+# Close / reopen
 gh pr close 123
 gh pr reopen 123
 ```
 
-### よく使うフラグ
+### Commonly used flags
 
-| フラグ | 意味 |
+| Flag | Meaning |
 |---|---|
-| `--json <fields>` | JSON 出力（`jq` と組み合わせ必須） |
-| `--template <tpl>` | Go template で出力整形 |
-| `--web` | ブラウザで開く |
-| `-R owner/repo` | 別リポジトリを対象 |
+| `--json <fields>` | JSON output (essential to combine with `jq`) |
+| `--template <tpl>` | Format output with a Go template |
+| `--web` | Open in browser |
+| `-R owner/repo` | Target a different repository |
 
-## Issue 操作
+## Issue operations
 
 ```bash
 gh issue create --title "bug: ..." --body "..." --label bug
@@ -138,46 +138,46 @@ gh issue list --state open --assignee @me
 gh issue view 456
 gh issue close 456 --reason "not planned"
 gh issue comment 456 --body "..."
-gh issue develop 456 --branch fix/456    # Issue からブランチ作成
+gh issue develop 456 --branch fix/456    # create a branch from an Issue
 ```
 
 ## Actions
 
 ```bash
-# workflow 一覧
+# List workflows
 gh workflow list
 
-# 手動実行（workflow_dispatch 対応 workflow）
+# Manual run (for workflow_dispatch-enabled workflows)
 gh workflow run ci.yaml
 gh workflow run deploy.yaml -f environment=staging
 
-# 実行履歴
+# Run history
 gh run list
 gh run list --workflow ci.yaml --branch main
-gh run view 123456 --log                 # ログ表示
-gh run view 123456 --log-failed          # 失敗ステップのログ
+gh run view 123456 --log                 # show logs
+gh run view 123456 --log-failed          # logs for failed steps only
 
-# 再実行
+# Rerun
 gh run rerun 123456
-gh run rerun 123456 --failed             # 失敗ジョブのみ
+gh run rerun 123456 --failed             # failed jobs only
 ```
 
 ## Release
 
 ```bash
-# 作成
+# Create
 gh release create v1.0.0 \
   --title "v1.0.0" \
   --notes-file CHANGELOG.md \
-  dist/*.tar.gz                          # アセット添付
+  dist/*.tar.gz                          # attach assets
 
-# 一覧
+# List
 gh release list
 
-# ダウンロード
+# Download
 gh release download v1.0.0 --pattern "*.tar.gz"
 
-# ドラフト
+# Draft
 gh release create v1.1.0 --draft
 gh release edit v1.1.0 --draft=false
 ```
@@ -185,25 +185,25 @@ gh release edit v1.1.0 --draft=false
 ## Secrets / Variables
 
 ```bash
-# 登録
-gh secret set NPM_TOKEN              # 対話で値入力
+# Set
+gh secret set NPM_TOKEN              # enter value interactively
 gh secret set NPM_TOKEN --body "xxx"
 echo "xxx" | gh secret set NPM_TOKEN
 
-# Environment 単位
+# Per environment
 gh secret set DEPLOY_KEY --env production
 
-# Variables（非機密）
+# Variables (non-sensitive)
 gh variable set LOG_LEVEL --body "info"
 
-# 一覧
+# List
 gh secret list
 gh variable list
 ```
 
-**gh secret set の値はローカル履歴（シェル history）に残らないよう `--body` ではなく stdin 経由推奨**。
+**For `gh secret set`, prefer stdin over `--body` so the value doesn't stay in local shell history.**
 
-## 任意 API 呼び出し
+## Arbitrary API calls
 
 ```bash
 # REST
@@ -220,97 +220,97 @@ gh api graphql -f query='
   }
 ' -F owner=your-org -F repo=your-repo
 
-# ページング
+# Pagination
 gh api --paginate repos/org/repo/issues
 
-# メソッド指定
+# Specify method
 gh api -X POST repos/org/repo/issues -f title="..." -f body="..."
 ```
 
-`gh api` は認証・ホスト・ページング・エラーハンドリングを自動で処理するため、直接 `curl` を叩くより格段に便利。
+`gh api` handles authentication, host, pagination, and error handling automatically, making it far more convenient than calling `curl` directly.
 
-## JSON 出力と jq
+## JSON output and jq
 
 ```bash
-# 直接フィールド指定
+# Direct field selection
 gh pr list --json number,title,author --jq '.[] | "\(.number) \(.title)"'
 
-# jq で整形
+# Format with jq
 gh pr list --json number,title | jq -r '.[] | "#\(.number) \(.title)"'
 
-# 条件絞り込み
+# Filter by condition
 gh pr list --json number,title,labels \
   | jq '.[] | select(.labels | map(.name) | contains(["bug"]))'
 ```
 
-`gh` は内蔵 `--jq` フィルタを持つので、単純な抽出なら `jq` コマンド呼び出し不要。
+`gh` has a built-in `--jq` filter, so simple extraction doesn't require invoking a separate `jq` command.
 
-## エイリアス
+## Aliases
 
 ```bash
-# PR の自分用ショートカット
+# Personal PR shortcuts
 gh alias set prs 'pr list --author @me'
 gh alias set prv 'pr view --web'
 
-# シェル展開も可能
+# Shell expansion is also supported
 gh alias set bugs 'issue list --label "bug"'
 
-# shell 経由の複雑なもの
+# More complex ones via shell
 gh alias set --shell pr-stats 'gh pr list --json state | jq "group_by(.state) | map({state: .[0].state, count: length})"'
 
 gh alias list
 ```
 
-## CI での使い方
+## Usage in CI
 
 ```yaml
-# GitHub Actions 内で gh を直接使う
+# Using gh directly inside GitHub Actions
 - run: gh pr comment ${{ github.event.pull_request.number }} --body "Build passed"
   env:
     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-`GITHUB_TOKEN` が自動で使える（Actions ランナーに gh プリインストール）。
+`GITHUB_TOKEN` is available automatically (gh comes preinstalled on Actions runners).
 
-## 拡張
+## Extensions
 
-`gh extension` で外部拡張を追加できる:
+External extensions can be added via `gh extension`:
 
 ```bash
-gh extension install dlvhdr/gh-dash    # PR/Issue ダッシュボード TUI
+gh extension install dlvhdr/gh-dash    # PR/Issue dashboard TUI
 gh extension list
 gh extension upgrade --all
 ```
 
-なお Copilot in CLI（旧 `github/gh-copilot` 拡張）は `gh copilot` として本体に統合済み。Agent Skills 管理の `gh skill`、Copilot coding agent 操作の `gh agent-task` も本体組み込み（Public Preview）で、AI エージェント運用で直接利用できる。
+Note that Copilot in CLI (formerly the `github/gh-copilot` extension) is now integrated into the core binary as `gh copilot`. `gh skill`, for managing Agent Skills, and `gh agent-task`, for Copilot coding agent operations, are also built in (Public Preview) and can be used directly in AI-agent operations.
 
-詳細は [`gh-extensions.md`](gh-extensions.md) を参照。
+See [`gh-extensions.md`](gh-extensions.md) for details.
 
-## Claude Code / MCP との連携
+## Integration with Claude Code / MCP
 
-Claude Code 等のエージェントは `gh` 経由で GitHub 操作を行うよう設計されているものが多い。理由:
+Many agents, including Claude Code, are designed to perform GitHub operations via `gh`. Reasons:
 
-- 認証・レート制御を gh が担保
-- 直接 API 叩くより誤設定が少ない
-- `--json` で機械可読出力が取れる
+- gh handles authentication and rate limiting
+- Fewer misconfigurations than calling the API directly
+- `--json` provides machine-readable output
 
-特に PR 作成・レビュー・マージは gh 経由が安定。
+PR creation, review, and merging in particular are most stable via gh.
 
-## トラブルシュート
+## Troubleshooting
 
-### `GH_TOKEN` と `GITHUB_TOKEN` が混在して期待と違う挙動
+### `GH_TOKEN` and `GITHUB_TOKEN` mixed, causing unexpected behavior
 
-`GH_TOKEN` が優先される。片方だけに絞るか、`gh auth status` で有効トークンを確認。
+`GH_TOKEN` takes precedence. Set only one, or check the active token with `gh auth status`.
 
-### `gh api` で 403 が出る
+### `gh api` returns 403
 
-- Token のスコープ不足（`repo` / `write:packages` 等）
-- PR のチェック要件を満たしていない（merge 系）
-- GHES で `GH_HOST` 未設定
+- Insufficient token scope (e.g. `repo` / `write:packages`)
+- PR check requirements not met (for merge operations)
+- `GH_HOST` not set on GHES
 
-### CI で `resource not accessible by integration`
+### CI shows `resource not accessible by integration`
 
-`permissions:` が足りない。workflow の先頭で:
+Insufficient `permissions:`. At the top of the workflow:
 
 ```yaml
 permissions:
@@ -319,19 +319,19 @@ permissions:
   issues: write
 ```
 
-### HTTPS vs SSH 認証の混在
+### Mixed HTTPS vs SSH authentication
 
-`gh auth login` で HTTPS を選ぶと `git push` も HTTPS で `GH_TOKEN` 経由になる。SSH 鍵運用を崩したくない場合は `gh auth login --git-protocol ssh` を選ぶ。
+Choosing HTTPS in `gh auth login` makes `git push` also go over HTTPS via `GH_TOKEN`. If you don't want to disrupt an existing SSH key setup, choose `gh auth login --git-protocol ssh`.
 
-## 他ツールとの比較
+## Comparison with other tools
 
-| 観点 | gh | hub | curl + API |
+| Aspect | gh | hub | curl + API |
 |---|---|---|---|
-| メンテ | GitHub 公式・活発 | 非推奨（hub は後継 gh に一本化） | — |
-| 認証 | 対話 + env + SSH 統合 | token ベース | 手動 |
-| GraphQL | 対応 | なし | 手動 |
-| Actions 操作 | あり | なし | 手動 |
-| ページング | `--paginate` | 手動 | 手動 |
-| JSON 出力 | `--json` + `--jq` | なし | 手動 |
+| Maintenance | Official GitHub, active | Deprecated (hub was consolidated into its successor, gh) | — |
+| Auth | Interactive + env + SSH integration | Token-based | Manual |
+| GraphQL | Supported | None | Manual |
+| Actions operations | Yes | None | Manual |
+| Pagination | `--paginate` | Manual | Manual |
+| JSON output | `--json` + `--jq` | None | Manual |
 
-gh 一択。hub は 2020 年から非推奨、保守終了。
+gh is the clear choice. hub has been deprecated since 2020 and is no longer maintained.

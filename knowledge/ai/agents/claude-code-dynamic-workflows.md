@@ -7,41 +7,41 @@ aliases: [dynamic-workflows, ultracode]
 
 # Claude Code Dynamic Workflows
 
-Claude Code に組み込まれた **JavaScript オーケストレーションスクリプト実行ランタイム**。Claude がタスクごとに動的にスクリプトを書き、ランタイムが**数十〜数百の subagent を並列で起動**し、結果を相互検証してから 1 つの答えにまとめて返す。2026-05-28 に Claude Opus 4.8 のリリースと同時に research preview として公開された。
+A **JavaScript orchestration script execution runtime** built into Claude Code. Claude writes an orchestration script dynamically per task, and the runtime **spawns tens to hundreds of subagents in parallel**, cross-verifies the results, and merges them into a single answer. Released as a research preview on 2026-05-28, alongside the release of Claude Opus 4.8.
 
-公式: [Anthropic blog](https://claude.com/blog/introducing-dynamic-workflows-in-claude-code) / [Claude Code docs](https://code.claude.com/docs/en/workflows)
+Official: [Anthropic blog](https://claude.com/blog/introducing-dynamic-workflows-in-claude-code) / [Claude Code docs](https://code.claude.com/docs/en/workflows)
 
-本機能は Claude Code の subagent / skill / agent team と**プランの保有者が違う**。subagent や skill は Claude がターン単位で次に何を spawn するか判断するが、workflow は**プランがコードに移される**ため、ループ・分岐・中間結果がスクリプト変数として保持され Claude の context window を消費しない。Claude Code 本体の機能・拡張機構は `ai/agents/claude-code.md` を参照。
+This feature has a **different plan owner** than Claude Code's subagents / skills / agent teams. With subagents and skills, Claude decides what to spawn next on a turn-by-turn basis, but with a workflow, **the plan is moved into code**, so loops, branches, and intermediate results are held as script variables and do not consume Claude's context window. See `ai/agents/claude-code.md` for Claude Code's core features and extension mechanisms.
 
-## 利用可能性
+## Availability
 
-- **Claude Code v2.1.154 以降**で利用可能（research preview）
-- **全有料プラン対応**: Pro / Max / Team / Enterprise。Pro のみ `/config` の Dynamic workflows 行で明示的に有効化が必要
-- **Anthropic API / Amazon Bedrock / Vertex AI / Microsoft Foundry** からも利用可能
-- 提供面: Claude Code CLI / Desktop / VS Code 拡張 / `claude -p`（非対話モード）/ Agent SDK
+- Available from **Claude Code v2.1.154 or later** (research preview)
+- **All paid plans supported**: Pro / Max / Team / Enterprise. On Pro only, explicit opt-in is required via the Dynamic workflows line in `/config`
+- Also available via **Anthropic API / Amazon Bedrock / Vertex AI / Microsoft Foundry**
+- Surfaces: Claude Code CLI / Desktop / VS Code extension / `claude -p` (non-interactive mode) / Agent SDK
 
-## 起動方法
+## How to trigger
 
-| 方法 | 用途 |
+| Method | Use |
 |---|---|
-| `ultracode` キーワードをプロンプトに含める | この 1 ターンだけ workflow として実行（自然言語の "use a workflow" / "run a workflow" でも同じ opt-in） |
-| `/effort ultracode` | セッション全体で `xhigh` 推論 + 自動 workflow オーケストレーションを有効化。Claude が「この task は workflow 向き」と判断したら自動で組む |
-| `/deep-research <question>` | 同梱 workflow。複数の角度から web 検索 → cross-check → 引用付きレポート |
-| `/<saved-workflow>` | `/workflows` ビューで `s` キーを押して保存した命令 |
+| Include the keyword `ultracode` in the prompt | Runs as a workflow for this turn only (natural-language phrasing like "use a workflow" / "run a workflow" is also accepted as opt-in) |
+| `/effort ultracode` | Enables `xhigh` reasoning + automatic workflow orchestration for the whole session. When Claude judges a task is workflow-shaped, it assembles one automatically |
+| `/deep-research <question>` | Bundled workflow. Multi-angle web search → cross-check → cited report |
+| `/<saved-workflow>` | An instruction saved by pressing `s` in the `/workflows` view |
 
-> **メモ:** v2.1.160 より前はキーワードが `workflow` だったが、現在は `ultracode` に統一されている。自然言語で「workflow で」と書いても受理される。
+> **Note:** Before v2.1.160 the keyword was `workflow`, but it has since been unified to `ultracode`. Natural-language phrasing like "as a workflow" is also accepted.
 
-## 動作モデル
+## Execution model
 
-1. **プラン生成**: ユーザープロンプトを受けて Claude（上位モデル）が JS スクリプトを書く
-2. **承認ゲート**: 初回起動時にスクリプトと phase 一覧を表示し、`Yes` / `View raw script` / `No` を選ばせる（Auto モードは初回のみ確認）
-3. **隔離環境で実行**: スクリプトは会話とは別ランタイムで走る。Claude のコンテキストには最終結果だけが返る
-4. **subagent 起動**: スクリプト中の `agent()` 呼び出しが subagent を spawn。各 subagent は `acceptEdits` モード固定で、セッションの tool allowlist を継承
-5. **進捗トラッキング**: ランタイムが各 agent の result を逐次保存し、中断後の再開（resume）と監視（`/workflows`）を可能にする
+1. **Plan generation**: given the user prompt, Claude (the top-tier model) writes a JS script
+2. **Approval gate**: on first launch, the script and phase list are shown, and the user chooses `Yes` / `View raw script` / `No` (Auto mode only confirms on the first run)
+3. **Execution in an isolated environment**: the script runs in a runtime separate from the conversation. Only the final result is returned to Claude's context
+4. **Subagent spawning**: `agent()` calls in the script spawn subagents. Each subagent is fixed to `acceptEdits` mode and inherits the session's tool allowlist
+5. **Progress tracking**: the runtime persists each agent's result incrementally, enabling resume after interruption and monitoring (`/workflows`)
 
-## スクリプト構造
+## Script structure
 
-スクリプトは以下のプリミティブで構成される。
+Scripts are built from the following primitives.
 
 ```js
 export const meta = {
@@ -50,7 +50,7 @@ export const meta = {
   phases: [{ title: 'Review' }, { title: 'Verify' }],
 }
 
-// dimension ごとに 1 agent でレビュー → 各 finding を adversarial verify
+// One agent reviews per dimension → adversarially verify each finding
 const results = await pipeline(
   DIMENSIONS,
   d => agent(d.prompt, { phase: 'Review', schema: FINDINGS_SCHEMA }),
@@ -62,119 +62,119 @@ const results = await pipeline(
 return { confirmed: results.flat().filter(f => f.verdict?.isReal) }
 ```
 
-主要プリミティブ:
+Key primitives:
 
-| プリミティブ | 役割 |
+| Primitive | Role |
 |---|---|
-| `meta` | 必須の pure literal frontmatter。`name` / `description` / `phases` を宣言 |
-| `agent(prompt, opts?)` | subagent を 1 体起動。`schema` を渡すと結果を Zod-like validation した object で返す。`isolation: 'worktree'` で git worktree 隔離（並列で同じファイルを触るときだけ使う） |
-| `parallel(thunks)` | 全 thunk を並列実行し**バリア**で全完了を待つ。本当に全結果が必要なときだけ |
-| `pipeline(items, ...stages)` | 各 item が独立に全 stage を流れる。stage 間にバリアがない。**デフォルトはこちら** |
-| `phase(title)` | 後続の `agent()` を 1 つのグループとして進捗表示にまとめる |
-| `log(message)` | ユーザーに 1 行進捗を出す |
-| `args` | 保存済み workflow に渡された入力（コマンドラインの `args` パラメータ） |
-| `budget` | トークン目標。`budget.remaining() > 50_000` で動的にループ深度を決める |
-| `workflow(name, args?)` | 別 workflow を sub-step として呼ぶ（1 段ネストまで） |
+| `meta` | Required pure literal frontmatter. Declares `name` / `description` / `phases` |
+| `agent(prompt, opts?)` | Spawns one subagent. Passing `schema` returns the result as a Zod-like-validated object. `isolation: 'worktree'` isolates via a git worktree (only use when parallel agents touch the same files) |
+| `parallel(thunks)` | Runs all thunks in parallel and waits for all to complete at a **barrier**. Use only when you truly need every result |
+| `pipeline(items, ...stages)` | Each item flows independently through all stages. No barrier between stages. **This is the default** |
+| `phase(title)` | Groups subsequent `agent()` calls into one progress-display group |
+| `log(message)` | Emits a one-line progress message to the user |
+| `args` | Input passed to a saved workflow (the `args` parameter on the command line) |
+| `budget` | Token target. Use `budget.remaining() > 50_000` to decide loop depth dynamically |
+| `workflow(name, args?)` | Calls another workflow as a sub-step (up to one level of nesting) |
 
-## 制約（ランタイムが強制）
+## Constraints (enforced by the runtime)
 
-| 制約 | 理由 |
+| Constraint | Reason |
 |---|---|
-| ミッドラン中のユーザー入力不可（agent permission prompt のみ可） | stage 間で承認が要るなら stage ごとに workflow を分ける |
-| filesystem / shell に**スクリプト**からは直接触れない | I/O は agent が担当、スクリプトは orchestration のみ |
-| concurrent agents は最大 16（CPU コア数が少ないマシンでは更に減る） | ローカルリソースを保護 |
-| 1 run あたり**最大 1000 agent** | 暴走ループのバックストップ |
+| No user input mid-run (only agent permission prompts are allowed) | If a stage needs approval, split it into a separate workflow per stage |
+| The **script** itself cannot touch the filesystem / shell directly | I/O is handled by agents; the script does orchestration only |
+| Max 16 concurrent agents (fewer on machines with fewer CPU cores) | Protects local resources |
+| **Max 1000 agents** per run | Backstop against runaway loops |
 
-## 同梱の `/deep-research`
+## Bundled `/deep-research`
 
-WebSearch ツールを使う built-in workflow。質問を複数角度に分解 → 並列に web 検索 → fetch → 主張ごとに adversarial vote → 棄却されなかった主張だけを引用付きレポートに合成する。Pro でも research preview として利用可能（要 toggle）。
+A built-in workflow that uses the WebSearch tool. It decomposes a question into multiple angles → searches the web in parallel → fetches → adversarially votes on each claim → synthesizes only the surviving claims into a cited report. Available on Pro as a research preview too (toggle required).
 
-## 進捗監視・運用
+## Progress monitoring and operations
 
-- `/workflows` でランニング / 完了一覧。矢印キーで選択、`Enter` で詳細
-- `p` で pause / resume、`x` で stop、`r` で個別 agent restart、`s` で保存
+- `/workflows` lists running / completed workflows. Arrow keys to select, `Enter` for details
+- `p` to pause/resume, `x` to stop, `r` to restart an individual agent, `s` to save
 
-スクリプト本体は `~/.claude/projects/<session>/` 配下のファイルに書き出され、編集して再実行すれば**変更されていない `agent()` 呼び出しはキャッシュから即座に復元**される（同一セッション内のみ）。
+The script body is written out to a file under `~/.claude/projects/<session>/`; if you edit it and rerun, **unchanged `agent()` calls are restored instantly from cache** (within the same session only).
 
-## 保存と再利用
+## Saving and reuse
 
-`/workflows` から `s` でスクリプトを保存:
+Save a script from `/workflows` with `s`:
 
-- `.claude/workflows/` — リポジトリ共有
-- `~/.claude/workflows/` — 個人用、全プロジェクトから使える
+- `.claude/workflows/` — shared with the repository
+- `~/.claude/workflows/` — personal, usable from all projects
 
-保存後は `/<name>` で他のスラッシュコマンドと同列に呼べる。`args` で構造化データ（issue 番号リスト等）を渡せる。
+Once saved, it can be invoked as `/<name>`, alongside other slash commands. Structured data (e.g., a list of issue numbers) can be passed via `args`.
 
-## 無効化
+## Disabling
 
-| 方法 | スコープ |
+| Method | Scope |
 |---|---|
-| `/config` の Dynamic workflows トグル | このユーザー（永続） |
-| `~/.claude/settings.json` に `"disableWorkflows": true` | このユーザー（永続） |
-| `CLAUDE_CODE_DISABLE_WORKFLOWS=1` | 環境変数の設定先 |
-| managed settings の `"disableWorkflows": true` | 組織全体 |
-| [Claude Code admin settings](https://claude.ai/admin-settings/claude-code) | 組織全体 |
+| Dynamic workflows toggle in `/config` | This user (persistent) |
+| `"disableWorkflows": true` in `~/.claude/settings.json` | This user (persistent) |
+| `CLAUDE_CODE_DISABLE_WORKFLOWS=1` | Wherever the environment variable is set |
+| `"disableWorkflows": true` in managed settings | Organization-wide |
+| [Claude Code admin settings](https://claude.ai/admin-settings/claude-code) | Organization-wide |
 
-無効化すると `/deep-research` も `ultracode` も使えなくなり、`/effort` メニューから `ultracode` が消える。
+Disabling it removes access to both `/deep-research` and `ultracode`, and `ultracode` disappears from the `/effort` menu.
 
-## 他の Claude Code 拡張との比較
+## Comparison with other Claude Code extension mechanisms
 
 | | Subagent | Skill | Agent team | Dynamic Workflow |
 |---|---|---|---|---|
-| 何か | Claude が spawn する worker | Claude が従う instructions | リード agent が peer session を監督 | ランタイムが実行する script |
-| 次に何を実行するか決める主体 | Claude（ターン単位） | Claude（プロンプト追従） | リード agent（ターン単位） | スクリプト |
-| 中間結果の置き場 | Claude の context window | Claude の context window | 共有 task list | スクリプト変数 |
-| 再利用単位 | worker 定義 | instructions | team 定義 | orchestration 自体 |
-| スケール | 1 ターンに数体 | 同上 | 数体の長寿命 peer | 1 run に**数十〜数百**体 |
-| 中断 | ターンが再開 | ターンが再開 | teammate は走り続ける | 同一セッション内で resumable |
+| What it is | A worker Claude spawns | Instructions Claude follows | A lead agent supervising peer sessions | A script the runtime executes |
+| Who decides what runs next | Claude (turn by turn) | Claude (follows the prompt) | Lead agent (turn by turn) | The script |
+| Where intermediate results live | Claude's context window | Claude's context window | Shared task list | Script variables |
+| Unit of reuse | Worker definition | Instructions | Team definition | The orchestration itself |
+| Scale | A few per turn | Same | A few long-lived peers | **Tens to hundreds** per run |
+| Interruption | Turn resumes | Turn resumes | Teammates keep running | Resumable within the same session |
 
-「同じスクリプトを毎回再実行したい」「数百 agent 並列で広く調べる」「stage 間 adversarial verification を入れたい」場合は workflow。「1 ターン中に専門タスクを 1〜2 件委譲したい」なら subagent。
+Use a workflow when you want to "rerun the same script every time," "investigate broadly with hundreds of parallel agents," or "add adversarial verification between stages." Use a subagent when you just want to delegate one or two specialist tasks within a single turn.
 
-## 実例
+## Real-world example
 
-Jarred Sumner 氏は dynamic workflows で **Bun（Zig 実装）を Rust に丸ごと port** した。約 **750,000 行**の Rust、**初コミットから merge まで 11 日**、既存テストの **99.8% pass**。
+Jarred Sumner used dynamic workflows to **port the entirety of Bun (written in Zig) to Rust**. Roughly **750,000 lines** of Rust, **11 days from first commit to merge**, with **99.8% of existing tests passing**.
 
-工程は 1 段 workflow ではなく、複数の workflow をパイプラインで連結:
+The process was not a single workflow but multiple workflows chained in a pipeline:
 
-1. **Lifetime mapping** — Zig の各 struct field に対し Rust lifetime を推定する workflow を 1 本
-2. **Per-file behavior port** — 並列 agent が振る舞い同等の Rust を書き、ファイルごとに 2 名の reviewer が cross-check
-3. **Fix loops** — ビルドが clean になるまで build error から自動で fix を生成するループ
-4. **Overnight optimization** — 夜間の workflow でホットパスの最適化機会を抽出
+1. **Lifetime mapping** — one workflow to infer Rust lifetimes for each Zig struct field
+2. **Per-file behavior port** — parallel agents write behaviorally equivalent Rust, cross-checked per file by two reviewers
+3. **Fix loops** — a loop that auto-generates fixes from build errors until the build is clean
+4. **Overnight optimization** — an overnight workflow that surfaces hot-path optimization opportunities
 
-その他に社内で実証された用途:
+Other internally demonstrated use cases:
 
-- コードベース全体の bug sweep（dead code 検出含む。静的解析では見つからないものが上がる）
-- profiler-guided 最適化監査
-- security audit（認証チェック・unsafe パターン）
-- 大規模 migration（フレームワーク差し替え、API 廃止対応、数千ファイル横断の言語 port）
+- Codebase-wide bug sweeps (including dead-code detection; surfaces issues static analysis misses)
+- Profiler-guided optimization audits
+- Security audits (auth checks, unsafe patterns)
+- Large-scale migrations (framework swaps, API deprecations, language ports spanning thousands of files)
 
-## コスト
+## Cost
 
-1 run で**通常セッションよりはるかに多くのトークンを消費**する。プラン枠とレート制限に同じくカウントされる。
+A single run **consumes far more tokens than a normal session**. It counts against plan quotas and rate limits the same way.
 
-実務的な抑え方:
+Practical ways to control it:
 
-1. **小さなスライスで試す**: 全リポではなく 1 ディレクトリ、広い質問ではなく狭い質問から
-2. **`/workflows` で agent ごとの token 消費を監視**し、許容を超えたら `x` で stop（完了済みの仕事は失われない）
-3. **モデル選択**: 全 agent はセッションのモデルを継承する。`/model` を確認し、軽い stage は Haiku に振るようスクリプト中で明示
-4. **agent cap**（1000 / 16 concurrent）が暴走スクリプトの上限になる
+1. **Try on a small slice first**: start with one directory instead of the whole repo, a narrow question instead of a broad one
+2. **Monitor per-agent token consumption in `/workflows`** and press `x` to stop once it exceeds tolerance (completed work is not lost)
+3. **Model selection**: all agents inherit the session's model. Check `/model`, and explicitly route lightweight stages to Haiku within the script
+4. The **agent cap** (1000 / 16 concurrent) serves as the ceiling for a runaway script
 
-## AI エージェントがよくやるミス
+## Common mistakes AI agents make
 
-1. **「workflow」キーワードでトリガーしようとする** — v2.1.160 で `ultracode` に変わった。古いブログを参考にしないこと
-2. **`parallel()` でバリアを多用する** — 各 stage で全 agent を待つと「最速の agent が遊ぶ時間」が膨らむ。デフォルトは `pipeline()` で stage 間バリアなしが正解
-3. **小さい task でも workflow を組む** — トークンが嵩む。「1 ターンの subagent 委譲で足りる」場合は workflow を使わない。`ultracode` を切っておく
-4. **スクリプトを目視せず承認** — 初回起動時の `View raw script` で確認するべき。Claude が想定外の adversarial loop を組んでいることがある
-5. **filesystem 操作をスクリプトに書こうとする** — スクリプトは orchestration 専用。`fs` モジュールは使えない。I/O は agent 経由
-6. **`Math.random()` / `Date.now()` を使う** — resume 時の決定性を壊すためランタイムが throw する。乱数性は agent prompt や index で表現
-7. **`ultracode` を on にしたまま日常コーディング** — 全タスクが workflow 化されてトークンを消費し続ける。ルーチンに戻ったら `/effort high` に下げる
-8. **1000 agent 上限を信頼してループを無制御に書く** — cap は安全網。本来はスクリプト側で `budget.remaining()` を見て収束させる
-9. **agent の tool 権限を忘れる** — workflow 内 subagent はセッションの allowlist を継承するが `acceptEdits` 固定。長時間 run で permission prompt が出ないよう必要なコマンドは事前 allowlist に入れる
+1. **Trying to trigger with the "workflow" keyword** — changed to `ultracode` in v2.1.160. Don't rely on older blog posts
+2. **Overusing barriers via `parallel()`** — waiting for all agents at every stage inflates "idle time for the fastest agent." `pipeline()`, with no barrier between stages, is the correct default
+3. **Building a workflow for a small task** — racks up tokens. If "delegating to a single-turn subagent is enough," don't use a workflow. Keep `ultracode` off
+4. **Approving without viewing the script** — should be checked via `View raw script` on first launch. Claude sometimes assembles an unexpectedly adversarial loop
+5. **Trying to write filesystem operations into the script** — the script is orchestration-only. The `fs` module is unavailable. I/O must go through agents
+6. **Using `Math.random()` / `Date.now()`** — the runtime throws, since these break determinism on resume. Express randomness via agent prompts or indices instead
+7. **Leaving `ultracode` on during everyday coding** — every task turns into a workflow and keeps consuming tokens. Drop back to `/effort high` once back to routine work
+8. **Writing unbounded loops that trust the 1000-agent cap** — the cap is a safety net. The script itself should check `budget.remaining()` to converge properly
+9. **Forgetting agent tool permissions** — subagents within a workflow inherit the session's allowlist but are fixed to `acceptEdits`. For long runs, pre-allowlist any commands needed so permission prompts don't interrupt
 
-## 参考
+## References
 
-- [Introducing dynamic workflows in Claude Code（Anthropic）](https://claude.com/blog/introducing-dynamic-workflows-in-claude-code)
+- [Introducing dynamic workflows in Claude Code (Anthropic)](https://claude.com/blog/introducing-dynamic-workflows-in-claude-code)
 - [Claude Code Docs: Orchestrate subagents at scale with dynamic workflows](https://code.claude.com/docs/en/workflows)
-- [Introducing Claude Opus 4.8（リリース告知）](https://www.anthropic.com/news/claude-opus-4-8)
+- [Introducing Claude Opus 4.8 (release announcement)](https://www.anthropic.com/news/claude-opus-4-8)
 - [InfoQ: Claude Code Adds Dynamic Workflows for Parallel Agent Coordination](https://www.infoq.com/news/2026/06/dynamic-workflows-claude-code/)
-- 関連: `ai/agents/claude-code.md` / `ai/agents/claude-code-routines.md` / `ai/practice/multi-agent-coordination.md` / `ai/practice/agentic-workflow-patterns.md` / `ai/platform/agent-extensions.md`
+- Related: `ai/agents/claude-code.md` / `ai/agents/claude-code-routines.md` / `ai/practice/multi-agent-coordination.md` / `ai/practice/agentic-workflow-patterns.md` / `ai/platform/agent-extensions.md`

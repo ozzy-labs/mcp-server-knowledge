@@ -3,154 +3,154 @@ reviewed: 2026-06-07
 tags: [ai-workflow, methodology]
 ---
 
-# AI エージェントのコンテキスト管理
+# AI Agent Context Management
 
-LLM エージェントの実用性は「コンテキストウィンドウをいかに効率よく使うか」で大きく変わる。本記事は Claude Code / Codex CLI / Gemini CLI など現代の AI エージェントで採用されている主要な手法をまとめる。
+The practical usefulness of an LLM agent depends heavily on "how efficiently the context window is used." This article summarizes the key techniques adopted by modern AI agents such as Claude Code, Codex CLI, and Gemini CLI.
 
-## なぜ重要か
+## Why It Matters
 
-- **コンテキスト長 ≠ 実効性能**: 200K / 1M トークンあっても、ノイズが多ければ精度・速度・コストが悪化する（"lost in the middle" 現象）
-- **コスト**: 入力トークンは毎リクエスト再送される。肥大は毎回の課金増
-- **レイテンシ**: プレフィル時間がトークン数にほぼ線形で増加
-- **キャッシュヒット率**: プロンプトキャッシングは「前と同じ先頭部分」がキーになる。動的に変わる部分を先頭に置くとキャッシュ失効
+- **Context length ≠ effective performance**: even with 200K / 1M tokens available, high noise degrades accuracy, speed, and cost (the "lost in the middle" phenomenon)
+- **Cost**: input tokens are resent with every request. Bloat means higher billing on every call
+- **Latency**: prefill time scales roughly linearly with token count
+- **Cache hit rate**: prompt caching keys off "the same leading portion as before." Placing dynamically-changing parts at the front invalidates the cache
 
-## 設計原則
+## Design Principles
 
-### 1. Static-first ordering（キャッシュ最適化）
+### 1. Static-first ordering (cache optimization)
 
 ```text
-[ システムプロンプト ]        ← 不変（キャッシュ）
-[ 固定ドキュメント・規約 ]    ← 不変（キャッシュ）
-[ ツール定義 ]                ← 不変（キャッシュ）
-[ セッションルール ]          ← 準不変（キャッシュ）
+[ System prompt ]             ← immutable (cached)
+[ Fixed docs / conventions ]  ← immutable (cached)
+[ Tool definitions ]          ← immutable (cached)
+[ Session rules ]             ← quasi-immutable (cached)
 ━━━ cache breakpoint ━━━
-[ 会話履歴（古い順） ]         ← 累積
-[ 直近のユーザー発話 ]        ← 毎回変わる
+[ Conversation history (oldest first) ]  ← accumulates
+[ Latest user utterance ]     ← changes every time
 ```
 
-プロンプトキャッシングは先頭から順にマッチする。**不変な要素を前に、動的な要素を後に**。
+Prompt caching matches from the front in order. **Put immutable elements first, dynamic elements last.**
 
 ### 2. Just-in-time loading
 
-全知識を常にコンテキストに載せない。**必要なときだけ**ロードする:
+Don't keep all knowledge loaded in context at all times. Load it **only when needed**:
 
-- **Skills の progressive disclosure**: 起動時は description のみ常駐、トリガーされた瞬間に本文がロードされる
-- **Resources / MCP tools**: ファイル内容は「問い合わせがあった時点」で初めて取得
-- **サブエージェントへの委譲**: 大量の読み込みは子エージェントで行い、要約だけ返す
+- **Skills' progressive disclosure**: only the description is resident at startup; the body loads the moment it's triggered
+- **Resources / MCP tools**: file contents are fetched only "at the point of query"
+- **Delegation to subagents**: heavy reading is done in a child agent, which returns only a summary
 
-### 3. 情報の段階的圧縮
+### 3. Progressive compression of information
 
 ```text
-生データ ─▶ 要約 ─▶ タグ／インデックス ─▶ ポインタ（URI/パス）
+Raw data ─▶ Summary ─▶ Tags/Index ─▶ Pointer (URI/path)
 ```
 
-- エージェントの親コンテキストには**ポインタと要約**を置く
-- 「必要なら `read_file(path)` で取れる」という状態にする
-- Claude Code の `resource_link` はまさにこれ
+- Keep **pointers and summaries** in the agent's parent context
+- Maintain a state where "it can be retrieved via `read_file(path)` if needed"
+- Claude Code's `resource_link` is exactly this
 
 ### 4. Context window budgeting
 
-タスク開始時にコンテキスト予算を決めておく:
+Decide a context budget at the start of a task:
 
-| 用途 | 目安（200K モデルの場合） |
+| Purpose | Rough guide (for a 200K model) |
 |---|---|
-| システムプロンプト + 規約 | 5〜15K |
-| ツール定義 | 5〜20K |
-| 会話履歴 | 20〜80K |
-| 作業用読み込みバッファ | 30〜100K |
-| 出力予約 | 8〜32K |
+| System prompt + conventions | 5-15K |
+| Tool definitions | 5-20K |
+| Conversation history | 20-80K |
+| Working read buffer | 30-100K |
+| Output reserve | 8-32K |
 
-超過したら圧縮・要約・カット戦略を発動する。
+When exceeded, trigger compression, summarization, or cutting strategies.
 
-## コンパクションの手法
+## Compaction Techniques
 
-### 手動コンパクション
+### Manual compaction
 
-ユーザーが明示的にトリガー。Claude Code の `/compact` は、会話をシリーズで要約しつつキー情報（ファイルパス、TODO、直近のエラー）を残す。
+Explicitly triggered by the user. Claude Code's `/compact` summarizes the conversation in series while preserving key information (file paths, TODOs, recent errors).
 
-### 自動コンパクション
+### Automatic compaction
 
-エージェントランタイムがコンテキスト使用率を監視し、閾値（例: 80%）でバックグラウンド要約を挟む。
+The agent runtime monitors context usage and inserts background summarization at a threshold (e.g., 80%).
 
-### サブエージェント分岐
+### Subagent branching
 
-大量の探索を要するタスクは**最初から別コンテキスト**に逃がす:
+Tasks requiring extensive exploration are offloaded to **a separate context from the start**:
 
 ```text
-親:  "コードベースのインポートグラフを調べて"
+Parent: "Investigate the codebase's import graph"
      │
-     └─▶ 子エージェント（独立 context）
-            │ 数十ファイル読み込み・整理
+     └─▶ Child agent (independent context)
+            │ Reads and organizes dozens of files
             ▼
-         親に「要約 + 注目すべき 3 箇所」だけ返す
+         Returns only "summary + 3 notable spots" to the parent
 ```
 
-Claude Code の `Agent` ツール / `subagent_type` はこの用途。親コンテキストは汚染されない。
+Claude Code's `Agent` tool / `subagent_type` serves this purpose. The parent context stays uncontaminated.
 
-### 会話履歴の trimming
+### Trimming conversation history
 
-- **古いメッセージから削る**: 単純だが LLM が文脈喪失する
-- **要約置換**: 古い範囲を LLM が要約してプレースホルダとして残す（推奨）
-- **重要マーカーの保持**: システムから明示された「記憶すべきこと」は削らない
+- **Drop from the oldest messages**: simple, but the LLM loses context
+- **Replace with summary**: the LLM summarizes the old range and leaves a placeholder (recommended)
+- **Preserve important markers**: don't drop anything explicitly flagged by the system as "must remember"
 
-## メモリの使い分け
+## Choosing the Right Type of Memory
 
-| 種類 | 永続性 | 用途 |
+| Type | Persistence | Purpose |
 |---|---|---|
-| セッションコンテキスト | セッション内 | 会話履歴 |
-| ファイル（`CLAUDE.md`, `AGENTS.md`） | リポジトリ寿命 | プロジェクト規約、チーム共通指示 |
-| Auto-memory（Claude Code） | 会話横断（ユーザー単位） | ユーザーの好み、繰り返す指示、固有知識 |
-| MCP Resources | サーバー寿命 | 構造化データソースへの遅延アクセス |
-| 外部ベクトル DB | 任意 | 大規模な RAG、組織知 |
+| Session context | Within session | Conversation history |
+| Files (`CLAUDE.md`, `AGENTS.md`) | Lifetime of the repository | Project conventions, shared team instructions |
+| Auto-memory (Claude Code) | Across conversations (per user) | User preferences, recurring instructions, domain knowledge |
+| MCP Resources | Lifetime of the server | Lazy access to structured data sources |
+| External vector DB | Arbitrary | Large-scale RAG, organizational knowledge |
 
-原則: **セッションで使い捨ててよいものだけコンテキストに載せる**。それ以外は外部メモリに置いてポインタで参照。
+Principle: **only put things in context that are fine to discard after the session.** Everything else belongs in external memory, referenced via a pointer.
 
-## アンチパターン
+## Anti-patterns
 
-- **「念のため全部貼る」** — トークン浪費とノイズ増。LLM は重要部分を見失う
-- **動的タイムスタンプをシステムプロンプト先頭に入れる** — キャッシュが毎回失効
-- **ツール定義を文字列で長々と書く** — 使われないツールのスキーマが context を食う。不要なら unload
-- **会話履歴をまるごと保持** — 古い失敗試行のノイズで精度低下。要約置換を
-- **サブエージェント結果を丸ごと親に戻す** — 分離の意味がない。必ず**圧縮して**返す
-- **同じ情報を複数箇所に複製** — キャッシュも壊れるし、LLM が「どれが正」で迷う
+- **"Paste everything just in case"** — wastes tokens and adds noise. The LLM loses track of what's important
+- **Putting a dynamic timestamp at the head of the system prompt** — invalidates the cache every time
+- **Writing tool definitions as long strings** — schemas for unused tools eat up context. Unload them if not needed
+- **Keeping the entire conversation history verbatim** — noise from old failed attempts degrades accuracy. Use summary replacement instead
+- **Returning subagent results wholesale to the parent** — defeats the purpose of isolation. Always return them **compressed**
+- **Duplicating the same information in multiple places** — breaks caching, and the LLM gets confused about which copy is authoritative
 
-## 実装のヒント
+## Implementation Tips
 
-### サブエージェントへの委譲判断
+### When to delegate to a subagent
 
-委譲が有効:
+Delegation is effective when:
 
-- 探索範囲が広い（多数ファイルの grep / 読み込み）
-- 失敗が多く試行錯誤が必要（親コンテキストを汚したくない）
-- 並列実行できる独立タスク（複数 PR のレビュー等）
+- The exploration scope is broad (grepping / reading many files)
+- Many failures and trial-and-error are expected (you don't want to pollute the parent context)
+- The task is independent and can run in parallel (e.g., reviewing multiple PRs)
 
-委譲が逆効果:
+Delegation is counterproductive when:
 
-- 結果が小さく親で直接やった方が早い
-- 親の文脈に依存する判断（委譲先では判断材料不足）
+- The result is small and doing it directly in the parent is faster
+- The judgment depends on the parent's context (the delegate lacks enough material to decide)
 
-### プロンプトキャッシングと相性の良い設計
+### Designs that play well with prompt caching
 
-- **システムプロンプトを固定化**（日付・session ID をプロンプト先頭に入れない）
-- **ツール定義を厳選**（使わないツールは unload）
-- **規約・背景知識を別ブロックにしてキャッシュブレークポイント**
-- **動的な部分は明確に区切って末尾に**
+- **Keep the system prompt fixed** (don't put dates or session IDs at the head of the prompt)
+- **Curate tool definitions carefully** (unload tools that aren't used)
+- **Put conventions/background knowledge in a separate block as a cache breakpoint**
+- **Clearly delimit dynamic parts and place them at the end**
 
-### 要約の品質基準
+### Quality criteria for summaries
 
-自動要約を採用する際、以下を失わないように:
+When adopting automatic summarization, be careful not to lose:
 
-- ファイルパス・関数名などの**識別子**
-- 直近のエラーメッセージと修正方向
-- 未完了の TODO・保留中の判断
-- ユーザーが明示した制約・禁止事項
+- **Identifiers** such as file paths and function names
+- Recent error messages and the direction of the fix
+- Incomplete TODOs and pending decisions
+- Constraints and prohibitions explicitly stated by the user
 
-これらは本文のまま残し、周辺の説明文のみ圧縮する。
+Keep these verbatim, and compress only the surrounding explanatory text.
 
-## 参考資料
+## References
 
 - Anthropic: [Prompt Caching](https://platform.claude.com/docs/en/build-with-claude/prompt-caching)
 - Anthropic: [Extended Thinking best practices](https://platform.claude.com/docs/en/build-with-claude/extended-thinking)
-- Claude Code: Skills の progressive disclosure 仕様（`ai/agents/claude-code.md` 参照）
-- 本リポジトリの `ai/practice/prompt-injection.md` — 信頼境界の設計はコンテキスト管理と密接
-- 本リポジトリの [`ai/practice/agent-memory.md`](agent-memory.md) — コンテキスト窓（短期）の外に何を永続させるか（長期メモリ）。本記事と対をなす
+- Claude Code: Skills' progressive disclosure spec (see `ai/agents/claude-code.md`)
+- This repository's `ai/practice/prompt-injection.md` — trust boundary design is closely related to context management
+- This repository's [`ai/practice/agent-memory.md`](agent-memory.md) — what to persist outside the context window (short-term) as long-term memory. Companion piece to this article

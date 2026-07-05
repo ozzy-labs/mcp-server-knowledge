@@ -5,11 +5,11 @@ tags: [security, go]
 
 # Trivy
 
-Aqua Security が提供する包括的なセキュリティスキャナ。コンテナイメージ・ファイルシステム・IaC・Kubernetes マニフェストに対して、脆弱性 (CVE)・シークレット・設定ミス・ライセンスの問題を検出する。Go 製の単一バイナリ。
+A comprehensive security scanner from Aqua Security. Detects vulnerabilities (CVEs), secrets, misconfigurations, and license issues in container images, filesystems, IaC, and Kubernetes manifests. A single Go binary.
 
-公式: [trivy.dev](https://trivy.dev/)
+Official: [trivy.dev](https://trivy.dev/)
 
-## インストール
+## Installation
 
 ```bash
 # mise
@@ -18,62 +18,62 @@ mise use trivy@0.71
 # Homebrew
 brew install trivy
 
-# スクリプト
+# Script
 curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
 
 # Docker
 docker run --rm -v "$PWD":/workdir aquasec/trivy:latest fs /workdir
 ```
 
-## スキャナ
+## Scanners
 
-Trivy は複数の検査器を切り替えて実行する:
+Trivy runs by switching between multiple detectors:
 
-| スキャナ | 検出対象 |
+| Scanner | Detects |
 |---|---|
-| `vuln` | CVE（OS パッケージ、言語の lockfile: npm, pnpm, Gemfile, go.sum, pylock.toml, etc.） |
-| `secret` | API キー、トークン、秘密鍵のパターン検出 |
-| `misconfig` | Dockerfile / Kubernetes / Terraform / CloudFormation の設定ミス |
-| `license` | 使用ライブラリのライセンス |
+| `vuln` | CVEs (OS packages, language lockfiles: npm, pnpm, Gemfile, go.sum, pylock.toml, etc.) |
+| `secret` | Pattern-based detection of API keys, tokens, private keys |
+| `misconfig` | Misconfigurations in Dockerfile / Kubernetes / Terraform / CloudFormation |
+| `license` | Licenses of used libraries |
 
-## 主要サブコマンド
+## Main subcommands
 
-| サブコマンド | 対象 | 例 |
+| Subcommand | Target | Example |
 |---|---|---|
-| `trivy fs` | ファイルシステム | `trivy fs .` |
-| `trivy image` | コンテナイメージ | `trivy image alpine:3.19` |
-| `trivy repo` | Git リポジトリ（URL） | `trivy repo https://github.com/org/repo` |
-| `trivy config` | IaC 設定ファイル | `trivy config .` |
-| `trivy k8s` | K8s クラスタ | `trivy k8s cluster` |
+| `trivy fs` | Filesystem | `trivy fs .` |
+| `trivy image` | Container image | `trivy image alpine:3.19` |
+| `trivy repo` | Git repository (URL) | `trivy repo https://github.com/org/repo` |
+| `trivy config` | IaC configuration files | `trivy config .` |
+| `trivy k8s` | K8s cluster | `trivy k8s cluster` |
 | `trivy sbom` | SBOM (CycloneDX, SPDX) | `trivy sbom bom.json` |
 
-## 基本的な使い方
+## Basic usage
 
 ```bash
-# ファイルシステム全体
+# Entire filesystem
 trivy fs --scanners vuln,secret --exit-code 1 --no-progress .
 
-# 特定ディレクトリ
+# Specific directory
 trivy fs --scanners vuln packages/web
 
-# イメージ（認証付き）
+# Image (with authentication)
 trivy image --username $REG_USER --password $REG_PASS ghcr.io/org/app:latest
 ```
 
-### 主要フラグ
+### Key flags
 
-| フラグ | 用途 |
+| Flag | Purpose |
 |---|---|
-| `--scanners <list>` | 有効化するスキャナ（`vuln,secret,misconfig,license`） |
-| `--severity <levels>` | 出力する深刻度（`CRITICAL,HIGH`） |
-| `--exit-code 1` | 検出時に非 0 終了（CI で失敗させる） |
-| `--ignore-unfixed` | 修正リリース済みでない CVE を無視 |
-| `--skip-dirs <pattern>` | ディレクトリ除外 |
-| `--format json` / `--format sarif` | 機械可読出力 |
-| `--output <file>` | ファイルに書き出し |
-| `--cache-dir <path>` | キャッシュディレクトリ |
+| `--scanners <list>` | Scanners to enable (`vuln,secret,misconfig,license`) |
+| `--severity <levels>` | Severity levels to output (`CRITICAL,HIGH`) |
+| `--exit-code 1` | Non-zero exit on detection (fail in CI) |
+| `--ignore-unfixed` | Ignore CVEs without a fixed release |
+| `--skip-dirs <pattern>` | Exclude directories |
+| `--format json` / `--format sarif` | Machine-readable output |
+| `--output <file>` | Write to a file |
+| `--cache-dir <path>` | Cache directory |
 
-## 設定ファイル `trivy.yaml`
+## Configuration file `trivy.yaml`
 
 ```yaml
 scan:
@@ -93,11 +93,11 @@ vulnerability:
   ignore-unfixed: true
 ```
 
-プロジェクトルートに置けば `trivy fs .` 実行時に自動適用される。
+Place it at the project root and it is applied automatically when running `trivy fs .`.
 
 ## `.trivyignore`
 
-個別の CVE ID を無視する:
+Ignore individual CVE IDs:
 
 ```text
 # format: <CVE-ID> <optional expiration: YYYY-MM-DD>
@@ -105,18 +105,18 @@ CVE-2023-12345
 CVE-2024-11111 2026-06-30 comment about why
 ```
 
-期限付き ignore を推奨（無期限放置を防ぐ）。
+Using an expiration for ignores is recommended (prevents indefinite neglect).
 
-## シークレット検出
+## Secret detection
 
-内蔵パターンで数十種の API キー・トークン・秘密鍵を検出する:
+Built-in patterns detect dozens of API key, token, and private key types:
 
-- AWS / GCP / Azure の access key
-- GitHub / GitLab の PAT
-- Slack / Stripe / SendGrid などの API キー
-- RSA / PGP 秘密鍵
+- AWS / GCP / Azure access keys
+- GitHub / GitLab PATs
+- API keys for Slack / Stripe / SendGrid, etc.
+- RSA / PGP private keys
 
-### カスタムパターン
+### Custom patterns
 
 ```yaml
 # trivy-secret.yaml
@@ -131,7 +131,7 @@ rules:
 trivy fs --secret-config trivy-secret.yaml .
 ```
 
-## CI での使い方
+## Usage in CI
 
 ### GitHub Actions
 
@@ -155,64 +155,64 @@ pre-commit:
       run: trivy fs --scanners vuln,secret --exit-code 1 --no-progress .
 ```
 
-## データベース更新
+## Database updates
 
-Trivy は脆弱性 DB を OCI アーティファクトとして取得する:
+Trivy fetches the vulnerability DB as an OCI artifact:
 
 ```bash
 trivy fs --db-repository ghcr.io/aquasecurity/trivy-db .
 ```
 
-デフォルトで 6 時間 TTL のローカルキャッシュ。CI では `--cache-dir` を永続化するとスキャン時間が短縮される。
+By default it uses a local cache with a 6-hour TTL. In CI, persisting `--cache-dir` shortens scan time.
 
-## 出力フォーマット
+## Output formats
 
 ```bash
-# コンソール（デフォルト）
+# Console (default)
 trivy fs .
 
 # JSON
 trivy fs --format json --output report.json .
 
-# SARIF（GitHub Security タブ統合用）
+# SARIF (for GitHub Security tab integration)
 trivy fs --format sarif --output trivy.sarif .
 
 # CycloneDX SBOM
 trivy fs --format cyclonedx --output bom.json .
 ```
 
-GitHub Actions では SARIF を `github/codeql-action/upload-sarif@v3` にアップロードすると Security タブに表示される。
+In GitHub Actions, uploading SARIF to `github/codeql-action/upload-sarif@v3` displays results in the Security tab.
 
-## トラブルシュート
+## Troubleshooting
 
-### DB 更新が遅い
+### DB update is slow
 
-初回のみ数十 MB のダウンロード。CI キャッシュ必須。
+Only the first run downloads tens of MB. CI caching is essential.
 
-### False positive
+### False positives
 
-既知 CVE でも実際に影響を受けない場合は `.trivyignore` に期限付きで追加する。
+If a known CVE doesn't actually affect you, add it to `.trivyignore` with an expiration.
 
-### `--severity` で絞っても CRITICAL しか出ない
+### Filtering with `--severity` only shows CRITICAL
 
-`--severity` は OR 条件。`CRITICAL,HIGH` とカンマ区切り（スペース NG）。
+`--severity` is an OR condition. Use a comma-separated list like `CRITICAL,HIGH` (no spaces).
 
-### シークレット検出でテストフィクスチャが引っかかる
+### Secret detection flags test fixtures
 
-`--skip-files` または `--skip-dirs` で除外。`.trivyignore` は CVE 専用で、シークレットには使えない。
+Exclude with `--skip-files` or `--skip-dirs`. `.trivyignore` is CVE-only and cannot be used for secrets.
 
-### コンテナイメージのスキャンで permission エラー
+### Permission error when scanning container images
 
-`docker run` 経由で使う場合、Docker デーモンソケットへのアクセス権が必要。
+When using it via `docker run`, access to the Docker daemon socket is required.
 
-## 他ツールとの比較
+## Comparison with other tools
 
-| 観点 | Trivy | Snyk | Grype | Dependabot |
+| Aspect | Trivy | Snyk | Grype | Dependabot |
 |---|---|---|---|---|
-| OSS | 完全 OSS | 商用 + 無料枠 | OSS | 無料（GitHub） |
-| スキャン対象 | fs / image / IaC / K8s | fs / image / IaC | image 中心 | 依存ファイル |
-| シークレット検出 | あり | 別機能 | なし | なし |
-| ライセンス | あり | あり | なし | なし |
-| SBOM | 生成・読み取り | あり | 読み取り | なし |
+| OSS | Fully OSS | Commercial + free tier | OSS | Free (GitHub) |
+| Scan targets | fs / image / IaC / K8s | fs / image / IaC | Image-focused | Dependency files |
+| Secret detection | Yes | Separate feature | No | No |
+| License | Yes | Yes | No | No |
+| SBOM | Generate and read | Yes | Read | No |
 
-Trivy は single-binary で幅広いカバレッジを持つため、OSS 運用では第一候補。
+Trivy is a single binary with broad coverage, making it the first choice for OSS operations.

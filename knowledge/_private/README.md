@@ -3,15 +3,15 @@ reviewed: 2026-05-10
 ---
 # Private Knowledge
 
-このディレクトリは、リポジトリにコミットしたくない自分専用のナレッジ記事を置くための場所です。
+This directory is for personal knowledge articles that you do not want to commit to the repository.
 
-## 特徴
+## Characteristics
 
-- **Git 管理外**: このディレクトリ配下のファイル（README.md を除く）は `.gitignore` により Git の追記・コミット対象から除外されています。
-- **MCP 連携**: 他のディレクトリ（`ai/`, `tools/` 等）と同様に、MCP サーバーから自動的に認識されます。`list` や `search` ツールを通じて、公開ナレッジと横断的に利用可能です。
+- **Excluded from Git**: Files under this directory (except README.md) are excluded from Git tracking and commits via `.gitignore`.
+- **MCP integration**: Like other directories (`ai/`, `tools/`, etc.), this directory is automatically recognized by the MCP server. It can be used alongside public knowledge via the `list` and `search` tools.
 
-## 使い方
+## Usage
 
-1. このディレクトリに `.md` ファイルを作成します。
-2. 他の記事と同様に Frontmatter を記述してください。
-3. MCP クライアント（Claude 等）から「_private/配下の記事を探して」と指示すれば利用できます。
+1. Create a `.md` file in this directory.
+2. Write frontmatter as you would for any other article.
+3. From an MCP client (e.g. Claude), instruct it to "find articles under _private/" to use them.
