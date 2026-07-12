@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-06-07
+reviewed: 2026-07-12
 tags: [ai-agent, desktop, anthropic]
 ---
 
@@ -36,11 +36,12 @@ Official: [anthropic.com/product/claude-cowork](https://www.anthropic.com/produc
 
 ## Availability
 
-After a research preview, it is now generally available as a feature of the Claude Desktop app.
+After a research preview, it became **generally available on 2026-04-09** as a feature of the Claude Desktop app.
 
 - **Plan**: Requires a **paid plan** (Pro / Max / Team / Enterprise).
-- **OS**: Available for both macOS and Windows (Windows requires the latest version).
-- **Foreground app**: The Claude Desktop app must remain open while work is in progress (closing it ends the session).
+- **OS / surfaces**: A desktop app for macOS and Windows (Windows requires the latest version). As reported on **2026-07-07**, Cowork is expanding to **web and mobile** as a staged beta (Max subscribers first), sharing a unified home screen with Chat.
+- **Background execution**: Tasks run on Anthropic's managed infrastructure and continue even when the device is offline or closed; the **mobile app notifies** you when the agent needs a decision.
+- **Foreground app (local-dependent tasks only)**: Runs that need **local** capabilities — connected-folder file access, local connectors, plugins, Chrome-based browser control / Computer Use — still require the **desktop app to stay open**; the web/mobile surfaces do not offer these.
 
 ## Best Practices
 
