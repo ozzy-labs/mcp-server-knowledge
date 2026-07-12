@@ -1,12 +1,12 @@
 ---
-reviewed: 2026-06-28
+reviewed: 2026-07-12
 tags: [ai-agent, ai-workflow, commercial]
 aliases: [cc]
 ---
 
 # Claude Code
 
-An AI coding agent CLI from Anthropic. In the terminal, the agent autonomously understands and edits the codebase, performs Git operations, and runs commands.
+An AI coding agent CLI from Anthropic. In the terminal, the agent autonomously understands and edits the codebase, performs Git operations, and runs commands. As of 2026-07-12 the latest stable release is **v2.1.207** (2026-07-11); from that version, Auto mode is available without opt-in on Amazon Bedrock, Google Cloud's Agent Platform (Vertex), and Microsoft Foundry.
 
 ## Installation
 
