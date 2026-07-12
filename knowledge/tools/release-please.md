@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-07-12
 tags: [release, github, cloud-hosted]
 ---
 
@@ -50,7 +50,7 @@ jobs:
         run: pnpm publish --no-git-checks
 ```
 
-As of 2026-05, the current major is `release-please-action@v5` (node24 runtime; the internal release-please library is in the 17.6.x line). v5.0.0 was released on 2026-04-22 as a major update.
+As of 2026-07, the current major is `release-please-action@v5` (node24 runtime; the internal release-please library is in the 17.10.x line). v5.0.0 was released on 2026-04-22 as a major update.
 
 ## `release-please-config.json`
 
