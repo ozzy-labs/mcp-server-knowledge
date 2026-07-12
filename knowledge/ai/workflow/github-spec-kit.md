@@ -1,12 +1,12 @@
 ---
-reviewed: 2026-06-07
+reviewed: 2026-07-12
 tags: [ai-workflow, spec, oss, github, cli]
 stability: beta
 ---
 
 # GitHub Spec Kit
 
-An officially GitHub-provided OSS SDD orchestrator. Distributes a Python-based CLI, `specify`, along with a set of slash command / Agent Skill templates for agents. An agent-agnostic orchestrator that can install the **same SDD workflow** across 40+ AI coding agents (Claude Code, Codex, Cursor, Copilot, Gemini CLI, Windsurf, Antigravity, OpenCode, Kiro CLI, Forge, Goose, Junie, etc. — 40 per the official integrations reference; the README still says 30+).
+An officially GitHub-provided OSS SDD orchestrator. Distributes a Python-based CLI, `specify`, along with a set of slash command / Agent Skill templates for agents. An agent-agnostic orchestrator that can install the **same SDD workflow** across many AI coding agents (Claude Code, Codex, Cursor, Copilot, Gemini CLI, Antigravity, OpenCode, Kiro CLI, Forge, Goose, Junie, etc. — **34 integrations** in the official reference as of 2026-07; the README still says 30+). The latest release is **v0.12.11** (2026-07-10).
 
 Official: [github.com/github/spec-kit](https://github.com/github/spec-kit) / Docs: [github.github.io/spec-kit](https://github.github.io/spec-kit/) / Releases: [Releases](https://github.com/github/spec-kit/releases)
 
@@ -52,8 +52,9 @@ specify init --here --integration copilot
 # Skills mode (install Agent Skills instead of slash commands)
 specify init . --integration <agent> --integration-options="--skills"
 
-# List integrable agents
-specify integration list
+# Manage agent integrations
+specify integration list          # also: search / info / install / uninstall / switch / use / upgrade / status / scaffold
+specify integration catalog list  # also: add / remove
 
 # Extension / Preset
 specify extension search
@@ -138,11 +139,24 @@ Preset examples: regulatory-compliant spec formats, domain-specific terminology,
 
 The Community catalog can be searched via [Community Extensions](https://speckit-community.github.io/extensions/).
 
+## Bundles
+
+**Bundles** (debuted 2026-06) are a distribution and composition layer *on top of* the existing primitives — they package extensions / presets / workflows / steps into a single **versioned, role-based installable unit** and add no new runtime behavior. Official example bundles cover four roles: `developer` / `product-manager` / `business-analyst` / `security-researcher` (this is the "persona-based provisioning" in the README's headline).
+
+A `bundle.yml` manifest declares metadata (`id` / `name` / `version` / `role` / `author` / `license`), `requires` (`speckit_version`, tools, MCP servers), and `provides` (version-pinned extensions / presets [with priority + strategy] / steps / workflows).
+
+```bash
+specify bundle search / info / install / update [--all] / remove / list / init / validate / build
+specify bundle catalog list | add | remove   # catalog stack is priority-ordered: project > user > built-in
+```
+
+Workflows and Steps are also first-class primitives (`workflow.yml`); see the [Workflows Reference](https://github.github.io/spec-kit/reference/workflows.html).
+
 ## Supported agents
 
-The official integrations reference supports **40 integrations** (both CLI and IDE; the README still says 30+). `specify integration list` shows the available list for the installed version. Representative examples:
+The official integrations reference lists **34 integrations** (33 named + `Generic`; both CLI and IDE — the README still says 30+). `specify integration list` shows the available list for the installed version. Current roster:
 
-- Amp, Antigravity, Auggie CLI, Claude Code, CodeBuddy CLI, Codex CLI, Cursor, Devin for Terminal, Forge, Gemini CLI, GitHub Copilot, Goose, IBM Bob, iFlow CLI, Junie, Kilo Code, Kimi Code, Kiro CLI, Lingma, Mistral Vibe, opencode, Pi Coding Agent, Qoder CLI, Qwen Code, Roo Code, SHAI, Tabnine CLI, Trae, Windsurf, Generic, etc.
+- Amp, Antigravity, Auggie CLI, Claude Code, Cline, CodeBuddy CLI, Codex CLI, Cursor, Devin for Terminal, Firebender, Forge, Gemini CLI, GitHub Copilot, Goose, Hermes, IBM Bob, Junie, Kilo Code, Kimi Code, Kiro CLI, Lingma, Mistral Vibe, Oh My Pi, opencode, Pi Coding Agent, Qoder CLI, Qwen Code, RovoDev, SHAI, Tabnine CLI, Trae, ZCode, Zed, Generic. (iFlow CLI / Roo Code / Windsurf are no longer in the reference list.)
 
 For the full and latest list, see [Supported AI Coding Agent Integrations](https://github.github.io/spec-kit/reference/integrations.html).
 
@@ -154,7 +168,7 @@ Use the `--integration <agent>` flag to initialize for a specific agent.
 |---|---|---|---|
 | Provider | Official GitHub | AWS | OSS (gotalab) |
 | Form | Python CLI + templates | IDE + CLI | npm package + skills |
-| Agent count | 40+ | (Kiro standalone) | 8 |
+| Agent count | 34 | (Kiro standalone) | 8 |
 | OSS | Yes (MIT) | No (commercial) | Yes (MIT) |
 | Entry point | `uv tool install` / `pipx` | `curl install.sh` / Desktop | `npx cc-sdd@latest` |
 | Spec format | Core templates can be overridden | EARS + design + tasks | Kiro-compatible (EARS + design + tasks) |
