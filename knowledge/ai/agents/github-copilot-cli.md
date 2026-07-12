@@ -1,12 +1,12 @@
 ---
-reviewed: 2026-06-28
+reviewed: 2026-07-12
 tags: [ai-agent, ai-workflow, commercial, github]
 aliases: [copilot]
 ---
 
 # GitHub Copilot CLI
 
-An AI coding agent CLI provided by GitHub. Deeply integrated with GitHub accounts, it autonomously handles planning, execution, testing, and review. GA on 2026-02-25.
+An AI coding agent CLI provided by GitHub. Deeply integrated with GitHub accounts, it autonomously handles planning, execution, testing, and review. GA on 2026-02-25; the current release is **v1.0.70** (2026-07-09).
 
 ## Installation
 
@@ -51,7 +51,8 @@ copilot completion <bash|zsh|fish>       # print shell completion script
 | Command | Description |
 |---|---|
 | `/help` | Show help (slash commands support tab completion) |
-| `/model` | Switch model (Auto mode selects the optimal model server-side). Supports model-family aliases `opus` / `sonnet` / `haiku` / `gpt` / `gemini` (v1.0.64) |
+| `/model` | Switch model (Auto mode routes server-side by task and gives a **10% AI-credit discount**). Model-family aliases `opus` / `sonnet` / `haiku` / `gpt` / `gemini` (v1.0.64). Current models span GPT-5.6 (Luna/Sol/Terra), Claude Sonnet 5 / Opus 4.8 (+ 4.8 Fast), Gemini 3.5 Flash, and kimi-k2.7-code |
+| `/refine` | Rewrite a rough prompt into clear instructions (v1.0.70) |
 | `/experimental` | Enable experimental features (rubber duck, agents, etc.) |
 | `/remote on/off` | Toggle remote control from GitHub.com or the mobile app |
 | `/statusline` | Customize the status line display (username, etc.) |
@@ -79,7 +80,7 @@ copilot completion <bash|zsh|fish>       # print shell completion script
 | `/every` / `/after` | Scheduled prompt execution (added v1.0.58, experimental). Has a `/loop` alias |
 | `/fork [name]` | Fork the current session into an independent new session (added v1.0.45; optional name and origin display added v1.0.47). `/branch` alias added (v1.0.64, aligned with Claude Code) |
 | `/session` | Session management (`delete` / `delete-all`, name via `--name`) |
-| `/plugin` | Plugin management (`install` / `list` / `remove`) |
+| `/plugin` / `/plugins` | Plugin management (`install` / `list` / `remove`); the `/plugins` dashboard (v1.0.69) manages installed plugins and reloads extensions without a session restart |
 | `/subagents` / `/agents` | List/configure subagents (model / reasoning effort / context tier, added v1.0.62) |
 | `/cd` | Change working directory (persisted across resume as of v1.0.65; also discovers custom agents in the new directory) |
 | `/diagnose` | Analyze session logs (added v1.0.64) |
@@ -114,6 +115,7 @@ copilot completion <bash|zsh|fish>       # print shell completion script
 | `.github/hooks/hooks.json` | Project hooks | Yes |
 | `.github/lsp.json` | Project LSP config | Yes |
 | `.mcp.json` | Project MCP (v1.0.22 dropped support for `.vscode/mcp.json` / `.devcontainer/devcontainer.json` and standardized on `.mcp.json`; shows a migration hint when those are detected) | Yes |
+| `.github/copilot/settings.json` | Repo-level pinning of model / effort / context tier for a trusted repo (v1.0.70) | Yes |
 | `.github-private/.github/copilot/settings.json` | Enterprise-managed plugin definitions (public preview 2026-05-06) | Yes |
 | `.github/copilot-instructions.md` | Custom instructions (legacy) | Yes |
 
@@ -130,6 +132,8 @@ The `COPILOT_HOME` environment variable can change the config directory.
 - **LSP integration**: Leverages type information via integration with servers such as TypeScript Language Server
 - **MCP integration**: Integration with Model Context Protocol servers
 - **Rubber Duck agent**: Independent critique of your work. Enabled by default as of v1.0.58 (controlled via `builtInAgents.rubberDuck` / `builtInAgents.rubberDuckAutoInvoke`). Remote JSON RPC also enabled by default as of v1.0.58
+- **Sandbox** (v1.0.67+): An OS-level shell sandbox toggled with `--sandbox` / `--no-sandbox`. A sandbox-policy badge is shown, and `web_fetch` honors the sandbox network policy (routed through a required HTTPS proxy as of v1.0.70)
+- **Repo-level model pinning** (v1.0.70): a trusted repo can pin model / effort level / context tier in `.github/copilot/settings.json`; `/settings` and `/model` gain `--repo` / `--local` flags
 
 ## Custom agents
 
