@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-06-28
+reviewed: 2026-07-12
 tags: [ai-agent, ai-workflow, commercial, gcp]
 ---
 
@@ -72,7 +72,7 @@ See `gh api repos/google-gemini/gemini-cli/contents/docs/reference/commands.md` 
 - **Four-tier memory management system**: Advanced prompt-driven memory retention
 - **MCP integration**: Integration with Model Context Protocol servers
 
-## Selectable Models (as of v0.49)
+## Selectable Models (as of v0.50)
 
 Specify via alias with the `--model` flag (or the `/model` dialog).
 
@@ -85,7 +85,7 @@ Specify via alias with the `--model` flag (or the `/model` dialog).
 
 Gemini 3.1 series models (e.g. `gemini-3.1-pro-preview`) can be specified directly via `/model` Manual or `-m gemini-3.1-pro-preview` (rollout in progress).
 
-**Gemma 4**: Added experimentally in v0.41, enabled by default via the Gemini API in v0.42 (#26307). The current stable release is the v0.49 series (v0.49.0).
+**Gemma 4**: Added experimentally in v0.41, enabled by default via the Gemini API in v0.42 (#26307). The current stable release is the v0.50 series (v0.50.0, 2026-07-08); the v0.49 → v0.50 change was infrastructure-only, with no model / command / config changes.
 
 Fallback: when Gemini 3 Pro hits its limit, it automatically downgrades to Gemini 2.5 Pro → 2.5 Flash.
 
