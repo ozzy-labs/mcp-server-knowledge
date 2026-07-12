@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-06-07
+reviewed: 2026-07-12
 tags: [library, typescript, ai-workflow]
 ---
 
@@ -237,4 +237,4 @@ Pure logic can be tested by extracting the handler as a named function. It's fas
 
 ## v1 / v2 notes
 
-The v2 series (alpha as of 2026-05, latest 2.0.0-alpha.2) splits the package: `@modelcontextprotocol/server` / `/client` / `/node` (shared runtime / `InMemoryTransport` etc.), plus framework integrations `/express` / `/hono` / `/fastify`. Node.js **>= 20** is required for the v2 series. `inputSchema` changes from the v1 raw shape to accepting any **Standard Schema**-compatible library, not just Zod (e.g. Valibot, ArkType). v2 stable missed its Q1 2026 target and remains in alpha. Stable stays on the v1 series for now (this article is based on v1.29.0, current npm latest = 1.29.0).
+The v2 series has moved from alpha to **beta** (current `2.0.0-beta.3` as of 2026-07). It splits the monolithic package into `@modelcontextprotocol/server` / `/client` / `/core` (shared internals) / `/node` (runtime / `InMemoryTransport` etc.), plus framework integrations `/express` / `/hono` / `/fastify`, and adds `/codemod` for migration (`npx @modelcontextprotocol/codemod@beta v1-to-v2 .`). v2 is ESM-only and requires **Node.js >= 20** (also runs on Bun / Deno). `inputSchema` changes from the v1 raw shape to accepting any **Standard Schema**-compatible library, not just Zod (e.g. Valibot, ArkType). The beta also adds runtime-neutral Bearer auth and OAuth discovery (RFC 9728 / RFC 8414). v2 **stable now targets the `2026-07-28` MCP spec release** (it slipped the earlier Q1 2026 target). Until then, **v1.x remains the production-supported line** — this article is based on **v1.29.0**, still the current npm `latest` — and v1.x is slated to receive bug/security fixes for at least 6 months after v2 ships.
