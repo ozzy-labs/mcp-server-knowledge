@@ -1,7 +1,7 @@
 ---
-reviewed: 2026-07-04
+reviewed: 2026-07-12
 tags: [ai-agent, ai-workflow, commercial]
-aliases: [model-selection, fallbackModel, opusplan, oauth-usage, fast-mode]
+aliases: [model-selection, fallbackModel, opusplan, oauth-usage, fast-mode, ultracode]
 ---
 
 # Claude Code model selection, switching, fallback, and usage monitoring
@@ -35,19 +35,23 @@ Models can be specified at the following **four units**. **There is no automatic
 | `sonnet[1m]` / `opus[1m]` | 1 million token context |
 | `opusplan` | **Automatically switches to Opus for plan mode and Sonnet for execution mode** (`opusplan[1m]` gives 1M for both phases) |
 
-**`default` by account type**: Max / Team Premium / Enterprise pay-as-you-go / Anthropic API → Opus 4.8, Claude Platform on AWS → Opus 4.7, Pro / Team Standard / Enterprise subscription seats → Sonnet 5, Bedrock / Vertex / Foundry → Sonnet 4.5. **Fable 5 is never the default for any account type** (explicit selection via `/model fable` etc. is required).
+**`default` by account type**: Max / Team Premium / Enterprise pay-as-you-go / Anthropic API → Opus 4.8, Claude Platform on AWS → Opus 4.8, Pro / Team Standard / Enterprise subscription seats → Sonnet 5, Bedrock / Vertex / Foundry → Sonnet 4.5. **Fable 5 is never the default for any account type** (explicit selection via `/model fable` etc. is required).
+
+> On third-party providers the family aliases resolve to a fixed version: on the Anthropic API and Claude Platform on AWS `opus` → Opus 4.8 / `sonnet` → Sonnet 4.6; on Bedrock and Vertex `opus` → Opus 4.8 / `sonnet` → Sonnet 4.5; on Foundry `opus` → Opus 4.6 / `sonnet` → Sonnet 4.5. Where an alias resolves to an older version, pin the full model name or set `ANTHROPIC_DEFAULT_OPUS_MODEL` / `ANTHROPIC_DEFAULT_SONNET_MODEL`.
 
 ### `effort` (reasoning depth) is specified at the same units
 
 `effort` (`low`/`medium`/`high`/`xhigh`/`max`) can be specified via `effort:` in skill / subagent frontmatter just like model, overriding the session value only while that skill/subagent is active (the `CLAUDE_CODE_EFFORT_LEVEL` env var takes highest priority). Default effort is `high` for Fable 5, Sonnet 5, and Opus 4.8, and `xhigh` for Opus 4.7. `max` is session-only (except via env). `xhigh` is only available for Fable 5 / Sonnet 5 / Opus 4.7-4.8 (Opus 4.6 and Sonnet 4.6 have `max` but not `xhigh`). Fable 5, Sonnet 5, and Opus 4.7+ always use adaptive reasoning, and **Fable 5 cannot have thinking turned off**.
 
+The `/effort` menu additionally offers **`ultracode`** — a Claude Code-only setting (not one of the API effort levels above) that sends `xhigh` to the model *and* has Claude orchestrate [Dynamic Workflows](claude-code-dynamic-workflows.md) for substantive tasks. It is **session-only**, is **not** accepted by the persisted `effortLevel` setting or `CLAUDE_CODE_EFFORT_LEVEL`, and `--effort ultracode` requires **v2.1.203+** (earlier versions print `Unknown --effort value 'ultracode'`). When workflows are turned off, `ultracode` degrades to plain `xhigh`. (The `ultrathink` keyword anywhere in a prompt requests deeper reasoning for that one turn without changing the session effort level.)
+
 ### Fast mode (`/fast`) — speeds up output without changing the model
 
 `/fast` toggles **Fast mode**. This is neither a model switch like `opusplan` nor an effort change — it's a **separate axis that raises output token throughput for the same model (up to roughly 2.5x, at a premium price)**. It never downgrades to a lower-tier model.
 
-- Supported **only on Opus 4.8 / 4.7**. **Fast mode on Opus 4.7 is deprecated** (once removed, `speed:"fast"` on 4.7 will error), with Opus 4.8 being the permanent fast-capable tier.
-- Fast mode is a **research preview exclusive to the Anthropic API (first-party)**. It is unavailable on Claude Platform on AWS / Bedrock / Vertex / Foundry, the Batch API, or Priority Tier.
-- From v2.1.176 onward it is subject to constraints from `availableModels` (the allowed-model list setting). On the API side it's implemented via the beta header `fast-mode-2026-02-01` plus top-level `speed:"fast"` (`client.beta.messages`), and has its own rate limit separate from standard Opus.
+- Supported **only on Opus 4.8 / 4.7**, with Opus 4.8 the permanent fast-capable tier (and the fast-mode default from v2.1.154). **Fast mode on Opus 4.7 is deprecated as of 2026-06-25 and is removed on 2026-07-24**; after removal, a fast request on Opus 4.7 errors and does **not** fall back to standard 4.7 (the model itself stays available at standard speed). Pricing is flat across the full 1M window: **Opus 4.8 $10 / $50, Opus 4.7 $30 / $150** per MTok.
+- Fast mode is a **research preview on first-party surfaces only**: the Anthropic API / Console and Claude subscription plans (Pro / Max / Team / Enterprise), where it is billed from **usage credits** rather than the plan's included usage (an org Owner must enable it for Team / Enterprise). It is unavailable on Claude Platform on AWS / Bedrock / Vertex / Foundry, the Batch API, or Priority Tier. Requires Claude Code v2.1.36+.
+- From v2.1.176 onward it is subject to constraints from `availableModels` (the allowed-model list setting). On the API side it's implemented via the beta header `fast-mode-2026-02-01` plus top-level `speed:"fast"` (`client.beta.messages`), and Opus 4.8 / 4.7 share one fast-mode rate-limit pool separate from standard Opus.
 
 ## Fallback (when the specified model is unavailable)
 
@@ -68,7 +72,7 @@ Automatically switches to the next model when the primary model is **overloaded 
 
 ### 2. Automatic model fallback (Fable 5 safety-based)
 
-Fable 5 comes with cybersecurity and biology safety classifiers, and **re-runs flagged requests on the default Opus (Opus 4.8 on the Anthropic API, Opus 4.7 on Claude Platform on AWS)**, continuing to use Opus for the rest of that session (use `/model fable` to switch back).
+Fable 5 comes with cybersecurity and biology safety classifiers, and **re-runs flagged requests on the default Opus (Opus 4.8)**, continuing to use Opus for the rest of that session (use `/model fable` to switch back). On Bedrock / Vertex / Foundry, set `ANTHROPIC_DEFAULT_FABLE_MODEL` and `ANTHROPIC_DEFAULT_OPUS_MODEL` so Claude Code can identify both ends of the switch.
 
 - **Can trigger even on the session's very first request** (since it carries CLAUDE.md, git status, and workspace context). Repositories touching security/biology can trip this from context alone. Use `claude --safe-mode` to disable customizations and isolate the cause.
 - Turning off "switch models when a message is flagged" in `/config` prevents the automatic switch when flagged, instead letting you choose between "switch to Opus" or "edit the prompt and retry with Fable." In non-interactive / SDK use, this ends the turn with a refusal.
@@ -121,7 +125,8 @@ Higher-tier models like Fable 5 have **higher token cost (roughly 2x Opus) and a
 
 Official:
 
-- [Model configuration](https://code.claude.com/docs/en/model-config) (aliases / fallback model chains / automatic model fallback / effort / fast mode)
+- [Model configuration](https://code.claude.com/docs/en/model-config) (aliases / default by account type / fallback model chains / automatic model fallback / effort / ultracode)
+- [Speed up responses with fast mode](https://code.claude.com/docs/en/fast-mode) (Opus 4.7 removal 2026-07-24, pricing, usage-credit billing, `fast-mode-2026-02-01` + `speed:"fast"`)
 - [Subagents](https://code.claude.com/docs/en/sub-agents) / [Skills](https://code.claude.com/docs/en/skills) (frontmatter `model` / `effort`)
 - [Manage costs](https://code.claude.com/docs/en/costs) (usage)
 - [Introducing Claude Fable 5](https://platform.claude.com/docs/en/about-claude/models/introducing-claude-fable-5-and-claude-mythos-5)
