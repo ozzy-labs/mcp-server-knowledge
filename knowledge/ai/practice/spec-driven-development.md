@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-06-07
+reviewed: 2026-07-12
 tags: [methodology, ai-workflow, spec]
 ---
 
@@ -45,9 +45,11 @@ Representative SDD orchestrators as of 2026:
 
 | Tool | Provider | Characteristics | Details |
 |---|---|---|---|
-| **GitHub Spec Kit** | GitHub | Agent-agnostic (supports 30+ agents including Claude Code / Codex / Copilot / Gemini), installed via `uv tool install specify-cli` | `ai/workflow/github-spec-kit.md` |
-| **Kiro** | AWS | Dedicated IDE + CLI, Spec view, agent hooks, defaults to Claude Sonnet 4.5 / Auto mode | `ai/workflow/kiro.md` |
+| **GitHub Spec Kit** | GitHub | Agent-agnostic (34 agents in the integrations reference; README still says "30+"), installed via `uv tool install specify-cli`; persona **Bundles** provision PM/dev/security-researcher sets | `ai/workflow/github-spec-kit.md` |
+| **Kiro** | AWS | Dedicated IDE + CLI, Spec view, agent hooks; **Auto mode** is the recommended starting point (Sonnet 5 added 2026-07, Opus 4.8 available) | `ai/workflow/kiro.md` |
 | **cc-sdd** | OSS (gotalab) | npm package, installs Kiro-compatible specs into 8 agents (Claude Code / Codex / Cursor / Copilot / Windsurf / OpenCode / Gemini / Antigravity) | `ai/workflow/cc-sdd.md` |
+
+Two other OSS orchestrators have grown large enough to note (both ~50-60k GitHub stars as of 2026-07): **OpenSpec** (Fission-AI) is repo-native and needs no API key or MCP, tracking scoped **deltas** against a source-of-truth spec (propose → apply → archive) — a direct answer to the tool-format lock-in pitfall below; **BMAD-METHOD** orchestrates a virtual agile team (analyst / PM / architect / SM / dev / QA) across a plan-then-build two-phase flow, sitting at the SDD ⇄ AIDD boundary.
 
 Each tool differs in "where to place the spec," "how finely to slice the plan," and "which agent to hand it to." A practical selection criterion is **which CLI/IDE you already use**.
 
