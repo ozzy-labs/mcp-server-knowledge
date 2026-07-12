@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.3](https://github.com/ozzy-labs/mcp-server-knowledge/compare/v0.1.2...v0.1.3) (2026-07-12)
+
+
+### Bug Fixes
+
+* **deps:** override transitive hono to ^4.12.21 for CVE-2026-47673~47676 ([#240](https://github.com/ozzy-labs/mcp-server-knowledge/issues/240)) ([065a343](https://github.com/ozzy-labs/mcp-server-knowledge/commit/065a3435139597b3f2bc69803f308d2d6296fc7b))
+* gate pre-commit trivy on HIGH/CRITICAL severity ([#293](https://github.com/ozzy-labs/mcp-server-knowledge/issues/293)) ([f74839d](https://github.com/ozzy-labs/mcp-server-knowledge/commit/f74839db009329caf10b52486f777847dc0fc1b8))
+* **related:** weight same directory below a single shared tag ([#300](https://github.com/ozzy-labs/mcp-server-knowledge/issues/300)) ([550e000](https://github.com/ozzy-labs/mcp-server-knowledge/commit/550e000270bc9cb71b14154932cc8bbb5a4628dd))
+
 ## [0.1.2](https://github.com/ozzy-labs/mcp-server-knowledge/compare/v0.1.1...v0.1.2) (2026-05-31)
 
 
