@@ -1,23 +1,23 @@
 ---
-reviewed: 2026-06-07
+reviewed: 2026-07-12
 tags: [ai-agent, ai-workflow, commercial, cloud-hosted]
 stability: research-preview
 ---
 
 # Claude Code Routines
 
-A mechanism for running Claude Code non-interactively on Anthropic-managed cloud infrastructure. The `/model` selector lets you choose **Claude Opus 4.8** (the previous-generation Opus 4.7 is also selectable) and **1 million token context**, usable as a trigger-driven autonomous execution platform. A prompt + repository + connectors are saved as a single configuration and auto-launched by triggers. Available on Pro / Max / Team / Enterprise plans when **Claude Code on the web is enabled** (research preview).
+A mechanism for running Claude Code non-interactively on Anthropic-managed cloud infrastructure. The `/model` selector picks the model Claude uses on every run — the current Claude Code lineup is **Fable 5 / Opus 4.8 / Sonnet 5 / Haiku 4.5** (Sonnet 5 became the Claude Code default around v2.1.197), with up to **1M token context** — usable as a trigger-driven autonomous execution platform. A prompt + repository + connectors are saved as a single configuration and auto-launched by triggers. Available on Pro / Max / Team / Enterprise plans when **Claude Code on the web is enabled** (research preview).
 
 Official: [Automate work with routines](https://code.claude.com/docs/en/routines)
 
 ## Key features
 
-- **Opus 4.8 & 1M Context**: selectable via the model selector (the previous-generation Opus 4.7 remains selectable too). Can analyze dependencies across an entire large repository at once.
+- **Model selector & 1M context**: pick the run's model from the current lineup (Fable 5 / Opus 4.8 / Sonnet 5 / Haiku 4.5); large-context models can analyze dependencies across an entire large repository at once.
 - **fresh clone model**: each trigger clones the repository from the default branch, and changes are pushed to a `claude/`-prefixed branch. Enabling **Allow unrestricted branch pushes** also allows pushing to existing branches.
 
 ### Related features (not Routines itself, but used alongside it)
 
-- **Dreaming** ([Managed Agents](https://platform.claude.com/docs/en/managed-agents/dreams)): a research-preview feature that reorganizes the memory store using past session logs as material. Same Claude Code ecosystem as Routines but a separate layer. During the research preview it supports `claude-opus-4-7` / `claude-sonnet-4-6`.
+- **Dreaming** ([Managed Agents](https://platform.claude.com/docs/en/managed-agents/dreams)): a research-preview feature that reorganizes the memory store using past session logs as material. Same Claude Code ecosystem as Routines but a separate layer. At research-preview launch it supported `claude-opus-4-7` / `claude-sonnet-4-6` (both since superseded by Opus 4.8 / Sonnet 5; verify the current selectable set in the product).
 - **`/ultrareview`** ([a Claude Code core slash command](https://code.claude.com/docs/en/ultrareview)): a multi-lens pipeline that reviews the diff between the current branch and the default branch. Can also be invoked via Routines.
 
 ## Execution model

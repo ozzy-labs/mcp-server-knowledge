@@ -1,13 +1,12 @@
 ---
-reviewed: 2026-06-07
+reviewed: 2026-07-12
 tags: [ai-agent, ai-workflow, commercial, multi-agent]
-stability: research-preview
 aliases: [dynamic-workflows, ultracode]
 ---
 
 # Claude Code Dynamic Workflows
 
-A **JavaScript orchestration script execution runtime** built into Claude Code. Claude writes an orchestration script dynamically per task, and the runtime **spawns tens to hundreds of subagents in parallel**, cross-verifies the results, and merges them into a single answer. Released as a research preview on 2026-05-28, alongside the release of Claude Opus 4.8.
+A **JavaScript orchestration script execution runtime** built into Claude Code. Claude writes an orchestration script dynamically per task, and the runtime **spawns tens to hundreds of subagents in parallel**, cross-verifies the results, and merges them into a single answer. Released as a research preview on 2026-05-28 (alongside Claude Opus 4.8), it is now **generally available** in the Claude Code CLI, Desktop, and the VS Code extension.
 
 Official: [Anthropic blog](https://claude.com/blog/introducing-dynamic-workflows-in-claude-code) / [Claude Code docs](https://code.claude.com/docs/en/workflows)
 
@@ -15,7 +14,7 @@ This feature has a **different plan owner** than Claude Code's subagents / skill
 
 ## Availability
 
-- Available from **Claude Code v2.1.154 or later** (research preview)
+- Available from **Claude Code v2.1.154 or later** (now GA)
 - **All paid plans supported**: Pro / Max / Team / Enterprise. On Pro only, explicit opt-in is required via the Dynamic workflows line in `/config`
 - Also available via **Anthropic API / Amazon Bedrock / Vertex AI / Microsoft Foundry**
 - Surfaces: Claude Code CLI / Desktop / VS Code extension / `claude -p` (non-interactive mode) / Agent SDK
@@ -26,6 +25,7 @@ This feature has a **different plan owner** than Claude Code's subagents / skill
 |---|---|
 | Include the keyword `ultracode` in the prompt | Runs as a workflow for this turn only (natural-language phrasing like "use a workflow" / "run a workflow" is also accepted as opt-in) |
 | `/effort ultracode` | Enables `xhigh` reasoning + automatic workflow orchestration for the whole session. When Claude judges a task is workflow-shaped, it assembles one automatically |
+| `claude --effort ultracode` | Launch flag (**v2.1.203+**) that starts the session at `xhigh` + workflow orchestration |
 | `/deep-research <question>` | Bundled workflow. Multi-angle web search → cross-check → cited report |
 | `/<saved-workflow>` | An instruction saved by pressing `s` in the `/workflows` view |
 
@@ -34,7 +34,7 @@ This feature has a **different plan owner** than Claude Code's subagents / skill
 ## Execution model
 
 1. **Plan generation**: given the user prompt, Claude (the top-tier model) writes a JS script
-2. **Approval gate**: on first launch, the script and phase list are shown, and the user chooses `Yes` / `View raw script` / `No` (Auto mode only confirms on the first run)
+2. **Approval gate**: on first launch, the script and phase list are shown, and the user chooses `Yes, run it` / `Yes, and don't ask again for <name> in <path>` / `View raw script` / `No` (`Ctrl+G` opens an editor, `Tab` adjusts the prompt; Desktop shows Once / Always / Deny cards). Auto mode only confirms on the first run
 3. **Execution in an isolated environment**: the script runs in a runtime separate from the conversation. Only the final result is returned to Claude's context
 4. **Subagent spawning**: `agent()` calls in the script spawn subagents. Each subagent is fixed to `acceptEdits` mode and inherits the session's tool allowlist
 5. **Progress tracking**: the runtime persists each agent's result incrementally, enabling resume after interruption and monitoring (`/workflows`)
@@ -158,6 +158,7 @@ Practical ways to control it:
 2. **Monitor per-agent token consumption in `/workflows`** and press `x` to stop once it exceeds tolerance (completed work is not lost)
 3. **Model selection**: all agents inherit the session's model. Check `/model`, and explicitly route lightweight stages to Haiku within the script
 4. The **agent cap** (1000 / 16 concurrent) serves as the ceiling for a runaway script
+5. **Cap workflow size**: the `/config` **Dynamic workflow size** setting (v2.1.202) advises Claude to keep a run `small` (<5 agents) / `medium` (<15) / `large` (<50) / `unrestricted` (default). A **Large workflow** warning (v2.1.203) shows in the task panel above ~25 agents or ~1.5M projected tokens — advisory only, and suppressed under `ultracode`
 
 ## Common mistakes AI agents make
 
