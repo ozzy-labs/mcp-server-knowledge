@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-06-28
+reviewed: 2026-07-12
 tags: [ai-workflow, methodology, practice]
 ---
 
@@ -16,8 +16,9 @@ A relatively new term, systematized and named "Loop Engineering" by Addy Osmani 
 | **Prompt engineering** | A single input. Instruction phrasing, examples, output format |
 | **Context engineering** | Curation of which tokens go into the context window at inference time |
 | **Loop engineering** | The **iterative cycle the agent runs in itself**. Invocation, tools, verification, stopping, recovery, state |
+| **Harness engineering** | The **whole engineered scaffold** around the model (`Agent = Model + Harness`) — the superset that contains the loop. See [Harness Engineering](harness-engineering.md) |
 
-The three are not mutually exclusive but layered. Context engineering operates within each iteration of the loop, and prompt engineering operates within the instructions of each step. Note that the "prompt → context → loop" staged-evolution framing is widely used in secondary commentary, but it is not an explicit staged theory found in primary sources.
+These are not mutually exclusive but layered (**harness ⊃ loop ⊃ context ⊃ prompt**). Context engineering operates within each iteration of the loop, and prompt engineering operates within the instructions of each step. Loop engineering is best understood as the **iterative-cycle subset of harness engineering** (LangChain, "The Art of Loop Engineering", 2026-06-16). Note that the "prompt → context → loop" staged-evolution framing is widely used in secondary commentary, but it is not an explicit staged theory found in primary sources.
 
 ## What is an agent loop
 
@@ -125,6 +126,7 @@ The observation that a practical agent can be built from just "an LLM + a loop +
 - Anthropic: [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) (2025-11-26, verification tools, git revert, progress logs)
 - Claude Code Docs: [How Claude Code works](https://code.claude.com/docs/en/how-claude-code-works) (gather context → take action → verify, agentic harness)
 - Addy Osmani: [Loop Engineering](https://addyosmani.com/blog/loop-engineering/) (2026-06-07, systematization of the term)
+- LangChain (Sydney Runkle): [The Art of Loop Engineering](https://www.langchain.com/blog/the-art-of-loop-engineering) (2026-06-16, loops as the iterative mechanisms within the [harness](harness-engineering.md))
 - Simon Willison: [Designing agentic loops](https://simonwillison.net/2025/Sep/30/designing-agentic-loops/) (2025-09-30, loop design, budget limits, sandboxing)
 - Thorsten Ball: [How to Build an Agent](https://ampcode.com/notes/how-to-build-an-agent)
 - Yao et al.: [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) (the original source of the thought/action/observation loop)
