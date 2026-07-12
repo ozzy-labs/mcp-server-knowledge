@@ -1,11 +1,11 @@
 ---
-reviewed: 2026-06-28
+reviewed: 2026-07-12
 tags: [ai-agent, ai-workflow, commercial]
 ---
 
 # Codex CLI
 
-An open-source coding agent CLI provided by OpenAI. Reads/edits code and executes commands in a full-screen TUI, and also supports multi-agent parallel processing.
+An open-source coding agent CLI provided by OpenAI. Reads/edits code and executes commands in a full-screen TUI, and also supports multi-agent parallel processing. As of 2026-07 the latest release is **rust-v0.144.1** (2026-07-09), and Codex is also integrated into the ChatGPT desktop app (macOS / Windows, 2026-07-09).
 
 ## Installation
 
@@ -30,7 +30,7 @@ Sign in on first launch. Authenticate with either of the following:
 - Browser OAuth with a ChatGPT account (paid plan recommended)
 - OpenAI API key (`OPENAI_API_KEY` environment variable)
 
-`gpt-5.5` is available both via ChatGPT sign-in and the OpenAI API (model ID `gpt-5.5`, available since 2026-04-24).
+The current default is `gpt-5.6-sol`, available via both ChatGPT sign-in and the OpenAI API (the GPT-5.6 family reached GA on 2026-07-09; `gpt-5.5` is now the previous generation).
 
 ## Basic commands
 
@@ -39,6 +39,7 @@ codex                    # Start a full-screen TUI session
 codex "prompt"            # One-shot execution
 codex update             # Update the CLI to the latest version
 codex remote-control     # Remote control entry point (v0.130+)
+codex remote-control pair # Generate a manual pairing code (v0.143+)
 ```
 
 ## In-session commands
@@ -77,7 +78,7 @@ See the official full list at [Codex CLI slash commands](https://developers.open
 
 ```toml
 # Default model
-model = "gpt-5.5"
+model = "gpt-5.6-sol"
 
 # Reasoning depth (minimal, low, medium, high, xhigh)
 model_reasoning_effort = "medium"
@@ -89,7 +90,7 @@ approval_policy = "on-request"
 
 ### Bundled models
 
-The `/model` picker's recommended models are `gpt-5.5` (current recommended default) / `gpt-5.4` (flagship) / `gpt-5.4-mini` (lightweight, for subagents) / `gpt-5.3-codex-spark` (research preview, ChatGPT Pro only). The older `gpt-5.3-codex` / `gpt-5.2` are deprecated for Codex under ChatGPT sign-in.
+The `/model` picker's recommended models are the **GPT-5.6 family** (GA 2026-07-09): `gpt-5.6-sol` (current recommended default / flagship) / `gpt-5.6-terra` (balanced) / `gpt-5.6-luna` (fast, low cost), plus `gpt-5.4` / `gpt-5.4-mini` (lightweight, for subagents) and `gpt-5.3-codex-spark` (research preview, ChatGPT Pro only). `gpt-5.5` is now the previous-generation default; the older `gpt-5.3-codex` / `gpt-5.2` are deprecated for Codex under ChatGPT sign-in.
 
 > For details on model-selection units, reasoning effort, fallback (Codex has no automatic fallback), and usage (ChatGPT plan quota / API pay-as-you-go), see [`codex-cli-model-selection.md`](codex-cli-model-selection.md).
 
@@ -98,7 +99,10 @@ The `/model` picker's recommended models are `gpt-5.5` (current recommended defa
 - **Full-screen TUI**: Interactive terminal UI
 - **Multi-agent**: Parallel execution in independent Git worktrees
 - **Large-thread paging (v0.130+)**: Toggle between summarized and full display of huge history
-- **MCP integration**: Integration with Model Context Protocol servers
+- **MCP integration**: Integration with Model Context Protocol servers. MCP **tool search is on by default** (v0.143+), ChatGPT-hosted MCP servers can use session authentication, and **MCP tools can request authentication interactively** without an experimental opt-in (v0.144+)
+- **Remote plugins (default from v0.143)**: A plugin catalog sourced from an npm marketplace, with remote/local version comparison
+- **System proxy support (v0.143+)**: Routes authentication and Responses API traffic through macOS / Windows system proxies (PAC / WPAD)
+- **`writes` app-approval mode (v0.144+)**: For apps / MCP tools, allows declared read-only actions automatically while prompting only on writes (`apps.<id>.default_tools_approval_mode` / `mcp_servers.<id>.default_tools_approval_mode` accept `auto` / `prompt` / `writes` / `approve`)
 
 ## Approval policies
 
