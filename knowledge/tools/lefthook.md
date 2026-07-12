@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-07-12
 tags: [git-hook, go]
 ---
 
@@ -201,6 +201,29 @@ Even with `stage_fixed: true` set, if the command touches files beyond `{staged_
 ### commitlint doesn't run
 
 Typical causes are a misnamed `commit-msg` hook (not `commit_msg`) or forgetting the `{1}` argument.
+
+## AI agent hooks (`ai:`, beta)
+
+As of v2.1.10, a beta top-level `ai:` key lets you declare hooks for **AI coding agents** in `lefthook.yaml`. `lefthook install` then generates the provider-specific hook file so the agent calls `lefthook run <hook>`:
+
+| Provider | Generated file |
+|---|---|
+| `claude` | `.claude/settings.json` |
+| `codex` | `.codex/hooks.json` |
+| `cursor` | `.cursor/hooks.json` |
+| `copilot` | `.github/hooks/lefthook.json` |
+
+```yaml
+ai:
+  claude:
+    Stop: validate
+    PreToolUse: security-check
+validate:
+  jobs:
+    - run: go test ./...
+```
+
+`lefthook install` / `uninstall` only replaces or removes lefthook-managed entries (hand-written agent entries are preserved), and the generated command uses the lefthook config value or an absolute path, so it does not depend on `PATH`.
 
 ## Comparison with other tools
 

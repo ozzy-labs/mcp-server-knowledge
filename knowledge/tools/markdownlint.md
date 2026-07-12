@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-05-04
+reviewed: 2026-07-12
 tags: [lint, markdown, javascript]
 ---
 
@@ -154,7 +154,7 @@ Same configuration as this repository's `lefthook-base.yaml`.
 SARIF output is not supported, so combine it with a tool that streams failure logs into Pull Request annotations:
 
 ```yaml
-- uses: DavidAnson/markdownlint-cli2-action@v23
+- uses: DavidAnson/markdownlint-cli2-action@v24
   with:
     config: ".markdownlint.jsonc"
     globs: "**/*.md"
