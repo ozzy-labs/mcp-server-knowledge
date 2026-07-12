@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-06-28
+reviewed: 2026-07-12
 tags: [ai-workflow, methodology]
 ---
 
@@ -142,6 +142,10 @@ Row lookups in a DB → tool. A project README → resource.
 ## MCP Extensions
 
 In January 2026, **MCP Apps** was announced as the first official MCP extension. Without changing the core protocol, a tool can point to a `ui://`-scheme UI resource via the `_meta.ui.resourceUri` field, allowing responses to return interactive React-based UI (dashboards, forms, visualizations, etc.). Claude, ChatGPT, VS Code, Goose, and others already support it.
+
+## MCP Registry
+
+The official **MCP Registry** (`registry.modelcontextprotocol.io`) is a metadata catalog of publicly available MCP servers. As of 2026-07 it is still in **preview** (no GA date announced; breaking changes and data resets may occur). Servers publish a `server.json` under a **reverse-DNS namespace** (e.g. `io.github.<user>/<server>`) with DNS/OIDC-based ownership verification, exposed over a REST/OpenAPI API. It is designed to be consumed by **downstream aggregators / marketplaces** rather than directly by hosts, and is backed by Anthropic, GitHub, PulseMCP, and Microsoft.
 
 ## Next revision (2026-07-28 RC)
 
