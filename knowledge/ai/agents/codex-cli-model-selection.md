@@ -74,7 +74,7 @@ The **GPT-5.6 family** became generally available across ChatGPT / Codex / the O
 
 ## Reasoning Effort (`model_reasoning_effort`)
 
-Reasoning depth is specified as `model_reasoning_effort` via config, CLI, or subagent frontmatter.
+Reasoning depth is specified as `model_reasoning_effort` via config, CLI, or a subagent's TOML file.
 
 - **Config-reference enum**: `minimal | low | medium | high | xhigh` — "Adjust reasoning effort for supported models (Responses API only; `xhigh` is model-dependent)." No default is declared; the sample config uses `medium`.
 - **Picker levels for GPT-5.6** — **Low / Medium (default) / High / Extra High / Max / Ultra**. `max` gained first-class support in **rust-v0.143.0**. **`ultra` is a multi-agent mode rather than a plain effort level**: it uses subagents to handle separate parts of a complex task in parallel. Since rust-v0.145.0 the CLI **warns when you select Ultra** that high multi-agent concurrency can increase usage quickly.
