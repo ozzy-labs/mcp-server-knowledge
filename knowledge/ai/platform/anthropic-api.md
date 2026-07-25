@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-07-12
+reviewed: 2026-07-25
 tags: [library, commercial, cloud-hosted, ai-workflow]
 aliases: [claude-api]
 ---
@@ -29,7 +29,7 @@ import anthropic
 
 client = anthropic.Anthropic()  # reads from env var
 message = client.messages.create(
-    model="claude-opus-4-8",
+    model="claude-opus-5",
     max_tokens=1024,
     messages=[{"role": "user", "content": "Hello, Claude"}],
 )
@@ -41,11 +41,12 @@ print(message.content[0].text)
 | Model | API ID | Context | Max output | Positioning | Price (input/output per 1M) |
 |---|---|---|---|---|---|
 | **Fable 5** | `claude-fable-5` | 1M | 128K | The most capable widely released model. For the hardest reasoning and long-horizon agentic work. Thinking is always ON (`thinking` is omitted; explicitly setting `disabled` returns 400). Requires 30-day data retention (ZDR not available). Ships **cybersecurity/biology safety classifiers** that can decline a request, returning `stop_reason: "refusal"` as a 200 response (not billed if refused before output; retry another model via the beta `fallbacks` param) | $10 / $50 |
-| **Opus 4.8** | `claude-opus-4-8` | 1M | 128K | Current Opus-tier flagship. Complex reasoning, long-horizon agentic coding, high-autonomy tasks. Extended thinking not supported (adaptive thinking only). `effort` defaults to `high` | $5 / $25 |
+| **Opus 5** | `claude-opus-5` | 1M | 128K | **Current Opus-tier flagship.** Complex agentic coding and enterprise work; strongest on deep reasoning and long-horizon work. **Thinking is ON by default** (omitting `thinking` runs adaptive — unlike Opus 4.8/4.7); `thinking: {type:"disabled"}` is accepted only at `effort` ≤ `high` and returns 400 at `xhigh`/`max`. Raw chain of thought never returned. Runs **safety classifiers** that can return `stop_reason: "refusal"` (cyber-flagged requests fall back to Opus 4.8). Knowledge cutoff May 2026 | $5 / $25 |
+| **Opus 4.8** | `claude-opus-4-8` | 1M | 128K | Previous Opus-tier flagship, still the safe landing spot for security-adjacent work. Extended thinking not supported (adaptive thinking only), and **adaptive is OFF unless requested**. `effort` defaults to `high` | $5 / $25 |
 | **Sonnet 5** | `claude-sonnet-5` | 1M | 128K | Current Sonnet tier. Excellent balance of speed and intelligence; near-Opus for coding/agents. Adaptive thinking is ON by default (adaptive even when `thinking` is omitted; `budget_tokens` returns 400). `effort` ranges `low`–`max` (first Sonnet tier to support `xhigh`). With the new tokenizer, the same text uses ~30% more tokens than Sonnet 4.6 | $3 / $15 (introductory price $2 / $10 through 2026-08-31) |
 | **Haiku 4.5** | `claude-haiku-4-5-20251001` | 200K | 64K | Fastest and cheapest. Near-frontier intelligence. Supports extended thinking | $1 / $5 |
 
-Opus 4.8, released 2026-05-28, replaces Opus 4.7 as the current **Opus-tier flagship**. It shares the same $5 / $25 price, 1M context, and 128K max output as Opus 4.7, with an equivalent tool/platform feature set. Anthropic's highest-performing widely released model, however, is **Claude Fable 5** (`claude-fable-5`, $10 / $50), which sits above the Opus tier but has different API behavior (thinking always ON so the `thinking` parameter is omitted, sampling parameters like `temperature` are not allowed, and 30-day data retention is required). Opus 4.8 remains the default for coding/agentic work; choose Fable 5 only when maximum capability is required. **Mythos 5** (`claude-mythos-5`), available only in limited release through Project Glasswing (invitation-only, no self-serve), shares Fable 5's specs and pricing **but without the safety classifiers** (so it never returns the `refusal` stop reason); it is the successor to Claude Mythos Preview (`claude-mythos-preview`). **Sonnet 5** (`claude-sonnet-5`, $3 / $15, with an introductory price of $2 / $10 through 2026-08-31) is the current Sonnet tier, replacing Sonnet 4.6. Adaptive thinking is ON by default (it runs in adaptive mode even when `thinking` is omitted; `budget_tokens` returns 400), and `effort` ranges `low`–`max` (the first time `xhigh` is available at the Sonnet tier). Due to the new tokenizer, the same text consumes about 30% more tokens than under Sonnet 4.6 (1M / 128K; sticker pricing is unchanged but effective cost will vary). Opus 4.7 / Opus 4.6 / Sonnet 4.6 are now legacy (still usable, but migration is recommended). Opus 4.8 **reduces wasted thinking tokens only when adaptive thinking is enabled**, improving long-horizon agentic coding, compaction recovery, and tool triggering relative to Opus 4.7. The 1M context window **reached GA for Opus 4.6 / Sonnet 4.6 on 2026-03-13** (no header required, standard pricing), and Opus 4.7 / 4.8 default to 1M as well. The legacy beta header `context-1m-2025-08-07` was removed for Sonnet 4.5 / Sonnet 4 on 2026-04-30 and no longer has any effect. Dateless IDs from the 4.6 generation onward (e.g. `claude-opus-4-8`) are also pinned snapshots, not evergreen pointers. **Deprecation**: Opus 4.1 (`claude-opus-4-1-20250805`) is scheduled to retire on 2026-08-05. Sonnet 4 (`claude-sonnet-4-20250514`) / Opus 4 (`claude-opus-4-20250514`) had an original retirement date of 2026-06-15, which as of today (2026-07-05) has already passed — migrate immediately to `claude-opus-4-8` / `claude-sonnet-5` if you have not already.
+**Opus 5** (`claude-opus-5`) is now the current **Opus-tier flagship**, replacing Opus 4.8 as a drop-in upgrade at the same $5 / $25 price, 1M context, and 128K max output. Migration is a model-ID swap plus prompt re-tuning, with two breaking changes: (1) **thinking is on by default** — a request that omits `thinking` now thinks, and since `max_tokens` caps thinking *plus* response text, a workload sized tightly around its answer on Opus 4.8 can truncate; (2) **`thinking: {type: "disabled"}` is capped at `effort` `high`** and returns 400 at `xhigh`/`max` (validated per request). It also lowers the **minimum cacheable prompt to 512 tokens** (from 1024), supports the full `low`–`max` effort ladder, adds the `fallbacks: "default"` scalar form (beta `server-side-fallback-2026-07-01`) that routes refusals by category automatically, and adds **mid-conversation tool changes** (beta `mid-conversation-tool-changes-2026-07-01`) — `tool_addition` / `tool_removal` blocks on a `role: "system"` message that change the tool set between turns without invalidating the prompt cache. Two operational caveats: **Opus 5 draws on a rate-limit bucket separate from the combined Opus 4.x pool**, and **Priority Tier does not cover it** (a Priority Tier request naming Opus 5, Sonnet 5, Mythos 5, or Mythos Preview fails validation). Anthropic's highest-performing widely released model, however, is **Claude Fable 5** (`claude-fable-5`, $10 / $50), which sits above the Opus tier but has different API behavior (thinking always ON so the `thinking` parameter is omitted, sampling parameters like `temperature` are not allowed, and 30-day data retention is required). Opus 5 is the default for coding/agentic work; choose Fable 5 only when maximum capability is required. **Mythos 5** (`claude-mythos-5`), available only in limited release through Project Glasswing (invitation-only, no self-serve), shares Fable 5's specs and pricing **but without the safety classifiers** (so it never returns the `refusal` stop reason); it is the successor to Claude Mythos Preview (`claude-mythos-preview`). **Sonnet 5** (`claude-sonnet-5`, $3 / $15, with an introductory price of $2 / $10 through 2026-08-31) is the current Sonnet tier, replacing Sonnet 4.6. Adaptive thinking is ON by default (it runs in adaptive mode even when `thinking` is omitted; `budget_tokens` returns 400), and `effort` ranges `low`–`max` (the first time `xhigh` is available at the Sonnet tier). Due to the new tokenizer, the same text consumes about 30% more tokens than under Sonnet 4.6 (1M / 128K; sticker pricing is unchanged but effective cost will vary). Opus 4.8 / Opus 4.7 / Opus 4.6 / Sonnet 4.6 are now legacy (still usable, and Opus 4.8 remains the recommended target for cyber-adjacent work, but migration to Opus 5 is otherwise recommended). Opus 4.8 **reduces wasted thinking tokens only when adaptive thinking is enabled**, improving long-horizon agentic coding, compaction recovery, and tool triggering relative to Opus 4.7. The 1M context window **reached GA for Opus 4.6 / Sonnet 4.6 on 2026-03-13** (no header required, standard pricing), and Opus 4.7 / 4.8 default to 1M as well. The legacy beta header `context-1m-2025-08-07` was removed for Sonnet 4.5 / Sonnet 4 on 2026-04-30 and no longer has any effect. Dateless IDs from the 4.6 generation onward (e.g. `claude-opus-4-8`) are also pinned snapshots, not evergreen pointers. **Deprecation**: Opus 4.1 (`claude-opus-4-1-20250805`) is scheduled to retire on 2026-08-05. Sonnet 4 (`claude-sonnet-4-20250514`) / Opus 4 (`claude-opus-4-20250514`) had an original retirement date of 2026-06-15, which has already passed — migrate immediately to `claude-opus-5` / `claude-sonnet-5` if you have not already.
 
 ## Prompt caching — the single most important optimization
 
@@ -57,7 +58,7 @@ Placing cache breakpoints on static system prompts, documents, and tool definiti
 
 ```python
 message = client.messages.create(
-    model="claude-opus-4-8",
+    model="claude-opus-5",
     max_tokens=1024,
     system=[
         {"type": "text", "text": "You are a helpful assistant."},
@@ -72,7 +73,7 @@ message = client.messages.create(
 ```
 
 - **TTL**: default 5 minutes / extended 1 hour (**GA as of 2025-08-13, no header required**; the legacy beta header `extended-cache-ttl-2025-04-11` has been removed)
-- **Minimum cacheable length**: **4,096 tokens** for Opus 4.8 / 4.7 / 4.6 / Haiku 4.5; **2,048 tokens** for Fable 5 / Sonnet 4.6; 1,024 tokens for the Sonnet 4.5 series. Prefixes shorter than this are silently not cached even if a breakpoint is set (`cache_creation_input_tokens: 0` with no error)
+- **Minimum cacheable length — not monotonic across generations**, so check per model: **512 tokens** for Opus 5 / Fable 5 / Mythos 5; **1,024** for Opus 4.8 / Sonnet 5 / Sonnet 4.6 / Sonnet 4.5; **2,048** for Opus 4.7; **4,096** for Opus 4.6 / Opus 4.5 / Haiku 4.5. Prefixes shorter than this are silently not cached even if a breakpoint is set (`cache_creation_input_tokens: 0` with no error). Opus 5 halving the Opus 4.8 minimum means prompts previously written off as uncacheable now create entries with no code change
 - **Breakpoint limit**: maximum 4 per request
 - **Invalidation**: any change to content before a breakpoint invalidates the cache from that point onward
 - **Eligible blocks**: text, images, and PDFs in `system` / `messages.content`, and tool definitions
@@ -120,24 +121,35 @@ tools = [
 
 ## Extended / Adaptive Thinking
 
-From Opus 4.6 onward, **adaptive thinking** is recommended. On Opus 4.7 / Opus 4.8, passing `thinking: {type: "enabled", budget_tokens: N}` returns a **400 error** (rejected, not merely deprecated). Opus 4.7 / 4.8 do not support extended thinking at all — only adaptive is supported. **Adaptive thinking is OFF by default.** Without explicitly setting `thinking={"type": "adaptive"}`, the model runs without thinking.
+From Opus 4.6 onward, **adaptive thinking** is recommended. On Opus 5 / Opus 4.8 / 4.7 / Fable 5 / Sonnet 5, passing `thinking: {type: "enabled", budget_tokens: N}` returns a **400 error** (rejected, not merely deprecated) — only adaptive is supported.
 
-On Opus 4.7 / Opus 4.8, setting `temperature` / `top_p` / `top_k` to a **non-default value** returns a 400 error. Omit these and steer behavior via the prompt instead.
+**Whether adaptive is ON by default differs by model, and this is the most common migration trap:**
+
+| Model | `thinking` omitted | `{type: "disabled"}` |
+|---|---|---|
+| **Opus 5** | Runs **adaptive** (thinking is on by default) | Accepted only at `effort` ≤ `high`; **400 at `xhigh`/`max`** |
+| Opus 4.8 / 4.7 | Runs **without** thinking — set `{type: "adaptive"}` explicitly | Accepted |
+| Sonnet 5 | Runs adaptive | Accepted |
+| Fable 5 | Runs adaptive (always on) | **400** — omit the parameter instead |
+
+Because `max_tokens` caps thinking *plus* response text, an Opus 4.8 workload that never set `thinking` and sized `max_tokens` tightly around its answer can **truncate mid-response on Opus 5**. Revisit `max_tokens` on every such route.
+
+On Opus 5 / Opus 4.8 / 4.7 / Fable 5, setting `temperature` / `top_p` / `top_k` to a **non-default value** returns a 400 error. Omit these and steer behavior via the prompt instead.
 
 ```python
-# Opus 4.8: adaptive thinking + effort specification
+# Opus 5: thinking is on by default — this makes it explicit
 message = client.messages.create(
-    model="claude-opus-4-8",
+    model="claude-opus-5",
     max_tokens=16000,
-    thinking={"type": "adaptive"},
-    output_config={"effort": "medium"},  # low / medium / high / xhigh / max (Opus 4.8 defaults to high)
+    thinking={"type": "adaptive", "display": "summarized"},
+    output_config={"effort": "high"},  # low / medium / high / xhigh / max (default high)
     messages=[{"role": "user", "content": "Complex problem..."}],
 )
 ```
 
-The `effort` parameter replaces `budget_tokens` and is passed **under `output_config`** (not at the top level). Values are `low` / `medium` / `high` / `xhigh` / `max`. `xhigh` was added with Opus 4.7 (recommended for coding/agentic work), and `max` is available from Opus 4.6 onward and on Sonnet 4.6 (not available on Haiku 4.5). Default is `high` (equivalent to omitting it).
+The `effort` parameter replaces `budget_tokens` and is passed **under `output_config`** (not at the top level). Values are `low` / `medium` / `high` / `xhigh` / `max`. `xhigh` was added with Opus 4.7 (recommended for coding/agentic work) and is available on Opus 5 / 4.8 / 4.7, Fable 5, and Sonnet 5; Opus 4.6 and Sonnet 4.6 have `max` but not `xhigh` (not available on Haiku 4.5). Default is `high` (equivalent to omitting it). On Opus 5, start at `xhigh` for coding/agentic work and `high` elsewhere, **then sweep downward** — `low` and `medium` are unusually strong on this model, so effort defaults carried over from a prior model are rarely right.
 
-**Task budgets (beta, Opus 4.7 / 4.8)**: communicates an approximate total token target to the model for the entire agentic loop (thinking + tool calls + tool results + final output). While `max_tokens` is a hard cap, `task_budget` is an advisory target the model is aware of. Attach the beta header `task-budgets-2026-03-13` and specify e.g. `output_config={"effort": "high", "task_budget": {"type": "tokens", "total": 128000}}` (minimum 20k).
+**Task budgets (beta, Opus 5 / Fable 5 / Sonnet 5 / Opus 4.8 / 4.7)**: communicates an approximate total token target to the model for the entire agentic loop (thinking + tool calls + tool results + final output). While `max_tokens` is a hard cap, `task_budget` is an advisory target the model is aware of. Attach the beta header `task-budgets-2026-03-13` and specify e.g. `output_config={"effort": "high", "task_budget": {"type": "tokens", "total": 128000}}` (minimum 20k).
 
 Opus 4.7 changes **the default for `thinking.display` to `"omitted"`** (Opus 4.6 defaulted to `"summarized"`). To display thinking content during streaming, explicitly set `"display": "summarized"`.
 
@@ -156,7 +168,7 @@ batch = client.messages.batches.create(
         {
             "custom_id": "req-1",
             "params": {
-                "model": "claude-opus-4-8",
+                "model": "claude-opus-5",
                 "max_tokens": 1024,
                 "messages": [{"role": "user", "content": "..."}],
             },
@@ -192,7 +204,7 @@ file = client.beta.files.upload(
 )
 
 message = client.beta.messages.create(
-    model="claude-opus-4-8",
+    model="claude-opus-5",
     max_tokens=1024,
     messages=[{
         "role": "user",

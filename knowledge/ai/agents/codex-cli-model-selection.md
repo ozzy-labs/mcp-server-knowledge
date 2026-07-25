@@ -1,14 +1,16 @@
 ---
-reviewed: 2026-07-12
+reviewed: 2026-07-25
 tags: [ai-agent, ai-workflow, commercial]
-aliases: [codex-model, model_reasoning_effort, gpt-5.6, gpt-5.5, codex-usage, codex-model-fallback]
+aliases: [codex-model, model_reasoning_effort, gpt-5.6, gpt-5.5, codex-usage, codex-model-fallback, service_tier]
 ---
 
 # Codex CLI Model Selection, Reasoning Effort, Fallback, and Usage Management
 
 This article covers Codex CLI's model selection ("which model, at which scope, how to switch"), reasoning effort (depth of reasoning) settings, whether a **fallback** exists when a model is unavailable, and observing **usage** (ChatGPT plan quota / API metered billing). For the CLI's general specification, see [`codex-cli.md`](codex-cli.md); for Claude Code's equivalent mechanism (for comparison), see [`claude-code-model-selection.md`](claude-code-model-selection.md).
 
-> The model lineup in this article reflects **rust-v0.144.1 (2026-07-09)**. Check the `/model` picker or the official [Models](https://developers.openai.com/codex/models) page for the latest.
+> The model lineup in this article reflects **rust-v0.145.0 (2026-07-21)**. Check the `/model` picker or the official [Models](https://learn.chatgpt.com/codex/models) page for the latest.
+>
+> **Docs moved.** `developers.openai.com/codex/*` now 308-redirects to **`learn.chatgpt.com/codex/*`**, and the paths were restructured at the same time (e.g. the config reference is `learn.chatgpt.com/codex/config-file/config-reference`, not `/codex/config-reference`). Old links still resolve via the redirect, but update bookmarks and scripts.
 
 ## Scopes for Model Selection
 
@@ -17,27 +19,40 @@ Model and reasoning effort can be specified at the following **scopes**, and **a
 | Scope | How to specify | Type |
 |---|---|---|
 | **CLI flag (one-off)** | `codex -m <model>` / `--model`, `-c model_reasoning_effort="high"` (`--config`) | Manual, applies only to that invocation, **highest priority** |
-| **`/model` (in-session)** | Switch model + adjust reasoning level via the TUI `/model` command | Manual, applies only to that session |
+| **`/model` (in-session)** | Switch model via the TUI `/model` command; **`/reasoning` sets the effort level separately** | Manual, applies only to that session |
 | **profile** | Select `[profiles.<name>]` (or `$CODEX_HOME/<name>.config.toml`) via `--profile` / `-p` | Pre-configured, overrides per profile |
 | **project config** | `model` / `model_reasoning_effort` in the repo's `.codex/config.toml` | Pre-configured, per project |
 | **user config** | `model` / `model_reasoning_effort` in `~/.codex/config.toml` (`$CODEX_HOME`) | Pre-configured, global default |
-| **subagent** | `model` / `model_reasoning_effort` in the agent file frontmatter under `~/.codex/agents/` (personal) / `.codex/agents/` (project) | Pre-configured; **inherits the parent session if omitted** |
+| **subagent** | Per-agent TOML file under `~/.codex/agents/` (personal) / `.codex/agents/` (project), plus `[agents]` defaults | Pre-configured; **inherits the parent session if omitted** |
 
-**Priority (highest → lowest)**: CLI `-c` / `--model` → profile (`--profile`) → project `.codex/config.toml` → user `~/.codex/config.toml` → built-in default. A subagent uses the value in its own frontmatter if present; otherwise it inherits the parent session's model / effort.
+**Priority (highest → lowest)**: CLI `-c` / `--model` → profile (`--profile`) → project `.codex/config.toml` → user `~/.codex/config.toml` → built-in default.
+
+**Subagent resolution** is its own chain: explicit spawn values → the custom agent's TOML file → `[agents]` defaults in the parent config → parent session values. Each agent file is a standalone TOML defining one agent, and requires `name`, `description`, and `developer_instructions`; it may also override model / reasoning effort. `sandbox_mode`, `mcp_servers`, and `skills.config` inherit from the parent unless the file overrides them.
+
+```toml
+# ~/.codex/config.toml
+[agents]
+enabled = true                                   # multi-agent tools (default true)
+default_subagent_model = "gpt-5.6-terra"
+default_subagent_reasoning_effort = "medium"
+max_concurrent_threads_per_session = 4
+```
+
+Other `[agents]` keys: `max_threads`, `interrupt_message`, and per-agent `agents.<name>.config_file` / `agents.<name>.description`.
 
 ```toml
 # ~/.codex/config.toml
 model = "gpt-5.6-sol"
 model_reasoning_effort = "medium"   # minimal / low / medium / high / xhigh
 
-[profiles.fast]
-model = "gpt-5.4-mini"
+[profiles.quick]                     # name it something other than "fast" —
+model = "gpt-5.6-luna"               # `/fast` is the separate service-tier toggle
 model_reasoning_effort = "low"
 ```
 
 ```bash
-codex -m gpt-5.4 -c model_reasoning_effort="high" "..."   # one-off override
-codex --profile fast                                        # select a profile
+codex -m gpt-5.6-terra -c model_reasoning_effort="high" "..."   # one-off override
+codex --profile quick                                          # select a profile
 ```
 
 ## Current Models
@@ -50,30 +65,50 @@ The **GPT-5.6 family** became generally available across ChatGPT / Codex / the O
 | `gpt-5.6-terra` | Balanced | Everyday work; performance competitive with `gpt-5.5` at a lower cost |
 | `gpt-5.6-luna` | Fast and affordable | Strong capability at the family's lowest cost |
 | `gpt-5.5` | Previous-generation frontier | The prior recommended default; still selectable as a legacy option |
-| `gpt-5.4` / `gpt-5.4-mini` | Flagship / lightweight | `gpt-5.4-mini` stays the responsiveness-focused choice **recommended for subagents** |
+| `gpt-5.4` / `gpt-5.4-mini` | Still selectable, no longer highlighted | `gpt-5.4-mini` is the "fast, efficient mini model for responsive coding tasks and subagents" |
 | `gpt-5.3-codex-spark` | Research preview | Near-real-time iterative coding, text-only. **ChatGPT Pro only** |
 
-- **Default**: When no model is specified, each surface (CLI / IDE / Cloud) picks its recommended model (currently `gpt-5.6-sol`) — a static default, not runtime automatic failover (see below).
+- **Default**: When no model is specified, each surface (CLI / IDE / Cloud) picks its recommended model (currently `gpt-5.6-sol`) — a static default, not runtime automatic failover (see below). Since rust-v0.145.0, **`gpt-5.6-sol` is also the default model for Amazon Bedrock** (which gained experimental managed login, custom endpoint, and auth support in the same release).
+- **Subagent recommendation shifted to the 5.6 family**: rust-v0.145.0 "migrated bundled GPT-5.4 selections and internal uses to the corresponding GPT-5.6 Terra and Luna variants." The subagents doc now recommends `gpt-5.6` for demanding multi-step work needing planning and validation, and **`gpt-5.6-terra` for speed-focused exploration, scanning, or lightweight parallel work** — the role `gpt-5.4-mini` used to fill.
 - **Deprecated**: `gpt-5.3-codex` and `gpt-5.2` were **deprecated as user-selectable models in Codex under ChatGPT sign-in on 2026-05-26** (separate from using legacy model IDs via API key). Migrate to a current GPT-5.6 model.
 
 ## Reasoning Effort (`model_reasoning_effort`)
 
 Reasoning depth is specified as `model_reasoning_effort` via config, CLI, or subagent frontmatter.
 
-- **Config values**: `minimal` / `low` / `medium` / `high` / `xhigh`. The official sample config uses `medium` as an example (the reference does not explicitly declare a "default value").
-- **`/model` picker for GPT-5.6** exposes six levels — **Low / Medium (default) / High / Extra High / Max / Ultra**. `max` gained first-class support in Codex CLI **rust-v0.143.0**. **`ultra` is a multi-agent mode rather than a plain effort level**: it uses subagents to handle separate parts of a complex task in parallel (watch usage — high parallelism can spike consumption).
-- **Note the doc lag**: the config-reference `model_reasoning_effort` enum still lists only `minimal`–`xhigh`; `max` / `ultra` are exposed through the picker on GPT-5.6, and config-level acceptance of them is not yet reflected in the reference.
-- **`xhigh` is model-dependent** (Responses API only, and only on models that support it).
-- `model_reasoning_summary` (`auto` / `concise` / `detailed` / `none`) can also be used to control reasoning summary output.
-- `/model` allows adjusting the reasoning level at the same time as switching models.
+- **Config-reference enum**: `minimal | low | medium | high | xhigh` — "Adjust reasoning effort for supported models (Responses API only; `xhigh` is model-dependent)." No default is declared; the sample config uses `medium`.
+- **Picker levels for GPT-5.6** — **Low / Medium (default) / High / Extra High / Max / Ultra**. `max` gained first-class support in **rust-v0.143.0**. **`ultra` is a multi-agent mode rather than a plain effort level**: it uses subagents to handle separate parts of a complex task in parallel. Since rust-v0.145.0 the CLI **warns when you select Ultra** that high multi-agent concurrency can increase usage quickly.
+- **The doc lag persists at top level, but is resolved for subagents**: the top-level `model_reasoning_effort` enum still stops at `xhigh`, while the subagents doc documents `ultra` / `max` / `xhigh` / `high` / `medium` / `low` as valid per-agent reasoning-effort values.
+- `model_reasoning_summary` (`auto` / `concise` / `detailed` / `none`) controls reasoning summary output.
+- **`/reasoning` is now a separate slash command** ("choose the reasoning effort for the current chat") alongside `/model` ("choose the model for the current chat").
+
+## Fast Mode (`service_tier`) — Codex Now Has a Speed Axis Too
+
+Codex gained a speed setting that is **independent of model and reasoning effort** — the direct analogue of Claude Code's `/fast`. It buys latency with credits, not intelligence.
+
+- **1.5x faster**, supported on **GPT-5.6 / GPT-5.5 / GPT-5.4**.
+- **Credit multiplier vs the Standard rate: 2.5x on GPT-5.6 / 5.5, 2x on GPT-5.4.**
+- **Not available with API-key auth** — API keys bill by token price instead; the API-side analogue is Priority Processing (2x token rate on GPT-5.6, separate billing mechanics).
+- Available in the ChatGPT desktop app, Codex CLI, and the IDE extension when signed in with ChatGPT.
+
+```toml
+# ~/.codex/config.toml
+service_tier = "fast"   # preferred service tier for new turns; `fast` maps to the request value `priority`
+
+[features]
+fast_mode = true
+```
+
+In-session: `/fast on` / `/fast off` / `/fast status`. `codex-spark` (`gpt-5.3-codex-spark`) is a *different* lever — a lightweight model for near-instant iteration, ChatGPT Pro only during the research preview — not a speed tier applied to your current model.
 
 ## Fallback — Codex Has No Automatic Fallback
 
 **Important**: Codex has **no** documented mechanism to "automatically switch to a different model when the specified model is unavailable." There is no equivalent of Claude Code's `fallbackModel` (automatic availability-based switching).
 
 - The statement "falls back to the recommended model when unspecified" refers to **static default selection**, not per-request automatic failover on overload / rate-limit / unavailability.
-- When `gpt-5.4` is described as a "fallback," it means a **manual alternative selected via `/model`** when not choosing `gpt-5.5` / when it hasn't rolled out to the account yet. Since `gpt-5.5` rolls out in stages, "an alternative for when it's unavailable" is a matter of account availability, not automatic switching.
-- Therefore, the only way to work around overload / rate-limit on a model is to **manually switch via `/model`** or use different profiles. This is the **biggest difference from Claude Code** (contrast with the two-tier fallback described in [`claude-code-model-selection.md`](claude-code-model-selection.md)).
+- When an older model is described as a "fallback," it means a **manual alternative selected via `/model`** when the newer one hasn't rolled out to the account yet — a matter of account availability, not automatic switching.
+- Therefore, the only way to work around overload / rate-limit on a model is to **manually switch via `/model`** or use different profiles. This remains the **biggest difference from Claude Code** (contrast with the two-tier fallback described in [`claude-code-model-selection.md`](claude-code-model-selection.md)) — and now the *only* major one, since Codex has gained its own fast-mode axis.
+- **One narrow exception exists as of rust-v0.145.0**: when resuming a ChatGPT thread whose compaction references a *retired* model, Codex recovers by retrying with the currently selected model. That is a resume-path repair, not general availability failover.
 
 ## Usage and Rate Limits
 
@@ -84,16 +119,22 @@ Rate-limited models differ depending on the billing path.
 | **ChatGPT plan** (Free / Go / Plus / Pro / Business / Enterprise / Edu) | Rolling **5-hour** window (shared between local CLI messages and Cloud tasks) + **weekly** cap |
 | **OpenAI API key** | **Metered billing** (pay only for tokens used, no fixed plan quota) |
 
-- **`/usage`** (v0.140+): Shows the account's token usage and rate-limit status within the CLI. `/status` also shows remaining quota within a session.
-- **Rate-limit reset banking** (Plus / Pro only): Unused resets are banked and usable for 30 days. As of **rust-v0.144.0**, banked reset credits show their type and expiration and let you choose which credit to redeem.
-- **Model choice affects how far quota stretches**: Switching to `gpt-5.4` / `gpt-5.4-mini` can extend the local-message usage cap (depending on the model switched from). Smaller models consume the shared quota more slowly (this does not raise the total cap).
+The 5-hour window is **shared across ChatGPT Work and Codex**, and across local CLI messages and Cloud tasks. Published per-plan message ranges on the Sol model, per 5 hours: **Plus 15–90, Pro 5x 75–450, Pro 20x 300–1,800, Business 15–90.**
+
+- **Observation surfaces**: `/status` in a session (chat ID, context usage, rate limits) and `/usage` in the CLI (v0.140+); the account-level dashboard is at **`chatgpt.com/codex/settings/usage`** — check it weekly to track pace against the weekly cap.
+- **Rate-limit reset banking** (Plus / Pro): unused resets are banked and usable for 30 days. As of **rust-v0.144.0**, banked reset credits show their type and expiration and let you choose which credit to redeem.
+- **Beyond the included limits**, additional credits can be purchased; Enterprise / Edu flexible pricing allows workspace credit purchases.
+- **Model choice affects how far quota stretches**: smaller models (**Luna**, **Mini**) consume the shared quota more slowly. This does not raise the total cap.
+- **Fast mode spends the same quota faster** — 2.5x on GPT-5.6 / 5.5, 2x on GPT-5.4 (see above). Treat it as a latency purchase, not a free toggle.
 
 ## Practical Patterns
 
-- **Default to `gpt-5.6-sol`**. For subagents or mechanical, responsiveness-focused work, drop to `gpt-5.4-mini` to conserve the shared quota.
-- **Reserve `xhigh` for hard tasks only** (supported models only). `low` / `medium` suffice for routine work.
-- **Turn model switches into profiles** (e.g., `[profiles.fast]` = `gpt-5.4-mini` + `low`) so `--profile` / `/model` can be used to quickly fall back. Since there's no automatic fallback, manual fallback via profiles is effectively the substitute.
-- Model downgrades never happen automatically even for credential / security-adjacent work (Codex has no behavior like Claude Fable's safety-driven automatic downgrade).
+- **Default to `gpt-5.6-sol`**. For subagents or mechanical, responsiveness-focused work, drop to `gpt-5.6-terra` (or `gpt-5.6-luna` / `gpt-5.4-mini`) to conserve the shared quota.
+- **Reserve `xhigh` for hard tasks only** (supported models only). `low` / `medium` suffice for routine work. Use `ultra` deliberately — it fans out to subagents and its concurrency is what spikes consumption, which is why the CLI now warns on selection.
+- **Set `[agents]` defaults rather than per-agent overrides** (`default_subagent_model` / `default_subagent_reasoning_effort` / `max_concurrent_threads_per_session`) so fan-out cost is bounded in one place.
+- **Turn model switches into profiles** (e.g., `[profiles.quick]` = `gpt-5.6-luna` + `low`) so `--profile` / `/model` can be used to quickly step down. Since there's no automatic fallback, manual fallback via profiles is effectively the substitute.
+- **Keep `service_tier = "fast"` out of the global config** — enable it per session with `/fast on` when latency actually matters, since the credit multiplier applies to every turn while it's on.
+- Model downgrades never happen automatically even for credential / security-adjacent work (Codex has no behavior like the Fable 5 / Opus 5 safety-driven automatic downgrade).
 
 ## Related
 
@@ -102,9 +143,12 @@ Rate-limited models differ depending on the billing path.
 
 Official:
 
-- [Models](https://developers.openai.com/codex/models) (current lineup, deprecations)
-- [Config reference](https://developers.openai.com/codex/config-reference) / [Config sample](https://developers.openai.com/codex/config-sample) (`model` / `model_reasoning_effort` / profiles)
-- [CLI reference](https://developers.openai.com/codex/cli) (`--model` / `-c` / `/model`)
-- [Subagents](https://developers.openai.com/codex/subagents) (agent file `model` / `model_reasoning_effort`)
-- [Pricing](https://developers.openai.com/codex/pricing) (ChatGPT plan quota / API metered billing / `/usage` / banking)
-- [Changelog](https://developers.openai.com/codex/changelog)
+All Codex docs moved from `developers.openai.com/codex/*` to `learn.chatgpt.com/codex/*` (308 redirect), with restructured paths:
+
+- [Models](https://learn.chatgpt.com/codex/models) (current lineup, deprecations, effort levels)
+- [Config reference](https://learn.chatgpt.com/codex/config-file/config-reference) / [Config sample](https://learn.chatgpt.com/codex/config-file/config-sample) (`model` / `model_reasoning_effort` / `service_tier` / `[agents]`)
+- [Speed](https://learn.chatgpt.com/codex/agent-configuration/speed) (fast mode, credit multipliers, `/fast`, codex-spark)
+- [CLI reference](https://learn.chatgpt.com/codex/cli) (`--model` / `-c` / `--profile`) / [Slash commands](https://learn.chatgpt.com/codex/reference/slash-commands) (`/model` / `/reasoning` / `/fast` / `/status`)
+- [Subagents](https://learn.chatgpt.com/codex/agent-configuration/subagents) (agent TOML files, `[agents]` defaults, recommended models per role)
+- [Pricing](https://learn.chatgpt.com/codex/pricing) (ChatGPT plan quota / per-plan message ranges / API metered billing / banking)
+- [Changelog](https://learn.chatgpt.com/codex/changelog)
