@@ -103,7 +103,7 @@ Plugins execute arbitrary code with your privileges — **install only from sour
 
 - [Agent Skills open standard](https://agentskills.io/)
 - Claude Code: [Plugins](https://code.claude.com/docs/en/plugins) / [Plugins reference](https://code.claude.com/docs/en/plugins-reference) / [Plugin marketplaces](https://code.claude.com/docs/en/plugin-marketplaces) / [Discover plugins](https://code.claude.com/docs/en/discover-plugins) / [Skills](https://code.claude.com/docs/en/skills)
-- Codex CLI: [Build plugins](https://developers.openai.com/codex/plugins/build) / [Plugins in Codex](https://help.openai.com/en/articles/20001256-plugins-in-codex)
+- Codex CLI: [Package your plugin](https://developers.openai.com/plugins/build/plugins) / [Plugins in Codex](https://help.openai.com/en/articles/20001256-plugins-in-codex)
 - Gemini CLI: [Extensions](https://geminicli.com/docs/extensions/) / [Releasing extensions](https://geminicli.com/docs/extensions/releasing/)
 - GitHub Copilot CLI: [Creating a plugin](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-creating) / [Plugin marketplace](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-marketplace)
 - Community npm distribution: [vercel-labs/skills](https://github.com/vercel-labs/skills) / [antfu/skills-npm](https://github.com/antfu/skills-npm)

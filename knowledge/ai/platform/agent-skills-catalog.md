@@ -120,7 +120,7 @@ Agent Skills is an open standard (`SKILL.md` requires `name` / `description`). T
 - [How we built our multi-agent research system](https://www.anthropic.com/engineering/built-multi-agent-research-system)
 - [anthropics/skills (official public skills)](https://github.com/anthropics/skills)
 - [anthropics/claude-code-security-review](https://github.com/anthropics/claude-code-security-review)
-- [Codex Agent Skills (OpenAI official)](https://developers.openai.com/codex/skills)
+- [Build skills (OpenAI official)](https://learn.chatgpt.com/codex/build-skills)
 - [openai/plugins (Codex official plugins)](https://github.com/openai/plugins) / [openai/role-specific-plugins](https://github.com/openai/role-specific-plugins)
 - [gotalab/cc-sdd](https://github.com/gotalab/cc-sdd) / [github/spec-kit](https://github.com/github/spec-kit)
 - Related: `ai/platform/agent-skills-best-practices.md` (authoring guidance), `ai/platform/agent-skills-spec.md` (spec), `ai/agents/codex-cli.md`, `ai/workflow/cc-sdd.md`, `ai/workflow/github-spec-kit.md`

@@ -175,7 +175,7 @@ Choosing based on contracted assets: already paying for ChatGPT → Codex Cloud;
 
 ## References
 
-- [OpenAI Codex Cloud](https://developers.openai.com/codex/cloud) / [Codex GitHub integration](https://developers.openai.com/codex/integrations/github) / [Codex GitHub Action](https://developers.openai.com/codex/github-action)
+- [Codex cloud](https://learn.chatgpt.com/codex/cloud) / [Codex code review in GitHub](https://learn.chatgpt.com/codex/third-party/github) / [Codex GitHub Action](https://learn.chatgpt.com/codex/github-action)
 - [OpenAI Terms of Use](https://openai.com/policies/terms-of-use/)
 - [anthropics/claude-code-action](https://github.com/anthropics/claude-code-action) (`docs/setup.md` / `docs/cloud-providers.md`)
 - [Anthropic Consumer Terms](https://www.anthropic.com/legal/consumer-terms) / [Legal and compliance](https://code.claude.com/docs/en/legal-and-compliance)
