@@ -65,7 +65,7 @@ codex remote-control pair # Generate a manual pairing code (v0.143+)
 | `/keymap` `/statusline` `/title` | UI customization |
 | `/help` `/quit` `/exit` | Help / exit |
 
-See the official full list at [Codex CLI slash commands](https://developers.openai.com/codex/cli/slash-commands).
+See the official full list at [Developer commands](https://learn.chatgpt.com/codex/developer-commands?surface=cli) (the page formerly titled "Codex CLI slash commands"; `?surface=cli` scopes it to the CLI).
 
 ## Configuration files
 

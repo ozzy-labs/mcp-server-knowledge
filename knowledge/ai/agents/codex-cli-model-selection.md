@@ -10,7 +10,7 @@ This article covers Codex CLI's model selection ("which model, at which scope, h
 
 > The model lineup in this article reflects **rust-v0.145.0 (2026-07-21)**. Check the `/model` picker or the official [Models](https://learn.chatgpt.com/codex/models) page for the latest.
 >
-> **Docs moved.** `developers.openai.com/codex/*` now 308-redirects to **`learn.chatgpt.com/codex/*`**, and the paths were restructured at the same time (e.g. the config reference is `learn.chatgpt.com/codex/config-file/config-reference`, not `/codex/config-reference`). Old links still resolve via the redirect, but update bookmarks and scripts.
+> **Docs moved.** Most of `developers.openai.com/codex/*` now 308-redirects to **`learn.chatgpt.com/codex/*`**, and the paths were restructured at the same time (e.g. the config reference is `learn.chatgpt.com/codex/config-file/config-reference`, not `/codex/config-reference`). Not everything landed on the new host: **plugin docs moved *within* `developers.openai.com`** instead, dropping the `/codex/` segment (`/codex/plugins/build` → `/plugins/build/plugins`). Resolve each old link individually rather than swapping the domain — old links still work via the redirect, so a stale link is not a broken one.
 
 ## Scopes for Model Selection
 
@@ -143,7 +143,7 @@ The 5-hour window is **shared across ChatGPT Work and Codex**, and across local 
 
 Official:
 
-All Codex docs moved from `developers.openai.com/codex/*` to `learn.chatgpt.com/codex/*` (308 redirect), with restructured paths:
+The pages below moved from `developers.openai.com/codex/*` to `learn.chatgpt.com/codex/*` (308 redirect), with restructured paths. Note that the OpenAI **API** docs (`developers.openai.com/api/docs/*`) and the **plugin** docs did not move to the new host:
 
 - [Models](https://learn.chatgpt.com/codex/models) (current lineup, deprecations, effort levels)
 - [Config reference](https://learn.chatgpt.com/codex/config-file/config-reference) / [Config sample](https://learn.chatgpt.com/codex/config-file/config-sample) (`model` / `model_reasoning_effort` / `service_tier` / `[agents]`)
