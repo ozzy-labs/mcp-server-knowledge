@@ -88,6 +88,7 @@ Practice tends to converge on a two-pronged setup: "**lightweight frameworks for
 | **Promptfoo** | OSS | Lightweight CI gate |
 | **LangSmith** | SaaS | Traces + eval, full multi-turn conversation evaluation |
 | **Braintrust** / **Arize Phoenix** / **Langfuse** | SaaS / OSS | Regression tracking, human annotation, [observability](agentic-observability.md) integration |
+| **waza** (Microsoft) | OSS (MIT) | Agent Skills specific — scaffolds skill + eval suite, 12 grader types, CI gate on regression. See [`../platform/waza.md`](../platform/waza.md) |
 
 ## Best practices
 

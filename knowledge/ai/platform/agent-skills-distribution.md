@@ -107,4 +107,5 @@ Plugins execute arbitrary code with your privileges — **install only from sour
 - Gemini CLI: [Extensions](https://geminicli.com/docs/extensions/) / [Releasing extensions](https://geminicli.com/docs/extensions/releasing/)
 - GitHub Copilot CLI: [Creating a plugin](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-creating) / [Plugin marketplace](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-marketplace)
 - Community npm distribution: [vercel-labs/skills](https://github.com/vercel-labs/skills) / [antfu/skills-npm](https://github.com/antfu/skills-npm)
+- Manifest-based distribution: [`apm.md`](apm.md) (Agent Package Manager — `apm.yml` + lockfile + policy) / [`ruler.md`](ruler.md) (fan one rule set out to 30+ agents)
 - Related: [`agent-skills-spec.md`](agent-skills-spec.md), [`agent-extensions.md`](agent-extensions.md), [`agent-skills-catalog.md`](agent-skills-catalog.md), [`agent-skills-best-practices.md`](agent-skills-best-practices.md)
