@@ -103,7 +103,9 @@ knowledge/
 ├── platforms/
 │   ├── github/     ← GitHub Actions / gh CLI / gh-extensions / actionlint
 │   ├── aws/        ← AWS CLI 等
-│   └── docker/     ← Docker 本体
+│   ├── cloudflare/ ← Workers / Wrangler / Storage / AI・MCP / Pages / DNS / Tunnel
+│   ├── docker/     ← Docker 本体
+│   └── vscode/     ← VS Code 拡張
 └── ai/
     ├── agents/     ← AI コーディングエージェント CLI（Claude Code, Codex, Gemini, Copilot 等）
     ├── platform/   ← AI プラットフォーム・SDK・プロトコル（Anthropic API, MCP 等）

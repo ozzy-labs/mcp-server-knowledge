@@ -15,6 +15,7 @@ export const TagSchema = z.enum([
   "ci",
   "cli",
   "cloud-hosted",
+  "cloudflare",
   "codegen",
   "commercial",
   "data-cli",
