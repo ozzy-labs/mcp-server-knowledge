@@ -155,7 +155,7 @@ A Worker can serve a static site and an API from one deployment. Assets are serv
 | `run_worker_first` | `false` (default), `true`, or an array of globs with `!` negation — use for auth, A/B tests, API routes |
 | `binding` | Exposes `env.ASSETS.fetch(request)` for programmatic serving |
 
-`.assetsignore` (gitignore syntax) excludes files from upload. Cloudflare's own guidance is **"for new projects, use Workers Static Assets instead of Pages"** — see [`cloudflare-pages.md`](cloudflare-pages.md) for the comparison and migration path.
+`.assetsignore` (gitignore syntax) excludes files from upload. Cloudflare's best-practices page states that Workers Static Assets is the recommended way to deploy static sites, SPAs, and full-stack apps, and that a **new project should use Workers rather than Pages** — see [`cloudflare-pages.md`](cloudflare-pages.md) for the comparison and migration path.
 
 ## Local development and testing
 

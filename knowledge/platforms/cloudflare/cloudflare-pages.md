@@ -48,12 +48,10 @@ Requests for static assets are free on Workers, so there is no cost penalty in m
 ```
 
 - `main` is optional: omit it for a pure static site
-- `not_found_handling`: `none` (default), `single-page-application` (serves `/index.html` with 200), `404-page`
-- `html_handling`: `auto-trailing-slash` (default), `force-trailing-slash`, `drop-trailing-slash`, `none`
-- `run_worker_first`: `true`, `false` (default), or globs with `!` negation — the replacement for `_routes.json`
+- `not_found_handling: "single-page-application"` is what reproduces a Pages SPA setup, and `run_worker_first` is what replaces `_routes.json`
 - `env.ASSETS.fetch(request)` serves an asset from Worker code
 
-Deploy with `wrangler deploy`; develop with `wrangler dev` or the Vite plugin. Details in [`cloudflare-workers.md`](cloudflare-workers.md#static-assets) and [`wrangler.md`](wrangler.md).
+The full key reference (`html_handling`, `not_found_handling`, `run_worker_first`, `binding`) lives in [`cloudflare-workers.md`](cloudflare-workers.md#static-assets); deployment and local development are in [`wrangler.md`](wrangler.md).
 
 ## Pages mechanics
 
