@@ -1,25 +1,46 @@
 ---
-reviewed: 2026-07-12
+reviewed: 2026-08-16
 tags: [library, typescript, ai-workflow]
 ---
 
 # MCP TypeScript SDK
 
-`@modelcontextprotocol/sdk` — the official TypeScript SDK implementing both server and client sides of the Model Context Protocol. This repository also uses it.
+The official TypeScript SDK implementing both server and client sides of the Model Context Protocol.
 
-Official: [github.com/modelcontextprotocol/typescript-sdk](https://github.com/modelcontextprotocol/typescript-sdk) / [npm](https://www.npmjs.com/package/@modelcontextprotocol/sdk)
+**As of 2026-07-27 the SDK ships as v2**: the monolithic `@modelcontextprotocol/sdk` package was split into `@modelcontextprotocol/server` and `@modelcontextprotocol/client` (both `2.0.0`), released alongside the [`2026-07-28` MCP spec revision](https://modelcontextprotocol.io/specification/2026-07-28). **v2 is the stable line.** `@modelcontextprotocol/sdk` v1.x (npm `latest` is `1.30.0`) lives on the long-lived `v1.x` branch and receives bug and security fixes for at least 6 months after v2's release. This repository is still on v1.
+
+Most of this article documents the v1 API; see [v2 and the 2026-07-28 spec revision](#v2-and-the-2026-07-28-spec-revision) at the end for the v2 surface and the migration path.
+
+Official: [github.com/modelcontextprotocol/typescript-sdk](https://github.com/modelcontextprotocol/typescript-sdk) / [v2 docs](https://ts.sdk.modelcontextprotocol.io/v2/) / [v1 docs](https://ts.sdk.modelcontextprotocol.io/) / npm [server](https://www.npmjs.com/package/@modelcontextprotocol/server) · [client](https://www.npmjs.com/package/@modelcontextprotocol/client) · [sdk (v1)](https://www.npmjs.com/package/@modelcontextprotocol/sdk)
 
 ## Installation and project setup
+
+### v2 (current stable line)
+
+```bash
+pnpm add @modelcontextprotocol/server zod   # server side
+pnpm add @modelcontextprotocol/client zod   # client side
+```
+
+- **Packages**: `@modelcontextprotocol/server` / `@modelcontextprotocol/client`, both `2.0.0`. All v2 packages share one version number
+- **Node.js**: `>= 20`. Also runs on Bun, Deno, and web-standard runtimes (Cloudflare Workers)
+- **Modules**: ESM-first, but a CommonJS build ships alongside, so `require("@modelcontextprotocol/server")` resolves natively
+- **Schemas**: [Standard Schema](https://standardschema.dev/) — Zod v4, Valibot, ArkType, or any compatible library
+- **Migration**: `npx @modelcontextprotocol/codemod@latest v1-to-v2 .`
+
+### v1 (legacy line, still supported)
 
 ```bash
 pnpm add @modelcontextprotocol/sdk zod
 ```
 
-- **Package**: `@modelcontextprotocol/sdk` (a single package with subpath imports per use case)
+- **Package**: `@modelcontextprotocol/sdk` (a single package with subpath imports per use case). Current npm `latest` is **1.30.0** (published 2026-07-27)
 - **Peer deps**: `zod ^3.25 || ^4.0` (required). Additionally `@cfworker/json-schema ^4.1.1` is an optional peer (needed only when using the `validation/cfworker` provider, e.g. on Cloudflare Workers)
 - **Node.js**: `>= 18` (20 LTS recommended)
 - **ESM only**: `"type": "module"` in `package.json`; `tsconfig.json` needs `"module": "Node16"` (or `NodeNext`) + `"moduleResolution": "Node16"`
 - **Subpath imports use the `.js` extension**: even from TS source, write `from "@modelcontextprotocol/sdk/server/mcp.js"`. As of v1.29.0, the top-level `./validation` (`/validation/ajv`, `/validation/cfworker`) and `./experimental` / `./experimental/tasks` (streaming elicitation/sampling) are also exposed
+
+> The sections from here to [Testing](#testing) document the **v1** API. v2's export map is flat (`.`, `./stdio`, `./validators/ajv`, `./validators/cf-worker`), so there is no `.js`-suffixed deep path to write.
 
 ## Server setup
 
@@ -51,6 +72,10 @@ const server = new McpServer(
 | `StdioServerTransport` | `server/stdio.js` | Local child process (launched by Claude Desktop, Claude Code, Codex CLI) |
 | `StreamableHTTPServerTransport` | `server/streamableHttp.js` | Remote/hosted (over HTTP) |
 | `SSEServerTransport` (deprecated) | `server/sse.js` | Legacy SSE, superseded by Streamable HTTP |
+
+The `2026-07-28` spec reclassifies the HTTP+SSE transport (soft-deprecated since `2025-03-26`) as formally **Deprecated** under the feature lifecycle policy. Use Streamable HTTP.
+
+In **v2**, serving is factory-based rather than transport-based: `serveStdio(createServer)` from `@modelcontextprotocol/server/stdio` owns the stdio loop, and `createMcpHandler(factory)` from `@modelcontextprotocol/server` is the web-standard `fetch`-shaped HTTP entry (`toNodeHandler(handler)` from `@modelcontextprotocol/node` adapts it to Node frameworks). `StdioServerTransport` + `server.connect(transport)` still works.
 
 ### Stdio caveat
 
@@ -98,7 +123,7 @@ server.registerTool(
 
 In the v1 series, pass a **shape object** like `{ x: z.number() }` rather than wrapping it in `z.object({...})`. The SDK internally wraps it as the equivalent of `z.object` and converts it to JSON Schema via `zod-to-json-schema`.
 
-> Passing `z.object(...)` causes double wrapping and breaks the JSON Schema. Note that v2 plans to flip this and expect an object instead.
+> Passing `z.object(...)` causes double wrapping and breaks the JSON Schema. **v2 flipped this**: `inputSchema` takes a full schema object (`z.object({ x: z.number() })`) from any Standard Schema library, and the codemod wraps existing raw shapes for you.
 
 ### `outputSchema`
 
@@ -231,10 +256,59 @@ it("calls greet", async () => {
 
 No sockets or subprocesses — schema validation, capability negotiation, and serialization all run end-to-end. A reasonable default for vitest.
 
+In **v2** the equivalent runs through the handler you actually deploy: build it with `createMcpHandler(createServer)` and hand `handler.fetch` to the client transport's `fetch` option, so nothing dials the network.
+
 ### Unit-testing handlers
 
 Pure logic can be tested by extracting the handler as a named function. It's fast but bypasses SDK validation, so **pair it with at least one in-process integration test per server**.
 
-## v1 / v2 notes
+## v2 and the 2026-07-28 spec revision
 
-The v2 series has moved from alpha to **beta** (current `2.0.0-beta.3` as of 2026-07). It splits the monolithic package into `@modelcontextprotocol/server` / `/client` / `/core` (shared internals) / `/node` (runtime / `InMemoryTransport` etc.), plus framework integrations `/express` / `/hono` / `/fastify`, and adds `/codemod` for migration (`npx @modelcontextprotocol/codemod@beta v1-to-v2 .`). v2 is ESM-only and requires **Node.js >= 20** (also runs on Bun / Deno). `inputSchema` changes from the v1 raw shape to accepting any **Standard Schema**-compatible library, not just Zod (e.g. Valibot, ArkType). The beta also adds runtime-neutral Bearer auth and OAuth discovery (RFC 9728 / RFC 8414). v2 **stable now targets the `2026-07-28` MCP spec release** (it slipped the earlier Q1 2026 target). Until then, **v1.x remains the production-supported line** — this article is based on **v1.29.0**, still the current npm `latest` — and v1.x is slated to receive bug/security fixes for at least 6 months after v2 ships.
+**v2 shipped 2026-07-27** — all packages at `2.0.0`, released alongside the `2026-07-28` MCP spec revision. `main` is now the v2 branch.
+
+### Package split
+
+| Package | Role |
+|---|---|
+| `@modelcontextprotocol/server` | Build servers (`McpServer`, `createMcpHandler`, `serveStdio`, auth helpers) |
+| `@modelcontextprotocol/client` | Build clients (transports, high-level helpers, OAuth helpers) |
+| `@modelcontextprotocol/core` | Public Zod `*Schema` constants (`core-internal` is private — never import it directly) |
+| `@modelcontextprotocol/node` / `/express` / `/hono` / `/fastify` | Thin runtime/framework adapters. The framework itself is now a **peer dependency** (v1 shipped it as a direct dep — install `express` / `hono` / `fastify` explicitly) |
+| `@modelcontextprotocol/server-legacy` | v1-era Express / SSE serving surface (`.`, `./auth`, `./sse`) |
+| `@modelcontextprotocol/codemod` | `npx @modelcontextprotocol/codemod@latest v1-to-v2 .` |
+
+All of these version together at `2.0.0`.
+
+### What changed in v2
+
+- **Node.js >= 20**; runs on Node.js, Bun, Deno, and Cloudflare Workers. ESM-first with a **CommonJS build alongside**, so Jest no longer needs a `moduleNameMapper` workaround
+- **Standard Schema** replaces the Zod-only surface: `inputSchema` / `outputSchema` / `argsSchema` take a full schema object, not a raw shape
+- `setRequestHandler` / `setNotificationHandler` take **method strings** instead of Zod schema constants; the v1 schema-first form throws a `TypeError` at registration
+- Renames: `McpError` → `ProtocolError`, `ErrorCode` → `ProtocolErrorCode`, `StreamableHTTPError` → `SdkHttpError`, `JSONRPCError` → `JSONRPCErrorResponse`, `RequestHandlerExtra` → `ServerContext` / `ClientContext`. The handler's `extra` parameter becomes `ctx` (`extra.requestInfo?.headers[...]` → `ctx.http?.req?.headers`, now a Web Standard `Headers`, so bracket access becomes `.get()`)
+- `instanceof` on SDK error classes works **across separately bundled copies** (brand-based via `Symbol.hasInstance`), with an explicit `X.isInstance(value)` guard as an alternative
+- Runtime-neutral **Bearer auth** (`requireBearerAuth`, `verifyBearerToken`) and **OAuth discovery serving** (`oauthMetadataResponse`; RFC 9728 Protected Resource Metadata + RFC 8414 AS metadata) for web-standard `fetch(request)` hosts
+- Experimental **tasks interception was removed** (SEP-2663 moved tasks to an official extension); the codemod flags those registrations rather than rewriting them
+
+### Serving the 2026-07-28 revision is opt-in
+
+Nothing in v2 puts a 2026-07-28 byte on the wire by default — a hand-constructed `Client` / `Server` / `McpServer` keeps speaking the 2025 era.
+
+- **Client**: `new Client({ ... }, { versionNegotiation: { mode: "auto" } })` probes with `server/discover` and falls back to the 2025 `initialize` handshake; `{ pin: "2026-07-28" }` is modern-only and never falls back. `client.getProtocolEra()` returns `"modern" | "legacy"`. The default performs no probe
+- **Server over HTTP**: `createMcpHandler(factory)` serves 2026-07-28 per request and, by default (`legacy: "stateless"`), also serves 2025-era traffic through the stateless idiom — one factory, one endpoint, both eras. An existing **sessionful** v1 setup routes in front of a strict entry (`legacy: "reject"`) via `isLegacyRequest(request)`
+
+### Spec 2026-07-28 highlights
+
+- **Sessions removed**: no `Mcp-Session-Id` header, no protocol-level sessions, and list endpoints no longer vary per connection. Cross-call state uses explicit server-minted handles passed as ordinary tool arguments (SEP-2567)
+- **Stateless**: the `initialize` / `notifications/initialized` handshake is gone. Every request carries `io.modelcontextprotocol/protocolVersion` and `io.modelcontextprotocol/clientCapabilities` in `_meta`; clients SHOULD send `clientInfo` and servers SHOULD stamp `io.modelcontextprotocol/serverInfo` in each result's `_meta` (SEP-2575)
+- **`server/discover`**: servers MUST implement it to advertise supported protocol versions, capabilities, and identity
+- **`subscriptions/listen`** replaces the HTTP GET endpoint and `resources/subscribe` / `unsubscribe`. SSE stream resumability (`Last-Event-ID`, event IDs) is removed — a broken stream means re-issuing the request with a new ID
+- **Multi Round-Trip Requests (MRTR)** replace server-initiated requests (`roots/list`, `sampling/createMessage`, `elicitation/create`): the server returns `resultType: "input_required"` carrying `inputRequests`, and the client retries the original request with `inputResponses` (SEP-2322). Every result now carries a required `resultType` (`"complete"` otherwise)
+- **Required headers** `Mcp-Method` and `Mcp-Name` on Streamable HTTP POSTs, plus `x-mcp-header` for custom headers derived from tool parameters (SEP-2243)
+- **Cache hints**: `ttlMs` and `cacheScope` (`"public"` / `"private"`) are required on `tools/list`, `prompts/list`, `resources/list`, `resources/read`, and `resources/templates/list` results (SEP-2549)
+- `ping`, `logging/setLevel`, and `notifications/roots/list_changed` are removed; log level is set per request via `io.modelcontextprotocol/logLevel` in `_meta`
+- Error codes renumbered into a reserved `-32020`–`-32099` MCP range; resource-not-found moves from `-32002` to `-32602`
+- **Deprecated**: Roots, Sampling, and Logging (SEP-2577); the HTTP+SSE transport; and **OAuth Dynamic Client Registration (RFC 7591)**, superseded by **Client ID Metadata Documents (CIMD)**. Authorization servers SHOULD include the RFC 9207 `iss` parameter and clients MUST validate it before redeeming the code (SEP-2468)
+
+### v1 status
+
+The rest of this article documents **v1.30.0** — npm `latest`, published 2026-07-27 — which remains the production line for existing code, including this repository. v1 still targets Node.js `>= 18`, keeps the `zod ^3.25 || ^4.0` peer range, and keeps the raw-shape `inputSchema`.

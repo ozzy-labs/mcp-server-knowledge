@@ -156,12 +156,16 @@ ai/platform/mcp-typescript-sdk:
   sources:
     docs:
       - https://modelcontextprotocol.io/docs
+      - https://ts.sdk.modelcontextprotocol.io/v2/
     github_releases:
       - modelcontextprotocol/typescript-sdk
     raw_files:
-      - modelcontextprotocol/typescript-sdk/HEAD/CHANGELOG.md
+      - modelcontextprotocol/typescript-sdk/HEAD/docs/migration/upgrade-to-v2.md
+      - modelcontextprotocol/typescript-sdk/HEAD/docs/protocol-versions.md
     npm:
       - "@modelcontextprotocol/sdk"
+      - "@modelcontextprotocol/server"
+      - "@modelcontextprotocol/client"
     related_internal:
       - ai/platform/mcp-protocol
 
