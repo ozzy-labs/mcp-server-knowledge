@@ -1,28 +1,28 @@
 ---
-reviewed: 2026-07-12
+reviewed: 2026-08-16
 tags: [ai-agent, ai-workflow, commercial, cloud-hosted]
 stability: research-preview
 ---
 
 # Claude Code Routines
 
-A mechanism for running Claude Code non-interactively on Anthropic-managed cloud infrastructure. The `/model` selector picks the model Claude uses on every run — the current Claude Code lineup is **Fable 5 / Opus 4.8 / Sonnet 5 / Haiku 4.5** (Sonnet 5 became the Claude Code default around v2.1.197), with up to **1M token context** — usable as a trigger-driven autonomous execution platform. A prompt + repository + connectors are saved as a single configuration and auto-launched by triggers. Available on Pro / Max / Team / Enterprise plans when **Claude Code on the web is enabled** (research preview).
+A mechanism for running Claude Code non-interactively on Anthropic-managed cloud infrastructure. The `/model` selector picks the model Claude uses on every run — the current Claude Code lineup is **Fable 5 / Opus 5 / Opus 4.8 / Sonnet 5 / Haiku 4.5** (Opus 5 is the default on Max / Team Premium / Enterprise pay-as-you-go and requires v2.1.219+; Sonnet 5 is the default on Pro / Team Standard / Enterprise subscription seats), with up to **1M token context** — usable as a trigger-driven autonomous execution platform. A prompt + repository + connectors are saved as a single configuration and auto-launched by triggers. Available on Pro / Max / Team / Enterprise plans when **Claude Code on the web is enabled** (research preview).
 
 Official: [Automate work with routines](https://code.claude.com/docs/en/routines)
 
 ## Key features
 
-- **Model selector & 1M context**: pick the run's model from the current lineup (Fable 5 / Opus 4.8 / Sonnet 5 / Haiku 4.5); large-context models can analyze dependencies across an entire large repository at once.
-- **fresh clone model**: each trigger clones the repository from the default branch, and changes are pushed to a `claude/`-prefixed branch. Enabling **Allow unrestricted branch pushes** also allows pushing to existing branches.
+- **Model selector & 1M context**: pick the run's model from the current lineup (Fable 5 / Opus 5 / Opus 4.8 / Sonnet 5 / Haiku 4.5); large-context models can analyze dependencies across an entire large repository at once.
+- **fresh clone model**: each trigger clones the repository from the default branch, and changes are pushed to a `claude/`-prefixed branch, which is always accepted. When the prompt directs Claude to push to another branch, Claude Code checks the push first and rejects it if the branch is protected on GitHub, if someone else has an open pull request from that branch, or if the branch carries commits authored by someone other than you.
 
 ### Related features (not Routines itself, but used alongside it)
 
-- **Dreaming** ([Managed Agents](https://platform.claude.com/docs/en/managed-agents/dreams)): a research-preview feature that reorganizes the memory store using past session logs as material. Same Claude Code ecosystem as Routines but a separate layer. At research-preview launch it supported `claude-opus-4-7` / `claude-sonnet-4-6` (both since superseded by Opus 4.8 / Sonnet 5; verify the current selectable set in the product).
-- **`/ultrareview`** ([a Claude Code core slash command](https://code.claude.com/docs/en/ultrareview)): a multi-lens pipeline that reviews the diff between the current branch and the default branch. Can also be invoked via Routines.
+- **Dreaming** ([Managed Agents](https://platform.claude.com/docs/en/managed-agents/dreams)): a research-preview feature that reorganizes the memory store using past session logs as material. Same Claude Code ecosystem as Routines but a separate layer. Supported models during the research preview are `claude-opus-5`, `claude-fable-5`, `claude-opus-4-8`, `claude-opus-4-7`, `claude-sonnet-5`, and `claude-sonnet-4-6`. Dream endpoints need the `dreaming-2026-04-21` beta header in addition to `managed-agents-2026-04-01`.
+- **`/code-review ultra`** ([ultrareview](https://code.claude.com/docs/en/ultrareview), research preview): a multi-agent cloud pipeline that reviews the diff between the current branch and the default branch, with every finding independently reproduced and verified. The command is now `/code-review ultra`; `/ultrareview` is an alias where the feature is available, and `claude ultrareview` is the non-interactive subcommand. It bills against usage credits (3 one-time free runs on Pro / Max, none on Team / Enterprise), roughly $5–25 per review afterward. Can also be invoked via Routines.
 
 ## Execution model
 
-- **Cloud execution**: runs on Anthropic-managed VMs (continues even if your local machine is offline).
+- **Cloud execution**: runs on Anthropic-managed VMs — or on your organization's [self-hosted environment](https://code.claude.com/docs/en/self-hosted-environments) (public beta on Team / Enterprise, v2.1.224+) when routed there — and continues even if your local machine is offline.
 - **Fully autonomous**: no approval prompts. There is no permission-mode picker either. Design assuming `AskUserQuestion`-style tools will not function.
 - **fresh clone**: each trigger clones the repository from the default branch.
 - **Belongs to a personal account**: a routine is tied to a personal claude.ai account and is not shared across a team. Commits/PRs are recorded under your own GitHub user, and connector operations are recorded under your own linked account as well.
@@ -41,16 +41,20 @@ Terminology distinction: a **routine** is "a configuration entity saved in the c
 | `/schedule list` | List all routines |
 | `/schedule update` | Modify an existing routine (directly specifying a cron expression, changing connectors, and toggling the `enabled` flag are all done here) |
 | `/schedule run` | Fire immediately |
+| `/schedule <question about a run>` | Ask about run history — Claude lists recent runs with status and links, and reads a run's log to explain what happened (requires v2.1.227+) |
+| `/schedule add a GitHub trigger to ...` | Attach a GitHub trigger to an existing routine (requires v2.1.225+; install the [Claude GitHub App](https://github.com/apps/claude) first) |
 
+- **`/routines` is an alias of `/schedule`** — the same command under either name.
 - **What `/schedule` really is**: a built-in Claude Code CLI slash command. In recent versions it is implemented as a bundled skill that internally calls claude.ai's management endpoints (list/get/create/update/run on `/v1/code/triggers`) using an **in-process OAuth token**. **There is no public REST API for routine management** (not even one intended for curl use). The only public API is the `/fire` firing endpoint described below.
 - **Disable / enable**: toggle `enabled` via `/schedule update` (`false` stops firing while keeping the configuration, `true` resumes it). Also possible via the **Repeats toggle** (pause/resume) on Web / Desktop.
 - **Deletion is not possible from the CLI** — only from the Web / Desktop detail page (past execution sessions remain even after deletion). Neither the CLI nor the public API has a delete action; the most the CLI can do is disable (`enabled: false`).
-- **The only trigger type the CLI can create is schedule**. Adding/editing API or GitHub triggers, and generating/revoking API tokens, are all only possible on the Web ([claude.ai/code/routines](https://claude.ai/code/routines)).
+- **The CLI creates schedule triggers, and since v2.1.225 can also attach GitHub triggers** to an existing routine (install the Claude GitHub App yourself first — the CLI does not prompt for it). Adding/editing API triggers and generating/revoking API tokens remain Web-only ([claude.ai/code/routines](https://claude.ai/code/routines)). One-off scheduling from the CLI is still rolling out and may not be available on every account.
 - Main causes of `/schedule` showing up as **"Unknown command"** (the CLI hides the command when requirements aren't met):
-  1. Authenticated via Console API key / Bedrock / Vertex / Foundry. `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` / `apiKeyHelper` in `settings.json` take precedence over claude.ai login, so remove them (`/schedule` requires claude.ai subscription login).
+  1. Authenticated via Console API key, an Anthropic profile / federation credential, or a cloud provider (Amazon Bedrock / Google Cloud's Agent Platform / Microsoft Foundry). `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` / `apiKeyHelper` in `settings.json` take precedence over claude.ai login, so remove them (`/schedule` requires claude.ai subscription login). With a Console API key or a profile the message is instead `/schedule is available with Claude for Enterprise — ask your admin about migrating from API-key access`; with a cloud-provider login it stays `Unknown command`.
   2. `DISABLE_TELEMETRY` / `DO_NOT_TRACK` / `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` / `DISABLE_GROWTHBOOK` blocking feature-flag retrieval.
   3. Inside a Claude Code on the web session (operate via the Web UI instead).
   4. CLI version below v2.1.81 (`claude update`).
+  5. Org policy disables Claude Code on the web, or an Owner turned off the **Routines** toggle. On v2.1.227+ the org toggle also hides `/schedule`; before that the command still appeared and claude.ai rejected the create/run.
 
 ### Field capability boundaries in the create body
 
@@ -60,7 +64,7 @@ The body of `POST /v1/code/triggers`, which `/schedule`'s create calls, is a **s
 
 | Item | Path within create body |
 |---|---|
-| model (e.g. `claude-opus-4-8[1m]`) | `job_config.ccr.session_context.model` |
+| model (e.g. `claude-opus-5`) | `job_config.ccr.session_context.model` |
 | Custom instructions (full prompt text) | `job_config.ccr.events[].data.message.content` |
 | Target repository | `job_config.ccr.session_context.sources[].git_repository.url` |
 | allowed_tools | `job_config.ccr.session_context.allowed_tools` |
@@ -69,9 +73,9 @@ The body of `POST /v1/code/triggers`, which `/schedule`'s create calls, is a **s
 
 → **Both model and instructions can be set via CLI/API.** Don't misread the public docs' conversational-flow description as implying "instructions/model are Web-UI-only." `/schedule` (CLI) can register **everything except `allow_unrestricted_git_push`**.
 
-**Web UI only** (rejected if included in the create body):
+**Not settable in the create body** (rejected by the strict schema):
 
-- **`allow_unrestricted_git_push`** (the Web UI's **Allow unrestricted branch pushes**) is rejected by the strict schema if passed in the create body:
+- **`allow_unrestricted_git_push`** is rejected by the strict schema if passed in the create body:
 
   ```text
   HTTP 400
@@ -79,7 +83,7 @@ The body of `POST /v1/code/triggers`, which `/schedule`'s create calls, is a **s
    "message":"allow_unrestricted_git_push: Extra inputs are not permitted"}}
   ```
 
-  This permission can only be configured in the Web's Permissions settings. Since it's the setting that allows pushing to existing branches other than `claude/`-prefixed ones (e.g. `main`), a design where "the routine auto-merges its own PR into main" cannot be completed via CLI registration alone — this permission must be granted once on the Web.
+  Branch-push permission is no longer documented as a per-routine toggle. The current documented rule is that `claude/`-prefixed pushes are always accepted, and a push to any other branch (e.g. `main`) is checked first and rejected when the branch is protected on GitHub, when someone else has an open pull request from it, or when it carries commits authored by someone other than you. A design where "the routine auto-merges its own PR into `main`" therefore hinges on those three checks rather than on a permission granted once on the Web.
 
 ### API — firing only, no CRUD
 
@@ -96,7 +100,8 @@ curl -X POST https://api.anthropic.com/v1/claude_code/routines/trig_01ABCDEFGHJK
 
 - The base URL is **`https://api.anthropic.com`**, with path `/v1/claude_code/routines/{routine_id}/fire`.
 - Auth uses a **per-routine bearer token** (generated via `Generate token` in the Web's API trigger settings — shown only once, cannot be retrieved again; use `Regenerate` / `Revoke` to update).
-- The `text` field in the body is arbitrary free text and **is not parsed** (even if you pass JSON, it arrives as a string — used to pass alert bodies or failure logs).
+- The `text` field in the body is arbitrary free text and **is not parsed** (even if you pass JSON, it arrives as a string — used to pass alert bodies or failure logs). Maximum **65,536 characters**; exceeding it returns `400 invalid_request_error`, as does firing a paused routine.
+- **`text` arrives wrapped in a `<routine-fire-payload>` block** labelled as untrusted data, so the run ignores instructions inside it unless the routine's saved prompt opts in explicitly (e.g. "Investigate the alert described in the routine-fire-payload block"). Otherwise the text is inert context. The same wrapping applies to text supplied with **Run now** on the Web. Since anyone holding the bearer token can send `text`, the wrapper keeps a leaked token from injecting direct instructions.
 - A successful response is returned **immediately at session creation** (it does not wait for completion):
 
   ```json
@@ -118,9 +123,9 @@ Multiple triggers can be combined on a single routine (e.g. a nightly schedule +
 
 | Trigger | Purpose | Creation/edit surface |
 |---|---|---|
-| **Scheduled** | Recurring or one-off execution. Minimum interval is **1 hour** (shorter is rejected). One-off runs auto-disable after firing and show as **Ran** in the UI. | CLI / Web / Desktop |
+| **Scheduled** | Recurring (presets: hourly / daily / weekdays / weekly, or a custom cron via `/schedule update`) or one-off execution. Minimum interval is **1 hour** (shorter is rejected). Runs may start a few minutes late due to a per-routine stagger offset that stays consistent. One-off runs auto-disable after firing and show as **Ran** in the UI. | CLI / Web / Desktop |
 | **API** | Fired externally via a per-routine HTTP POST (`/fire`). Bearer token authentication. | **Web only** |
-| **GitHub** | Reacts to two categories of events, Pull request / Release (filterable). During the research preview there is a per-routine / per-account hourly cap. | **Web only** (requires the Claude GitHub App) |
+| **GitHub** | Reacts to two categories of events, Pull request / Release. PR filters cover author / title / body / base branch / head branch / labels / is draft / is merged, with equals, contains, starts with, is one of, is not one of, and matches regex operators (regex tests the whole field, so use `.*hotfix.*`). During the research preview there is a per-routine / per-account hourly cap and events beyond it are dropped. | Web, or CLI on v2.1.225+ (requires the Claude GitHub App) |
 
 ## Usage limits
 
@@ -145,4 +150,5 @@ Reference values during the research preview (subject to change — check [claud
 6. **Trying to CRUD routines via the public API** — the public API is firing-only. Creation/updates go through the CLI (schedule trigger only) or the Web; token generation/revocation is Web-only.
 7. **Assuming `/web-setup` installs the GitHub App** — `/web-setup` only grants repo access for cloning. The GitHub trigger requires a separate installation of the Claude GitHub App (you're prompted for this when configuring the trigger).
 8. **Trying to delete a routine via CLI / API** — no delete action exists. The most the CLI (`/schedule`) can do is disable it (`enabled: false` via `/schedule update`). Deletion is only possible from the Web / Desktop detail page.
-9. **Assuming `allow_unrestricted_git_push` can be passed in the create body** — the create API's strict schema rejects unknown fields, returning `400 Extra inputs are not permitted`. This permission (allowing pushes to existing branches) can only be set in the Web UI's Permissions; it cannot be set via CLI/API.
+9. **Assuming a permission toggle governs pushes to existing branches** — the create API's strict schema rejects `allow_unrestricted_git_push` with `400 Extra inputs are not permitted`, and the docs now describe automatic push checks rather than a toggle: `claude/` branches are always accepted, while any other branch is rejected when it is protected, when someone else has an open PR from it, or when it carries someone else's commits.
+10. **Passing fire `text` and expecting Claude to act on it** — `text` arrives inside a `<routine-fire-payload>` block marked untrusted. Unless the routine's saved prompt references that block explicitly, the payload is treated as inert context.

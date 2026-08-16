@@ -170,7 +170,7 @@ ai/platform/mcp-typescript-sdk:
       - ai/platform/mcp-protocol
 
 # ==============================================================================
-# Weekly group (33 articles, 03:00 JST Saturday)
+# Weekly group (36 articles, 03:00 JST Saturday)
 # ==============================================================================
 
 # --- tools 活発系 (12) ---
@@ -584,6 +584,58 @@ platforms/cloudflare/cloudflare-ai:
       - agents
     related_internal:
       - ai/platform/mcp-protocol
+
+# --- ai (3) ---
+
+ai/agents/claude-code-model-selection:
+  group: weekly
+  sources:
+    docs:
+      - https://code.claude.com/docs/en/model-config
+      - https://code.claude.com/docs/en/fast-mode
+      - https://code.claude.com/docs/en/costs
+      - https://platform.claude.com/docs/en/about-claude/models/overview
+    github_releases:
+      - anthropics/claude-code
+    raw_files:
+      - anthropics/claude-code/HEAD/CHANGELOG.md
+    npm:
+      - "@anthropic-ai/claude-code"
+    related_internal:
+      - ai/agents/claude-code
+      - ai/platform/anthropic-api
+
+ai/agents/codex-cli-model-selection:
+  group: weekly
+  sources:
+    docs:
+      - https://learn.chatgpt.com/codex/models
+      - https://learn.chatgpt.com/codex/pricing
+      - https://learn.chatgpt.com/codex/config-file/config-reference
+    github_releases:
+      - openai/codex
+    npm:
+      - "@openai/codex"
+    related_internal:
+      - ai/agents/codex-cli
+      - ai/agents/claude-code-model-selection
+
+ai/platform/claude-agent-sdk:
+  group: weekly
+  sources:
+    docs:
+      - https://code.claude.com/docs/en/agent-sdk/overview
+      - https://code.claude.com/docs/en/agent-sdk/typescript
+      - https://code.claude.com/docs/en/agent-sdk/python
+    github_releases:
+      - anthropics/claude-agent-sdk-typescript
+      - anthropics/claude-agent-sdk-python
+    npm:
+      - "@anthropic-ai/claude-agent-sdk"
+    pypi:
+      - claude-agent-sdk
+    related_internal:
+      - ai/agents/claude-code
 
 # ==============================================================================
 # Monthly group (40 articles incl 2 skip, 04:00 JST 1st of month)

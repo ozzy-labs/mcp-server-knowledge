@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-07-25
+reviewed: 2026-08-16
 tags: [ai-agent, ai-workflow, commercial]
 aliases: [model-selection, fallbackModel, opusplan, oauth-usage, fast-mode, ultracode]
 ---
@@ -73,9 +73,10 @@ The `/effort` menu additionally offers **`ultracode`** — a Claude Code-only se
 `/fast` toggles **Fast mode**. This is neither a model switch like `opusplan` nor an effort change — it's a **separate axis that raises output token throughput for the same model (up to roughly 2.5x, at a premium price)**. It never downgrades to a lower-tier model.
 
 - Supported **only on Opus 5 and Opus 4.8**, both priced flat across the full 1M window at **$10 / $50** per MTok. **Opus 5 is the fast-mode default from v2.1.219** (Opus 4.8 on v2.1.154–v2.1.218, Opus 4.7 on v2.1.142–v2.1.153).
-- **Fast mode on Opus 4.7 was deprecated 2026-06-25 and removed 2026-07-24.** Claude Code still treats Opus 4.7 as a fast-mode model everywhere it decides whether fast mode is on, so the toggle stays on and **the API rejects the resulting requests instead of serving them at standard speed** — switch to Opus 5 or Opus 4.8. (Opus 4.7 itself remains available at standard speed.)
-- Turn it on with `/fast` + Tab or `"fastMode": true` in settings. **Not supported in the VS Code extension.** By default the preference persists across sessions; `"fastModePerSessionOptIn": true` makes every session start with it off, and `CLAUDE_CODE_DISABLE_FAST_MODE=1` disables it entirely. From v2.1.208, switching back to a supported Opus model re-enables it from the saved preference; from v2.1.218 every model switch that flips fast mode shows a `Fast mode ON/OFF` confirmation.
-- **Hitting the fast-mode rate limit or running out of usage credits automatically falls back to standard speed** (the `↯` icon greys out) and re-enables when the cooldown expires. All supported Opus models share one fast-mode rate-limit pool, separate from standard Opus.
+- **Fast mode on Opus 4.7 was deprecated 2026-06-25 and removed 2026-07-24** (`/fast` applies to Opus 5 and Opus 4.8 from v2.1.219). From **v2.1.221** Claude Code treats Opus 4.7 like any other model without fast-mode support: switching to it **turns fast mode off**. Before v2.1.221 the toggle stayed on and the API rejected the resulting requests instead of serving them at standard speed. (Opus 4.7 itself remains available at standard speed.)
+- Turn it on with `/fast` + Tab or `"fastMode": true` in settings. **Not supported in the VS Code extension.** In non-interactive (`-p`) mode `/fast` works only in a session launched with fast mode in its `--settings` value (e.g. `claude -p --settings '{"fastMode": true}'`), applies to that session only, and is not saved as the default. By default the preference persists across sessions; `"fastModePerSessionOptIn": true` makes every session start with it off, and `CLAUDE_CODE_DISABLE_FAST_MODE=1` disables it entirely. From v2.1.208, switching back to a supported Opus model re-enables it from the saved preference — but **not** when the saved preference is off, and **not** under per-session opt-in (run `/fast` there); from v2.1.218 every model switch that flips fast mode shows a `Fast mode ON/OFF` confirmation, including switches made via `/config model=<model>` or Remote Control.
+- **Hitting the fast-mode rate limit falls back to standard speed** (the `↯` icon greys out) and re-enables automatically when the cooldown expires. All supported Opus models share one fast-mode rate-limit pool, separate from standard Opus.
+- **Running out of usage credits mid-session is a separate path with no cooldown.** Claude Code retries each rejected fast-mode request at standard speed and pricing, so work continues. In an interactive session it shows `Fast mode disabled · usage credits exhausted` and turns fast mode off for the rest of the session (the saved preference is unchanged — `/fast` turns it back on). Under `--output-format stream-json` and through the Agent SDK the same text arrives on the message stream as a `system` message with subtype `notification`, once per turn, and fast mode stays on (v2.1.221+; before that it failed silently).
 - Fast mode is a **research preview on first-party surfaces only**: the Anthropic API / Console and Claude subscription plans (Pro / Max / Team / Enterprise), where it is billed from **usage credits** rather than the plan's included usage (an org Owner must enable it for Team / Enterprise). It is unavailable on Claude Platform on AWS / Amazon Bedrock / Google Cloud's Agent Platform / Microsoft Foundry, the Batch API, or Priority Tier. Requires Claude Code v2.1.36+.
 - From v2.1.176 onward it is subject to constraints from `availableModels`. Behind an LLM gateway the org-availability check still goes directly to `api.anthropic.com` and does **not** follow `ANTHROPIC_BASE_URL` — a blocked or credential-rejected check reports "Fast mode unavailable due to network connectivity issues"; use `CLAUDE_CODE_SKIP_FAST_MODE_NETWORK_ERRORS=1` (refused/rejected) or `CLAUDE_CODE_SKIP_FAST_MODE_ORG_CHECK=1` (intercepted, or `ANTHROPIC_AUTH_TOKEN`-only sessions) to restore it.
 - On the API side it's implemented via the beta header `fast-mode-2026-02-01` plus top-level `speed:"fast"` (`client.beta.messages`).
@@ -116,6 +117,14 @@ On Bedrock / Google Cloud's Agent Platform / Foundry, set `ANTHROPIC_DEFAULT_FAB
 
 ## Observing usage (plan quota)
 
+### In-session: `/usage`
+
+On a Pro / Max / Team / Enterprise plan, `/usage` shows plan usage bars plus a **breakdown of what is driving them**: recent usage attributed to skills, subagents, plugins, and individual MCP servers (each as a percentage of the total), and **behavior flags** for causes such as long context or cache misses, raised when one accounts for 10% or more of recent usage. Press `d` / `w` to toggle between the last 24 hours and the last 7 days. The figures are approximate and computed from **local session history on this machine**, so usage from other devices or claude.ai is not included. (An MCP server's share counts only the requests that actually consumed one of its tool results — before v2.1.222 every request after the first call to a server was attributed to it.) When the usage endpoint is rate-limited, `/usage` falls back to the last bars loaded on this machine within the past 60 minutes with a `Showing last-known usage` note; press `r` to retry.
+
+`/usage-credits` manages usage beyond the plan allowance — on Pro / Max it opens **Settings > Usage** on claude.ai; on Team / Enterprise without billing access it sends a request to the org's admins. It requires a claude.ai login via `/login` and is unavailable with API-key authentication.
+
+### Raw: the OAuth usage endpoint
+
 Subscription (Pro / Max / Team / Enterprise) **usage caps** can be observed via an undocumented but real OAuth endpoint (the data source for Claude Code's `/usage` command and the statusline's `rate_limits`).
 
 ```bash
@@ -140,8 +149,11 @@ Response highlights: `five_hour` / `seven_day` each have `utilization` (percent 
 }
 ```
 
-- **Fable 5 has its own dedicated weekly quota (`weekly_scoped`)** (observed on the Max plan in 2026-07; `seven_day_opus`/`_sonnet` are null, but Fable alone returned a scoped entry). Whether Opus 5 also gets a scoped entry since its 2026-07 release is **unverified** — inspect `limits[]` on your own account rather than assuming.
-- **What happens when a per-model weekly quota is exhausted is not officially documented.** However, as noted above, `fallbackModel` doesn't trigger on rate-limit / usage-cap conditions, so it's safest to assume **exhausting a weekly quota does NOT auto-fallback** (it may block or error out instead). → Monitoring the `weekly_scoped` percentage and manually switching to a lower-tier model via `/model` before exhaustion is the reliable approach.
+- **Fable 5 has its own dedicated weekly quota (`weekly_scoped`)** (observed on the Max plan in 2026-07; `seven_day_opus`/`_sonnet` are null, but Fable alone returned a scoped entry). **Opus also has a model-scoped limit**, now visible in Claude Code's own error text: `You've hit your Opus limit · resets <time>`, distinct from the shared `session` / `weekly` messages. Inspect `limits[]` on your own account to see which scoped entries you actually get.
+- **Exhausting a limit blocks further requests until the reset time, and there is no auto-fallback** — consistent with `fallbackModel` not triggering on rate-limit / usage-cap conditions. The two kinds differ in what recovery is available:
+  - **Session (5-hour) and weekly limits are shared across all models**, so switching models with `/model` does *not* restore access.
+  - **A model-scoped limit (e.g. Opus) applies only to that model's requests**, so switching to another model with `/model` keeps you working — but Claude Code never switches for you.
+  → Monitor the `weekly_scoped` percentage (or `/usage`) and switch down manually before exhaustion; `/usage-credits` buys usage beyond the allowance on Pro / Max, or requests it from an admin on Team / Enterprise.
 
 ## Practical pattern: allocating higher-tier model quota
 

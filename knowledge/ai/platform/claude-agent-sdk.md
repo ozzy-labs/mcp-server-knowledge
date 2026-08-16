@@ -1,5 +1,5 @@
 ---
-reviewed: 2026-07-12
+reviewed: 2026-08-16
 tags: [library, ai-workflow, commercial, typescript, python]
 aliases: [claude-agent-sdk, claude-code-sdk, agent-sdk]
 ---
@@ -26,12 +26,12 @@ The key distinction from the **Client SDK** (Messages API): with `anthropic` you
 
 The TypeScript and Python packages version **independently** and are both pre-1.0 with near-daily releases — do not assume matching version numbers.
 
-| Language | Package | Latest (2026-07) | Runtime |
+| Language | Package | Latest (2026-08) | Runtime |
 |---|---|---|---|
-| TypeScript | `@anthropic-ai/claude-agent-sdk` | 0.3.207 (2026-07-11) | Node.js >= 18 |
-| Python | `claude-agent-sdk` | 0.2.116 (2026-07-11) | Python >= 3.10 |
+| TypeScript | `@anthropic-ai/claude-agent-sdk` | 0.3.233 (2026-08-14) | Node.js >= 18 |
+| Python | `claude-agent-sdk` | 0.2.139 (2026-08-14) | Python >= 3.10 |
 
-The TS package bundles a native Claude Code binary as an optional dependency, so you do not install Claude Code separately. Python depends on `mcp>=1.23.0` and `anyio`.
+Both packages bundle a native Claude Code binary, so you normally do not install Claude Code separately — but the TS binary ships through npm **optional dependencies**, so `npm ci --omit=optional` (or a source-only Python wheel, e.g. ARM64 Windows) leaves you without one; install Claude Code natively or set `pathToClaudeCodeExecutable`. TS peer deps: `@anthropic-ai/sdk >=0.93.0`, `@modelcontextprotocol/sdk ^1.29.0`, `zod ^4.0.0`. Python depends on `mcp>=1.23.0,<2.0.0`, `anyio>=4.0.0`, and `sniffio`.
 
 ### Renamed from the Claude Code SDK
 
@@ -50,7 +50,7 @@ npm install @anthropic-ai/claude-agent-sdk    # TypeScript (Node >= 18)
 pip install claude-agent-sdk                  # Python (>= 3.10)
 ```
 
-Set `ANTHROPIC_API_KEY` for auth. Amazon Bedrock / Claude Platform on AWS / Google Vertex / Microsoft Foundry are supported via `CLAUDE_CODE_USE_*` env vars. **claude.ai subscription login is not permitted for third-party products** built on the SDK — API-key auth only.
+Set `ANTHROPIC_API_KEY` for auth (the SDK does not load `.env` files itself). Third-party providers are selected with env vars: `CLAUDE_CODE_USE_BEDROCK=1` (Amazon Bedrock), `CLAUDE_CODE_USE_ANTHROPIC_AWS=1` + `ANTHROPIC_AWS_WORKSPACE_ID` (Claude Platform on AWS), `CLAUDE_CODE_USE_VERTEX=1` (Google Cloud's Agent Platform / Vertex), `CLAUDE_CODE_USE_FOUNDRY=1` (Microsoft Foundry). **claude.ai subscription login is not permitted for third-party products** built on the SDK — API-key auth only.
 
 ## Minimal agent
 
@@ -88,13 +88,16 @@ asyncio.run(main())
 | `ClaudeSDKClient` (Python) | Streaming / multi-turn with explicit `connect()` / `receive_response()` / `interrupt()` / `set_model()` / `disconnect()` |
 | Custom tools | `@tool(...)` + `create_sdk_mcp_server(...)` register in-process MCP tools, referenced as `mcp__<server>__<tool>` |
 | MCP servers | `mcpServers` / `mcp_servers` accept external and in-process servers |
-| Subagents | `agents` maps names to `AgentDefinition`; invoked via the built-in **`Agent`** tool (include `"Agent"` in `allowedTools`) |
+| Subagents | `agents` maps names to `AgentDefinition`; invoked via the built-in **`Agent`** tool (renamed from `Task` in Claude Code v2.1.63 — include `"Agent"` in `allowedTools`). Since v2.1.198 subagents run **in the background by default** unless the call passes `run_in_background: false` |
 | Permission modes | `default` / `acceptEdits` / `plan` / `dontAsk` / `bypassPermissions` / `auto`; plus `can_use_tool` callback |
 | Hooks | Callbacks at `PreToolUse` / `PostToolUse` / `Stop` / `SessionStart` / `SessionEnd` / `UserPromptSubmit`, etc. |
 | Sessions | Capture `session_id`, then `resume` / `continue_conversation` / `fork_session`; state is JSONL on your filesystem |
-| Model | `model` + `fallback_model`, plus `effort` (`low`–`max`) and `thinking` |
+| Model | `model` + `fallback_model`, plus `effort` (`low` / `medium` / `high` / `xhigh` / `max`) and `thinking` (defaults to `{"type": "adaptive"}`; `maxThinkingTokens` is deprecated) |
+| Structured output | `outputFormat` / `output_format` = `{"type": "json_schema", "schema": {...}}` constrains the final result to a schema |
+| Skills | `skills`: a name list or `"all"`; wildcard / delimiter-bearing names are rejected since TS 0.3.221 / Python 0.2.129 — use `"all"` |
+| Budget & caps | `maxBudgetUsd` / `max_budget_usd` and `maxTurns`, plus the `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` (default 3) and `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS` (default 20) env vars |
 
-`setting_sources` (`["user","project","local"]`) controls whether Claude Code filesystem config is read (Skills, `CLAUDE.md`, commands, plugins). TypeScript mirrors these options in camelCase (`allowedTools`, `permissionMode`, `settingSources`).
+`setting_sources` (`["user","project","local"]`) controls whether Claude Code filesystem config is read (Skills, `CLAUDE.md`, commands, plugins). **Omitting it loads all three**, matching the CLI — the v0.1.0 "load nothing" default was reverted; pass `[]` to run isolated (CI/CD, deployed apps, multi-tenant). TypeScript mirrors these options in camelCase (`allowedTools`, `permissionMode`, `settingSources`).
 
 ## Managed Agents (server-hosted, beta)
 
@@ -108,6 +111,7 @@ A separate API-side product where **Anthropic runs both the agent loop and the s
 4. **Forgetting `"Agent"` in `allowedTools`** — subagents are invoked via the `Agent` tool, so omitting it blocks auto-approval.
 5. **Assuming subscription login works** — third-party products must use API-key auth, not claude.ai login.
 6. **Assuming TS and Python share versions** — they don't (TS 0.3.x, Python 0.2.x), and both are pre-1.0 with frequent churn; pin versions.
+7. **Assuming todo / task-tracking tools are always available** — since TS 0.3.233 `TodoWrite` and `TaskCreate` / `TaskGet` / `TaskUpdate` / `TaskList` are no longer in the default tool surface on Opus 4.8, Sonnet 5, Fable 5, Mythos 5, and newer models; name them in `tools` / `allowedTools`, or set `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`.
 
 ## Related
 

@@ -1,12 +1,14 @@
 ---
-reviewed: 2026-07-12
+reviewed: 2026-08-16
 tags: [ai-agent, ai-workflow, commercial]
 aliases: [cc]
 ---
 
 # Claude Code
 
-An AI coding agent CLI from Anthropic. In the terminal, the agent autonomously understands and edits the codebase, performs Git operations, and runs commands. As of 2026-07-12 the latest stable release is **v2.1.207** (2026-07-11); from that version, Auto mode is available without opt-in on Amazon Bedrock, Google Cloud's Agent Platform (Vertex), and Microsoft Foundry.
+An AI coding agent CLI from Anthropic. In the terminal, the agent autonomously understands and edits the codebase, performs Git operations, and runs commands. As of 2026-08-16 the latest release is **v2.1.233** (2026-08-14); the `stable` channel, which trails by about a week and skips releases with major regressions, is at **v2.1.224**. Choose a channel with the `autoUpdatesChannel` setting (`latest` is the default, `stable` the alternative) and pin a floor with `minimumVersion`.
+
+Recent highlights: **Claude Opus 5** (`claude-opus-5`) became the default Opus model in v2.1.219; subagent forking became the default in v2.1.232; and `claude self-hosted-runner` (v2.1.224) lets Team / Enterprise run Claude Code web, mobile, and desktop sessions on their own machines. Auto mode has been available without opt-in on Amazon Bedrock, Google Cloud's Agent Platform (Vertex), and Microsoft Foundry since v2.1.207.
 
 ## Installation
 
@@ -16,14 +18,17 @@ curl -fsSL https://claude.ai/install.sh | bash    # macOS / Linux / WSL
 irm https://claude.ai/install.ps1 | iex           # Windows PowerShell
 curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del install.cmd  # Windows CMD
 
-# Homebrew (no auto-update)
+# Homebrew (no auto-update; channel is chosen by cask name)
 brew install --cask claude-code          # stable channel
-brew install --cask claude-code@latest  # latest channel (as of v2.1.195)
+brew install --cask claude-code@latest   # latest channel
 
-# WinGet
+# WinGet (no auto-update)
 winget install Anthropic.ClaudeCode
 
-# npm (deprecated)
+# Linux package managers: signed apt / dnf / apk repositories, each with
+# a stable and a latest channel (repository + signing key setup required)
+
+# npm (advanced option; requires Node.js 22+, installs the same native binary)
 npm install -g @anthropic-ai/claude-code
 ```
 
@@ -54,12 +59,21 @@ claude update             # Update the CLI to the latest version
 | `/usage` | Show session cost, plan usage, and stats. `/cost` and `/stats` have been merged into this |
 | `/agents` | Manage subagents |
 | `/goal` | Set a persistent goal (v2.1.139+) |
-| `/plugins` | Plugin manager UI |
-| `/color` | Assign a random UI color per session |
+| `/plugin` | Plugin manager UI |
+| `/color` | Set the prompt bar color for the current session |
+| `/effort` | Set the model effort level (`low` / `medium` / `high` / `xhigh` / `max`, or `auto`) |
+| `/fork` | Copy the current conversation into a new background session (v2.1.212+) |
+| `/subtask` | Hand a side task to a subagent that reports back (took over the old in-session `/fork`, v2.1.212+) |
+| `/code-review` | Review the current diff or a PR; `/review` is an alias, `/code-review ultra` runs a deep cloud review |
+| `/tasks` | List the session's background work |
+| `/status` | Session status, including kind: `interactive`, or a background job that is `attached` or `unattended` |
+| `/teleport` | Pull a web session into the terminal (also `claude --teleport <session id>`) |
+| `/remote-control` | Continue the session from another device |
+| `/btw` | Ask a side question without adding it to conversation history |
 
 `claude agents` (direct CLI invocation, v2.1.139+ Research Preview) launches the agent view.
 
-Custom commands can be defined as Markdown files in `.claude/commands/`.
+Custom commands have been merged into skills: `.claude/commands/deploy.md` and `.claude/skills/deploy/SKILL.md` both create `/deploy` and behave the same. Existing `.claude/commands/` files keep working; skills add a directory for supporting files, richer frontmatter, and automatic invocation by Claude.
 
 ## Configuration files
 
@@ -71,11 +85,16 @@ Custom commands can be defined as Markdown files in `.claude/commands/`.
 | `.claude/rules/` | Additional rule files | Yes |
 | `.claude/commands/` | Custom slash commands | Yes |
 | `.claude/agents/` | Subagent definitions | Yes |
+| `.claude/skills/` | Skill definitions (`<name>/SKILL.md`) | Yes |
 
 ### Environment variables
 
 - `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN=1` - Disables fullscreen mode, keeping native scrolling.
 - `CLAUDE_CODE_SESSION_ID` - Exposes the session ID for reference (for hooks).
+- `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` - Nested subagent depth limit (default 3 since v2.1.219).
+- `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS` - Concurrent subagent cap (default 20).
+- `CLAUDE_CODE_FORK_SUBAGENT=0` - Turns off default subagent forking.
+- `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` - Restores the todo/task tools, which are off on Opus 4.8, Sonnet 5, Fable 5, Mythos 5, and newer models (v2.1.233).
 
 ### Key features
 
@@ -101,6 +120,9 @@ Custom commands can be defined as Markdown files in `.claude/commands/`.
 ### Operations
 
 - **Scheduled execution**: Periodic execution on Anthropic infrastructure
+- **Self-hosted environments (v2.1.224+)**: `claude self-hosted-runner` turns your own machines or containers into a host for Claude Code web, mobile, and desktop sessions (Team / Enterprise)
+- **Remote Control**: Continue a local terminal session from claude.ai, the mobile app, or Desktop (`/remote-control`)
+- **Cross-session messaging (v2.1.224+)**: Sessions message each other via `SendMessage`, discovered with `ListAgents` / `/list-agents`; typing `@` in the prompt mentions another live session by name (v2.1.232, macOS and Linux)
 
 ## Permission modes
 
@@ -135,7 +157,7 @@ A mechanism for inserting automated processing before/after tool execution or se
 | Tool | `PreToolUse`, `PermissionRequest`, `PermissionDenied`, `PostToolUse`, `PostToolBatch`, `PostToolUseFailure` |
 | Subagent | `SubagentStart`, `SubagentStop` |
 | Task | `TeammateIdle`, `TaskCreated`, `TaskCompleted` |
-| Async | `Notification`, `CwdChanged`, `FileChanged`, `InstructionsLoaded`, `ConfigChange` |
+| Async | `Notification`, `MessageDisplay`, `CwdChanged`, `DirectoryAdded` (v2.1.219+), `FileChanged`, `InstructionsLoaded`, `ConfigChange` |
 | Context | `PreCompact`, `PostCompact` |
 | MCP / worktree | `Elicitation`, `ElicitationResult`, `WorktreeCreate`, `WorktreeRemove` |
 
@@ -173,24 +195,24 @@ tools: Grep Glob Read
 Systematically analyze the codebase...
 ```
 
-`model` can be an alias such as `sonnet` / `opus` / `haiku`, an explicit ID like `claude-sonnet-4-6` / `claude-opus-4-8`, or `inherit` (inherit from the parent session).
+`model` can be an alias such as `sonnet` / `opus` / `haiku` / `fable`, an explicit ID like `claude-opus-5` / `claude-sonnet-5`, or `inherit` (inherit from the parent session — the default when omitted). Resolution order: the `CLAUDE_CODE_SUBAGENT_MODEL` env var > a per-invocation `model` > this frontmatter field > the main conversation's model.
 
 | Field | Description |
 |---|---|
 | `name` | Agent identifier (required) |
 | `description` | Used to determine automatic delegation (required) |
 | `model` | Model to use (`inherit` to inherit from the parent session) |
-| `tools` | Allowed tools (comma- or space-separated) |
+| `tools` | Allowed tools (comma- or space-separated). Supports `Agent(<agent_type>)` to restrict which subagents it may spawn |
 | `disallowedTools` | Denied tools |
-| `permissionMode` | `default` / `acceptEdits` / `auto` / `dontAsk` / `bypassPermissions` / `plan` |
+| `permissionMode` | `default` / `acceptEdits` / `auto` / `dontAsk` / `bypassPermissions` / `plan` / `manual` |
 | `maxTurns` | Maximum number of turns |
 | `skills` | Skills to preload |
 | `mcpServers` | Available MCP servers |
 | `hooks` | Hooks active within this agent |
 | `memory` | `user` / `project` / `local` - persisted to `<scope>/agent-memory/<name>/` |
 | `isolation` | `worktree` isolates into a Git worktree |
-| `background` | `true` to launch asynchronously |
-| `effort` | Depth of reasoning |
+| `background` | `true` keeps the subagent in the background even when Claude asks to run it in the foreground |
+| `effort` | Reasoning effort: `low` / `medium` / `high` / `xhigh` / `max` |
 | `color` | UI color coding |
 | `initialPrompt` | Instruction sent immediately after launch |
 
@@ -208,13 +230,19 @@ Systematically analyze the codebase...
 
 | Name | Purpose |
 |---|---|
-| `Explore` | Haiku-based. Fast, read-only code exploration |
-| `Plan` | Inherits the parent model, read-only. Builds an implementation plan |
+| `Explore` | Read-only, inherits the parent model (capped at Opus on the Claude API). Fast code exploration |
+| `Plan` | Inherits the parent model, read-only. Gathers codebase context during plan mode |
 | `general-purpose` | General-purpose delegation target |
+| `claude` | Catch-all agent with every available tool |
+| `fork` | Inherits the full parent conversation (see below) |
 | `statusline-setup` | Interactive status-line configuration |
 | `claude-code-guide` | Answers questions about Claude Code features |
 
-As of v2.1.63, the old `Task` tool has been renamed `Agent` (the alias remains).
+As of v2.1.63, the old `Task` tool has been renamed `Agent` (the alias remains). Its `mode` parameter was deprecated in v2.1.212 and is now ignored — subagents inherit the parent session's permission mode.
+
+**Forking (v2.1.232+)**: `subagent_type: "fork"` is on by default in interactive sessions (off with `-p` and the Agent SDK). A fork inherits the parent's full conversation, system prompt, tools, model, and prompt cache, keeps its own tool calls isolated, and returns only its final result. While fork mode is on, every Claude-spawned subagent runs in the background. Toggle with `CLAUDE_CODE_FORK_SUBAGENT=0/1`, or block it with an `Agent(fork)` deny rule.
+
+**Nesting and limits**: subagents nest up to 3 levels deep by default (`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`), with at most 20 running concurrently (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`). The per-session spawn cap introduced in v2.1.212 was removed again in v2.1.224.
 
 ## Skills
 
@@ -249,6 +277,8 @@ When reviewing code, check the following:
 | `hooks` | Hooks that act only while this skill is active |
 | `context` | `fork` to run in a subagent context |
 | `agent` | Agent name when `context: fork` (defaults to `general-purpose`) |
+| `background` | With `context: fork`, `false` waits for the forked subagent's result in the invoking turn instead of backgrounding it (default `true`, v2.1.218+) |
+| `metadata` | Free-form YAML map for your own tooling; Claude Code accepts it but does not act on its contents |
 
 **Progressive disclosure**: At startup, only the description is loaded into context; the body is loaded once triggered. This is the core of context conservation.
 
@@ -312,14 +342,17 @@ Respond entirely in Japanese, in the register of business/technical documents...
 |---|---|
 | `name` | Display name (defaults to filename if omitted) |
 | `description` | Shown in the `/config` selection UI |
-| `keep-coding-instructions` | If `true`, keeps Claude Code's default coding instructions |
+| `keep-coding-instructions` | If `true`, keeps Claude Code's default coding instructions (default `false`) |
+| `force-for-plugin` | Plugin output styles only: apply automatically whenever the plugin is enabled, overriding the user's `outputStyle` |
 
 **How to select**:
 
 - `/config` -> Output style -> select from menu
 - Edit the `outputStyle` field in `settings.json` (effective from the next session)
 
-**Built-in styles**: `Default` / `Explanatory` (adds educational asides) / `Learning` (collaborative mode with `TODO(human)` markers).
+**Built-in styles**: `Default` / `Proactive` (executes immediately and makes reasonable assumptions instead of pausing; stronger than auto mode and independent of the permission mode) / `Explanatory` (adds educational asides) / `Learning` (collaborative mode with `TODO(human)` markers).
+
+The standalone `/output-style` command was deprecated in v2.1.73 and removed in v2.1.91 — use `/config` or the `outputStyle` setting.
 
 ## Status line
 
@@ -423,12 +456,14 @@ Review the following files: $ARGUMENTS
 
 ## Limitations
 
-- Not available on the free plan
+- Not available on the free plan (requires a Pro, Max, Team, Enterprise, or Console account, or a third-party provider such as Bedrock / Vertex / Foundry)
 - Prompt submission pauses temporarily once the rate limit is reached
-- Anything other than the native installer (npm) is deprecated
+- Only native installations auto-update; Homebrew, WinGet, and Linux package manager installs need a manual upgrade (or `CLAUDE_CODE_PACKAGE_MANAGER_AUTO_UPDATE=1` for Homebrew / WinGet)
+- Sandboxing is unsupported on native Windows and WSL 1
 
 ## System requirements
 
-- macOS 10.15+, Ubuntu 20.04+ / Debian 10+, Windows 10+ (WSL / Git Bash)
-- RAM: 4 GB or more (8 GB recommended)
-- Shell: Bash, Zsh, Fish
+- macOS 13.0+, Windows 10 1809+ / Windows Server 2019+, Ubuntu 20.04+ / Debian 10+, Alpine Linux 3.19+
+- RAM: 4 GB or more; x64 or ARM64 processor
+- Shell: Bash, Zsh, PowerShell, or CMD
+- On native Windows, Git for Windows is optional — without it Claude Code uses the PowerShell tool instead of the Bash tool
