@@ -1,12 +1,12 @@
 ---
-reviewed: 2026-07-12
+reviewed: 2026-08-16
 tags: [ai-agent, ai-workflow, commercial, github]
 aliases: [copilot]
 ---
 
 # GitHub Copilot CLI
 
-An AI coding agent CLI provided by GitHub. Deeply integrated with GitHub accounts, it autonomously handles planning, execution, testing, and review. GA on 2026-02-25; the current release is **v1.0.70** (2026-07-09).
+An AI coding agent CLI provided by GitHub. Deeply integrated with GitHub accounts, it autonomously handles planning, execution, testing, and review. GA on 2026-02-25; the current release is **v1.0.80** (2026-08-14).
 
 ## Installation
 
@@ -32,7 +32,7 @@ Shell completion for bash / zsh / fish is auto-installed on first launch (v1.0.4
 
 ## Authentication
 
-Authenticate via OAuth device flow or a GitHub Personal Access Token (PAT).
+Authenticate via OAuth or a GitHub Personal Access Token (PAT). As of v1.0.77 the **browser-based (web) OAuth flow is the default** for `copilot login` on local interactive terminals (including IDE integrations and local desktop subprocesses without a TTY, v1.0.78); device code remains the default on remote / headless terminals. Force either mode with `--web-flow` / `--device-code`, or pick one in `/login`.
 
 ## Basic commands
 
@@ -43,6 +43,9 @@ copilot -C <dir>                         # change working directory before launc
 copilot --attachment <file>              # attach a file in prompt mode (v1.0.41)
 copilot --max-autopilot-continues <n>    # cap on autopilot's consecutive continuations (default 5, v1.0.40)
 copilot --resume                         # resume a past session from a picker (-r shorthand, v1.0.60)
+copilot --plan --mode autopilot          # plan first, then implement without approval (v1.0.79)
+copilot --worktree                       # start in a new git worktree (from HEAD as of v1.0.79)
+copilot login --web-flow                 # force browser OAuth (--device-code forces device flow, v1.0.77)
 copilot completion <bash|zsh|fish>       # print shell completion script
 ```
 
@@ -51,7 +54,7 @@ copilot completion <bash|zsh|fish>       # print shell completion script
 | Command | Description |
 |---|---|
 | `/help` | Show help (slash commands support tab completion) |
-| `/model` | Switch model (Auto mode routes server-side by task and gives a **10% AI-credit discount**). Model-family aliases `opus` / `sonnet` / `haiku` / `gpt` / `gemini` (v1.0.64). Current models span GPT-5.6 (Luna/Sol/Terra), Claude Sonnet 5 / Opus 4.8 (+ 4.8 Fast), Gemini 3.5 Flash, and kimi-k2.7-code |
+| `/model` | Switch model (Auto mode routes server-side by task and gives a **10% AI-credit discount**). Model-family aliases `opus` / `sonnet` / `haiku` / `gpt` / `gemini` (v1.0.64). **Session-scoped by default as of v1.0.79** — use `/config model` to set defaults for future sessions; `-s` / `--session` added v1.0.72, and `/model plan` (`--plan`) picks a plan-mode-only model (v1.0.74). The picker groups models into Recent / Recommended / New with Shift+Tab (v1.0.79). Current models span GPT-5.6 (Luna/Sol/Terra), Claude Opus 5 (v1.0.75) / Sonnet 5 / Opus 4.8 (+ 4.8 Fast), Gemini 3.6 Flash (v1.0.74) and 3.5 Flash, grok-4.5 (v1.0.76), and kimi-k3 (v1.0.79) / kimi-k2.7-code |
 | `/refine` | Rewrite a rough prompt into clear instructions (v1.0.70) |
 | `/experimental` | Enable experimental features (rubber duck, agents, etc.) |
 | `/remote on/off` | Toggle remote control from GitHub.com or the mobile app |
@@ -73,19 +76,19 @@ copilot completion <bash|zsh|fish>       # print shell completion script
 | `/chronicle` | Session history review / standup (added v1.0.31, experimental) |
 | `/research` | Research assistant (added v1.0.41; uses orchestrator/subagent models) |
 | `/pr` | Create/reference a PR (added v1.0.40) |
-| `/autopilot` | Toggle between interactive and autopilot modes (added v1.0.45). `/autopilot <objective>` (alias `/goal`) pins an objective (v1.0.55) |
+| `/autopilot` | Toggle between interactive and autopilot modes (added v1.0.45). `/autopilot <objective>` (alias `/goal`) pins an objective (v1.0.55). Autopilot stays selected after `task_complete` by default as of v1.0.76 (set `stayInAutopilot` to `false` to return to interactive) |
 | `/security-review` | Security vulnerability review of code changes (added v1.0.51; GA without `--experimental` as of v1.0.64) |
 | `/memory` | Enable/disable/show status of Copilot Memory (`on` / `off` / `show`, added v1.0.49; persistent) |
 | `/rubber-duck` | Get an independent critique of your work from the rubber-duck agent (added v1.0.49; enabled by default as of v1.0.58) |
 | `/every` / `/after` | Scheduled prompt execution (added v1.0.58, experimental). Has a `/loop` alias |
 | `/fork [name]` | Fork the current session into an independent new session (added v1.0.45; optional name and origin display added v1.0.47). `/branch` alias added (v1.0.64, aligned with Claude Code) |
 | `/session` | Session management (`delete` / `delete-all`, name via `--name`) |
-| `/plugin` / `/plugins` | Plugin management (`install` / `list` / `remove`); the `/plugins` dashboard (v1.0.69) manages installed plugins and reloads extensions without a session restart |
+| `/plugin` / `/plugins` | Plugin management (`install` / `list` / `remove`); the `/plugins` dashboard (v1.0.69) manages installed plugins and reloads extensions without a session restart. v1.0.71 added `plugins marketplace` (list / add / remove / browse / update), v1.0.72 added `update` / `uninstall` verbs plus `--plugin` / `--mcp` / `--skill` targeting, and v1.0.76 added enable/disable for plugins, instructions, agents, LSP servers, and hooks |
 | `/subagents` / `/agents` | List/configure subagents (model / reasoning effort / context tier, added v1.0.62) |
 | `/cd` | Change working directory (persisted across resume as of v1.0.65; also discovers custom agents in the new directory) |
 | `/diagnose` | Analyze session logs (added v1.0.64) |
 | `/app` | Open the GitHub app / browser (added v1.0.62) |
-| `/theme` | Theme selection (default / dim / high-contrast / colorblind) |
+| `/theme` | Theme selection (default / dim / high-contrast / colorblind). **Deprecated** — color palette settings were consolidated under `/settings theme` in v1.0.66, and `/theme` now prints a deprecation notice (v1.0.79) |
 | `/settings` | View/change settings inline |
 | `/clear` / `/new` | Reset the conversation (also resets the active agent selection) |
 | `/bug` / `/feedback` | Feedback / bug report |
@@ -94,6 +97,16 @@ copilot completion <bash|zsh|fish>       # print shell completion script
 | `/reset` | Reset settings |
 | `/version` | Show version |
 | `/update` | Update the CLI (download progress shown as of v1.0.43; optional `prerelease` argument added v1.0.44) |
+| `/permissions` | Switch between approval modes (added v1.0.78) |
+| `/rewind` | Restore the conversation and/or the files Copilot changed; no longer requires git and skips files whose contents no longer match what Copilot last wrote (v1.0.78) |
+| `/worktree` / `/move` | Split in v1.0.71: `/worktree` creates a new worktree and leaves uncommitted changes behind, `/move` carries them into it. `/worktree new` starts a new session in a new worktree and `worktreeBaseRef` controls HEAD vs. remote default branch — all now default to HEAD (v1.0.79). Experimental `/new-worktree` starts a new conversation in one (v1.0.78) |
+| `/sandbox` | Sandbox configuration dialog; `/sandbox policy` shows effective paths, denials, and network access (v1.0.79) |
+| `/tasks` | Browse subagent tasks — nested tree navigation, current/all and finished filters, and a steerable live timeline (v1.0.79) |
+| `/limits` | AI-credit limits; `/limits predict` suggests a session limit based on similar sessions (v1.0.76) |
+| `/instructions` | Pick which instruction files load (respects `--no-custom-instructions`, v1.0.76) |
+| `/config` | Set defaults for future sessions, e.g. `/config model` (v1.0.79) |
+| `/voice` | Voice mode; `/voice devices` chooses and persists the microphone (v1.0.71) |
+| `/login` | Choose the OAuth flow interactively (v1.0.77) |
 | `/exit` | End the session |
 
 ## Configuration files
@@ -132,8 +145,13 @@ The `COPILOT_HOME` environment variable can change the config directory.
 - **LSP integration**: Leverages type information via integration with servers such as TypeScript Language Server
 - **MCP integration**: Integration with Model Context Protocol servers
 - **Rubber Duck agent**: Independent critique of your work. Enabled by default as of v1.0.58 (controlled via `builtInAgents.rubberDuck` / `builtInAgents.rubberDuckAutoInvoke`). Remote JSON RPC also enabled by default as of v1.0.58
-- **Sandbox** (v1.0.67+): An OS-level shell sandbox toggled with `--sandbox` / `--no-sandbox`. A sandbox-policy badge is shown, and `web_fetch` honors the sandbox network policy (routed through a required HTTPS proxy as of v1.0.70)
+- **Sandbox** (v1.0.67+): An OS-level shell sandbox toggled with `--sandbox` / `--no-sandbox`. A sandbox-policy badge is shown, and `web_fetch` honors the sandbox network policy (proxied when outbound is allowed, denied when `network.allowOutbound` is false, v1.0.76). A first-run splash offers opt-in to the default sandbox (v1.0.74), opt-in git / gh auth runs inside it (v1.0.72), and enterprise admins can enforce a restrictive floor via managed settings and macOS / Windows MDM (v1.0.76-77). Blocked commands offer a re-run outside the sandbox (v1.0.78, Linux in v1.0.79). **Breaking settings-key renames in v1.0.79 with no migration**: `sandbox.gitAuth` / `sandbox.ghAuth` → `sandbox.auth.git` / `sandbox.auth.gh`, and `allowDevToolCaches` → `allowDevToolAccess` (old keys are silently ignored)
 - **Repo-level model pinning** (v1.0.70): a trusted repo can pin model / effort level / context tier in `.github/copilot/settings.json`; `/settings` and `/model` gain `--repo` / `--local` flags
+- **Plan mode hardening** (v1.0.71+): plan mode hard-blocks built-in tools that would mutate the workspace (MCP and external tools still run); session-folder planning artifacts are allowed as of v1.0.74. `--plan --mode autopilot` plans first, then implements without waiting for approval (v1.0.79)
+- **Multi-session UI** (v1.0.76 experimental, GA-by-default surfaces in v1.0.79): manage concurrent sessions from a Sessions tab and sidebar; switching sessions no longer restarts MCP servers or rebuilds hook state (v1.0.78)
+- **tgrep** (v1.0.79): large monorepos use trigram-indexed grep instead of ripgrep for regex search
+- **Subagents**: default `subagents.maxDepth` lowered from 6 to 4 in v1.0.71 to curb runaway recursion (usage-based-billing users can raise it up to 128); multi-turn subagents are always enabled as of v1.0.72, so follow-up messages can be sent to running agents
+- **Tool durations** (v1.0.78): timeline headers show live, right-aligned elapsed time for tool calls lasting at least 5 seconds (`showToolDurations`)
 
 ## Custom agents
 
@@ -213,7 +231,7 @@ Complies with the open `Agent Skills` standard. **Supports multiple directories 
 | `permissionRequest` | Allows programmatic approval from a script (added v1.0.16) |
 | `preMcpToolCall` | Controls metadata of the outgoing MCP request (added v1.0.51) |
 | `subagentStart` | On subagent spawn (added v1.0.7) |
-| `agentStop` / `subagentStop` | Controls agent termination (added v1.0.22) |
+| `agentStop` / `subagentStop` | Controls agent termination (added v1.0.22). As of v1.0.72 the CLI ends the turn after 8 consecutive blocks, and hooks receive a `stop_hook_active` flag so they can detect a forced continuation and self-limit |
 | `preCompact` | Right before context compaction (added v1.0.5) |
 | `notification` | Async notification (added v1.0.18) |
 | `errorOccurred` | On error (generic) |
@@ -229,11 +247,11 @@ Complies with the open `Agent Skills` standard. **Supports multiple directories 
 }
 ```
 
-Both `bash` / `powershell` keys are supported. `timeoutSec` defaults to 30 seconds.
+Both `bash` / `powershell` keys are supported. `timeoutSec` defaults to 30 seconds. Hook output is bounded at 10 MiB per invocation, and malformed `userPromptSubmitted` return values are rejected with a warning rather than corrupting the session (v1.0.76).
 
 ## Plugins
 
-Place a `plugin.json` at the root to bundle and distribute agents, skills, hooks, MCP, and LSP together.
+Place a `plugin.json` at the root to bundle and distribute agents, skills, hooks, MCP, and LSP together. Open Plugin Spec v1 manifests and `mcp.json` configuration are supported as of v1.0.74, and Agent Plugins spec plugins can ship extensions under `com.github.copilot/extensions/` (v1.0.79). First-party plugins auto-update at session start (v1.0.78); set `"autoUpdate": true` on an `extraKnownMarketplaces` entry to auto-update its plugins too (v1.0.79).
 
 ```text
 my-plugin/
