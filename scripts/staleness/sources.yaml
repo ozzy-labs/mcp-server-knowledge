@@ -166,7 +166,7 @@ ai/platform/mcp-typescript-sdk:
       - ai/platform/mcp-protocol
 
 # ==============================================================================
-# Weekly group (29 articles, 03:00 JST Saturday)
+# Weekly group (33 articles, 03:00 JST Saturday)
 # ==============================================================================
 
 # --- tools 活発系 (12) ---
@@ -528,7 +528,7 @@ ai/platform/agent-skills-spec:
     related_internal:
       - ai/platform/agent-extensions
 
-# --- platforms (1) ---
+# --- platforms (4) ---
 
 platforms/github/github-actions:
   group: weekly
@@ -538,8 +538,51 @@ platforms/github/github-actions:
     rss:
       - https://github.blog/changelog/feed/
 
+platforms/cloudflare/cloudflare-workers:
+  group: weekly
+  sources:
+    docs:
+      - https://developers.cloudflare.com/workers/
+      - https://developers.cloudflare.com/workers/platform/limits/
+      - https://developers.cloudflare.com/workers/configuration/compatibility-flags/
+    rss:
+      - https://developers.cloudflare.com/changelog/index.xml
+    github_releases:
+      - cloudflare/workerd
+    related_internal:
+      - platforms/cloudflare/wrangler
+
+platforms/cloudflare/wrangler:
+  group: weekly
+  sources:
+    docs:
+      - https://developers.cloudflare.com/workers/wrangler/
+      - https://developers.cloudflare.com/workers/wrangler/configuration/
+      - https://developers.cloudflare.com/workers/wrangler/commands/workers/
+    github_releases:
+      - cloudflare/workers-sdk
+    npm:
+      - wrangler
+    related_internal:
+      - platforms/cloudflare/cloudflare-workers
+
+platforms/cloudflare/cloudflare-ai:
+  group: weekly
+  sources:
+    docs:
+      - https://developers.cloudflare.com/workers-ai/
+      - https://developers.cloudflare.com/ai-gateway/
+      - https://developers.cloudflare.com/agents/
+      - https://developers.cloudflare.com/agents/model-context-protocol/apis/handler-api/
+    github_releases:
+      - cloudflare/agents
+    npm:
+      - agents
+    related_internal:
+      - ai/platform/mcp-protocol
+
 # ==============================================================================
-# Monthly group (35 articles incl 2 skip, 04:00 JST 1st of month)
+# Monthly group (40 articles incl 2 skip, 04:00 JST 1st of month)
 # ==============================================================================
 
 # --- tools 安定系 (21) ---
@@ -842,7 +885,7 @@ languages/js/typescript-esm:
     related_internal:
       - languages/nodejs
 
-# --- platforms (1) ---
+# --- platforms (6) ---
 
 platforms/docker/docker:
   group: monthly
@@ -854,6 +897,65 @@ platforms/docker/docker:
     rss:
       - https://www.docker.com/blog/feed/
     eol: docker-engine
+
+platforms/cloudflare/cloudflare:
+  group: monthly
+  sources:
+    docs:
+      - https://developers.cloudflare.com/products/
+      - https://developers.cloudflare.com/workers/platform/pricing/
+      - https://www.cloudflare.com/plans/
+    rss:
+      - https://blog.cloudflare.com/rss/
+    related_internal:
+      - platforms/cloudflare/cloudflare-workers
+
+platforms/cloudflare/cloudflare-storage:
+  group: monthly
+  sources:
+    docs:
+      - https://developers.cloudflare.com/workers/platform/storage-options/
+      - https://developers.cloudflare.com/d1/
+      - https://developers.cloudflare.com/r2/
+      - https://developers.cloudflare.com/durable-objects/
+    related_internal:
+      - platforms/cloudflare/cloudflare-workers
+
+platforms/cloudflare/cloudflare-pages:
+  group: monthly
+  sources:
+    docs:
+      - https://developers.cloudflare.com/pages/
+      - https://developers.cloudflare.com/workers/static-assets/
+      - https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/
+    npm:
+      - "@cloudflare/vite-plugin"
+      - "@opennextjs/cloudflare"
+    related_internal:
+      - platforms/cloudflare/cloudflare-workers
+
+platforms/cloudflare/cloudflare-tunnel:
+  group: monthly
+  sources:
+    docs:
+      - https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/
+      - https://developers.cloudflare.com/cloudflare-one/identity/service-tokens/
+    github_releases:
+      - cloudflare/cloudflared
+    related_internal:
+      - platforms/cloudflare/cloudflare-dns-cdn
+
+platforms/cloudflare/cloudflare-dns-cdn:
+  group: monthly
+  sources:
+    docs:
+      - https://developers.cloudflare.com/dns/
+      - https://developers.cloudflare.com/cache/
+      - https://developers.cloudflare.com/rules/
+      - https://developers.cloudflare.com/waf/
+      - https://developers.cloudflare.com/ssl/
+    related_internal:
+      - platforms/cloudflare/cloudflare
 
 # --- ai (2) ---
 
