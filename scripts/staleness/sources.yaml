@@ -170,7 +170,7 @@ ai/platform/mcp-typescript-sdk:
       - ai/platform/mcp-protocol
 
 # ==============================================================================
-# Weekly group (36 articles, 03:00 JST Saturday)
+# Weekly group (42 articles, 03:00 JST Saturday)
 # ==============================================================================
 
 # --- tools 活発系 (12) ---
@@ -637,8 +637,77 @@ ai/platform/claude-agent-sdk:
     related_internal:
       - ai/agents/claude-code
 
+# --- ai/platform 未登録分 (5) ---
+
+ai/platform/agentrc:
+  group: weekly
+  sources:
+    docs:
+      - https://microsoft.github.io/agentrc/
+    github_releases:
+      - microsoft/agentrc
+    related_internal:
+      - ai/platform/agents-md
+
+ai/platform/apm:
+  group: weekly
+  sources:
+    docs:
+      - https://microsoft.github.io/apm/
+      - https://microsoft.github.io/apm/reference/
+    github_releases:
+      - microsoft/apm
+    related_internal:
+      - ai/platform/agent-skills-distribution
+
+ai/platform/ruler:
+  group: weekly
+  sources:
+    github_releases:
+      - intellectronica/ruler
+    npm:
+      - "@intellectronica/ruler"
+    related_internal:
+      - ai/platform/agents-md
+
+ai/platform/waza:
+  group: weekly
+  sources:
+    docs:
+      - https://microsoft.github.io/waza/
+    github_releases:
+      - microsoft/waza
+    related_internal:
+      - ai/platform/agent-skills-spec
+
+ai/platform/mcp-python-sdk:
+  group: weekly
+  sources:
+    docs:
+      - https://modelcontextprotocol.io/docs
+    github_releases:
+      - modelcontextprotocol/python-sdk
+    pypi:
+      - mcp
+    related_internal:
+      - ai/platform/mcp-typescript-sdk
+
+# --- languages 未登録分 (1) ---
+
+languages/js/hono:
+  group: weekly
+  sources:
+    docs:
+      - https://hono.dev/docs/
+    github_releases:
+      - honojs/hono
+    npm:
+      - hono
+    related_internal:
+      - platforms/cloudflare/cloudflare-workers
+
 # ==============================================================================
-# Monthly group (40 articles incl 2 skip, 04:00 JST 1st of month)
+# Monthly group (74 articles incl 2 skip, 04:00 JST 1st of month)
 # ==============================================================================
 
 # --- tools 安定系 (21) ---
@@ -1034,3 +1103,348 @@ ai/workflow/spec-driven-presentation-maker:
       - aws-samples/sample-spec-driven-presentation-maker/HEAD/README.md
     related_internal:
       - ai/practice/spec-driven-development
+
+# ==============================================================================
+# 未登録だった記事の追加登録 (34 articles, monthly)
+# ==============================================================================
+
+# --- ai/platform (6) ---
+
+ai/platform/a2a-protocol:
+  group: monthly
+  sources:
+    github_releases:
+      - a2aproject/A2A
+    web_search:
+      - "A2A protocol specification update"
+    related_internal:
+      - ai/platform/mcp-protocol
+
+ai/platform/agent-skills-best-practices:
+  group: monthly
+  sources:
+    docs:
+      - https://code.claude.com/docs/en/skills
+    github_releases:
+      - anthropics/skills
+    related_internal:
+      - ai/platform/agent-skills-spec
+
+ai/platform/agent-skills-catalog:
+  group: monthly
+  sources:
+    github_releases:
+      - anthropics/skills
+    web_search:
+      - "public agent skills catalog"
+    related_internal:
+      - ai/platform/agent-skills-spec
+      - ai/platform/agent-skills-best-practices
+
+ai/platform/agent-skills-distribution:
+  group: monthly
+  sources:
+    docs:
+      - https://code.claude.com/docs/en/plugins
+    web_search:
+      - "agent skills distribution plugin marketplace"
+    related_internal:
+      - ai/platform/agent-skills-spec
+      - ai/platform/apm
+
+ai/platform/llms-txt:
+  group: monthly
+  sources:
+    docs:
+      - https://llmstxt.org/
+    github_releases:
+      - AnswerDotAI/llms-txt
+    related_internal:
+      - ai/platform/open-knowledge-format
+
+ai/platform/open-knowledge-format:
+  group: monthly
+  sources:
+    github_releases:
+      - GoogleCloudPlatform/knowledge-catalog
+    web_search:
+      - "Open Knowledge Format specification"
+    related_internal:
+      - ai/platform/llms-txt
+
+# --- ai/practice (7) ---
+
+ai/practice/agent-evaluation:
+  group: monthly
+  sources:
+    web_search:
+      - "AI agent evaluation benchmark practice"
+    related_internal:
+      - ai/practice/agentic-observability
+
+ai/practice/agent-memory:
+  group: monthly
+  sources:
+    docs:
+      - https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool
+    web_search:
+      - "AI agent memory pattern"
+    related_internal:
+      - ai/practice/ai-context-management
+
+ai/practice/agent-reliability-guardrails:
+  group: monthly
+  sources:
+    github_releases:
+      - anthropic-experimental/sandbox-runtime
+    web_search:
+      - "AI agent guardrails sandboxing"
+    related_internal:
+      - ai/practice/prompt-injection
+
+ai/practice/agent-tool-design:
+  group: monthly
+  sources:
+    docs:
+      - https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview
+    web_search:
+      - "agent computer interface tool design"
+    related_internal:
+      - ai/practice/loop-engineering
+
+ai/practice/agentic-observability:
+  group: monthly
+  sources:
+    github_releases:
+      - open-telemetry/semantic-conventions
+    web_search:
+      - "OpenTelemetry GenAI semantic conventions"
+    related_internal:
+      - ai/practice/agent-evaluation
+
+ai/practice/harness-engineering:
+  group: monthly
+  sources:
+    web_search:
+      - "agent harness engineering practice"
+    related_internal:
+      - ai/practice/loop-engineering
+
+ai/practice/loop-engineering:
+  group: monthly
+  sources:
+    web_search:
+      - "agent loop engineering pattern"
+    related_internal:
+      - ai/practice/agent-tool-design
+
+# --- languages/go (6) ---
+
+languages/go/go:
+  group: monthly
+  sources:
+    docs:
+      - https://go.dev/doc/devel/release
+    github_releases:
+      - golang/go
+    related_internal:
+      - languages/go/golangci-lint
+
+languages/go/cobra:
+  group: monthly
+  sources:
+    github_releases:
+      - spf13/cobra
+    related_internal:
+      - languages/go/go
+
+languages/go/golangci-lint:
+  group: monthly
+  sources:
+    docs:
+      - https://golangci-lint.run/
+    github_releases:
+      - golangci/golangci-lint
+    related_internal:
+      - languages/go/go
+
+languages/go/gopls:
+  group: monthly
+  sources:
+    docs:
+      - https://pkg.go.dev/golang.org/x/tools/gopls
+    github_releases:
+      - golang/tools
+    related_internal:
+      - languages/go/go
+
+languages/go/goreleaser:
+  group: monthly
+  sources:
+    docs:
+      - https://goreleaser.com/
+    github_releases:
+      - goreleaser/goreleaser
+    related_internal:
+      - standards/software-distribution
+
+languages/go/govulncheck:
+  group: monthly
+  sources:
+    docs:
+      - https://go.dev/security/vuln/
+    github_releases:
+      - golang/vuln
+    related_internal:
+      - languages/go/go
+
+# --- languages/python (1) ---
+
+languages/python/fastapi:
+  group: monthly
+  sources:
+    docs:
+      - https://fastapi.tiangolo.com/
+    github_releases:
+      - fastapi/fastapi
+    pypi:
+      - fastapi
+    related_internal:
+      - languages/python/python
+
+# --- platforms/github (7) ---
+
+platforms/github/dependabot:
+  group: monthly
+  sources:
+    docs:
+      - https://docs.github.com/en/code-security/dependabot
+    rss:
+      - https://github.blog/changelog/feed/
+    related_internal:
+      - tools/renovate
+
+platforms/github/gh-extensions:
+  group: monthly
+  sources:
+    docs:
+      - https://docs.github.com/en/github-cli/github-cli/using-github-cli-extensions
+    related_internal:
+      - platforms/github/gh-cli
+
+platforms/github/gh-skill:
+  group: monthly
+  sources:
+    docs:
+      - https://docs.github.com/en/github-cli
+    related_internal:
+      - platforms/github/gh-cli
+      - ai/platform/agent-skills-spec
+
+platforms/github/github-environments:
+  group: monthly
+  sources:
+    docs:
+      - https://docs.github.com/en/actions/deployment/targeting-different-environments/managing-environments-for-deployment
+    rss:
+      - https://github.blog/changelog/feed/
+    related_internal:
+      - platforms/github/github-actions
+
+platforms/github/github-issues:
+  group: monthly
+  sources:
+    docs:
+      - https://docs.github.com/en/issues
+    rss:
+      - https://github.blog/changelog/feed/
+    related_internal:
+      - platforms/github/gh-cli
+
+platforms/github/github-pull-requests:
+  group: monthly
+  sources:
+    docs:
+      - https://docs.github.com/en/pull-requests
+    rss:
+      - https://github.blog/changelog/feed/
+    related_internal:
+      - standards/github-flow
+
+platforms/github/github-releases:
+  group: monthly
+  sources:
+    docs:
+      - https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases
+    rss:
+      - https://github.blog/changelog/feed/
+    related_internal:
+      - tools/release-please
+
+# --- platforms/vscode (1) ---
+
+platforms/vscode/vscode-extensions:
+  group: monthly
+  sources:
+    docs:
+      - https://code.visualstudio.com/api
+      - https://code.visualstudio.com/updates
+    related_internal:
+      - platforms/github/gh-extensions
+
+# --- standards (2) ---
+
+standards/software-distribution:
+  group: monthly
+  sources:
+    web_search:
+      - "software distribution packaging practice"
+    related_internal:
+      - standards/npm-trusted-publishers
+      - languages/go/goreleaser
+
+standards/test-driven-development:
+  group: monthly
+  sources:
+    web_search:
+      - "test driven development practice update"
+    related_internal:
+      - languages/js/vitest
+
+# --- tools (4) ---
+
+tools/buf:
+  group: monthly
+  sources:
+    docs:
+      - https://buf.build/docs/
+    github_releases:
+      - bufbuild/buf
+    related_internal:
+      - languages/go/go
+
+tools/chrome-devtools-protocol:
+  group: monthly
+  sources:
+    docs:
+      - https://chromedevtools.github.io/devtools-protocol/
+    github_releases:
+      - ChromeDevTools/devtools-protocol
+    npm:
+      - devtools-protocol
+
+tools/git-submodule:
+  group: monthly
+  sources:
+    docs:
+      - https://git-scm.com/docs/git-submodule
+    related_internal:
+      - tools/git-worktree
+
+tools/git-worktree:
+  group: monthly
+  sources:
+    docs:
+      - https://git-scm.com/docs/git-worktree
+    related_internal:
+      - tools/git-submodule
